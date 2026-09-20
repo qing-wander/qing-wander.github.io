@@ -802,7 +802,7 @@ button { font-family: inherit; cursor: pointer; }
 .edu-side-card h4 { font-size: 17px; font-weight: 900; margin-bottom: 4px; }
 .edu-side-card p { font-size: 14.5px; color: var(--ink-soft); }
 
-/* ══════════════ SEC.04 实习经历 ══════════════ */
+/* ══════════════ SEC.04 工作经历 ══════════════ */
 .exp-list { display: flex; flex-direction: column; gap: 40px; }
 .exp-card {
   border: var(--border-thick);
