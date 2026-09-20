@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>李清 · 财务会计 · 求职简历</title>
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-64.png">
+<link rel="apple-touch-icon" href="favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Noto+Sans+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --paper: #F3EEE2; --card: #FFFCF4; --ink: #141311; --ink-soft: #4A463F;
+  --orange: #FF5A1E; --blue: #2B4BE0;
+  --border: 3px solid var(--ink);
+  --font-cn: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --font-display: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --font-mono: 'Space Mono', 'SF Mono', Consolas, monospace;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-cn);
+  font-size: 14px;
+  line-height: 1.7;
+  padding: 28px 18px 80px;
+}
+.sheet {
+  max-width: 860px;
+  margin: 0 auto;
+  background: var(--card);
+  border: 4px solid var(--ink);
+  box-shadow: 10px 10px 0 var(--ink);
+}
+.sheet-head {
+  display: flex;
+  gap: 22px;
+  padding: 26px 30px;
+  border-bottom: var(--border);
+  align-items: center;
+  flex-wrap: wrap;
+}
+.avatar {
+  width: 96px; height: 96px;
+  border: var(--border);
+  flex-shrink: 0;
+  overflow: hidden;
+}
+.avatar img { width: 100%; height: 100%; object-fit: cover; }
+.head-main { flex: 1; min-width: 240px; }
+.head-name {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 42px;
+  line-height: 1.1;
+  letter-spacing: .02em;
+  text-shadow: 3px 3px 0 rgba(255, 90, 30, .8);
+}
+.head-role { font-family: var(--font-mono); font-size: 12.5px; font-weight: 700; letter-spacing: .06em; margin-top: 4px; }
+.head-role em { font-style: normal; color: var(--blue); }
+.head-meta {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  font-weight: 700;
+  line-height: 2;
+  color: var(--ink-soft);
+}
+.head-meta b { color: var(--ink); }
+.file-no {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 700;
+  background: var(--ink);
+  color: var(--paper);
+  padding: 4px 9px;
+  align-self: flex-start;
+}
+.sec { padding: 22px 30px; border-bottom: 2px solid var(--ink); }
+.sec:last-child { border-bottom: none; }
+.sec-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.sec-no {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  background: var(--orange);
+  color: #fff;
+  padding: 3px 8px;
+  border: 2px solid var(--ink);
+}
+.sec-title h2 {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 900;
+  line-height: 1;
+}
+.sec-line { flex: 1; border-top: 2px solid var(--ink); }
+
+.item { margin-bottom: 16px; }
+.item:last-child { margin-bottom: 0; }
+.item-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.item-title { font-size: 16px; font-weight: 900; }
+.item-title span { font-weight: 500; color: var(--ink-soft); font-size: 13.5px; margin-left: 8px; }
+.item-time { font-family: var(--font-mono); font-size: 11.5px; font-weight: 700; color: var(--blue); white-space: nowrap; }
+.pts { margin-top: 6px; }
+.pts li {
+  position: relative;
+  padding-left: 18px;
+  color: var(--ink-soft);
+  margin-bottom: 3px;
+  list-style: none;
+}
+.pts li::before { content: '▪'; position: absolute; left: 2px; color: var(--orange); }
+.pts strong { color: var(--ink); }
+.kv { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px 24px; }
+.kv li { list-style: none; font-size: 14px; }
+.kv b { color: var(--blue); font-family: var(--font-mono); font-size: 12px; margin-right: 6px; }
+.tags { display: flex; flex-wrap: wrap; gap: 8px; }
+.tags span {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  border: 2px solid var(--ink);
+  padding: 4px 9px;
+  background: var(--paper);
+}
+.tags .t-o { background: var(--orange); color: #fff; }
+.tags .t-b { background: var(--blue); color: #fff; }
+
+.actions {
+  max-width: 860px;
+  margin: 26px auto 0;
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 700;
+  padding: 14px 24px;
+  border: 3px solid var(--ink);
+  background: var(--card);
+  color: var(--ink);
+  cursor: pointer;
+  text-decoration: none;
+  box-shadow: 4px 4px 0 var(--ink);
+  transition: transform .15s ease, box-shadow .15s ease;
+  font-family: var(--font-cn);
+}
+.btn:hover { transform: translate(-2px, -2px); box-shadow: 6px 6px 0 var(--ink); }
+.btn-solid { background: var(--orange); color: #fff; }
+
+@media print {
+  body { padding: 0; background: #fff; font-size: 12.5px; }
+  .sheet { border: 2.5px solid #141311; box-shadow: none; max-width: 100%; }
+  .actions { display: none; }
+  .sec { padding: 14px 22px; }
+  .sheet-head { padding: 18px 22px; }
+}
+@media (max-width: 620px) {
+  .head-name { font-size: 32px; }
+  .kv { grid-template-columns: 1fr; }
+  .sheet-head { padding: 20px; }
+  .sec { padding: 18px 20px; }
+}
+</style>
+</head>
+<body>
+
+<div class="sheet">
+  <!-- 头部 -->
+  <header class="sheet-head">
+    <div class="avatar"><img src="images/portrait.jpg" alt="李清的个人形象照"></div>
+    <div class="head-main">
+      <h1 class="head-name">李清</h1>
+      <p class="head-role">财务会计 / <em>FINANCE ACCOUNTANT</em> · 5 年经验</p>
+      <div class="head-meta">
+        <p><b>电话</b> +86 173 2963 5456　<b>邮箱</b> 2092841563@qq.com</p>
+        <p><b>坐标</b> 广东深圳　<b>证书</b> 初级会计职称 · CET-4　<b>到岗</b> 随时</p>
+      </div>
+    </div>
+    <span class="file-no">FILE LQ-2021-0601</span>
+  </header>
+
+  <!-- 教育经历 -->
+  <section class="sec">
+    <div class="sec-title"><span class="sec-no">01</span><h2>教育经历</h2><span class="sec-line"></span></div>
+    <div class="item">
+      <div class="item-head">
+        <p class="item-title">中山大学新华学院 <span>会计学 · 统招全日制本科</span></p>
+        <span class="item-time">2017.09 — 2021.06</span>
+      </div>
+      <ul class="pts">
+        <li>会计学专业，系统学习会计核算、财务管理与税法实务</li>
+        <li>主修：基础会计 · 中级财务会计 · 成本会计 · 管理会计 · 财务管理 · 审计学 · 税法 · 经济法</li>
+        <li>会计初级职称（助理会计师）· 大学英语四级 CET-4</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 工作经历 -->
+  <section class="sec">
+    <div class="sec-title"><span class="sec-no">02</span><h2>工作经历</h2><span class="sec-line"></span></div>
+    <div class="item">
+      <div class="item-head">
+        <p class="item-title">北京科锐国际人力资源股份有限公司深圳分公司 <span>综合财务 · 薪资验收方向</span></p>
+        <span class="item-time">2026.05 — 2026.07</span>
+      </div>
+      <ul class="pts">
+        <li>负责外包员工<strong>薪资验收核对</strong>，对薪资应收数据日常校验与整理，逐项核查数据准确性</li>
+        <li><strong>主动识别薪资数据异常</strong>，定位差异原因，跟进并推动业务端完成问题闭环，规避数据差错</li>
+        <li>保障薪资验收工作<strong>按时落地</strong></li>
+      </ul>
+    </div>
+    <div class="item">
+      <div class="item-head">
+        <p class="item-title">南方电网数字平台科技（广东）有限公司 <span>综合会计 · 驻场财务支撑</span></p>
+        <span class="item-time">2023.06 — 2026.04</span>
+      </div>
+      <ul class="pts">
+        <li>独立审核 <strong>15 个部门</strong>月度报销单据，校验票据合规、费用标准与审批流程，单据合规率保持 <strong>93%</strong>，报销办理效率提升至 <strong>95%</strong></li>
+        <li>负责供应商往来核对与应付账款梳理，跟进差异调整与对账闭环，月结前往来账项清理，确保<strong>账实相符</strong></li>
+        <li>作为财务系统与业务端桥梁，收集系统问题与优化需求，跟进工单处理，推动<strong>功能迭代上线</strong>并验证效果</li>
+        <li>一对一反馈退回单据、讲解发票规范，推动 <strong>3 项制度优化</strong>落地，组织财务培训降低报销退回率</li>
+      </ul>
+    </div>
+    <div class="item">
+      <div class="item-head">
+        <p class="item-title">广东国地规划科技股份有限公司 <span>管理会计</span></p>
+        <span class="item-time">2021.06 — 2023.05</span>
+      </div>
+      <ul class="pts">
+        <li>处理日常费用报销审核、往来款项核对与资金申请资料整理，参与合同评审与财务条款梳理</li>
+        <li>担任公司<strong>金蝶财务系统管理员</strong>：账号权限配置、科目与客户/供应商档案维护、故障排查</li>
+        <li>协助增值税与附加税申报前期准备、企业所得税汇算清缴资料收集，配合税务稽查与外部审计</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 项目经历 -->
+  <section class="sec">
+    <div class="sec-title"><span class="sec-no">03</span><h2>重点项目</h2><span class="sec-line"></span></div>
+    <div class="item">
+      <div class="item-head">
+        <p class="item-title">费控中枢 EXPENSE HUB <span>部门费用报销管控体系 · 15 个部门</span></p>
+        <span class="item-time">2023.06 — 2026.04</span>
+      </div>
+      <ul class="pts">
+        <li>15 个部门月度报销审核：票据合规校验、费用台账编制、异常数据分析、付款审批跟进</li>
+        <li>单据合规率 <strong>93%</strong>，报销办理效率 <strong>95%</strong>，推动 3 项制度优化落地</li>
+      </ul>
+    </div>
+    <div class="item">
+      <div class="item-head">
+        <p class="item-title">对账闭环 RECON LOOP <span>供应商往来对账管理</span></p>
+        <span class="item-time">2023.06 — 2026.04</span>
+      </div>
+      <ul class="pts">
+        <li>定期往来核对、应付账款梳理、差异调整与月结前清理，账实相符、余额可追溯</li>
+      </ul>
+    </div>
+    <div class="item">
+      <div class="item-head">
+        <p class="item-title">系统桥梁 SYS BRIDGE <span>金蝶运维与财务系统优化</span></p>
+        <span class="item-time">2021.06 — 2026.04</span>
+      </div>
+      <ul class="pts">
+        <li>金蝶系统管理员（权限配置、基础数据维护）+ 财务系统与业务端对接，推动功能迭代上线</li>
+      </ul>
+    </div>
+    <div class="item">
+      <div class="item-head">
+        <p class="item-title">数据验收 PAYCHECK <span>外包薪资验收数据管控</span></p>
+        <span class="item-time">2026.05 — 2026.07</span>
+      </div>
+      <ul class="pts">
+        <li>薪资应收数据逐项校验、异常识别、差异定位与问题闭环，保障验收按时落地</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 专业技能 -->
+  <section class="sec">
+    <div class="sec-title"><span class="sec-no">04</span><h2>专业技能</h2><span class="sec-line"></span></div>
+    <div class="tags">
+      <span class="t-o">Excel</span><span class="t-o">VLOOKUP / XLOOKUP</span><span class="t-o">数据透视表</span>
+      <span class="t-b">Power Query</span><span class="t-b">金蝶系统</span>
+      <span>费用审核</span><span>往来对账</span><span>应付账款</span>
+      <span>月度结账</span><span>凭证管理</span><span>发票合规</span>
+      <span>增值税申报</span><span>汇算清缴</span><span>审计配合</span><span>跨部门培训</span>
+    </div>
+  </section>
+
+  <!-- 获奖与证书 -->
+  <section class="sec">
+    <div class="sec-title"><span class="sec-no">05</span><h2>证书与职称</h2><span class="sec-line"></span></div>
+    <ul class="kv">
+      <li><b>职称</b> 会计初级职称（助理会计师）</li>
+      <li><b>语言</b> 大学英语四级 CET-4</li>
+    </ul>
+  </section>
+</div>
+
+<div class="actions">
+  <button class="btn btn-solid" onclick="window.print()">打印 / 保存为 PDF ⎙</button>
+  <a class="btn" href="index.html">← 返回作品集主页</a>
+</div>
+
+</body>
+</html>
