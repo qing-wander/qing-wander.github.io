@@ -8,11 +8,33 @@ import { onRequestPost as deliverPost, onRequestOptions as deliverOpt } from '..
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const PORT = Number(process.env.PORT || 8877);
+/* 内存 KV：模拟 expirationTtl，否则本地测不出「固定窗口限流到期自动解锁」。
+   WALL_SEED=<n> 可预置 n 条历史留言，用来验收分页 / 加载更多。 */
 const KV = new Map();
 const SITE_KV = {
-  async get(k) { return KV.has(k) ? KV.get(k) : null; },
-  async put(k, v) { KV.set(k, String(v)); },
+  async get(k) {
+    const e = KV.get(k);
+    if (!e) return null;
+    if (e.expiresAt && e.expiresAt <= Date.now()) { KV.delete(k); return null; }
+    return e.value;
+  },
+  async put(k, v, opts) {
+    const ttl = opts && Number(opts.expirationTtl) > 0 ? Number(opts.expirationTtl) : 0;
+    KV.set(k, { value: String(v), expiresAt: ttl ? Date.now() + ttl * 1000 : 0 });
+  },
 };
+const SEED = Number(process.env.WALL_SEED || 0);
+if (SEED > 0) {
+  const now = Date.now();
+  const seed = Array.from({ length: Math.min(SEED, 100) }, (_, i) => ({
+    id: 'wseed' + i,
+    name: i % 4 === 0 ? '匿名访客' : '访客' + (i + 1),
+    text: '这是本地联调用的第 ' + (i + 1) + ' 条留言，用来检查分页与加载更多是否正常。',
+    ts: now - i * 3600000,
+  }));
+  KV.set('wall:messages', { value: JSON.stringify(seed), expiresAt: 0 });
+  console.log('[seed] 预置 ' + seed.length + ' 条留言');
+}
 /* 本地模拟 Resend：只记录，不发真实邮件。
    MOCK_RESEND=unverified 时模拟「域名未验证」→ 422，用来验收 mailto 兜底。
    MOCK_RESEND=nokey 时模拟未配置 API Key → 503。 */
@@ -22,8 +44,15 @@ const ENV = {
   ALLOWED_ORIGINS: 'http://127.0.0.1:' + PORT + ',http://localhost:' + PORT,
   RESEND_FROM: process.env.RESEND_FROM || '',
   DELIVER_BCC: process.env.DELIVER_BCC || '',
+  /* 本地默认给一个测试令牌，方便验收 DELETE；不设就等于线上「未配置」形态 */
+  WALL_ADMIN_TOKEN: process.env.WALL_ADMIN_TOKEN || 'local-admin-token',
 };
 if (MOCK !== 'nokey') ENV.RESEND_API_KEY = 're_local_test';
+/* WALL_NO_KV=1 模拟「Pages 里忘了绑定 SITE_KV」的线上形态，用来验收关闭态与 ?wallDebug=1 */
+if (process.env.WALL_NO_KV === '1') {
+  delete ENV.SITE_KV;
+  console.log('[mock] 未绑定 SITE_KV：/api/wall 将返回 open=false, reason=kv_not_bound');
+}
 
 const REAL_FETCH = globalThis.fetch;
 globalThis.fetch = async (url, init) => {

@@ -1461,9 +1461,88 @@ a.cap-ref:hover, a.cap-ref:focus-visible {
 .wall-item-time { font-family: var(--font-mono); font-size: 11px; color: var(--ink-soft); margin-left: auto; }
 .wall-item-text { font-size: 14px; line-height: 1.75; color: var(--ink); word-break: break-word; white-space: pre-wrap; }
 
+/* ── 留言板增强：工具条 / 分页 / 状态 / 新留言高亮 ── */
+.wall-form-tip {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: rgba(var(--ink-rgb), .5);
+  letter-spacing: .02em;
+}
+.wall-count.is-near { color: var(--orange); font-weight: 700; }
+.wall-input:disabled { opacity: .55; cursor: not-allowed; }
+.wall-board { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.wall-board-head {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  padding-bottom: 10px; border-bottom: 2px solid rgba(var(--ink-rgb), .35);
+}
+.wall-board-title { font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: .08em; color: var(--orange); }
+.wall-board-count { font-family: var(--font-mono); font-size: 11px; color: var(--ink-soft); }
+.wall-board-actions { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+.wall-refresh, .wall-new {
+  font-family: var(--font-mono); font-size: 11px; font-weight: 700;
+  border: 2px solid var(--ink); background: var(--card); color: var(--ink);
+  padding: 5px 10px; box-shadow: 2px 2px 0 rgba(var(--ink-rgb), .28);
+  white-space: nowrap;
+  transition: transform .12s ease, background .12s ease;
+}
+.wall-refresh:hover, .wall-new:hover { background: var(--orange); color: var(--accent-text); }
+.wall-refresh:active { transform: translate(1px, 1px); box-shadow: none; }
+.wall-refresh:disabled { opacity: .55; cursor: progress; }
+.wall-refresh.is-loading .wall-refresh-icon { display: inline-block; animation: wall-spin .8s linear infinite; }
+@keyframes wall-spin { to { transform: rotate(360deg); } }
+.wall-new { background: var(--orange); color: var(--accent-text); animation: wall-pulse 1.8s ease-in-out infinite; }
+@keyframes wall-pulse { 50% { box-shadow: 2px 2px 0 var(--ink), 0 0 0 5px rgba(255, 90, 30, .2); } }
+.wall-refresh:focus-visible, .wall-new:focus-visible, .wall-more:focus-visible { outline: 3px solid var(--orange); outline-offset: 2px; }
+
+.wall-skeleton { border: var(--border); background: var(--card); padding: 16px 18px; }
+.wall-skeleton-line { height: 10px; background: rgba(var(--ink-rgb), .13); animation: wall-shimmer 1.2s ease-in-out infinite; }
+.wall-skeleton-line + .wall-skeleton-line { margin-top: 10px; }
+.wall-skeleton-line.short { width: 38%; }
+.wall-skeleton-line.mid { width: 74%; }
+@keyframes wall-shimmer { 50% { opacity: .35; } }
+.wall-error {
+  border: 2px dashed var(--orange);
+  background: rgba(var(--card-rgb, 255, 252, 244), .7);
+  color: var(--ink-soft); font-family: var(--font-mono); font-size: 12.5px;
+  padding: 20px; text-align: center;
+}
+.wall-error button {
+  display: inline-block; margin-left: 10px; font-family: var(--font-mono); font-size: 12px; font-weight: 700;
+  border: 2px solid var(--ink); background: var(--card); color: var(--ink); padding: 4px 12px;
+}
+.wall-error button:hover { background: var(--orange); color: var(--accent-text); }
+.wall-item.is-new {
+  border-color: var(--orange);
+  box-shadow: 5px 5px 0 rgba(255, 90, 30, .35);
+  animation: wall-flash 2s ease-out;
+}
+@keyframes wall-flash { 0%, 35% { background: rgba(255, 90, 30, .16); } 100% { background: var(--card); } }
+.wall-item.is-own .wall-item-name::after {
+  content: '· 我'; margin-left: 6px; font-family: var(--font-mono);
+  font-size: 10px; font-weight: 700; color: var(--orange);
+}
+.wall-board-foot { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.wall-more {
+  width: 100%; font-family: var(--font-mono); font-size: 12px; font-weight: 700;
+  border: 2px solid var(--ink); background: transparent; color: var(--ink);
+  padding: 10px; transition: background .12s ease, color .12s ease;
+}
+.wall-more:hover { background: var(--ink); color: var(--paper); }
+.wall-more:disabled { opacity: .55; cursor: progress; }
+.wall-board-note { font-family: var(--font-mono); font-size: 10.5px; color: var(--ink-soft); }
+/* 站长诊断浮层：仅 ?wallDebug=1 时出现 */
+.wall-debug {
+  border: 2px solid var(--orange); background: var(--card);
+  font-family: var(--font-mono); font-size: 11px; line-height: 1.6;
+  color: var(--ink); padding: 10px 14px; white-space: pre-wrap; word-break: break-word;
+}
+
 @media (max-width: 1024px) {
   .wall-wrap { grid-template-columns: 1fr; }
   .wall-form { position: static; }
+}
+@media (max-width: 480px) {
+  .wall-board-actions { width: 100%; margin-left: 0; justify-content: flex-end; }
 }
 
 /* ══════════════ FOOTER ══════════════ */
@@ -1653,6 +1732,10 @@ a.cap-ref:hover, a.cap-ref:focus-visible {
   pointer-events: none;
 }
 .toast.show { transform: translate(-50%, 0); opacity: 1; }
+/* 成功 / 失败 / 中性：左边框色带，弱色觉用户也能靠文字区分 */
+.toast.ok { border-left: 9px solid var(--green); }
+.toast.err { border-left: 9px solid var(--orange); }
+.toast.info { border-left: 9px solid var(--blue); }
 
 /* ══════════════ 滚动进场 ══════════════ */
 .reveal { opacity: 0; transform: translateY(26px); transition: opacity .6s ease, transform .6s ease; }

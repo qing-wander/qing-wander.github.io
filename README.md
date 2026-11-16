@@ -94,6 +94,10 @@ AI Agent 工程师求职个人网站：基于纯原生 HTML / CSS / JavaScript �
 │   ├── site-data.json      # 唯一编辑源：全部文案、项目、证书、联系方式
 │   └── site-data.js        # 自动生成的 window.SITE_DATA 快照（勿手改）
 ├── images/                 # 形象照 / 项目图 / 证书 / 学信网二维码
+├── functions/api/wall.js            # 留言墙 API（分页 / 限流 / 管理删除，KV 存储）
+├── functions/api/deliver.js         # 简历转发到邮箱（Resend）
+├── scripts/wall-check.sh            # 留言墙线上自检（默认只读）
+├── scripts/dev-api-server.mjs       # 本地联调：静态站 + 真实 Functions + 内存 KV
 ├── scripts/sync_site_data.py        # JSON → JS 快照，支持 --check
 ├── scripts/sync-pages-from-github.sh  # Cloudflare Pages 同步（api.github.com + 直传，幂等）
 ├── scripts/deploy-pages.sh          # Cloudflare Pages 兜底直传（支持 --dry-run）
@@ -102,6 +106,7 @@ AI Agent 工程师求职个人网站：基于纯原生 HTML / CSS / JavaScript �
 ├── docs/observability-and-cms.md    # 教程：统计与内容管理接入
 ├── docs/ai-assistant-survey.md      # AI 简历问答后端（RAG）方案与实施
 ├── docs/cloudflare-pages-deploy.md  # Cloudflare Pages 备用托管说明
+├── docs/resume-delivery.md          # 留言墙 / 简历转发的部署、自检与排障
 ├── worker/                 # 可选：自建 Cloudflare Worker 访客计数
 ├── .pages.yml              # Pages CMS 配置
 ├── .github/workflows/sync-site-data.yml  # JSON 变更后自动重建快照
@@ -130,6 +135,14 @@ python3 -m http.server 8000
 1. 将代码推送到 GitHub 仓库
 2. 仓库 `Settings → Pages → Source: Deploy from a branch`
 3. 选择 `main` 分支、`/ (root)` 目录，保存即自动上线
+
+## 留言墙（主页 SEC.10）
+
+匿名访客可公开留言，后端是 Cloudflare Pages Function + KV；主站 `github.io` 是纯静态，API 走备用站 `pages.dev`（双线路自动切换）。
+
+- **线上自检**：`./scripts/wall-check.sh`（默认只读）。2026-11-16 已绑定 `SITE_KV`（`site-kv` namespace，Production 环境）并重新部署，`open=true`、11/11 全过，`./scripts/deploy-pages.sh` 部署结束也会自动检查这一项。绑定/环境变量变更需在控制台操作并重新部署才生效，见 [docs/resume-delivery.md](docs/resume-delivery.md) ②。
+- **本地联调**：`node scripts/dev-api-server.mjs` → `http://127.0.0.1:8877/index.html`；`本地预览.command` 的 8765 是纯静态服务，没有 `/api`。
+- **交互**：每页 20 条 + 加载更早、手动刷新、60 秒新留言提示、相对时间、`⌘/Ctrl + Enter` 提交、加载/错误状态；站长排障可加 `?wallDebug=1`。
 
 ## 可观测统计与内容管理
 

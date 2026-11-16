@@ -36,13 +36,14 @@
      若把 showToast 定义在 initInteractions 内部，留言墙调用时会 ReferenceError。 */
   var toastEl = null;
   var toastTimer = null;
-  function showToast(msg) {
+  function showToast(msg, type) {
     if (!toastEl) toastEl = $('toast');
     if (!toastEl) return;
     toastEl.textContent = msg;
-    toastEl.classList.add('show');
+    /* ok / err / info 由 CSS 左边框色带区分；旧调用只传 msg 时保持中性 */
+    toastEl.className = 'toast show' + (type ? ' ' + type : '');
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(function () { toastEl.classList.remove('show'); }, 2600);
+    toastTimer = setTimeout(function () { toastEl.classList.remove('show'); }, 2800);
   }
   function esc(s) { /* 文本转义（字段值默认按纯文本；需 HTML 的字段走 innerHTML） */
     return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -296,7 +297,8 @@
     /* ── 留言墙（文案；列表与提交见交互层第 12 节） ── */
     var wl = d.wall || {};
     if ($('wallLead')) $('wallLead').innerHTML = wl.lead || '';
-    window.__WALL_TEXT = { empty: wl.emptyText || '', closed: wl.closedText || '' };
+    /* 留言墙文案整包交给交互层；empty/closed 两个别名兼容旧版读取 */
+    window.__WALL_TEXT = Object.assign({ empty: wl.emptyText || '', closed: wl.closedText || '' }, wl);
   }
 
   /* ══════════════ 交互层（渲染完成后初始化） ══════════════ */
@@ -937,7 +939,8 @@
   }
 
   /* ── 12. 留言墙（Cloudflare Pages Function /api/wall，KV 存储） ──
-     file:// 或 fetch 失败 → 静默降级为「暂未开放」，不影响页面其余部分。 */
+     分页 / 刷新 / 新留言轮询 / 加载与错误态 / 快捷键 / 站长诊断。
+     file:// 或两条线路都不通 → 明确降级，不影响页面其余部分。 */
   function initWall() {
     var form = $('wallForm');
     if (!form) return;
@@ -946,15 +949,40 @@
     var textEl = $('wallText');
     var countEl = $('wallCount');
     var submitBtn = $('wallSubmit');
+    var totalEl = $('wallTotal');
+    var noteEl = $('wallNote');
+    var moreBtn = $('wallMore');
+    var newBtn = $('wallNew');
+    var refreshBtn = $('wallRefresh');
+    var tipEl = $('wallFormTip');
     var T = window.__WALL_TEXT || {};
+    var LIMIT = 20;
+    var POLL_MS = 60000;
+    var debugOn = /(?:^|[?&])wallDebug=1(?:&|$)/.test(location.search);
 
-    if (/^file:/.test(location.protocol)) { renderClosed(T.closed); return; }
+    var state = {
+      mode: 'loading',          /* loading | open | closed | error */
+      messages: [], total: 0, hasMore: false,
+      busy: false, refreshing: false, loadingMore: false,
+      showNew: false, latestId: null, highlightId: null, myIds: [],
+      updatedAt: 0, base: '', status: 0, reason: '', closedMsg: '', errorMsg: ''
+    };
+    try { /* 本次会话自己贴的留言，刷新后仍能标「· 我」 */
+      var saved = JSON.parse(sessionStorage.getItem('cp-wall-myids') || '[]');
+      if (Array.isArray(saved)) state.myIds = saved.slice(-30);
+    } catch (e) {}
 
     function escT(s) {
       return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
         return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
       });
     }
+    function tpl(str, vars) {
+      return String(str == null ? '' : str).replace(/\{(\w+)\}/g, function (all, k) {
+        return vars[k] == null ? '' : vars[k];
+      });
+    }
+    function setText(el, s) { if (el) el.textContent = s; }
     function fmtTime(ts) {
       try {
         var dt = new Date(ts);
@@ -962,25 +990,20 @@
         return dt.getFullYear() + '.' + pad(dt.getMonth() + 1) + '.' + pad(dt.getDate()) + ' ' + pad(dt.getHours()) + ':' + pad(dt.getMinutes());
       } catch (e) { return ''; }
     }
-    function renderItems(messages) {
-      if (!listEl) return;
-      if (!messages || !messages.length) {
-        listEl.innerHTML = '<p class="wall-empty">' + escT(T.empty || '还没有留言') + '</p>';
-        return;
-      }
-      listEl.innerHTML = messages.map(function (m) {
-        return '<article class="wall-item reveal in">' +
-          '<div class="wall-item-head"><span class="wall-item-no">#' + escT(m.id ? m.id.slice(-5) : '') + '</span>' +
-          '<strong class="wall-item-name">' + escT(m.name || '匿名访客') + '</strong>' +
-          '<time class="wall-item-time">' + escT(fmtTime(m.ts)) + '</time></div>' +
-          '<p class="wall-item-text">' + escT(m.text) + '</p>' +
-          '</article>';
-      }).join('');
+    function clockTime(ts) {
+      try {
+        var dt = new Date(ts), pad = function (n) { return (n < 10 ? '0' : '') + n; };
+        return pad(dt.getHours()) + ':' + pad(dt.getMinutes());
+      } catch (e) { return ''; }
     }
-    function renderClosed(text) {
-      if (listEl) listEl.innerHTML = '<p class="wall-empty">' + escT(text || T.closed || '留言墙暂未开放') + '</p>';
-      if (submitBtn) { submitBtn.disabled = true; }
-      if (textEl) textEl.disabled = true;
+    function relTime(ts) {
+      var s = Math.max(0, Math.floor((Date.now() - Number(ts)) / 1000));
+      if (!isFinite(s)) return '';
+      if (s < 60) return T.timeNow || '刚刚';
+      if (s < 3600) return tpl(T.timeMin || '{n} 分钟前', { n: Math.floor(s / 60) });
+      if (s < 86400) return tpl(T.timeHour || '{n} 小时前', { n: Math.floor(s / 3600) });
+      var d = Math.floor(s / 86400);
+      return d < 7 ? tpl(T.timeDay || '{n} 天前', { n: d }) : fmtTime(ts);
     }
 
     /* API 双线路：GitHub Pages 只有静态文件，/api 不存在 →
@@ -993,69 +1016,331 @@
       return ['', 'https://shenge-work.pages.dev'];
     })();
 
-    /* 依次尝试线路；404/405 或非 JSON（静态主机把 /api 当文件返回）视为该线路没有 API */
-    function apiFetch(path, opts) {
-      var i = 0;
-      var tried = {};
+    /* 依次尝试线路；404/405 或非 JSON（静态主机把 /api 当文件返回）视为该线路没有 API。
+       serverFailover 只给 GET 用：POST 收到 5xx 时不能盲目换线路重试，可能重复写入。 */
+    function apiFetch(path, opts, serverFailover) {
+      var i = 0, tried = {}, usedBase = '';
       function next() {
         if (i >= API_BASES.length) return Promise.reject(new Error('no_api'));
-        var url = new URL(API_BASES[i++] + path, location.href).href;
+        var base = API_BASES[i++];
+        var url = new URL(base + path, location.href).href;
         if (tried[url]) return next();
         tried[url] = 1;
+        usedBase = base || '(同源)';
         return fetch(url, opts).then(function (r) {
           var ct = r.headers.get('content-type') || '';
           if (r.status === 404 || r.status === 405 || ct.indexOf('application/json') < 0) return next();
-          return r.json().then(function (j) { return { ok: r.ok, status: r.status, body: j }; });
+          if (serverFailover && r.status >= 500) return next();
+          return r.json().then(function (j) {
+            return { ok: r.ok, status: r.status, body: j, base: usedBase };
+          });
         }, function () { return next(); });
       }
       return next();
     }
 
-    apiFetch('/api/wall', { headers: { 'Accept': 'application/json' } })
-      .then(function (res) {
-        var d = res.body;
-        if (d && d.open) renderItems(d.messages);
-        else renderClosed(T.closed);
-      })
-      .catch(function () { renderClosed(T.closed); });
+    function renderSkeleton() {
+      if (!listEl) return;
+      var card = '<div class="wall-skeleton"><div class="wall-skeleton-line short"></div>' +
+        '<div class="wall-skeleton-line"></div><div class="wall-skeleton-line mid"></div></div>';
+      listEl.innerHTML = card + card + card;
+    }
+    function renderClosed(text) {
+      if (listEl) listEl.innerHTML = '<p class="wall-empty">' +
+        escT(text || state.closedMsg || T.closedText || T.closed || '留言墙暂未开放') + '</p>';
+      if (newBtn) newBtn.hidden = true;
+    }
+    function syncFormEnabled() {
+      if (submitBtn) submitBtn.disabled = (state.mode === 'closed' || state.busy);
+    }
+    function renderError(text) {
+      if (!listEl) return;
+      listEl.innerHTML = '<p class="wall-error">' +
+        escT(text || state.errorMsg || T.errorText || '留言没能加载出来') +
+        '<button type="button" id="wallRetry">' + escT(T.retryText || '重试') + '</button></p>';
+    }
+    function renderItems() {
+      if (!listEl) return;
+      if (!state.messages.length) {
+        listEl.innerHTML = '<p class="wall-empty">' + escT(T.emptyText || T.empty || '还没有留言') + '</p>';
+        return;
+      }
+      listEl.innerHTML = state.messages.map(function (m) {
+        var cls = 'wall-item reveal in';
+        if (m.id && m.id === state.highlightId) cls += ' is-new';
+        if (m.id && state.myIds.indexOf(m.id) >= 0) cls += ' is-own';
+        var iso = '';
+        try { iso = new Date(m.ts).toISOString(); } catch (e) {}
+        return '<article class="' + cls + '" data-id="' + escT(m.id) + '">' +
+          '<div class="wall-item-head"><span class="wall-item-no">#' + escT(String(m.id || '').slice(-5)) + '</span>' +
+          '<strong class="wall-item-name">' + escT(m.name || '匿名访客') + '</strong>' +
+          '<time class="wall-item-time" data-ts="' + escT(String(m.ts)) + '" datetime="' + escT(iso) +
+          '" title="' + escT(fmtTime(m.ts)) + '">' + escT(relTime(m.ts)) + '</time></div>' +
+          '<p class="wall-item-text">' + escT(m.text) + '</p>' +
+          '</article>';
+      }).join('');
+    }
+    function updateBoardMeta() {
+      var open = state.mode === 'open';
+      setText(totalEl, open ? tpl(T.countText || '共 {n} 条留言', { n: state.total }) : '');
+      var note = '';
+      if (open) {
+        note = tpl(T.shownText || '已显示 {shown} / {total} 条', { shown: state.messages.length, total: state.total });
+        if (state.updatedAt) note += ' · ' + tpl(T.updatedText || '更新于 {time}', { time: clockTime(state.updatedAt) });
+      }
+      setText(noteEl, note);
+      if (moreBtn) {
+        moreBtn.hidden = !(open && state.hasMore);
+        moreBtn.disabled = state.busy;
+        moreBtn.textContent = state.loadingMore ? (T.moreLoadingText || '读取中…') : (T.moreText || '加载更早的留言 ▼');
+      }
+      if (newBtn) {
+        newBtn.hidden = !(open && state.showNew);
+        newBtn.textContent = T.newText || '有新留言 ▲';
+      }
+      if (refreshBtn) {
+        refreshBtn.disabled = state.busy || state.mode === 'closed';
+        refreshBtn.classList.toggle('is-loading', !!state.refreshing);
+      }
+    }
+    function renderDebug() {
+      if (!listEl || !listEl.parentNode) return;
+      var old = listEl.parentNode.querySelector('.wall-debug');
+      if (old) old.parentNode.removeChild(old);
+      var lines = [
+        '留言墙诊断 · ?wallDebug=1',
+        'API 线路 : ' + (state.base || '（未发出请求）'),
+        'HTTP     : ' + (state.status || '-'),
+        'mode     : ' + state.mode,
+        'open     : ' + (state.mode === 'open'),
+        'reason   : ' + (state.reason || '-'),
+        'total    : ' + state.total
+      ];
+      if (state.reason === 'kv_not_bound') {
+        lines.push('', '→ Cloudflare Pages 未绑定 SITE_KV：Settings → Functions → KV namespace bindings 添加 SITE_KV，保存后重新部署。',
+          '→ 一键自检：./scripts/wall-check.sh');
+      } else if (state.reason === 'network_error') {
+        lines.push('', '→ 两条线路都没拿到 JSON：检查网络，或确认 functions/api 已随站点部署。');
+      } else if (state.reason === 'local_static') {
+        lines.push('', '→ 当前是本地静态预览（无 /api）：改用 node scripts/dev-api-server.mjs 启动 8877 端口。');
+      } else if (state.reason === 'file_protocol') {
+        lines.push('', '→ 当前是 file:// 直开，请用「本地预览.command」启动 HTTP 服务。');
+      }
+      var box = document.createElement('div');
+      box.className = 'wall-debug';
+      box.textContent = lines.join('\n');
+      listEl.parentNode.insertBefore(box, listEl);
+    }
+    function render() {
+      if (nameEl) nameEl.disabled = (state.mode === 'closed');
+      if (textEl) textEl.disabled = (state.mode === 'closed');
+      syncFormEnabled();
+      if (state.mode === 'loading') renderSkeleton();
+      else if (state.mode === 'closed') renderClosed();
+      else if (state.mode === 'error') renderError();
+      else renderItems();
+      updateBoardMeta();
+      if (debugOn) renderDebug();
+    }
+    function applyPage(d, reset) {
+      var page = Array.isArray(d.messages) ? d.messages : [];
+      if (reset) {
+        state.messages = page.slice();
+      } else { /* 按 id 去重：翻页期间若有人插了新留言，避免重复卡片 */
+        var seen = {};
+        state.messages.forEach(function (m) { seen[m.id] = 1; });
+        page.forEach(function (m) { if (!seen[m.id]) { seen[m.id] = 1; state.messages.push(m); } });
+      }
+      state.total = Number(d.total) || state.messages.length;
+      state.hasMore = typeof d.hasMore === 'boolean' ? d.hasMore : (state.messages.length < state.total);
+      state.latestId = state.messages.length ? state.messages[0].id : null;
+      state.mode = 'open';
+      state.updatedAt = Date.now();
+    }
 
-    textEl.addEventListener('input', function () {
-      var len = textEl.value.length;
-      countEl.textContent = len + ' / 300';
+    /* keep：刷新时一次拉回当前已展开的条数，不让「刷新」把列表折叠回第一页 */
+    function loadFirst(silent, keep) {
+      if (state.busy) return Promise.resolve();
+      state.busy = true;
+      state.refreshing = !!silent;
+      if (!silent) { state.mode = 'loading'; }
+      render();
+      var limit = Math.min(50, Math.max(LIMIT, keep || state.messages.length));
+      return apiFetch('/api/wall?limit=' + limit + '&offset=0',
+        { headers: { 'Accept': 'application/json' } }, true)
+        .then(function (res) {
+          state.status = res.status;
+          state.base = res.base;
+          var d = res.body || {};
+          if (!res.ok || !d.ok) throw new Error('bad_response');
+          if (d.open === false) {
+            state.mode = 'closed';
+            state.reason = d.reason || 'unknown';
+            state.messages = []; state.total = 0; state.hasMore = false;
+            state.showNew = false;
+            render();
+            return;
+          }
+          state.reason = '';
+          state.showNew = false;
+          applyPage(d, true);
+          render();
+        })
+        .catch(function () {
+          state.mode = 'error';
+          /* 本地 8765 静态预览本来就没有 /api，给站长一句可执行的提示，而不是干巴巴的「加载失败」 */
+          var isLocal = /^(localhost|127\.0\.0\.1|0\.0\.0\.0|\[::1\])$/.test(location.hostname || '');
+          state.reason = isLocal ? 'local_static' : 'network_error';
+          state.errorMsg = isLocal
+            ? (T.localText || '本地静态预览没有留言 API · 要联调请运行 node scripts/dev-api-server.mjs 并打开 http://127.0.0.1:8877')
+            : '';
+          render();
+        })
+        .then(function () {
+          state.busy = false;
+          state.refreshing = false;
+          syncFormEnabled();
+          updateBoardMeta();
+        });
+    }
+    function loadMore() {
+      if (state.busy || state.mode !== 'open' || !state.hasMore) return;
+      state.busy = true; state.loadingMore = true;
+      updateBoardMeta();
+      apiFetch('/api/wall?limit=' + LIMIT + '&offset=' + state.messages.length,
+        { headers: { 'Accept': 'application/json' } }, true)
+        .then(function (res) {
+          var d = res.body || {};
+          if (!res.ok || !d.ok || d.open === false) { showToast(T.errorText || '加载失败，稍后再试', 'err'); return; }
+          applyPage(d, false);
+          render();
+        })
+        .catch(function () { showToast(T.errorText || '加载失败，稍后再试', 'err'); })
+        .then(function () {
+          state.busy = false; state.loadingMore = false;
+          syncFormEnabled(); updateBoardMeta();
+        });
+    }
+    /* 轻量轮询：只取总数与最新 id，不传正文；有新留言时显示提示按钮，不打断阅读 */
+    function peek() {
+      if (state.busy || state.mode !== 'open') return;
+      apiFetch('/api/wall?peek=1', { headers: { 'Accept': 'application/json' } }, true)
+        .then(function (res) {
+          var d = res.body || {};
+          if (!res.ok || !d.ok || d.open === false) return;
+          if (d.latest && d.latest.id && d.latest.id !== state.latestId && !state.showNew) {
+            state.showNew = true;
+            updateBoardMeta();
+          }
+        })
+        .catch(function () {});
+    }
+    function updateTimes() {
+      if (!listEl) return;
+      listEl.querySelectorAll('.wall-item-time[data-ts]').forEach(function (el) {
+        el.textContent = relTime(Number(el.getAttribute('data-ts')));
+      });
+    }
+    function refresh() { state.showNew = false; loadFirst(true, state.messages.length); }
+    function updateCount() {
+      if (!countEl) return;
+      var n = Array.from(textEl.value || '').length;
+      countEl.textContent = n + ' / 300';
+      countEl.classList.toggle('is-near', n > 270);
+    }
+
+    if (tipEl && T.tipText) setText(tipEl, T.tipText);
+    if (moreBtn && T.moreText) setText(moreBtn, T.moreText);
+
+    if (/^file:/.test(location.protocol)) {
+      state.mode = 'closed';
+      state.reason = 'file_protocol';
+      state.closedMsg = T.fileText || '本地双击打开时留言墙不可用，请用「本地预览.command」启动 HTTP 服务';
+      render();
+      return;
+    }
+
+    loadFirst(false);
+
+    if (refreshBtn) refreshBtn.addEventListener('click', refresh);
+    if (newBtn) newBtn.addEventListener('click', refresh);
+    if (moreBtn) moreBtn.addEventListener('click', loadMore);
+    if (listEl) listEl.addEventListener('click', function (e) {
+      if (e.target && e.target.id === 'wallRetry') loadFirst(false);
     });
+    if (textEl) textEl.addEventListener('input', updateCount);
+
+    function quickSubmit(e) {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+        e.preventDefault();
+        if (form.requestSubmit) form.requestSubmit();
+        else form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+      }
+    }
+    [nameEl, textEl].forEach(function (el) { if (el) el.addEventListener('keydown', quickSubmit); });
 
     form.addEventListener('submit', function (e) {
       e.preventDefault();
+      if (state.mode === 'closed') { showToast(T.closedText || '留言墙暂未开放', 'err'); return; }
+      if (state.busy) return;
       var text = String(textEl.value || '').trim();
-      if (!text) { showToast('先写点什么吧', 'err'); textEl.focus(); return; }
-      if (text.length < 2) { showToast('再多写两个字吧（至少 2 个字）', 'err'); textEl.focus(); return; }
+      if (!text) { showToast(T.emptyPostText || '先写点什么吧', 'err'); textEl.focus(); return; }
+      if (Array.from(text).length < 2) { showToast(T.shortText || '再多写两个字吧（至少 2 个字）', 'err'); textEl.focus(); return; }
       var name = String(nameEl.value || '').trim();
+      state.busy = true;
       submitBtn.disabled = true;
       var old = submitBtn.textContent;
       submitBtn.textContent = '发送中…';
+      updateBoardMeta();
       apiFetch('/api/wall', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: name, text: text })
       })
         .then(function (res) {
-          if (res.ok && res.body && res.body.ok) {
-            renderItems(res.body.messages);
+          var d = res.body || {};
+          if (res.ok && d.ok) {
+            applyPage(d, true);
+            var first = state.messages[0];
+            if (first && first.id) {
+              state.highlightId = first.id;
+              if (state.myIds.indexOf(first.id) < 0) state.myIds.push(first.id);
+              try { sessionStorage.setItem('cp-wall-myids', JSON.stringify(state.myIds.slice(-30))); } catch (err) {}
+            }
+            state.showNew = false;
             textEl.value = '';
             nameEl.value = '';
-            countEl.textContent = '0 / 300';
-            showToast('已贴上留言墙，感谢你的想法 ▶', 'ok');
+            updateCount();
+            showToast(d.duplicate ? (T.duplicateText || '这条留言刚刚已经贴过啦')
+              : (T.postOkText || '已贴上留言墙，感谢你的想法 ▶'), d.duplicate ? 'info' : 'ok');
+            render();
+            if (listEl && listEl.firstElementChild && listEl.firstElementChild.scrollIntoView) {
+              try { listEl.firstElementChild.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); } catch (err) {}
+            }
           } else {
-            showToast((res.body && res.body.message) || '留言失败，稍后再试', 'err');
+            var msg = d.message || T.postFailText || '留言失败，稍后再试';
+            if (res.status === 429 && d.retryAfter) {
+              msg += '（约 ' + Math.max(1, Math.ceil(Number(d.retryAfter) / 60)) + ' 分钟后）';
+            }
+            showToast(msg, 'err');
           }
         })
-        .catch(function () {
-          showToast('网络异常，留言未能发送', 'err');
-        })
+        .catch(function () { showToast(T.netFailText || '网络异常，留言未能发送', 'err'); })
         .then(function () {
-          submitBtn.disabled = false;
+          state.busy = false;
           submitBtn.textContent = old;
+          syncFormEnabled();
+          updateBoardMeta();
         });
+    });
+
+    setInterval(function () {
+      if (document.hidden || state.mode !== 'open') return;
+      updateTimes();
+      peek();
+    }, POLL_MS);
+    document.addEventListener('visibilitychange', function () {
+      if (!document.hidden && state.mode === 'open') peek();
     });
   }
 

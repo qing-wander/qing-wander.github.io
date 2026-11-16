@@ -15,7 +15,7 @@
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&display=swap"></noscript>
 <!-- 等宽英文字体本地自托管，不依赖境外 CDN -->
 <link rel="stylesheet" href="css/fonts.css?v=20261111a">
-<link rel="stylesheet" href="css/style.css?v=20261111c">
+<link rel="stylesheet" href="css/style.css?v=20261116a">
 <link rel="stylesheet" href="css/ai-skins.css?v=20261110b">
 <meta name="theme-color" content="#F3EEE2">
 <link rel="canonical" href="https://shenge-work.github.io/">
@@ -344,8 +344,25 @@
         <span class="wall-count" id="wallCount" aria-live="polite">0 / 300</span>
         <button class="wall-submit" type="submit" id="wallSubmit">贴上留言墙 ▶</button>
       </div>
+      <p class="wall-form-tip" id="wallFormTip">⌘ / Ctrl + Enter 快速提交 · 换行会保留</p>
     </form>
-    <div class="wall-list reveal" id="wallList" aria-live="polite"></div>
+    <div class="wall-board">
+      <div class="wall-board-head">
+        <span class="wall-board-title">WALL//FEED</span>
+        <span class="wall-board-count" id="wallTotal" aria-live="polite"></span>
+        <span class="wall-board-actions">
+          <button class="wall-new" type="button" id="wallNew" hidden>有新留言 ▲</button>
+          <button class="wall-refresh" type="button" id="wallRefresh" aria-label="刷新留言" title="刷新留言">
+            <span class="wall-refresh-icon" aria-hidden="true">↻</span> 刷新
+          </button>
+        </span>
+      </div>
+      <div class="wall-list reveal" id="wallList" aria-live="polite"></div>
+      <div class="wall-board-foot">
+        <button class="wall-more" type="button" id="wallMore" hidden>加载更早的留言 ▼</button>
+        <span class="wall-board-note" id="wallNote"></span>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -449,7 +466,7 @@
   <div class="ai-foot" aria-hidden="true">CLOUDBASE 云函数 · 静态 RAG · hy3 // 已接入</div>
 </aside>
 
-<script src="js/main.js?v=20261113d"></script>
+<script src="js/main.js?v=20261116a"></script>
 <script src="js/ai-skins.js?v=20261110d"></script>
 <script src="js/analytics.js" defer></script>
 <script src="js/visitor-count.js" defer></script>

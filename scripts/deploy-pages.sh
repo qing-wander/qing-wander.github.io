@@ -4,6 +4,8 @@
 # 用法：
 #   ./scripts/deploy-pages.sh              # 直接上传当前静态文件到 shenge-work 项目
 #   ./scripts/deploy-pages.sh --dry-run    # 只打印会传哪些文件，不真的部署
+#   WRANGLER_BIN=/path/to/wrangler.js ./scripts/deploy-pages.sh
+#                                         # npx 缓存损坏时直接指定已下载的 wrangler 入口
 #
 # 线上地址：
 #   生产环境  https://shenge-work.pages.dev
@@ -30,7 +32,7 @@ DRY_RUN=0
 for arg in "$@"; do
   case "$arg" in
     --dry-run) DRY_RUN=1 ;;
-    -h|--help) sed -n '2,16p' "$0"; exit 0 ;;
+    -h|--help) sed -n '2,17p' "$0"; exit 0 ;;
     *) echo "未知参数：$arg"; exit 2 ;;
   esac
 done
@@ -64,7 +66,14 @@ if [ -n "$BIG" ]; then
 fi
 
 echo "=== ② 前置检查：wrangler 登录状态"
-if ! npx --yes wrangler@latest whoami >/dev/null 2>&1; then
+# npx 缓存损坏（npm EIO / .bin rename 失败）时，可绕开 npx 直接指向已下载的
+# wrangler 入口 JS：WRANGLER_BIN=.../node_modules/wrangler/bin/wrangler.js ./scripts/deploy-pages.sh
+if [ -n "${WRANGLER_BIN:-}" ]; then
+  WRANGLER=(node "$WRANGLER_BIN")
+else
+  WRANGLER=(npx --yes wrangler@latest)
+fi
+if ! "${WRANGLER[@]}" whoami >/dev/null 2>&1; then
   echo "尚未登录 Cloudflare，先执行：npx wrangler login"
   exit 1
 fi
@@ -78,7 +87,7 @@ fi
 
 echo "=== ③ 部署到 Cloudflare Pages（项目 ${PROJECT} / 分支 ${BRANCH}）"
 # 在暂存目录里执行，wrangler 的 .wrangler 缓存就不会落到仓库根目录
-(cd "$STAGE" && npx --yes wrangler@latest pages deploy . \
+(cd "$STAGE" && "${WRANGLER[@]}" pages deploy . \
   --project-name="$PROJECT" \
   --branch="$BRANCH" \
   --commit-dirty=true)
@@ -91,5 +100,18 @@ for path in "" resume.html data/site-data.json css/style.css js/main.js; do
 done
 echo "本地首页 md5: $(md5 -q index.html)"
 echo "线上首页 md5: $(curl -sL --ipv4 -A "Mozilla/5.0" "$PROD" | md5 -q)"
+
+echo "=== ⑤ 留言墙接口自检（KV 绑定容易漏，部署后直接看结果）"
+WALL_STATE=$(curl -s -m 15 "${PROD}api/wall" | python3 -c \
+  'import sys,json
+try:
+    d=json.load(sys.stdin); print("true" if d.get("open") else "false (%s)" % (d.get("reason") or "unknown"))
+except Exception: print("unreachable")' 2>/dev/null || echo 'unreachable')
+echo "   /api/wall open=$WALL_STATE"
+if [ "$WALL_STATE" != "true" ]; then
+  echo "   ⚠ 留言墙未开放：Cloudflare Pages → Settings → Functions → KV namespace bindings"
+  echo "     添加变量名为 SITE_KV 的绑定，保存后重新部署（绑定变更不会热更新）。"
+  echo "     详见 docs/resume-delivery.md；一键自检：./scripts/wall-check.sh"
+fi
 echo
 echo "完成：$PROD"

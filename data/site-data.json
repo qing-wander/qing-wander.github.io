@@ -862,6 +862,27 @@
   "wall": {
     "lead": "不想直接联系我，又对我的经历或能力有想法？<strong>写在这里</strong>——留言公开可见，我看到都会回。",
     "emptyText": "墙上还没有留言，来做第一个写下想法的人 ▶",
-    "closedText": "留言墙暂未开放（存储配置中），有事请走联系方式"
+    "closedText": "留言墙暂未开放（站长还在配置存储），有事请走上面的联系方式 ▶",
+    "errorText": "留言没能加载出来",
+    "retryText": "重试",
+    "moreText": "加载更早的留言 ▼",
+    "moreLoadingText": "读取中…",
+    "newText": "有新留言 ▲",
+    "postOkText": "已贴上留言墙，感谢你的想法 ▶",
+    "duplicateText": "这条留言刚刚已经贴过啦",
+    "postFailText": "留言失败，稍后再试",
+    "netFailText": "网络异常，留言未能发送",
+    "fileText": "本地双击打开时留言墙不可用，请用「本地预览.command」启动 HTTP 服务",
+    "localText": "本地静态预览没有留言 API · 联调请运行 node scripts/dev-api-server.mjs 并打开 8877 端口",
+    "countText": "共 {n} 条留言",
+    "shownText": "已显示 {shown} / {total} 条",
+    "updatedText": "更新于 {time}",
+    "tipText": "⌘ / Ctrl + Enter 快速提交 · 换行会保留",
+    "shortText": "再多写两个字吧（至少 2 个字）",
+    "emptyPostText": "先写点什么吧",
+    "timeNow": "刚刚",
+    "timeMin": "{n} 分钟前",
+    "timeHour": "{n} 小时前",
+    "timeDay": "{n} 天前"
   }
 }
