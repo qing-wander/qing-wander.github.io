@@ -107,6 +107,7 @@ AI Agent 工程师求职个人网站：基于纯原生 HTML / CSS / JavaScript �
 ├── docs/ai-assistant-survey.md      # AI 简历问答后端（RAG）方案与实施
 ├── docs/cloudflare-pages-deploy.md  # Cloudflare Pages 备用托管说明
 ├── docs/resume-delivery.md          # 留言墙 / 简历转发的部署、自检与排障
+├── docs/TODO.md                     # 项目待办与未竟事项台账（唯一「还没做的事」清单）
 ├── worker/                 # 可选：自建 Cloudflare Worker 访客计数
 ├── .pages.yml              # Pages CMS 配置
 ├── .github/workflows/sync-site-data.yml  # JSON 变更后自动重建快照
@@ -162,6 +163,11 @@ python3 -m http.server 8000
 - 完整接入教程（注册 → 拿 ID → 填配置 → 验证 → 排障）：[docs/observability-and-cms.md](docs/observability-and-cms.md)
 - 只想快速跑通：看教程开头的「5 分钟最快路径」
 - 教程里的账号授权步骤**必须本人操作**（第三方登录与 GitHub App 授权弹窗无法代办）
+
+## 项目待办
+
+所有「还没做的事」集中登记在 [docs/TODO.md](docs/TODO.md)：含状态、影响、前置条件、执行步骤与验收标准，
+较大改动收尾时盘点一次。已决策暂缓的条目（如 Resend 发信域名验证）不是故障，别当 bug 修。
 
 ## 作者
 
