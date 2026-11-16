@@ -27,7 +27,7 @@ AI Agent 工程师求职个人网站：基于纯原生 HTML / CSS / JavaScript �
 | 关于我 ABOUT | 个人形象照 + 自我介绍 |
 | 求职意向 TARGET | 目标岗位与期望 |
 | 教育经历 EDUCATION | 全日制统招本科（中山大学新华学院 · 软件工程） |
-| 工作经历 EXPERIENCE | 进门财经 / Lessie / 房极客 / 丰速 / 周生生 |
+| 工作经历 EXPERIENCE | 进门财经 / Lessie / 房极客 / 周生生 |
 | 项目作品 WORKS | comein.cn / lessie.cn / hicreator.ai 等作品展示 |
 | 专业技能 SKILLS | 技能条可视化 |
 | 获奖证书 AWARDS | 证书图片展示 |
@@ -36,7 +36,7 @@ AI Agent 工程师求职个人网站：基于纯原生 HTML / CSS / JavaScript �
 ### 在线简历（resume.html）
 单页 ATS 友好简历，主要区块：
 - **个人优势**：跨语言复合背景、0→1 系统建设能力、Agent 工程化专精
-- **工作经历**：进门财经（AI 投研工作台）、Lessie（AI 人脉搜索引擎）、房极客（房地产 SaaS）、丰速（电商 SaaS）、周生生（CRM 平台）
+- **工作经历**：进门财经（AI 投研工作台）、Lessie（AI 人脉搜索引擎）、房极客（房地产 SaaS）、周生生（CRM 平台）
 - **项目经历**：comein.cn AI 投研工作台、lessie.cn AI 人脉搜索引擎、hicreator.ai 海外红人营销 SaaS（项目标题可点击直达官网）
 - **专业技能**：Agent/Harness、AI 驱动编程、数据与中间件、后端、前端、DevOps 六大分类（掌握层级两行式，ATS 友好）
 - **教育经历**：含学信网学历在线验证码区块 + 二维码扫码核验（有效期至 2027-04-29）

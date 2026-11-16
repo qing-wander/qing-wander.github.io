@@ -210,7 +210,7 @@ window.SITE_DATA = {
     {
       "company": "进门财经 · 深圳进门财经科技股份有限公司",
       "role": "机构金融投研 SaaS · Agent 工程师",
-      "time": "2026.01 — 2026.07（组织架构调整，团队缩编）",
+      "time": "2026.01 — 2026.07（组织架构调整）",
       "points": [
         "搭建 QwenPaw / OpenCode 集成与通用 Agent 基座，实现<strong>多租户云沙箱</strong>隔离环境，完成发布依赖管理、日志上报与 Agent / Skill 全生命周期管控。",
         "设计 <strong>MCP / Skill 统一能力扩展体系</strong>：能力注册、发现、调用、权限与版本全流程标准化，兼容 MCP 协议与外部 API，支持多模态能力接入。",
@@ -287,22 +287,6 @@ window.SITE_DATA = {
         },
         {
           "text": "MySQL"
-        }
-      ]
-    },
-    {
-      "company": "丰速 · 深圳丰速科技有限公司",
-      "role": "电商 SaaS（顺丰投资）· Java 开发工程师",
-      "time": "2023.07（公司搬迁苏州，仅工作两周）",
-      "points": [
-        "短期参与电商 ERP 与订单履约的需求梳理和研发交接，对接企得宝 ERP、易打单、速打等覆盖电商全链路的核心产品。"
-      ],
-      "tags": [
-        {
-          "text": "Java"
-        },
-        {
-          "text": "电商 ERP"
         }
       ]
     },
