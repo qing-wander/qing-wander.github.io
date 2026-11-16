@@ -49,13 +49,31 @@
 
 ## 站长需要做的一次性配置（约 10 分钟）
 
-### ① 注册 Resend（2 分钟）
+> **进度（2026-11-17）**：① 注册 / API Key、③ 环境变量、④ 部署均已做完，**只剩 ①b 验证发信域名**。
+> Cloudflare Pages 项目 `shenge-work` 的 Production 已配置 `RESEND_API_KEY`（Secret）、
+> `RESEND_FROM=Portfolio Resume <onboarding@resend.dev>`、`ALLOWED_ORIGINS`（含主站 / 备站 / 本地 8877），
+> 并保留 `SITE_KV` 绑定；变量修改后用 Cloudflare 的 **Retry deployment** 重新部署生效。
+> API Key 用的是 Resend onboarding 自动生成的「仅发信」受限 key（最小权限，不能读邮件 / 管域名）。
+>
+> 实测：`POST /api/deliver` → 账号邮箱 `shenge.work@gmail.com` 返回 `201 {"ok":true,"id":"01a1e59e-…"}`；
+> 发给其他邮箱被 Resend 以 403 拒绝，接口返回 `recipient_not_verified`，前端按设计切到 mailto 兜底。
+> **结论**：自动发信链路已通，但要让访客填任意邮箱都能收信，必须完成 ①b 并把 `RESEND_FROM`
+> 改成 `陈培胜简历 <resume@已验证域名>`（改完需再次重新部署）。
+>
+> **2026-11-17 站长决定：暂不配置域名**。当前保持「自动发信仅支持 `shenge.work@gmail.com`、
+> 其他邮箱走 mailto 兜底」的模式；以后要开放任意收件人，只需做 ①b + 改 `RESEND_FROM` + 重新部署，
+> 无需改动任何代码。
+
+### ① 注册 Resend（2 分钟）· ✅ 已完成
 
 1. 打开 https://resend.com/signup ，用 Google 账号（建议直接用 shenge.work@gmail.com）注册；
 2. 进入 Dashboard → **API Keys** → `Create API Key`，名字随意（如 `portfolio-deliver`），权限选默认的 `Full access`；
 3. 复制 `re_` 开头的 key（**只显示一次**），先存到本地记事本。
 
-### ①b 验证发信域名（要让任意收件人收到，必须做）
+### ①b 验证发信域名（要让任意收件人收到，必须做）· ⏸ 站长决定暂缓
+
+> 当前 Cloudflare 账号下没有任何 zone，Pages 项目也只有 `shenge-work.pages.dev`，GitHub Pages 未绑自定义域名：
+> 需要先有一个自有域名（任意注册商均可），才能做这一步。
 
 1. Resend Dashboard → **Domains** → `Add Domain`，填你已有的域名（如 `shenge.dev`），按提示加 DNS 记录（SPF / DKIM，通常 5 分钟生效）；
 2. 验证通过后，把 Pages 环境变量 `RESEND_FROM` 设为 `陈培胜简历 <resume@你的域名>`；
@@ -76,7 +94,7 @@
    - Variable name 填 **`SITE_KV`**（必须一字不差），KV namespace 选刚建的 `site-kv`，点 Save；
 4. **注意**：项目名不是 `shenge-work.pages.dev`，而是 Pages 里的项目 `shenge-work`。Preview 环境未绑定，预览部署的留言墙仍会显示关闭态（刻意如此，避免测试留言混入生产数据）。
 
-### ③ 配置环境变量（2 分钟）
+### ③ 配置环境变量（2 分钟）· ✅ 已完成
 
 同在 `shenge-work` 项目 → **Settings → Variables and Secrets** → 添加：
 
@@ -91,11 +109,15 @@
 > Secret 类型选「**Secret**」而不是「Text」，加密存储。
 > 配完点 `Save`。**Pages 变量/KV 绑定修改后需要重新部署才生效**（重新跑一次部署脚本，或 Pages 控制台 Deployments → … → Retry deployment）。
 
-### ④ 部署并验证（3 分钟）
+### ④ 部署并验证（3 分钟）· ✅ 已完成（Retry deployment）
 
 ```bash
 ./scripts/deploy-pages.sh          # 上传含 functions/api 的完整站点
 ```
+
+> Windows / Git Bash 上若缺 `rsync`、`md5`，不必补装：变量或绑定变更后可直接调用
+> Cloudflare API `POST /accounts/{account_id}/pages/projects/shenge-work/deployments/{deployment_id}/retry`
+> 重新部署（本次即如此，复用已登录的 wrangler OAuth 凭据）；只有函数代码有改动才需要完整上传。
 
 验证清单（浏览器直接访问）：
 
