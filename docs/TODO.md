@@ -118,8 +118,8 @@ curl -s -X POST https://shenge-work.pages.dev/api/deliver \
 **实测根因**：不是「代理不可达」，而是代理对 Git 的 HTTP/2 传输处理有问题——
 `git ls-remote` 与 `curl https://github.com/.../info/refs` 都返回 200，但 `git fetch`
 报 `Empty reply from server`。加 `-c http.version=HTTP/1.1` 后立刻成功。
-已写入本机 `.git/config`（`git config --local http.version HTTP/1.1`，**不入库**），
-此后直接 `git fetch` / `git push` 即可，无需带参数。
+已把两项参数写入本机 `.git/config`（**不入库**）：`http.version=HTTP/1.1` 与 `http.sslBackend=openssl`。
+后者同样必要：Windows Git 默认的 `schannel` 在 push 时会报 `failed to receive handshake`，换成 `openssl` 才成功。代理偶有波动（`CONNECT tunnel failed, response 502` / 超时），失败重试即可，不必回退到 API 通道。
 
 **实际执行步骤**：
 
@@ -135,7 +135,7 @@ git reset --mixed origin/main     # 只移动 refs + index，不动工作区
 
 **验收（已通过）**：
 - `git rev-parse HEAD` == `git rev-parse main` == `git rev-parse origin/main` == `941da91`，且仓库非 shallow；
-- `git push --dry-run origin main` 返回 `Everything up-to-date`（标准 push 通道恢复）；
+- `git push origin main` **实测成功**（`941da91..b9e5706`，本条记录即由标准通道推送），推送后 `HEAD` / `main` / `origin/main` 三者一致；
 - `git status` 从 17 项收敛到 **9 项**，且 5 个语音文件（`js/ai-voice.js`、
   `js/ai-voice-cloud.js`、`css/ai-voice.css`、`docs/ai-voice-survey.md`、
   `functions/tencent/tts.js`）全部识别为「已提交且内容一致」，不再显示 `??`；
