@@ -58,6 +58,7 @@
   var voiceURI = '';
   var rateDelta = 0;
   var voices = [];
+  var voicesBusy = false;          // loadVoices 重入保护（见下方注释）
   var cloudProvider = null;       // Phase 2：{ synth(text, opts) -> Promise<{src}> }
   var PENDING_NONE = {};
   var pendingProvider = PENDING_NONE;  // 播报中注册 provider：等这句念完再切，不打断
@@ -110,21 +111,32 @@
     return s;
   }
 
+  /* 重入保护：syncUI → voiceLabel → pickedVoice 会回调 loadVoices。
+     首次 getVoices() 为空 / 过滤后无中文音色时，旧实现在这里无限递归爆栈，
+     直接让整个 IIFE 中断、window.AIVoice 都挂不上（生产环境实测踩到过）。 */
   function loadVoices() {
-    var list = [];
-    try { list = synth.getVoices() || []; } catch (e) { list = []; }
-    var next = [];
-    for (var i = 0; i < list.length; i++) {
-      var v = list[i];
-      /* Edge 150 曾出现 "Microsoft undefined Online (Natural) - undefined" 残缺条目 */
-      if (!v || !v.name || !v.lang || /undefined/i.test(v.name)) continue;
-      var lang = String(v.lang).replace('_', '-').toLowerCase();
-      if (!/^zh/.test(lang) && !/chinese|中文|普通话|mandarin|cmn/i.test(v.name)) continue;
-      next.push({ v: v, score: scoreVoice(v) });
+    if (voicesBusy || !supported) return;
+    voicesBusy = true;
+    try {
+      var list = [];
+      try { list = synth.getVoices() || []; } catch (e) { list = []; }
+      var next = [];
+      for (var i = 0; i < list.length; i++) {
+        var v = list[i];
+        /* Edge 150 曾出现 "Microsoft undefined Online (Natural) - undefined" 残缺条目 */
+        if (!v || !v.name || !v.lang || /undefined/i.test(v.name)) continue;
+        var lang = String(v.lang).replace('_', '-').toLowerCase();
+        if (!/^zh/.test(lang) && !/chinese|中文|普通话|mandarin|cmn/i.test(v.name)) continue;
+        next.push({ v: v, score: scoreVoice(v) });
+      }
+      next.sort(function (a, b) { return b.score - a.score; });
+      voices = next;
+      /* 必须在 voicesBusy=true 期间调用：syncUI 经 voiceLabel → pickedVoice
+         会回调 loadVoices，此时被重入保护挡住，链条到此为止 */
+      syncUI();
+    } finally {
+      voicesBusy = false;
     }
-    next.sort(function (a, b) { return b.score - a.score; });
-    voices = next;
-    syncUI();
   }
 
   function pickedVoice() {
