@@ -9,14 +9,13 @@ AI Agent 工程师求职个人网站：基于纯原生 HTML / CSS / JavaScript �
 **备用线路（Cloudflare Pages，同一套静态文件）**
 - 作品集主页：https://shenge-work.pages.dev/
 - 在线简历：https://shenge-work.pages.dev/resume.html
-- 更新方式：项目已配 GitHub 数据源，但 **Cloudflare 的 GitHub App 尚未授权本仓库**，push 暂不会触发自动构建；目前由本机 launchd 每小时跑 `scripts/sync-pages-from-github.sh`，拉 `main` 最新提交直传 Pages
-  - 手动同步：`./scripts/sync-pages-from-github.sh --force`（`--check` 只看有没有新提交）
-  - 按本地工作区直传：`./scripts/deploy-pages.sh`（支持 `--dry-run`）
-  - 构建命令（启用自动构建后使用）：`mkdir -p dist && cp -r index.html resume.html css js data images videos assets favicon-64.png favicon.png dist/`，输出目录 `dist`
-- 想启用「push 即部署」：GitHub → Settings → Applications → Cloudflare Pages → `Configure` → 授权 `shenge-work.github.io` 仓库
+- 更新方式：**push 即部署已生效**（2026-11-17 实测：push 后约 3 秒触发 `github:push` 构建，`functions/` 照常编译，`/api/*` 不会丢）
+  - 兜底/紧急修复：`./scripts/sync-pages-from-github.sh --force`（`--check` 只看有没有新提交）、`./scripts/deploy-pages.sh`（按本地工作区直传，支持 `--dry-run`）
+  - launchd 每小时定时同步为**历史方案**，自动构建生效后不必再依赖本机开机
+  - 构建命令：`mkdir -p dist && cp -r index.html resume.html css js data images videos assets favicon-64.png favicon.png dist/`，输出目录 `dist`
 - 详细说明：[docs/cloudflare-pages-deploy.md](docs/cloudflare-pages-deploy.md)
 
-> 注意：Pages 只读取 GitHub 仓库的提交，本地改动必须 push 到 GitHub 才会同步；同步由本机定时任务完成，机器关机时会顺延到下次开机。
+> 注意：Pages 只读取 GitHub 仓库的提交，本地改动必须 push 到 GitHub 才会同步。
 
 ## 页面结构
 
@@ -98,6 +97,7 @@ AI Agent 工程师求职个人网站：基于纯原生 HTML / CSS / JavaScript �
 │   ├── ai-skins.css        # AI 助手角色皮肤样式
 │   └── ai-voice.css        # 语音开关 / 引导气泡 / 说话律动样式
 ├── assets/skins/           # 3D 模型 / model-viewer / AI 立绘 / 皮肤总览
+├── assets/vendor/          # 本地自托管第三方（html2canvas，简历长图用，不依赖境外 CDN）
 ├── data/
 │   ├── site-data.json      # 唯一编辑源：全部文案、项目、证书、联系方式
 │   └── site-data.js        # 自动生成的 window.SITE_DATA 快照（勿手改）
@@ -120,6 +120,7 @@ AI Agent 工程师求职个人网站：基于纯原生 HTML / CSS / JavaScript �
 ├── docs/cloudflare-pages-deploy.md  # Cloudflare Pages 备用托管说明
 ├── docs/resume-delivery.md          # 留言墙 / 简历转发的部署、自检与排障
 ├── docs/TODO.md                     # 项目待办与未竟事项台账（唯一「还没做的事」清单）
+├── docs/portfolio-capabilities-and-learnings.md  # 功能全景 / 收获 / 32 条经验 / 能力矩阵
 ├── worker/                 # 可选：自建 Cloudflare Worker 访客计数
 ├── .pages.yml              # Pages CMS 配置
 ├── .github/workflows/sync-site-data.yml  # JSON 变更后自动重建快照
@@ -175,6 +176,11 @@ python3 -m http.server 8000
 - 完整接入教程（注册 → 拿 ID → 填配置 → 验证 → 排障）：[docs/observability-and-cms.md](docs/observability-and-cms.md)
 - 只想快速跑通：看教程开头的「5 分钟最快路径」
 - 教程里的账号授权步骤**必须本人操作**（第三方登录与 GitHub App 授权弹窗无法代办）
+
+## 项目复盘
+
+功能全景、收获与经验沉淀见 [docs/portfolio-capabilities-and-learnings.md](docs/portfolio-capabilities-and-learnings.md)：
+六层功能地图、32 条「踩过才知道」的经验、能力矩阵（可直接用于简历/面试）、诚实缺口清单与下一步优先级。
 
 ## 项目待办
 

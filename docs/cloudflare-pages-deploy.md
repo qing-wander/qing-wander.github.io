@@ -5,35 +5,35 @@ GitHub Pages 之外的备用线路，同一套静态文件。当前线上地址�
 - 作品集主页：https://shenge-work.pages.dev/
 - 在线简历：https://shenge-work.pages.dev/resume.html
 
-## 当前实际形态（2026-11-11）
+## 当前实际形态（2026-11-18 实测）
 
-项目 `shenge-work` 已配置为 GitHub 数据源（`shenge-work/shenge-work.github.io`，生产分支 `main`），但 **Cloudflare 的 GitHub App 尚未授权该仓库**，所以 `push` 不会触发 Cloudflare 自动构建。
+项目 `shenge-work` 已配置为 GitHub 数据源（`shenge-work/shenge-work.github.io`，生产分支 `main`），
+**GitHub App 授权已生效，`push` 即触发自动构建**——这是当前主链路。
 
-实际生效的同步方式有两种：
+2026-11-17 实测证据（推翻 2026-11-11 版文档里「push 不会触发构建」的结论）：
 
-1. **本机 launchd 定时同步（当前生效）**
-   - 每小时跑一次 `scripts/sync-pages-from-github.sh`
-   - 通过 `api.github.com` 取 `main` 最新 commit，用 `codeload` 下 tar 包，只取静态资源直传 Pages
-   - 幂等：commit 未变则跳过；部署后逐文件比对 md5 一致才记录状态
-   - 日志：`~/Library/Logs/pages-sync.log`、`~/Library/Logs/pages-sync.err.log`
-   - 状态：`~/.local/state/pages-sync/shenge-work.last-commit`
-   - 停用：`launchctl bootout gui/$(id -u)/com.shenge.pages-sync`
+- 远端 commit `d5de5afe`（18:41:23Z）后 3 秒，Pages 产生 production 部署 `0a522e4f`（18:41:26Z）；
+- `deployment_trigger.type = github:push`，`commit_hash = d5de5afe…`，各 stage 全部 success；
+- 自动构建后线上 `GET /api/wall?peek=1` → `200 {"ok":true,"open":true}`；
+  `POST /api/deliver` → `400 bad_request`（正常参数校验），说明 `functions/` **没有被自动构建冲掉**，
+  仍被 Pages 编译成 Functions（虽然不进 `dist`）。
 
-2. **手动强制同步**
+保留的两条兜底通道（自动构建正常时不需要用）：
+
+1. **手动强制同步**（远端 main 直传，幂等）
    ```bash
    ./scripts/sync-pages-from-github.sh --force   # 忽略状态，立即按远端 main 部署
    ./scripts/sync-pages-from-github.sh --check   # 只看远端有无新提交
-   ./scripts/deploy-pages.sh                     # 按本地工作区直传（紧急修复用）
+   ./scripts/deploy-pages.sh                     # 按本地工作区直传（紧急修复用，支持 --dry-run）
    ```
+2. **本机 launchd 定时同步（历史方案，已不再是主链路）**
+   - 每小时跑一次 `scripts/sync-pages-from-github.sh`；commit 未变则跳过，部署后逐文件比对 md5
+   - 日志：`~/Library/Logs/pages-sync.log`、`~/Library/Logs/pages-sync.err.log`
+   - 状态：`~/.local/state/pages-sync/shenge-work.last-commit`
+   - 停用：`launchctl bootout gui/$(id -u)/com.shenge.pages-sync`
+   - 说明：该方案为「Cloudflare 未授权 GitHub App」时期的替代手段，当前机器/系统更换后无需再恢复
 
-## 想要「push 即部署」需做的两步
-
-到 GitHub 给 Cloudflare 的 App 授权本仓库（一次性）：
-
-1. 打开 https://github.com/settings/installations
-2. 找到 **Cloudflare Pages**，点 `Configure` → `Repository access` 选中 `shenge-work.github.io` → `Save`
-
-授权后 push 到 `main` 由 Cloudflare 直接构建，本机定时同步可停掉。
+> 结论：**改静态文件只需 push**；只有云函数（CloudBase）与 Pages 环境变量需要单独处理。
 
 ## 项目配置
 
@@ -53,11 +53,13 @@ GitHub Pages 之外的备用线路，同一套静态文件。当前线上地址�
 
 - 平台环境变量 `ALLOWED_ORIGINS`（逗号分隔）**优先于代码默认值**。当前线上已配置为：
   ```
-  https://shenge-work.github.io,https://shenge-work.pages.dev
+  https://shenge-work.github.io,https://shenge-work.pages.dev,*.shenge-work.pages.dev
   ```
-  实测两个域名均回显自身 ACAO，外来域名返回 403。
-- 代码默认值已包含 `https://shenge-work.github.io`、`https://shenge-work.pages.dev`，以及通配规则 `*.shenge-work.pages.dev`（覆盖每个 commit 的预览部署 `https://<commit>.shenge-work.pages.dev`）。
-- **通配规则要生效需要重新部署函数代码**：旧的线上包只做精确匹配，而环境变量又是精确列表，所以预览子域目前仍不放行。重传代码后，可直接把环境变量改回不设置（走代码默认值）或显式写入 `*.shenge-work.pages.dev`。
+  实测两个正式域名均回显自身 ACAO，外来域名返回 403。
+- 代码默认值同样包含 `https://shenge-work.github.io`、`https://shenge-work.pages.dev`，以及通配规则 `*.shenge-work.pages.dev`（覆盖每个 commit 的预览部署 `https://<commit>.shenge-work.pages.dev`）。
+- **通配规则需要「新代码 + 新配置」同时到位**：旧线上包只做精确匹配，而当时环境变量也是精确列表，所以预览子域曾一直 403。
+  2026-11-18 已在控制台把 `*.shenge-work.pages.dev` 写进环境变量（保存即生效，无需重新部署代码）；
+  若某次部署后预览域又变 403，先查环境变量是否被覆盖，再查函数包是否是旧版。
 
 ## 与 GitHub Pages 的关系
 

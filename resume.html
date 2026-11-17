@@ -959,11 +959,12 @@ window.addEventListener('afterprint', function () {
   }
 });
 
-/* 简历长图：按需加载 html2canvas，生成后先进入预览，预览内提供下载 / 取消 */
+/* 简历长图：按需加载 html2canvas（本地自托管，断网/境外 CDN 不可达也能用），
+   生成后先进入预览，预览内提供下载 / 取消 */
 function loadLongImageLib(cb, onFail) {
   if (window.html2canvas) { cb(); return; }
   var s = document.createElement('script');
-  s.src = 'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js';
+  s.src = 'assets/vendor/html2canvas.min.js?v=20261118a';
   s.onload = function () { cb(); };
   s.onerror = onFail;
   document.head.appendChild(s);
