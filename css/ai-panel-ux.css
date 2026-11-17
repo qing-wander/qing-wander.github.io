@@ -1,0 +1,86 @@
+/* ════════════════════════════════════════════════════════════
+   CP.AI 面板「窗口层」交互（放大 / 还原 / 一步关闭）
+   --------------------------------------------------------------
+   · 配套 js/ai-panel-ux.js；js/main.js 的问答逻辑零改动
+   · 放大 = 视口正中展开、四周留白，绝不 fullscreen
+   · × / Esc / 点遮罩都能一步关闭，关闭时自动复位成原本大小
+   · 角色让位规则在 css/ai-skins.css（body.ai-panel-open）
+   ════════════════════════════════════════════════════════════ */
+
+/* 头部留白副标题可压缩，保证三个窗口按钮在窄屏也不被挤掉 */
+.ai-head-sub { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ai-head-status { flex: 0 0 auto; }
+
+/* ── 头部放大 / 还原按钮：与语音开关、关闭按钮同规格 ── */
+.ai-win-btn {
+  display: flex; align-items: center; justify-content: center;
+  width: 26px; height: 26px; padding: 0; flex: 0 0 auto;
+  font-family: var(--font-mono); cursor: pointer;
+  background: transparent; color: var(--card);
+  border: 2px solid var(--card);
+  transition: background .12s ease, color .12s ease, transform .12s ease;
+}
+.ai-win-btn svg { width: 14px; height: 14px; display: block; }
+.ai-win-btn:hover { background: var(--orange); border-color: var(--orange); color: var(--card); transform: translate(-1px, -1px); }
+.ai-win-btn:active { transform: translate(1px, 1px); }
+.ai-panel.is-max .ai-win-btn { background: var(--blue); border-color: var(--blue); }
+.ai-panel.is-max .ai-win-btn:hover { background: var(--orange); border-color: var(--orange); }
+.ai-win-btn:focus-visible,
+.ai-close:focus-visible { outline: 3px solid var(--orange); outline-offset: 2px; }
+
+/* ── 放大态遮罩：只做视觉聚焦，点一下等于直接关闭 ── */
+.ai-panel-scrim {
+  position: fixed; inset: 0; z-index: 148;
+  background: rgba(var(--ink-rgb), .34);
+  cursor: pointer;
+  animation: aiScrimIn .2s ease-out both;
+}
+.ai-panel-scrim[hidden] { display: none !important; }
+@keyframes aiScrimIn { from { opacity: 0; } to { opacity: 1; } }
+
+/* ── 放大态：四边归零 + margin auto 居中 ──────────────────
+   不用 translate(-50%,-50%)，把 transform 完整留给入场动画，
+   这样 main.js 的 .opening 动画与放大动画互不打架。 */
+.ai-panel.is-max {
+  top: 0; right: 0; bottom: 0; left: 0;
+  margin: auto;
+  width: min(900px, calc(100vw - 72px));
+  max-width: none;
+  height: min(720px, calc(100vh - 72px));
+  box-shadow: 10px 10px 0 var(--blue);
+  animation: aiPanelMaxIn .22s cubic-bezier(.2, .9, .3, 1.1) both;
+}
+.ai-panel[hidden] { display: none !important; }
+@keyframes aiPanelMaxIn {
+  from { transform: scale(.965); opacity: .55; }
+  to { transform: none; opacity: 1; }
+}
+
+/* 大窗里把阅读宽度收住，避免气泡 / JD 结果卡被拉成一长条 */
+.ai-panel.is-max .ai-body { padding: 18px 22px; }
+.ai-panel.is-max .ai-msg { max-width: min(88%, 680px); }
+.ai-panel.is-max .ai-quick { padding-left: 22px; padding-right: 22px; }
+.ai-panel.is-max .ai-jd-card { max-width: min(100%, 760px); }
+.ai-panel.is-max .ai-jd-rows { max-height: min(56vh, 520px); }
+
+/* ── 移动端：窗口本就不大，放大只把它「居中 + 拉高」，仍留出四周 ── */
+@media (max-width: 620px) {
+  /* 状态灯 + 三个窗口按钮会把 mono 副标题挤成省略号：窄屏优先留副标题 */
+  .ai-head-status { display: none; }
+  .ai-panel.is-max {
+    width: calc(100vw - 24px);
+    height: min(88vh, calc(100vh - 32px));
+    box-shadow: 6px 6px 0 var(--blue);
+  }
+  .ai-panel.is-max .ai-body { padding: 14px; }
+  .ai-panel.is-max .ai-quick { padding-left: 14px; padding-right: 14px; }
+  .ai-panel.is-max .ai-jd-rows { max-height: min(52vh, 420px); }
+  .ai-panel-scrim { background: rgba(var(--ink-rgb), .42); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ai-panel.is-max, .ai-panel-scrim { animation: none; }
+}
+@media print {
+  .ai-panel-scrim, .ai-win-btn { display: none !important; }
+}

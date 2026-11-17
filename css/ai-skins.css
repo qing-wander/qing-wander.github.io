@@ -67,9 +67,9 @@ body.has-ai-skin .ai-fab-tip { bottom: 240px; right: 18px; }
 }
 .ai-stage-menu-btn:hover { background: var(--orange); transform: rotate(45deg); }
 
-/* 面板展开时把角色挪到面板左侧，保留表情状态联动 */
-body.ai-panel-open .ai-stage { right: 420px; bottom: 24px; }
-body.ai-panel-open .ai-stage-name { bottom: 2px; }
+/* 面板展开时角色完整让位：PC / 移动端统一隐藏，关闭后平滑淡入。
+   旧的「挪到面板左侧」会与放大后居中的大窗叠在一起，已废弃。 */
+body.ai-panel-open .ai-stage { opacity: 0; pointer-events: none; }
 
 /* ── 皮肤菜单小窗口 ───────────────────────────────────────── */
 .ai-skin-menu {
@@ -228,9 +228,6 @@ model-viewer.ai-mv {
 }
 
 /* ── 响应式 / 可访问性 ───────────────────────────────────── */
-@media (max-width: 900px) {
-  body.ai-panel-open .ai-stage { opacity: 0; pointer-events: none; }
-}
 @media (max-width: 560px) {
   .ai-stage { width: 140px; height: 168px; bottom: 12px; }
   .ai-skin-menu { right: 12px; left: 12px; bottom: 64px; width: auto; }
@@ -278,6 +275,5 @@ model-viewer.ai-mv {
 /* 桌宠会横向走动，名字牌移到卡片顶部、整体上抬，避免压住角色 */
 .ai-stage[data-skin="deskpet"] .ai-stage-name { top: 6px; bottom: auto; }
 .ai-stage[data-skin="deskpet"] .ai-skin-host { padding-bottom: 24px; }
-body.ai-panel-open .ai-stage[data-skin="deskpet"] .ai-stage-name { top: 6px; bottom: auto; }
 
 @media print { .ai-stage, .ai-skin-menu, .ai-stage-menu-btn { display: none !important; } }
