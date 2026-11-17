@@ -1,0 +1,38 @@
+name: tests
+
+# 纯函数回归：检索、JD 解析、输入拦截、脱敏
+# 这些是最容易被"改一个参数"改坏、又最难肉眼发现的部分；不依赖网络与云函数环境。
+
+on:
+  push:
+    paths:
+      - 'functions/**'
+      - 'scripts/build_kb.py'
+      - 'tests/**'
+      - '.github/workflows/test.yml'
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  unit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: 语法检查（前端与会话脚本）
+        run: |
+          for f in js/*.js functions/tencent/*.js functions/api/*.js worker/index.mjs scripts/*.mjs; do
+            node --check "$f" || { echo "::error::$f 语法错误"; exit 1; }
+          done
+
+      - name: 单元测试
+        run: node --test tests/*.test.mjs
+
+      - name: 知识库 idempotency
+        run: |
+          python3 scripts/build_kb.py --check
+          python3 scripts/sync_site_data.py --check

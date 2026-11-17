@@ -29,18 +29,28 @@ jobs:
           python-version: "3.11"
 
       - name: 重建知识库（零依赖，provider=tfidf）
-        run: python3 scripts/build_kb.py
+        # --sync-functions：同时更新函数包里的 kb/，否则线上回答会一直用旧档案
+        run: python3 scripts/build_kb.py --sync-functions
 
       - name: 隐私闸门 —— 产物中不允许出现手机号
         run: |
-          if grep -nE "(^|[^0-9])1[3-9][0-9]{9}([^0-9]|$)" knowledge/chunks.json knowledge/kb.js; then
+          if grep -nE "(^|[^0-9])1[3-9][0-9]{9}([^0-9]|$)" knowledge/chunks.json knowledge/kb.js functions/tencent/kb/chunks.json; then
             echo "::error::知识库中出现疑似手机号，已中止"
             exit 1
           fi
-          if grep -niE "tel:" knowledge/chunks.json knowledge/kb.js; then
+          if grep -niE "tel:" knowledge/chunks.json knowledge/kb.js functions/tencent/kb/chunks.json; then
             echo "::error::知识库中出现 tel: 直拨链接，已中止"
             exit 1
           fi
+
+      - name: 两份产物同源校验
+        run: |
+          for f in chunks.json vectors.json kb-meta.json; do
+            if ! cmp -s "knowledge/$f" "functions/tencent/kb/$f"; then
+              echo "::error::$f 未同步到函数包"
+              exit 1
+            fi
+          done
 
       - name: 幂等校验
         run: python3 scripts/build_kb.py --check
@@ -52,11 +62,11 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          if git diff --quiet -- knowledge/; then
+          if git diff --quiet -- knowledge/ functions/tencent/kb/; then
             echo "知识库无变化，跳过提交"
             exit 0
           fi
-          git add knowledge/
+          git add knowledge/ functions/tencent/kb/
           git commit -m "chore(kb): 由 site-data.json 重建知识库"
           # checkout 之后远端可能已被另一个 workflow 推过，直接 push 会被拒
           # （cannot lock ref ... expected <旧 sha>）。先 rebase 再推，失败重试。
