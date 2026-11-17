@@ -689,7 +689,7 @@
       endpoint: 'https://resume-ai-d9g7zghnxda2ee2cb-1307508155.ap-shanghai.app.tcloudbase.com/chat',
       timeout: 20000,       // 云函数执行超时 30s，前端留余量
       maxChars: 200,        // 与后端 MAX_QUESTION_CHARS 对齐
-      welcome: '你好，我是 CP.AI —— 陈培胜的档案问答助手。<br>后端跑在 <b>CloudBase 云函数</b>上：先用 TF-IDF 在 32 段简历切片里召回相关段落，再交给大模型受约束生成答案，每次回答都会标注依据来源。<br>可以问我项目细节、技术栈、工作经历。',
+      welcome: '你好，我是 CP.AI —— 陈培胜的档案问答助手。<br>后端跑在 <b>CloudBase 云函数</b>上：先用 TF-IDF 在简历档案切片里召回相关段落，再交给大模型受约束生成答案，每次回答都会标注依据来源。<br>可以问我项目细节、技术栈、工作经历。',
       quickQuestions: ['主导过哪些 0→1 系统？', 'Agent 架构经验？', '技术栈与方向？', '联系方式？'],
       /* ── 主动性：停留 10 秒仍未开口，就主动把问题递到手边 ── */
       autoDelay: 10000,             // 展开面板的时刻（毫秒）
@@ -824,7 +824,11 @@
         var m = data.match || {}, o = m.overall || {};
         var score = Math.max(0, Math.min(100, Number(o.score) || 0));
         var n = (m.rows && m.rows.length) || 0;
-        aiAppendMsg('bot', '覆盖度 <b>' + score + '/100</b>（' + esc(o.verdict || '已比对') + '），已逐条对照 ' + n + ' 条要求。完整对照表在下面 ↓');
+        var req = Number(data.meta && data.meta.requirements) || 0;
+        var coverage = req > n
+          ? 'JD 拆出 ' + req + ' 条要求，合并为 ' + n + ' 个需求点'
+          : '已逐条对照 ' + n + ' 个需求点';
+        aiAppendMsg('bot', '覆盖度 <b>' + score + '/100</b>（' + esc(o.verdict || '已比对') + '），' + coverage + '。完整对照表在下面 ↓');
         aiAppendJDCard(data, (Date.now() - started) / 1000);
       }).catch(function (err) {
         typing.remove();
@@ -858,7 +862,9 @@
               '<span class="s-g">缺口 ' + (stats.gap || 0) + '</span></div>' +
           '</div>' +
         '</div>' +
-        '<div class="ai-jd-meta">' + (meta.recalled || 0) + ' 段切片 · ' + (meta.requirements || 0) + ' 条需求 · ' + elapsed.toFixed(1) + 's</div>' +
+        '<div class="ai-jd-meta">' + (meta.recalled || 0) + ' 段切片 · ' +
+          (Number(meta.requirements) || rows.length) + ' 条要求 → ' + rows.length + ' 个需求点 · ' +
+          elapsed.toFixed(1) + 's</div>' +
         '<div class="ai-jd-rows">';
       rows.forEach(function (r, i) {
         var st = CN[r.status] ? r.status : 'partial';

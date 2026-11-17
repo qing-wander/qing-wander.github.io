@@ -45,7 +45,15 @@ var AI_BASE = (process.env.AI_BASE_URL ||
 var AI_KEY = process.env.AI_API_KEY || process.env.CLOUDBASE_APIKEY || '';
 var AI_MODEL = process.env.AI_MODEL || 'hy3';
 var LOG_ENABLED = String(process.env.LOG_ENABLED || 'true') !== 'false';
-var LOG_SALT = process.env.LOG_SALT || 'resume-ai-salt';
+/* IP 盐值：优先用显式配置；没配也不能退回固定常量（固定盐等于可逆向的伪匿名）。
+   退路依次是「由部署密钥派生」（同一部署内稳定、外部不可猜）和「实例级随机」。
+   实例级随机意味着冷启动后 ip_hash 会变，跨实例的日均计数随之重置——这是隐私优先的取舍。 */
+var LOG_SALT = (function () {
+  var explicit = String(process.env.LOG_SALT || '').trim();
+  if (explicit) return explicit;
+  if (AI_KEY) return 'ak|' + crypto.createHash('sha256').update(String(AI_KEY)).digest('hex').slice(0, 24);
+  return 'ephemeral|' + crypto.randomBytes(12).toString('hex');
+})();
 
 // D6 日志落库：PG 模式环境自动暴露 PostgREST，直接 POST 一行 payload(jsonb)，无需引入 SDK
 var RDB_LOG_URL = process.env.RDB_LOG_URL ||
@@ -90,17 +98,20 @@ function fallbackOrigin() {
 
 var MAX_QUESTION_CHARS = 200;
 var TOP_K = 4;
-var SCORE_FLOOR = 0.01;
+var SCORE_FLOOR = 0.05;         // 绝对下限：低于它连"弱相关"都算不上，交给关键词兜底
+var SCORE_KEEP_RATIO = 0.4;     // 相对下限：只保留接近 top1 的块，避免"矮子里拔将军"
 var MAX_ANSWER_CHARS = 700;
 var RATE_WINDOW_MS = 60 * 1000;
 var RATE_LIMIT_PER_WINDOW = 20;
 var RATE_LIMIT_PER_DAY = 200;
+/* 全站兜底额度：IP 维度可以被伪造/轮换绕过，这条不按 IP，只防「整站被打爆」 */
+var GLOBAL_LIMIT_PER_DAY = Number(process.env.GLOBAL_LIMIT_PER_DAY || 600);
 
 // JD 匹配（mode: 'jd'）：长文本 + 生成一整张表，成本高于单次问答，单独设一档额度
 var MIN_JD_CHARS = 30;
 var MAX_JD_CHARS = 1500;
 var JD_TOP_CHUNKS = 6;          // 送进提示词的档案切片数（全库 37 段）
-var JD_MAX_ROWS = 8;            // 对照表最多几行，与提示词约束一致
+var JD_MAX_ROWS = 10;           // 对照表最多几行，与提示词约束一致
 var JD_LIMIT_WINDOW_MS = 10 * 60 * 1000;
 var JD_LIMIT_PER_WINDOW = 4;    // 每 IP 10 分钟 4 次
 var JD_LIMIT_PER_DAY = 20;
@@ -167,7 +178,7 @@ function tokenize(text) {
   return out;
 }
 
-/** 查询向量（L2 归一化），返回 { vec, hits } */
+/** 查询向量（L2 归一化），返回 { vec, hits, terms } */
 function queryVector(text, kb) {
   var toks = tokenize(text);
   var cnt = Object.create(null);
@@ -185,13 +196,38 @@ function queryVector(text, kb) {
   for (var j = 0; j < vec.length; j++) norm += vec[j] * vec[j];
   norm = Math.sqrt(norm);
   if (norm > 0) for (var n = 0; n < vec.length; n++) vec[n] = vec[n] / norm;
-  return { vec: vec, hits: total };
+  return { vec: vec, hits: total, terms: toks };
+}
+
+/** 标题命中加权：块标题（项目名/公司名）是简历检索里最强的信号 */
+function titleBoost(terms, title) {
+  if (!terms || !terms.length) return 1;
+  var low = String(title || '').toLowerCase();
+  var seen = Object.create(null);
+  var matched = 0;
+  for (var i = 0; i < terms.length; i++) {
+    var t = terms[i].charAt(0) === '#' ? terms[i].slice(1) : terms[i];
+    if (!t || seen[t]) continue;
+    seen[t] = 1;
+    if (low.indexOf(t) !== -1) matched++;
+  }
+  if (!matched) return 1;
+  return Math.min(1.45, 1 + 0.12 * matched);
 }
 
 /** 关键词兜底：按 query bigram 在块内的命中比例打分（与前端 provider=none 同一算法） */
 function keywordScore(text, kb, topk) {
-  var terms = tokenize(text);
-  if (!terms.length) return [];
+  var raw = tokenize(text);
+  if (!raw.length) return [];
+  /* 去重：同一 bigram 重复出现不代表更强相关；单字命中也不足为据 */
+  var seen = Object.create(null);
+  var terms = [];
+  for (var s = 0; s < raw.length; s++) {
+    if (seen[raw[s]]) continue;
+    seen[raw[s]] = 1;
+    terms.push(raw[s]);
+  }
+  var minHits = Math.min(2, terms.length);
   var hits = [];
   for (var i = 0; i < kb.chunks.length; i++) {
     var low = String(kb.chunks[i].text).toLowerCase();
@@ -199,29 +235,75 @@ function keywordScore(text, kb, topk) {
     for (var t = 0; t < terms.length; t++) {
       var term = terms[t];
       if (term.charAt(0) === '#') term = term.slice(1);
-      if (low.indexOf(term) !== -1) n++;
+      if (term && term.length > 1 && low.indexOf(term) !== -1) n++;
     }
-    if (n) hits.push({ score: n / terms.length, id: kb.chunks[i].id });
+    if (n >= minHits && n) hits.push({ score: n / terms.length, id: kb.chunks[i].id });
   }
   hits.sort(function (a, b) { return b.score - a.score; });
   return hits.slice(0, topk || TOP_K);
 }
 
-function retrieve(question) {
+/**
+ * 章节意图：简历问答里「教育背景 / 联系方式 / 技术栈」这类词，在切片正文里往往
+ * 根本没有同名字面（education 段写的是学校名和课程），纯词面检索必然落空。
+ * 这里把常见问法映射到切片的 section，命中时给一个小加成，兜住这类"词面缺口"。
+ */
+var SECTION_HINTS = [
+  { section: 'education', terms: ['教育', '学历', '毕业', '院校', '大学', '奖学金', '成绩'] },
+  { section: 'contact', terms: ['联系', '邮箱', '邮件', '微信', '电话'] },
+  { section: 'skills', terms: ['技能', '技术栈', '会什么', '语言', '框架', '工具'] },
+  { section: 'awards', terms: ['证书', '获奖', '荣誉', '职称'] },
+  { section: 'works', terms: ['作品', '开源', '个人项目', '作品集'] },
+  { section: 'projects', terms: ['项目', '系统', '架构', '业务'] },
+  { section: 'experience', terms: ['工作', '公司', '任职', '在职', '离职', '经历'] },
+  { section: 'about', terms: ['自我介绍', '你是谁', '简单介绍'] }
+];
+var SECTION_BONUS = 0.06;
+
+function sectionHint(text) {
+  var low = String(text || '').toLowerCase();
+  for (var i = 0; i < SECTION_HINTS.length; i++) {
+    var terms = SECTION_HINTS[i].terms;
+    for (var j = 0; j < terms.length; j++) {
+      if (low.indexOf(terms[j]) !== -1) return SECTION_HINTS[i].section;
+    }
+  }
+  return '';
+}
+
+/**
+ * 检索：稀疏点积 + 标题加权 + 章节意图 → 去掉 0 分块 → 绝对/相对双阈值 → Top-K。
+ * opts.relaxed 给 JD 逐条召回用：单条需求往往只有两三个词，按问答口径会被卡掉。
+ */
+function retrieve(question, opts) {
   var kb = loadKB();
+  var relaxed = !!(opts && opts.relaxed);
   var q = queryVector(question, kb);
+  var hint = sectionHint(question);
   var top = [];
-  if (q.hits > 0) {
+  if (q.hits > 0 || hint) {
     for (var i = 0; i < kb.items.length; i++) {
       var item = kb.items[i];
       var s = 0;
       for (var k = 0; k < item.idx.length; k++) s += q.vec[item.idx[k]] * (item.val[k] / kb.scale);
+      var ch = kb.byId[item.id];
+      if (!ch) continue;
+      if (hint && ch.section === hint) s += SECTION_BONUS;   // 词面缺口：靠章节意图兜住
+      if (s <= 0) continue;                                  // 0 分块没有信息量，绝不放进"依据"
+      s = s * titleBoost(q.terms, ch.title);
       top.push({ score: s, id: item.id });
     }
     top.sort(function (a, b) { return b.score - a.score; });
-    top = top.slice(0, TOP_K);
+    var best = top.length ? top[0].score : 0;
+    var absFloor = relaxed ? 0.04 : SCORE_FLOOR;
+    var keepFloor = Math.max(absFloor, best * (relaxed ? 0.3 : SCORE_KEEP_RATIO));
+    if (best < absFloor) {
+      top = [];
+    } else {
+      top = top.filter(function (h) { return h.score >= keepFloor; }).slice(0, TOP_K);
+    }
   }
-  if (!top.length || top[0].score < SCORE_FLOOR) {
+  if (!top.length) {
     var kw = keywordScore(question, kb, TOP_K);
     if (!kw.length) return { hits: [], fallback: true, top1: 0, vocabHits: q.hits };
     return { hits: kw, fallback: true, top1: kw[0].score, vocabHits: q.hits };
@@ -282,9 +364,9 @@ function jdChunkWeight(id) {
 function retrieveForJD(jd, requirements) {
   var merged = Object.create(null);
   for (var i = 0; i < requirements.length; i++) {
-    mergeHits(merged, retrieve(requirements[i]).hits);
+    mergeHits(merged, retrieve(requirements[i], { relaxed: true }).hits);
   }
-  mergeHits(merged, retrieve(String(jd).slice(0, 600)).hits);
+  mergeHits(merged, retrieve(String(jd).slice(0, 600), { relaxed: true }).hits);
   var list = [];
   for (var id in merged) list.push({ id: id, score: merged[id] });
   list.sort(function (a, b) { return b.score - a.score; });
@@ -308,6 +390,11 @@ function oneLine(v, max) {
   var s = String(v == null ? '' : v).replace(/[\r\n\t]+/g, ' ').replace(/\s{2,}/g, ' ').trim();
   if (s.length > max) s = s.slice(0, max) + '…';
   return s;
+}
+
+/** JD 留痕只存哈希：正文不入库，与页面对外承诺一致（也便于按同一份 JD 做去重统计） */
+function jdTag(jd) {
+  return 'jd:' + crypto.createHash('sha256').update(String(jd || '')).digest('hex').slice(0, 10);
 }
 
 /** 模型可能把 [proj-p02-03] 或标题当成 src，两种都认，认不出就不收这条证据 */
@@ -520,6 +607,19 @@ async function rateCheck(iph) {
   return { blocked: false, count: mem.count };
 }
 
+/* 全站日额度：IP 维度可能被伪造，这条不按 IP，只在整站被刷爆时熔断 */
+var globalBucket = { dayKey: '', count: 0 };
+
+function globalQuota() {
+  var day = new Date().toISOString().slice(0, 10);
+  if (globalBucket.dayKey !== day) {
+    globalBucket.dayKey = day;
+    globalBucket.count = 0;
+  }
+  globalBucket.count++;
+  return { blocked: globalBucket.count > GLOBAL_LIMIT_PER_DAY, count: globalBucket.count };
+}
+
 // JD 匹配在问答限流之外再收一道：一次请求要读完 1500 字并生成整张表，
 // 成本是单次问答的数倍，只靠 20 次/分钟挡不住脚本刷额度。
 var jdBuckets = Object.create(null);
@@ -543,6 +643,18 @@ function jdQuota(key) {
   };
 }
 
+/**
+ * 额度退款：解析失败 / 上游 5xx / 召回为空 都没拿到结果，不该记在用户头上。
+ * 只退不减到负数，且窗口必须仍属于当前窗口（跨窗口时旧账已清零，无需退）。
+ */
+function jdQuotaRefund(key) {
+  var b = jdBuckets[key];
+  if (!b) return;
+  if (Date.now() - b.windowStart > JD_LIMIT_WINDOW_MS) return;
+  if (b.count > 0) b.count--;
+  if (b.dayCount > 0) b.dayCount--;
+}
+
 // ---------------------------------------------------------------- HTTP 适配
 
 function headerOf(headers, name) {
@@ -554,11 +666,22 @@ function headerOf(headers, name) {
   return '';
 }
 
+/**
+ * 取客户端 IP：
+ * 1) 平台注入的单值头（x-real-ip / x-client-ip / cf-connecting-ip）最可信；
+ * 2) X-Forwarded-For 只认**最后一跳**（网关追加的那一段），首段是客户端自填的，可伪造；
+ * 3) 都没有才退回运行时给的 clientIP。
+ */
 function clientIp(event, headers) {
+  var direct = headerOf(headers, 'x-real-ip') ||
+    headerOf(headers, 'x-client-ip') ||
+    headerOf(headers, 'cf-connecting-ip');
+  if (direct) return String(direct).split(',')[0].trim();
   var xff = headerOf(headers, 'x-forwarded-for');
-  if (xff) return xff.split(',')[0].trim();
-  var real = headerOf(headers, 'x-real-ip');
-  if (real) return real;
+  if (xff) {
+    var list = String(xff).split(',').map(function (s) { return s.trim(); }).filter(Boolean);
+    if (list.length) return list[list.length - 1];
+  }
   return event.clientIP || event.clientIp || 'unknown';
 }
 
@@ -682,13 +805,18 @@ async function handleJD(body, origin, iph, started) {
     logLine({ ts: started, origin: origin, ip_hash: iph, q: '', a: '', channel: 'tencent', tag: 'jd', blocked: 'rate_limited:' + rl.reason, count: rl.count });
     return reply(429, origin, { ok: false, error: 'rate_limited', message: '请求有点急，稍等几秒再试' });
   }
+  var gq = globalQuota();
+  if (gq.blocked) {
+    logLine({ ts: started, origin: origin, ip_hash: iph, q: '', a: '', channel: 'tencent', tag: 'jd', blocked: 'global_day', count: gq.count });
+    return reply(429, origin, { ok: false, error: 'rate_limited', message: '今天的 JD 匹配额度用完了，明天再来，或直接邮件联系' });
+  }
 
   /* JD 是文档不是提问：不做「越界/敏感」拦截（JD 里出现「薪资」很正常），
      只拦提示注入——它是唯一会改写上面系统规则的东西。
      注入检查放在额度扣减之前：被拦掉的请求不该占用人家的次数。 */
   var cls = promptLib.classifyInput(jd.slice(0, 300));
   if (cls.action === 'suspect') {
-    logLine({ ts: started, origin: origin, ip_hash: iph, q: oneLine(jd, 200), a: '', channel: 'tencent', tag: 'jd', blocked: 'injection:' + cls.reason, latency_ms: Date.now() - started });
+    logLine({ ts: started, origin: origin, ip_hash: iph, q: jdTag(jd), a: '', channel: 'tencent', tag: 'jd', blocked: 'injection:' + cls.reason, latency_ms: Date.now() - started });
     return reply(400, origin, { ok: false, error: 'bad_request', message: 'JD 里包含指令性内容，已停止处理' });
   }
 
@@ -702,6 +830,7 @@ async function handleJD(body, origin, iph, started) {
   }
 
   if (!AI_KEY) {
+    jdQuotaRefund(iph);
     return reply(500, origin, { ok: false, error: 'server_misconfig', message: '函数缺少 AI_API_KEY 环境变量' });
   }
 
@@ -711,6 +840,7 @@ async function handleJD(body, origin, iph, started) {
     requirements = splitRequirements(jd);
     top = retrieveForJD(jd, requirements);
   } catch (e) {
+    jdQuotaRefund(iph);
     return reply(500, origin, { ok: false, error: 'kb_error', message: '知识库装载失败' });
   }
 
@@ -723,7 +853,8 @@ async function handleJD(body, origin, iph, started) {
     sources.push({ id: ch.id, title: ch.title, score: Number(top[i].score.toFixed(4)) });
   }
   if (!ctxChunks.length) {
-    logLine({ ts: started, origin: origin, ip_hash: iph, q: oneLine(jd, 200), a: '', channel: 'tencent', tag: 'jd', latency_ms: Date.now() - started, model_called: false });
+    jdQuotaRefund(iph);
+    logLine({ ts: started, origin: origin, ip_hash: iph, q: jdTag(jd), a: '', channel: 'tencent', tag: 'jd', latency_ms: Date.now() - started, model_called: false });
     return reply(200, origin, { ok: false, error: 'no_match', message: '档案里找不到与这份 JD 相关的资料，换个岗位试试' });
   }
 
@@ -742,8 +873,9 @@ async function handleJD(body, origin, iph, started) {
 
   var match = answer ? parseJDAnswer(answer, kb) : null;
   if (!match) {
+    jdQuotaRefund(iph);   // 模型没按结构输出属于我方失败，不占用户额度
     logLine({
-      ts: started, origin: origin, ip_hash: iph, q: oneLine(jd, 300), a: oneLine(answer, 300),
+      ts: started, origin: origin, ip_hash: iph, q: jdTag(jd), a: '',
       channel: 'tencent', tag: 'jd', top_ids: ctxChunks.map(function (c) { return c.id; }),
       top1_score: top.length ? top[0].score : 0, fallback: false,
       latency_ms: Date.now() - started, model_called: true, model: AI_MODEL, blocked: 'parse_failed'
@@ -753,8 +885,8 @@ async function handleJD(body, origin, iph, started) {
 
   logLine({
     ts: started, origin: origin, ip_hash: iph,
-    q: oneLine(jd, 300),
-    a: match.overall.summary || (match.overall.score + ' 分 / ' + match.overall.verdict),
+    q: jdTag(jd),
+    a: match.overall.score + ' 分 / ' + match.overall.verdict,
     channel: 'tencent', tag: 'jd', top_ids: ctxChunks.map(function (c) { return c.id; }),
     top1_score: top.length ? top[0].score : 0, fallback: false,
     latency_ms: Date.now() - started, model_called: true, model: AI_MODEL
@@ -767,7 +899,8 @@ async function handleJD(body, origin, iph, started) {
     sources: sources,
     meta: {
       jd_chars: jd.length,
-      requirements: requirements.length,
+      requirements: requirements.length,   // JD 拆出的原始条目数
+      merged: match.rows.length,           // 对照表实际行数（同义需求已合并）
       recalled: ctxChunks.length,
       latency_ms: Date.now() - started
     }
@@ -918,6 +1051,14 @@ exports.main = async function (event) {
     });
     return reply(429, origin, { ok: false, error: 'rate_limited', message: '问得有点快，稍等几秒再试' });
   }
+  var gq = globalQuota();
+  if (gq.blocked) {
+    logLine({
+      ts: started, origin: origin, ip_hash: iph, q: '', a: '', channel: 'tencent',
+      tag: 'rate_limited', blocked: 'global_day', count: gq.count
+    });
+    return reply(429, origin, { ok: false, error: 'rate_limited', message: '今天的问答额度用完了，明天再来，或直接邮件联系' });
+  }
 
   var cls = promptLib.classifyInput(question);
   var suspect = cls.action === 'suspect';
@@ -985,8 +1126,13 @@ exports.main = async function (event) {
 exports._internal = {
   splitRequirements: splitRequirements,
   retrieveForJD: retrieveForJD,
+  retrieve: retrieve,
   parseJDAnswer: parseJDAnswer,
   groundRatio: groundRatio,
+  titleBoost: titleBoost,
+  keywordScore: keywordScore,
+  clientIp: clientIp,
+  jdTag: jdTag,
   loadKB: loadKB
 };
 

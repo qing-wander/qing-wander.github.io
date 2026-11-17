@@ -245,7 +245,7 @@
 
   <p class="jd-lead reveal">
     把在招岗位的 JD 贴进来，一分钟后拿到一张对照表：<b>每条要求落在哪段经历、缺口在哪、面试能顺着问什么</b>。
-    这张表由本站自己的 RAG Agent 生成 —— JD 先拆成需求条目，逐条在 37 段档案切片里召回，模型只允许引用召回原文作答。
+    这张表由本站自己的 RAG Agent 生成 —— JD 先拆成需求条目，逐条在简历档案切片里召回，模型只允许引用召回原文作答。
   </p>
 
   <div class="jd-wrap">
@@ -268,7 +268,7 @@
           <button class="jd-chip" type="button" data-jd-sample="solution">AI 解决方案</button>
         </div>
       </div>
-      <p class="jd-form-tip" id="jdTip">⌘ / Ctrl + Enter 提交 · 单次 1500 字 · 每人 10 分钟 4 次 · JD 不入库，只留脱敏摘要</p>
+      <p class="jd-form-tip" id="jdTip">⌘ / Ctrl + Enter 提交 · 单次 1500 字 · 每人 10 分钟 4 次 · JD 正文不入库，只留哈希留痕</p>
     </form>
 
     <div class="jd-stage reveal" id="jdStage" role="region" aria-label="岗位匹配结果">
@@ -279,7 +279,7 @@
         </div>
         <ol class="jd-steps">
           <li><span class="jd-step-no">01</span><div><b>拆需求</b><p>按行与分号把 JD 切成条目，去掉序号和套话，最多 14 条。</p></div></li>
-          <li><span class="jd-step-no">02</span><div><b>召回档案</b><p>每条需求在 37 段简历切片上做 TF-IDF 检索，项目与工作经历优先，取 6 段进上下文。</p></div></li>
+          <li><span class="jd-step-no">02</span><div><b>召回档案</b><p>每条需求在简历档案切片上做 TF-IDF 检索，项目与工作经历优先，取 6 段进上下文。</p></div></li>
           <li><span class="jd-step-no">03</span><div><b>约束输出</b><p>模型只能引用召回原文，按固定结构输出覆盖 / 部分 / 缺口与追问点，证据带出处。</p></div></li>
         </ol>
         <p class="jd-empty-note">左侧贴 JD 或点一个示例，结果会显示在这里。</p>
@@ -287,7 +287,7 @@
           <li>单次 ≤ 1500 字</li>
           <li>10 分钟 4 次</li>
           <li>证据带出处</li>
-          <li>JD 不入库</li>
+          <li>JD 正文不入库</li>
         </ul>
       </div>
     </div>

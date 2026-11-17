@@ -2,7 +2,7 @@
    岗位匹配 / JD MATCH · 招聘方视角的对照表
    ────────────────────────────────────────────────────────
    数据链路：本页表单 → 云函数 POST { mode:'jd', jd }
-            → 拆需求 / 逐条 TF-IDF 召回 37 段档案切片
+            → 拆需求 / 逐条 TF-IDF 召回档案切片
             → 模型按固定结构输出 → 前端渲染对照表
    端点与问答助手共用（window.CP_AI_ENDPOINT，见 js/main.js 第 11 节），
    不额外引入后端；额度、长度与降级都在云函数侧兜底。
@@ -215,7 +215,7 @@
         '<div class="jd-progress" aria-hidden="true"><i></i></div>' +
         '<ul class="jd-loading-steps">' +
           '<li>拆解 JD 需求条目</li>' +
-          '<li>在 37 段档案切片上召回</li>' +
+          '<li>在档案切片上召回</li>' +
           '<li>约束模型按结构输出对照表</li>' +
         '</ul>' +
         '<p class="jd-loading-note">首次调用可能冷启动，一般 8–20 秒；生成的是对照表，不是小作文。</p>' +
@@ -300,7 +300,9 @@
             '<div class="jd-summary-top">' +
               '<span class="tag ' + tagCls + '">' + esc(o.verdict || '已比对') + '</span>' +
               '<span class="jd-summary-meta">' +
-                (meta.recalled || 0) + ' 段切片 · ' + (meta.requirements || 0) + ' 条需求 · ' +
+                (meta.recalled || 0) + ' 段切片 · ' +
+                (meta.requirements || 0) + ' 条需求' +
+                (meta.merged && meta.merged !== meta.requirements ? ' → ' + meta.merged + ' 个需求点' : '') + ' · ' +
                 state.elapsed.toFixed(1) + 's' +
               '</span>' +
             '</div>' +
