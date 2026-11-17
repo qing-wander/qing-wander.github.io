@@ -1564,20 +1564,56 @@
 
   /* ══════════════ 视口自适应 ══════════════
      1) --vw-real：真实内容视口宽度（排除 Windows 经典滚动条），供全幅区块使用
-     2) 顶栏溢出兜底：字体放大 / 浏览器缩放 / 文案变长导致内容仍放不下时，
-        自动收起横向导航、启用汉堡菜单，保证任何屏幕尺寸都不出现横向裁切
-     测量前先移除 .bar-tight，避免紧凑状态自身影响判断而反复抖动。 */
+     2) 顶栏导航逐项退让：以右侧「分享 / 访问统计」区左边界为界，凡是被它遮住、
+        无法完整显示的导航项一律隐藏；能完整显示几项就留几项（从最右侧起让位）。
+        一项都放不下时才整体收成汉堡菜单，并在菜单里恢复全部入口。
+        字体放大 / 浏览器缩放 / 翻译变长都走同一套几何判断，任何屏幕都不横向裁切。
+     3) 裁决前先移除 .bar-tight 与隐藏标记，避免上一轮结果影响本轮判断而抖动。 */
   function syncResponsiveGuard() {
     var root = document.documentElement;
     var bar = document.querySelector('.topbar-inner');
     root.style.setProperty('--vw-real', root.clientWidth + 'px');
     if (!bar) return;
+    var nav = document.getElementById('nav');
+    var rightArea = document.querySelector('.topbar-right');
+    var items = nav ? Array.prototype.slice.call(nav.querySelectorAll('a')) : [];
+    if (!items.length) return;
+
+    /* 复位：全部显示，按真实布局重新裁决 */
     document.body.classList.remove('bar-tight');
-    if (bar.scrollWidth > bar.clientWidth + 1) {
+    for (var i = 0; i < items.length; i++) items[i].classList.remove('nav-item-hidden');
+
+    /* 汉堡菜单展开时为竖排，逐项裁剪无意义且会误伤菜单里的入口，直接跳过 */
+    if (window.getComputedStyle(nav).flexDirection === 'column') return;
+
+    /* 分享 / 计数区左边界即「完整显示」的右极限；取不到则退回顶栏右内缘 */
+    var limit = rightArea ? rightArea.getBoundingClientRect().left
+                          : bar.getBoundingClientRect().right - 12;
+    var tolerance = 1;
+
+    function visibleItems() {
+      return items.filter(function (a) { return !a.classList.contains('nav-item-hidden'); });
+    }
+    /* 当前最右侧仍越界的那一项；都在界内则返回 null */
+    function rightmostCovered() {
+      var vis = visibleItems();
+      if (!vis.length) return null;
+      var last = vis[vis.length - 1];
+      return last.getBoundingClientRect().right > limit - tolerance ? last : null;
+    }
+
+    /* 从最右侧起逐项隐藏被遮住的导航项；隐藏后布局重排，循环内重新测量 */
+    var covered;
+    while ((covered = rightmostCovered())) {
+      covered.classList.add('nav-item-hidden');
+    }
+
+    /* 一项都放不下 → 收成汉堡菜单，并在菜单里恢复全部入口 */
+    if (!visibleItems().length) {
+      for (var j = 0; j < items.length; j++) items[j].classList.remove('nav-item-hidden');
       document.body.classList.add('bar-tight');
-      var navEl = document.getElementById('nav');
       var menuEl = document.getElementById('menuBtn');
-      if (navEl && !navEl.classList.contains('open') && menuEl) {
+      if (menuEl) {
         menuEl.classList.remove('open');
         menuEl.setAttribute('aria-expanded', 'false');
       }

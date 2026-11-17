@@ -254,6 +254,10 @@ button { font-family: inherit; cursor: pointer; }
 /* 1281–1600 中等桌面的顶栏瘦身规则放在文件末尾（须晚于 .status-pill /
    .hit-counter-head 等基础声明，否则会被同特异性的 display 覆盖）。 */
 
+/* 导航项被右侧分享/计数区遮住时的统一退让：JS 逐项标记隐藏，
+   能完整显示几项就留几项；汉堡菜单展开时全部无条件恢复，入口不丢。 */
+.nav a.nav-item-hidden { display: none; }
+
 /* 顶栏空间兜底：字体异常放大、浏览器缩放、翻译导致文案变长时，
    由 js/main.js 检测溢出后给 body 加 .bar-tight，收起横向导航改用汉堡菜单 */
 body.bar-tight .nav:not(.open) { display: none; }
