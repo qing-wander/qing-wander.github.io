@@ -100,7 +100,7 @@ index.html  ── 只加 2 条引用 ──┐
 │  ├ ② 文本清洗：HTML → 口语化纯文本                     │
 │  ├ ③ 语音队列：选音色 → 分句 → 链式播放 → 看门狗        │
 │  ├ ④ 解锁状态机：activation / 补播 / CTA               │
-│  ├ ⑤ UI：面板头开关 + 右下角 dock + 首次引导气泡         │
+│  ├ ⑤ UI：面板头开关 + 首次引导气泡（右下角 dock 已移除）  │
 │  └ ⑥ 状态广播：body.cpai-speaking + cpai:voice 事件    │
 └──────────────────────┬────────────────────────────────┘
                        ▼
@@ -167,7 +167,8 @@ Provider 接口预留后，Phase 2 只要写一个云端 provider（返回可播
 ### 4.5 UI 与持久化
 
 - **面板头开关** `.ai-voice-toggle`：喇叭图标 + `aria-pressed`，关闭态加斜杠；面板打开时可见。
-- **右下角 dock** `.ai-voice-dock`：面板关闭时常驻，位于角色舞台左侧（`right: 210px`），不抢舞台点击；面板打开时自动隐藏，避免与面板重叠。
+- ~~右下角 dock `.ai-voice-dock`~~：**2026-11-18 已移除**（站长反馈它贴在 3D 角色旁边太吵）。
+  语音开关只保留面板头那一个：想知道当前是开还是关，打开面板看图标状态即可；`is-off` 时图标变暗。
 - **首次引导气泡** `.ai-voice-cta`：仅当欢迎语被自动播放策略拦下时出现，含「🔊 听它说」和「先不用」；按钮本身就是解锁手势。
 - **面板内引导** `.ai-voice-inline-cta`：若用户 10 秒内始终没交互、`main.js` 自动展开面板，浮动气泡会被面板盖住，模块自动把引导改挂进对话区（同一套按钮），保证入口不丢。
 - `localStorage.cpai_voice_v1` 记忆开关与音色；不支持 `speechSynthesis` 时，开关灰显并提示「当前浏览器不支持语音播报」，页面其余功能不受影响。
@@ -220,7 +221,7 @@ Provider 接口预留后，Phase 2 只要写一个云端 provider（返回可播
 |---|---|---|
 | 1 | `docs/ai-voice-survey.md` | 本文 |
 | 2 | `js/ai-voice.js` | 语音模块，IIFE + `window.AIVoice` |
-| 3 | `css/ai-voice.css` | 开关 / dock / CTA / 说话律动样式 |
+| 3 | `css/ai-voice.css` | 开关 / CTA / 说话律动样式（dock 样式已于 2026-11-18 删除） |
 | 4 | `index.html` | 加两条带版本号的引用 + 面板底栏 AI 语音标识 |
 | 5 | `README.md` / `docs/ai-assistant-survey.md` | 功能清单与设计依据同步 |
 | 6 | 本地浏览器验证 | `python -m http.server 8899` + 临时 `playwright-core` 脚本（放在系统临时目录，不入库），用 mock `speechSynthesis` 覆盖「允许自动播 / 拦截自动播 / 全程不交互」三种场景 |

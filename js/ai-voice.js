@@ -72,7 +72,7 @@
   var welcomeState = 'none';     // none | pending | played
   var lastText = '', lastAt = 0;
   var startTimer = null, partTimer = null, ctaTimer = null, replayTimer = null;
-  var ctaEl = null, inlineEl = null, dockEl = null, toggleBtn = null, dockBtn = null;
+  var ctaEl = null, inlineEl = null, toggleBtn = null;
   var gestureBound = false;
 
   function readStore() {
@@ -237,7 +237,6 @@
     speaking = v;
     if (v) document.body.classList.add('cpai-speaking');
     else document.body.classList.remove('cpai-speaking');
-    if (dockEl) dockEl.classList.toggle('is-speaking', v);
     if (!v && pendingProvider !== PENDING_NONE) {
       cloudProvider = pendingProvider;
       pendingProvider = PENDING_NONE;
@@ -466,7 +465,7 @@
     }
   }
 
-  /* ─────────────── UI：面板头开关 / 右下角 dock / 首次引导 ─────────────── */
+  /* ─────────────── UI：面板头开关 / 首次引导 ─────────────── */
 
   function makeToggle(cls, label) {
     var b = document.createElement('button');
@@ -494,36 +493,23 @@
       else aiHead.appendChild(toggleBtn);
     }
 
-    dockEl = document.createElement('div');
-    dockEl.className = 'ai-voice-dock';
-    dockBtn = makeToggle('ai-voice-dock-btn', '关闭 AI 语音播报');
-    dockEl.appendChild(dockBtn);
-    var tag = document.createElement('span');
-    tag.className = 'ai-voice-dock-tag';
-    tag.textContent = 'AI 语音';
-    dockEl.appendChild(tag);
-    document.body.appendChild(dockEl);
+    /* 右下角常驻开关已移除（2026-11-18）：它贴在 3D 角色旁，视觉噪声大于收益。
+       语音开关只留 aiHead 里这一个，要关语音打开面板点一下即可。 */
   }
 
   function syncUI() {
     if (!toggleBtn) return;
     var label = enabled ? '关闭 AI 语音播报' : '开启 AI 语音播报';
     var title = (enabled ? 'AI 语音：开' : 'AI 语音：关') + ' · ' + voiceLabel() + ' · 右键换音色';
-    var bs = [toggleBtn, dockBtn];
-    for (var i = 0; i < bs.length; i++) {
-      if (!bs[i]) continue;
-      bs[i].classList.toggle('is-off', !enabled || !supported);
-      bs[i].setAttribute('aria-pressed', enabled && supported ? 'true' : 'false');
-      bs[i].setAttribute('aria-label', supported ? label : '当前浏览器不支持语音播报');
-      bs[i].title = supported ? title : '当前浏览器不支持语音播报';
-      bs[i].disabled = !supported;
-    }
-    if (dockEl) dockEl.classList.toggle('is-off', !enabled || !supported);
+    toggleBtn.classList.toggle('is-off', !enabled || !supported);
+    toggleBtn.setAttribute('aria-pressed', enabled && supported ? 'true' : 'false');
+    toggleBtn.setAttribute('aria-label', supported ? label : '当前浏览器不支持语音播报');
+    toggleBtn.title = supported ? title : '当前浏览器不支持语音播报';
+    toggleBtn.disabled = !supported;
   }
 
-  function syncDock() {
+  function syncCta() {
     var open = !!(aiPanel && !aiPanel.hidden);
-    if (dockEl) dockEl.style.display = open ? 'none' : '';
     /* 10s 后 main.js 会自动展开面板：浮动引导会被面板盖住，
        此时把引导改挂到对话区里，保证「一点即播」入口始终看得见 */
     if (welcomeState === 'pending' && enabled) {
@@ -675,12 +661,12 @@
       });
       tipMo.observe(document.body, { childList: true });
 
-      var panelMo = new MutationObserver(syncDock);
+      var panelMo = new MutationObserver(syncCta);
       panelMo.observe(aiPanel, { attributes: true, attributeFilter: ['hidden'] });
     }
     document.addEventListener('visibilitychange', function () {
       if (document.hidden && supported) stop();
-      syncDock();
+      syncCta();
     });
     window.addEventListener('pagehide', function () { if (supported) stop(); }, false);
   }
@@ -689,7 +675,7 @@
 
   readStore();
   buildUI();
-  syncDock();
+  syncCta();
   syncUI();
 
   if (supported) {
