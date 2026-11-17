@@ -6,8 +6,10 @@
  * 职责：CORS 白名单 → 限流 → 意图拦截 → TF-IDF 检索（与 knowledge/ 产物同源）
  *      → 组装提示词 → 调 CloudBase 内置大模型网关 → 返回 JSON + 结构化日志。
  *
- * 两种请求：
+ * 三种请求：
  *   POST { question }           简历问答（≤200 字，20 次/分钟、200 次/天）
+ *   POST { mode: 'jd', jd }     岗位匹配（≤1500 字，10 分钟 4 次、20 次/天）
+ *                               输出固定结构的对照表，见 prompt.js buildJDSystem
  *   POST { mode: 'tts', text }  语音合成（≤150 字，走腾讯云 TTS 免费包）
  *                               返回 base64 mp3，见 tts.js / docs/ai-voice-survey.md 第 7 节
  *
@@ -94,12 +96,20 @@ var RATE_WINDOW_MS = 60 * 1000;
 var RATE_LIMIT_PER_WINDOW = 20;
 var RATE_LIMIT_PER_DAY = 200;
 
+// JD 匹配（mode: 'jd'）：长文本 + 生成一整张表，成本高于单次问答，单独设一档额度
+var MIN_JD_CHARS = 30;
+var MAX_JD_CHARS = 1500;
+var JD_TOP_CHUNKS = 6;          // 送进提示词的档案切片数（全库 37 段）
+var JD_MAX_ROWS = 8;            // 对照表最多几行，与提示词约束一致
+var JD_LIMIT_WINDOW_MS = 10 * 60 * 1000;
+var JD_LIMIT_PER_WINDOW = 4;    // 每 IP 10 分钟 4 次
+var JD_LIMIT_PER_DAY = 20;
+
 // TTS：按句合成，一次回答会连发数条请求，额度比问答宽，但字符是真金白银，独立收一道
 var TTS_LIMIT_WINDOW_MS = 60 * 1000;
 var TTS_LIMIT_PER_WINDOW = 40;  // 每 IP 每分钟 40 段（约 10 次完整回答）
 var TTS_LIMIT_PER_DAY = 400;
 var TTS_MAX_TEXT_CHARS = ttsLib.maxChars;
-
 
 // ---------------------------------------------------------------- 知识库装载
 
@@ -219,6 +229,172 @@ function retrieve(question) {
   return { hits: top, fallback: false, top1: top[0].score, vocabHits: q.hits };
 }
 
+// ---------------------------------------------------------------- JD 匹配
+// 招聘方视角：JD → 需求条目 → 逐条召回档案切片 → 约束模型输出对照表。
+// 与问答共用同一份 kb、同一套 TF-IDF 口径，不引入第二条检索链路。
+
+/** 把 JD 拆成需求条目：按行 / 分号切，去掉序号与项目符号，去重后最多 14 条 */
+function splitRequirements(jd) {
+  var lines = String(jd || '').replace(/\r/g, '').split(/\n+/);
+  var out = [];
+  var seen = Object.create(null);
+  for (var i = 0; i < lines.length; i++) {
+    var segs = lines[i].split(/[；;]/);
+    for (var j = 0; j < segs.length; j++) {
+      var s = segs[j]
+        .replace(/^\s*(?:[-•·*—]|\(?\d{1,2}[.、)）]|[（(]\d{1,2}[)）])\s*/, '')
+        .replace(/\s+/g, ' ')
+        .replace(/[。，,、：:]+$/, '')
+        .trim();
+      if (s.length < 4) continue;
+      if (s.length > 90) s = s.slice(0, 90);
+      var key = s.toLowerCase();
+      if (seen[key]) continue;
+      seen[key] = 1;
+      out.push(s);
+      if (out.length >= 14) return out;
+    }
+  }
+  return out;
+}
+
+function mergeHits(into, hits) {
+  for (var i = 0; i < hits.length; i++) {
+    var h = hits[i];
+    var s = h.score * jdChunkWeight(h.id);
+    if (into[h.id] == null || s > into[h.id]) into[h.id] = s;
+  }
+}
+
+/** 对照表要的是「可验证的证据」，不是自我介绍：
+ *  同等相关度下优先项目 / 工作经历切片，个人概要与教育、证书、联系方式往后排。 */
+function jdChunkWeight(id) {
+  if (/^proj-|^exp-|^work-/.test(id)) return 1;
+  if (/^skills-/.test(id)) return 0.8;
+  if (/^me-/.test(id)) return 0.55;
+  if (/^awards-/.test(id)) return 0.45;
+  if (/^edu-/.test(id)) return 0.4;
+  if (/^contact-/.test(id)) return 0.1;
+  return 0.8;
+}
+
+/** 逐条需求召回 + 整段 JD 兜底召回，按最高分去重取前 N 段 */
+function retrieveForJD(jd, requirements) {
+  var merged = Object.create(null);
+  for (var i = 0; i < requirements.length; i++) {
+    mergeHits(merged, retrieve(requirements[i]).hits);
+  }
+  mergeHits(merged, retrieve(String(jd).slice(0, 600)).hits);
+  var list = [];
+  for (var id in merged) list.push({ id: id, score: merged[id] });
+  list.sort(function (a, b) { return b.score - a.score; });
+  return list.slice(0, JD_TOP_CHUNKS);
+}
+
+/** 证据与原文的二元组重合度：用来在返回里标注「可回溯程度」，不参与筛选 */
+function groundRatio(point, text) {
+  var terms = tokenize(point);
+  if (!terms.length) return 0;
+  var low = String(text || '').toLowerCase();
+  var hit = 0;
+  for (var i = 0; i < terms.length; i++) {
+    var t = terms[i].charAt(0) === '#' ? terms[i].slice(1) : terms[i];
+    if (t && low.indexOf(t) !== -1) hit++;
+  }
+  return Number((hit / terms.length).toFixed(2));
+}
+
+function oneLine(v, max) {
+  var s = String(v == null ? '' : v).replace(/[\r\n\t]+/g, ' ').replace(/\s{2,}/g, ' ').trim();
+  if (s.length > max) s = s.slice(0, max) + '…';
+  return s;
+}
+
+/** 模型可能把 [proj-p02-03] 或标题当成 src，两种都认，认不出就不收这条证据 */
+function findChunk(kb, src) {
+  var key = String(src || '').trim().replace(/^[\[\s]+|[\]\s]+$/g, '');
+  if (!key) return null;
+  if (kb.byId[key]) return kb.byId[key];
+  for (var id in kb.byId) {
+    var t = String(kb.byId[id].title || '');
+    if (t === key || t.indexOf(key) === 0) return kb.byId[id];
+  }
+  return null;
+}
+
+var JD_STATUSES = { covered: 1, partial: 1, gap: 1 };
+var JD_STATUS_ALIAS = { '覆盖': 'covered', '已覆盖': 'covered', '部分': 'partial', '部分覆盖': 'partial', '缺口': 'gap', '未覆盖': 'gap' };
+
+/**
+ * 解析并收紧模型输出：非法 JSON 直接判失败（前端提示重试），
+ * 合法但越界的内容逐项裁剪——行数、字数、状态枚举、证据 id 都必须落在白名单里。
+ */
+function parseJDAnswer(text, kb) {
+  var raw = String(text || '').trim();
+  if (!raw) return null;
+  raw = raw.replace(/^```[a-zA-Z]*\s*/, '').replace(/```\s*$/, '').trim();
+  var start = raw.indexOf('{');
+  var end = raw.lastIndexOf('}');
+  if (start < 0 || end <= start) return null;
+  var obj = null;
+  try { obj = JSON.parse(raw.slice(start, end + 1)); } catch (e) { return null; }
+  if (!obj || typeof obj !== 'object' || !Array.isArray(obj.rows)) return null;
+
+  var overall = obj.overall || {};
+  var score = Number(overall.score);
+  if (!isFinite(score)) score = 0;
+  score = Math.max(0, Math.min(100, Math.round(score)));
+  var verdict = oneLine(overall.verdict, 12);
+  if (['强匹配', '匹配', '部分匹配', '不匹配', '无法判断'].indexOf(verdict) < 0) {
+    verdict = score >= 80 ? '强匹配' : score >= 60 ? '匹配' : score >= 35 ? '部分匹配' : '不匹配';
+  }
+
+  var rows = [];
+  var stats = { covered: 0, partial: 0, gap: 0 };
+  for (var i = 0; i < obj.rows.length && rows.length < JD_MAX_ROWS; i++) {
+    var r = obj.rows[i] || {};
+    var req = oneLine(r.req, 80);
+    if (!req) continue;
+    var status = String(r.status || '').toLowerCase();
+    if (JD_STATUS_ALIAS[status]) status = JD_STATUS_ALIAS[status];
+    if (!JD_STATUSES[status]) status = 'partial';
+
+    var evidence = [];
+    var list = Array.isArray(r.evidence) ? r.evidence : [];
+    for (var j = 0; j < list.length && evidence.length < 2; j++) {
+      var e = list[j];
+      if (typeof e === 'string') e = { point: e };
+      if (!e || typeof e !== 'object') continue;
+      var point = oneLine(e.point, 120);
+      var chunk = findChunk(kb, e.src);
+      if (!point || !chunk) continue;      // 拿不到原文出处的证据一律不收
+      evidence.push({
+        src: chunk.id,
+        title: oneLine(chunk.title, 48),
+        point: point,
+        ground: groundRatio(point, chunk.text)
+      });
+    }
+    if (status === 'covered' && !evidence.length) status = 'partial';
+
+    rows.push({
+      req: req,
+      status: status,
+      evidence: evidence,
+      gap: status === 'covered' ? '' : oneLine(r.gap, 90),
+      probe: oneLine(r.probe, 70)
+    });
+    stats[status]++;
+  }
+  if (!rows.length) return null;
+
+  return {
+    overall: { score: score, verdict: verdict, summary: oneLine(overall.summary, 200) },
+    rows: rows,
+    stats: stats
+  };
+}
+
 // ---------------------------------------------------------------- 模型调用
 
 function postJSON(urlStr, headers, payloadObj, timeoutMs) {
@@ -246,7 +422,8 @@ function postJSON(urlStr, headers, payloadObj, timeoutMs) {
   });
 }
 
-function callModel(systemPrompt, history, question) {
+function callModel(systemPrompt, history, question, opts) {
+  opts = opts || {};
   var messages = [{ role: 'system', content: systemPrompt }];
   var h = Array.isArray(history) ? history.slice(-4) : [];
   for (var i = 0; i < h.length; i++) {
@@ -263,11 +440,11 @@ function callModel(systemPrompt, history, question) {
     {
       model: AI_MODEL,
       messages: messages,
-      max_tokens: 800,
-      temperature: 0.3,
+      max_tokens: opts.maxTokens || 800,
+      temperature: opts.temperature == null ? 0.3 : opts.temperature,
       thinking: { type: 'disabled' }   // 实测关思考：reasoning_tokens 归零，延迟与成本都显著下降
     },
-    25000
+    opts.timeoutMs || 25000
   );
 }
 
@@ -341,6 +518,29 @@ async function rateCheck(iph) {
     }
   }
   return { blocked: false, count: mem.count };
+}
+
+// JD 匹配在问答限流之外再收一道：一次请求要读完 1500 字并生成整张表，
+// 成本是单次问答的数倍，只靠 20 次/分钟挡不住脚本刷额度。
+var jdBuckets = Object.create(null);
+
+function jdQuota(key) {
+  var now = Date.now();
+  var b = jdBuckets[key];
+  if (!b || now - b.windowStart > JD_LIMIT_WINDOW_MS) {
+    b = jdBuckets[key] = { windowStart: now, count: 0, dayStart: now, dayCount: 0 };
+  }
+  if (now - b.dayStart > 24 * 60 * 60 * 1000) {
+    b.dayStart = now;
+    b.dayCount = 0;
+  }
+  b.count++;
+  b.dayCount++;
+  return {
+    blocked: b.count > JD_LIMIT_PER_WINDOW || b.dayCount > JD_LIMIT_PER_DAY,
+    reason: b.count > JD_LIMIT_PER_WINDOW ? 'jd_window' : 'jd_day',
+    count: b.count
+  };
 }
 
 // ---------------------------------------------------------------- HTTP 适配
@@ -461,6 +661,119 @@ function purgeOldLogs() {
   } catch (e) { /* 忽略 */ }
 }
 
+// ---------------------------------------------------------------- JD 匹配主流程
+// POST { mode: 'jd', jd: '...' } → { ok, match: { overall, rows, stats }, sources, meta }
+// 与问答共用 origin 白名单、IP 盐化、两级限流与结构化日志，只是额度更紧。
+
+async function handleJD(body, origin, iph, started) {
+  var jd = String(body.jd || '').trim();
+  if (jd.length < MIN_JD_CHARS) {
+    return reply(400, origin, { ok: false, error: 'bad_request', message: 'JD 太短了，至少贴 ' + MIN_JD_CHARS + ' 字，才好逐条对照' });
+  }
+  if (jd.length > MAX_JD_CHARS) {
+    return reply(400, origin, {
+      ok: false, error: 'bad_request',
+      message: 'JD 请控制在 ' + MAX_JD_CHARS + ' 字内（当前 ' + jd.length + ' 字），建议只保留岗位职责与任职要求'
+    });
+  }
+
+  var rl = await rateCheck(iph);
+  if (rl.blocked) {
+    logLine({ ts: started, origin: origin, ip_hash: iph, q: '', a: '', channel: 'tencent', tag: 'jd', blocked: 'rate_limited:' + rl.reason, count: rl.count });
+    return reply(429, origin, { ok: false, error: 'rate_limited', message: '请求有点急，稍等几秒再试' });
+  }
+
+  /* JD 是文档不是提问：不做「越界/敏感」拦截（JD 里出现「薪资」很正常），
+     只拦提示注入——它是唯一会改写上面系统规则的东西。
+     注入检查放在额度扣减之前：被拦掉的请求不该占用人家的次数。 */
+  var cls = promptLib.classifyInput(jd.slice(0, 300));
+  if (cls.action === 'suspect') {
+    logLine({ ts: started, origin: origin, ip_hash: iph, q: oneLine(jd, 200), a: '', channel: 'tencent', tag: 'jd', blocked: 'injection:' + cls.reason, latency_ms: Date.now() - started });
+    return reply(400, origin, { ok: false, error: 'bad_request', message: 'JD 里包含指令性内容，已停止处理' });
+  }
+
+  var quota = jdQuota(iph);
+  if (quota.blocked) {
+    logLine({ ts: started, origin: origin, ip_hash: iph, q: '', a: '', channel: 'tencent', tag: 'jd', blocked: 'jd_quota:' + quota.reason, count: quota.count });
+    return reply(429, origin, {
+      ok: false, error: 'jd_quota',
+      message: 'JD 匹配每人 10 分钟内 4 次。急的话直接邮件：shenge.work@gmail.com'
+    });
+  }
+
+  if (!AI_KEY) {
+    return reply(500, origin, { ok: false, error: 'server_misconfig', message: '函数缺少 AI_API_KEY 环境变量' });
+  }
+
+  var kb, requirements, top;
+  try {
+    kb = loadKB();
+    requirements = splitRequirements(jd);
+    top = retrieveForJD(jd, requirements);
+  } catch (e) {
+    return reply(500, origin, { ok: false, error: 'kb_error', message: '知识库装载失败' });
+  }
+
+  var ctxChunks = [];
+  var sources = [];
+  for (var i = 0; i < top.length; i++) {
+    var ch = kb.byId[top[i].id];
+    if (!ch) continue;
+    ctxChunks.push(ch);
+    sources.push({ id: ch.id, title: ch.title, score: Number(top[i].score.toFixed(4)) });
+  }
+  if (!ctxChunks.length) {
+    logLine({ ts: started, origin: origin, ip_hash: iph, q: oneLine(jd, 200), a: '', channel: 'tencent', tag: 'jd', latency_ms: Date.now() - started, model_called: false });
+    return reply(200, origin, { ok: false, error: 'no_match', message: '档案里找不到与这份 JD 相关的资料，换个岗位试试' });
+  }
+
+  var answer = '';
+  try {
+    var resp = await callModel(
+      promptLib.buildJDSystem(ctxChunks, jd),
+      null,
+      '按上面的 JSON 结构输出这份 JD 的对照结果。',
+      { maxTokens: 1500, temperature: 0.2, timeoutMs: 26000 }
+    );
+    if (resp.status >= 200 && resp.status < 300) answer = extractAnswer(resp);
+  } catch (e) {
+    answer = '';
+  }
+
+  var match = answer ? parseJDAnswer(answer, kb) : null;
+  if (!match) {
+    logLine({
+      ts: started, origin: origin, ip_hash: iph, q: oneLine(jd, 300), a: oneLine(answer, 300),
+      channel: 'tencent', tag: 'jd', top_ids: ctxChunks.map(function (c) { return c.id; }),
+      top1_score: top.length ? top[0].score : 0, fallback: false,
+      latency_ms: Date.now() - started, model_called: true, model: AI_MODEL, blocked: 'parse_failed'
+    });
+    return reply(502, origin, { ok: false, error: 'parse_failed', message: '这次模型没按结构输出，再点一次就好' });
+  }
+
+  logLine({
+    ts: started, origin: origin, ip_hash: iph,
+    q: oneLine(jd, 300),
+    a: match.overall.summary || (match.overall.score + ' 分 / ' + match.overall.verdict),
+    channel: 'tencent', tag: 'jd', top_ids: ctxChunks.map(function (c) { return c.id; }),
+    top1_score: top.length ? top[0].score : 0, fallback: false,
+    latency_ms: Date.now() - started, model_called: true, model: AI_MODEL
+  });
+
+  return reply(200, origin, {
+    ok: true,
+    mode: 'jd',
+    match: match,
+    sources: sources,
+    meta: {
+      jd_chars: jd.length,
+      requirements: requirements.length,
+      recalled: ctxChunks.length,
+      latency_ms: Date.now() - started
+    }
+  });
+}
+
 // ---------------------------------------------------------------- 语音合成（Phase 2）
 // POST /chat { mode:'tts', text, kind } 或 POST /tts（若另外配了路径映射）
 // → { ok, audio: base64 mp3, mime, cached, chars }
@@ -573,8 +886,15 @@ exports.main = async function (event) {
   if (!body || typeof body !== 'object') {
     return reply(400, origin, { ok: false, error: 'bad_request', message: '请求体不是合法 JSON' });
   }
+
   var ip = clientIp(event, headers);
   var iph = ipHash(ip);
+
+  /* 「岗位匹配」视图：POST { mode: 'jd', jd }。
+     走同一套来源校验与 IP 盐化，但输入长度、额度、输出结构都是另一套。 */
+  if (String(body.mode || '') === 'jd') {
+    return handleJD(body, origin, iph, started);
+  }
 
   /* 语音合成：线上 HTTP 触发路径只配了 /chat，因此用 body.mode 路由，
      不需要在控制台新增 /tts 路径映射；若日后单独配了 /tts 也一并识别。 */
@@ -659,6 +979,15 @@ exports.main = async function (event) {
   answer = promptLib.scrub(answer).slice(0, MAX_ANSWER_CHARS);
   logLine({ ts: started, origin: origin, ip_hash: iph, q: question, a: answer, channel: 'tencent', top_ids: ret.hits.map(function (h) { return h.id; }), top1_score: ret.top1, fallback: ret.fallback, latency_ms: Date.now() - started, model_called: true, model: AI_MODEL, suspect: suspect });
   return reply(200, origin, { ok: true, answer: answer, sources: sources, top1_score: ret.top1, fallback: ret.fallback });
+};
+
+// 供本地自测与脚本直接调用（不影响云函数入口）
+exports._internal = {
+  splitRequirements: splitRequirements,
+  retrieveForJD: retrieveForJD,
+  parseJDAnswer: parseJDAnswer,
+  groundRatio: groundRatio,
+  loadKB: loadKB
 };
 
 // 作为容器入口直接 `node index.js` 运行时，起 HTTP 服务（CloudBase HTTP 云函数模式）

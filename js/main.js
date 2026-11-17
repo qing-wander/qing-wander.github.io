@@ -88,6 +88,7 @@
     $('heroBio').textContent = h.bio || '';
     $('heroCta').innerHTML =
       '<a class="btn btn-solid" href="#projects">' + esc(h.ctaProjects || '查看作品') + ' <span class="btn-arrow" aria-hidden="true">▶▶</span></a>' +
+      '<a class="btn btn-ghost" href="#jd">' + esc(h.ctaJd || 'JD 匹配') + ' <span class="btn-arrow" aria-hidden="true">▶</span></a>' +
       '<a class="btn btn-ghost" href="' + esc(h.resumeFile || 'resume.html') + '">' + esc(h.ctaResume || '查看简历') + ' <span class="btn-arrow" aria-hidden="true">▶</span></a>';
     $('heroStatus').textContent = h.statusMeta || '';
     var ic = h.idcard || {};
@@ -321,7 +322,7 @@
     window.addEventListener('resize', function () { if (window.innerWidth > 1280) closeMenu(); });
 
     /* ── 2. 导航当前区高亮 ── */
-    var sections = ['about', 'objective', 'education', 'experience', 'projects', 'works', 'skills', 'awards', 'contact', 'wall']
+    var sections = ['about', 'objective', 'jd', 'experience', 'projects', 'works', 'skills', 'education', 'awards', 'contact', 'wall']
       .map(function (id) { return document.getElementById(id); })
       .filter(Boolean);
     var navLinks = Array.prototype.slice.call(nav.querySelectorAll('a[data-sec]'));
@@ -703,6 +704,8 @@
       ]
     };
     var aiFab = $('aiFab');
+    /* 「岗位匹配」独立脚本（js/jd-match.js）复用同一台云函数与同一个 /chat 端点 */
+    window.CP_AI_ENDPOINT = AI_CONFIG.endpoint;
     var aiPanel = $('aiPanel');
     var aiCloseBtn = $('aiClose');
     var aiBody = $('aiBody');

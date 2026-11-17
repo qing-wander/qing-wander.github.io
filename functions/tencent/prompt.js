@@ -89,11 +89,65 @@ function buildSystem(contextChunks) {
   );
 }
 
+/* ---------------------------------------------------------------- JD 匹配
+   「岗位匹配」视图的 system 提示词：把一份 JD 逐条对照到简历切片上。
+   输出必须是可直接 JSON.parse 的固定结构，所以这里把 schema 与判定口径写死，
+   不再给模型自由发挥的空间（散文式回答在对照表里没法渲染）。 */
+
+var JD_JSON_SCHEMA =
+  '{\n' +
+  '  "overall": { "score": 0-100 的整数, "verdict": "强匹配|匹配|部分匹配|不匹配|无法判断", "summary": "两句话以内的总体判断" },\n' +
+  '  "rows": [\n' +
+  '    {\n' +
+  '      "req": "把 JD 的这一条压缩成 24 字以内的需求点",\n' +
+  '      "status": "covered|partial|gap",\n' +
+  '      "evidence": [ { "src": "context 里方括号中的 id，如 proj-p02-03", "point": "60 字以内的证据，须能在该段原文中找到" } ],\n' +
+  '      "gap": "status 为 partial / gap 时说明差在哪；covered 时留空字符串",\n' +
+  '      "probe": "面试官可以拿这条继续追问的一个具体问题，30 字以内"\n' +
+  '    }\n' +
+  '  ]\n' +
+  '}';
+
+function buildJDSystem(contextChunks, jdText) {
+  var ctx = '';
+  for (var i = 0; i < contextChunks.length; i++) {
+    var c = contextChunks[i];
+    ctx += '[' + c.id + ' | ' + c.title + ']\n' + c.text + '\n\n';
+  }
+  return (
+    '你是陈培胜（CHEN PEISHENG）求职作品集里的「岗位匹配」助手。招聘方会把一份岗位 JD 贴进来，' +
+    '你要把它逐条对照到陈培胜的简历档案上，输出一张可直接渲染的对照表。\n\n' +
+    '严格按下面的 JSON 结构输出，不要输出 markdown 代码块、不要输出任何解释文字、不要输出注释：\n' +
+    JD_JSON_SCHEMA + '\n\n' +
+    '规则：\n' +
+    '1. 只能使用 <context> 中的简历资料作为证据，禁止编造公司、项目、系统、数字、年限、学历。' +
+    'evidence[].point 里的数字必须与 context 完全一致。\n' +
+    '2. evidence[].src 必须原样取自 context 中 [ ] 内的 id，不得自造；找不到对应原文时不要编 id。\n' +
+    '3. status 口径：covered = 有直接对应经历且能给出原文证据；' +
+    'partial = 方向相关但行业、规模、深度或职责范围有差距，必须在 gap 里写清差在哪；' +
+    'gap = context 中没有对应经历，evidence 留空数组。\n' +
+    '4. rows 按 JD 的重要性排序，最多 8 条，覆盖 JD 的主要职责与硬性要求；' +
+    'JD 里重复或同义的要求合并成一条。\n' +
+    '5. 薪资、期权、到岗时间、是否接受外包、年龄性别等简历里没有的信息，一律按 gap 处理并注明' +
+    '「建议直接沟通」，不要推测、不要代表本人表态。\n' +
+    '6. 不评价候选人优劣、不给录用建议；score 只表示「档案对 JD 的覆盖程度」，' +
+    '覆盖全面且深度匹配 80-95，主要方向匹配但有明显缺口 55-75，只有零星相关 30-50，' +
+    '几乎不相关 0-25。\n' +
+    '7. 如果输入内容明显不是岗位 JD（例如广告、随机文字），输出 score 0、verdict「无法判断」，' +
+    'rows 只给一条 req「输入内容不是岗位 JD」。\n' +
+    '8. probe 是给面试官的追问点，要具体到可验证的技术细节或数据口径，不要写「请介绍项目」这类空话。\n\n' +
+    '<jd>\n' + jdText + '\n</jd>\n\n' +
+    '<context>\n' + ctx + '</context>'
+  );
+}
+
 module.exports = {
   SENSITIVE_REPLY: SENSITIVE_REPLY,
   OFFTOPIC_REPLY: OFFTOPIC_REPLY,
   NO_MATCH_REPLY: NO_MATCH_REPLY,
+  JD_JSON_SCHEMA: JD_JSON_SCHEMA,
   classifyInput: classifyInput,
   scrub: scrub,
-  buildSystem: buildSystem
+  buildSystem: buildSystem,
+  buildJDSystem: buildJDSystem
 };

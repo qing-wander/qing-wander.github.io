@@ -4,7 +4,7 @@
 > 统一在这里登记，每条给出状态、影响、前置条件、执行步骤与验收标准，并回链依据文档。
 > 目的：换会话、换机器、换协作人时，不用通读五份设计文档也能知道下一步该做什么、哪些是故意不做的。
 >
-> 最近一次盘点：**2026-11-17**（Resend 接入收尾 + T2 git refs 对齐）。
+> 最近一次盘点：**2026-11-17**（Resend 接入收尾 + T2 git refs 对齐 +「岗位匹配 JD MATCH」开发收尾，新增 T10–T12）。
 
 ---
 
@@ -12,13 +12,19 @@
 
 站点线上功能均可用：主页、简历页、留言墙、AI 问答助手、访问统计、访客计数、简历转发。
 
-**唯一的功能缺口是「访客填任意邮箱都能自动收到简历」**。Resend 尚未验证自有发信域名，
+**新增功能「岗位匹配 JD MATCH」（2026-11-17）已开发完成并本地验证，但尚未上线**：前端
+SEC.03 视图、云函数 `mode:"jd"` 分支、独立额度（10 分钟 4 次 / 每天 20 次）、文档全部就绪；
+**上线前提是「推送静态文件 + 重新部署云函数」（T10）**，之后还需真实模型端到端验收（T11）。
+部署之前，线上访问 `#jd` 会得到「后端云函数还是旧版本」提示——这是预期行为，不是故障。
+方案、进度与验收清单详见 [jd-match.md](jd-match.md)。
+
+**既有功能的缺口仍是「访客填任意邮箱都能自动收到简历」**。Resend 尚未验证自有发信域名，
 `onboarding@resend.dev` 只能发给账号邮箱 `shenge.work@gmail.com`；其他邮箱会被 Resend 以
 403 `recipient_not_verified` 拒绝，前端按设计自动切到「用邮箱客户端发送」的 mailto 兜底
 （收件人已填好），功能不中断，但不会自动收到邮件。
 
 站长已于 **2026-11-17 明确决定暂不配置域名**，因此这是「已决策暂缓」，**不是故障、不是 bug**。
-其余条目都是文档过时、工程卫生、可选增强或思考型迭代池，**全部不阻塞线上**。
+除 T10（JD 匹配因此才上线）外，其余条目都是文档过时、工程卫生、可选增强或思考型迭代池，**不阻塞既有线上功能**。
 
 ---
 
@@ -47,12 +53,15 @@
 | T7 | Pages CMS 账号授权状态确认 | `待确认` | 低 | 网页改文案 | [observability-and-cms.md §一.3](observability-and-cms.md) |
 | T8 | AI 助手皮肤后续迭代池 | `思考池` | 低 | 右下角助手 | [ai-avatar-skins.md §9](ai-avatar-skins.md) |
 | T9 | 里程碑 M5「本地推理演示通道」 | `已决策不做` | — | AI 问答 | [ai-assistant-survey.md D4](ai-assistant-survey.md) |
+| T10 | **上线收尾：推送 JD 静态文件 + 重新部署云函数 `functions/tencent`（硬前置）** | `待办` | 高（新功能上线阻塞） | AI 问答 / JD 匹配 | [jd-match.md §5/§6](jd-match.md) |
+| T11 | JD 匹配真实模型端到端验收（依赖 T10） | `待办` | 中 | JD 匹配 | [jd-match.md §4.3/§6.3](jd-match.md) |
+| T12 | JD 匹配迭代池（缓存 / 分享 / PDF / 追问直达 / 招聘方速览模式） | `思考池` | 低 | JD 匹配 | [jd-match.md §9](jd-match.md) |
 
 ---
 
 ## 3. 逐条明细
 
-### 3.1 T1 · Resend 发信域名验证（唯一功能缺口）
+### 3.1 T1 · Resend 发信域名验证（既有功能缺口）
 
 **现状（2026-11-17 实测）**
 
@@ -254,6 +263,80 @@ git reset --mixed origin/main     # 只移动 refs + index，不动工作区
 
 ---
 
+### 3.10 T10 · 上线收尾：推送 JD 静态文件 + 重新部署云函数（JD 匹配上线硬前置）
+
+**现状**：2026-11-17「岗位匹配」前端与云函数代码全部完成并本地验证——后端拆分 / 召回 /
+结构校验 / 限流 / 注入拦截 / 假模型端到端，前端 1440–390px 四态渲染（详见
+[jd-match.md §4](jd-match.md)）。但两条发布链路都还没走：静态文件未 push，云函数未重部署。
+线上旧函数不认识 `mode:"jd"`，会返回「缺少 question」400；前端已按此提示「后端云函数还是
+旧版本」——**看到这条提示就是还没部署，不是故障**。
+
+**上线要做的两件事**：
+
+1. **静态发布（走 git push，通道已恢复，见 §3.2）**：提交并推送 JD 匹配改动——
+   `index.html`、`js/main.js`、`README.md`、`functions/tencent/index.js`、
+   `functions/tencent/prompt.js`（修改），`js/jd-match.js`、`css/jd-match.css`、
+   `docs/jd-match.md`（新增），以及本文件与 `docs/jd-match.md` 的登记更新。
+   `docs/ai-avatar-skins.md` 的纯排版改动是否一并入库自行决定。
+   push 后 GitHub Pages / Cloudflare Pages 自动构建。
+2. **云函数重部署（CloudBase 控制台操作，与 git 无关）**：上传 `functions/tencent/` 整包
+   （`index.js`、`prompt.js` 有改动；`kb/` 未变无需重建）。环境变量沿用 `AI_API_KEY` /
+   `AI_MODEL`，**无新增变量**；HTTP 触发路径仍为 `/chat`。
+
+**打包前检查**：
+
+- `node --check functions/tencent/index.js functions/tencent/prompt.js functions/tencent/tts.js functions/tencent/server.js` 全过；
+- 语音链路改动（`tts.js`、`js/ai-voice*.js` 等）经并行会话已入库（§3.2 实测一致），
+  但打包前仍建议确认没有新的在途改动，避免半成品互相覆盖上线。
+
+**验收**：
+
+```bash
+curl -s -X POST https://resume-ai-d9g7zghnxda2ee2cb-1307508155.ap-shanghai.app.tcloudbase.com/chat \
+  -H 'Content-Type: application/json' \
+  -H 'Origin: https://shenge-work.github.io' \
+  -d '{"mode":"jd","jd":"岗位职责：负责企业级 AI Agent 平台架构设计，含任务规划与多智能体编排；建设 RAG 检索链路并做召回评测。"}'
+# 期望 {"ok":true,"mode":"jd","match":{...}}；返回「缺少 question」说明还是旧函数
+```
+
+- 线上 `#jd` 点示例 → 8–20s 出表，「旧版本」提示消失；
+- 问答助手回归正常（`mode` 缺省走旧流程不受影响）；
+- 顺带生效：预览子域 CORS 通配（T5）随新函数代码自动上线。
+
+---
+
+### 3.11 T11 · JD 匹配真实模型端到端验收
+
+**为什么单独列**：本地无 `AI_API_KEY`，端到端用的是桩响应；以下项只能部署后（T10 完成）实测：
+
+| 未验证项 | 判定口径 |
+|---|---|
+| 真实模型输出质量 | hy3 对 JSON schema 的遵循率、`parse_failed` 实际比例（偶发可接受，高频需收紧提示词） |
+| 真实延迟 | 预期 8–20s 出表、冷启动更久；38s 前端超时是否够用 |
+| 线上限流与日志 | 10 分钟内第 5 次触发 `jd_quota`；`chat_logs` 有 `tag=jd` 行且 `q` 为 ≤300 字脱敏摘要 |
+| 移动端真机 | 本轮仅 390px 视口模拟，未覆盖真机 WebView |
+
+**执行**：按 [jd-match.md §6.3](jd-match.md) 验收清单逐项打勾（三个示例 JD、非 JD 输入判
+「无法判断」、注入拦截不占额度、问答回归、日志落库、真机渲染）；完成后回写
+`jd-match.md` §4.2/§4.3，并把 T10 / T11 置为 `已完成（日期）`。
+
+---
+
+### 3.12 T12 · JD 匹配迭代池（未排期，思考用）
+
+来自 [jd-match.md §9](jd-match.md) 与同轮调研的备选方案，**不是待办任务清单**：
+
+- 结果缓存：`sha256(JD)` 10 分钟内存缓存，重复点击不重复扣额度；
+- 可分享链接：`?jd=` 压缩参数或短链，方便招聘方转给同事；
+- 导出 PDF / 邮件：复用 `functions/api/deliver.js` 的 Resend 链路（注意 T1 的域名限制）；
+- 追问点直达问答：点一条 `probe` 直接调 `/chat`，把对照表变成「面试预演」；
+- 招聘方速览模式：同轮调研的备选方案（开关把整站切成 30 秒版，只留量化战绩与三个项目结论，
+  成本一天以内；说服力弱于 JD 匹配，故本期未做）。
+
+需要排期时，先在本文件新建独立条目并给出验收标准，再动代码。
+
+---
+
 ## 4. 已完成（2026-11-16 / 17 收尾，勿重复做）
 
 - Resend 账号（Chrome 现成 Google 会话登录）、「仅发信」最小权限 API Key，明文未落仓库；
@@ -265,6 +348,12 @@ git reset --mixed origin/main     # 只移动 refs + index，不动工作区
 - 留言墙 KV `site-kv` 绑定 Production 已生效，`./scripts/wall-check.sh` 11/11 通过；
 - 2026-11-17 复核：`github:push` 自动构建已生效，且自动部署不会丢失 `/api/*` Functions；
 - T2（2026-11-17）：本机 git refs 与远端 `main` 对齐到 `941da91`，`http.version=HTTP/1.1` 写入 `.git/config`，标准 `git fetch` / `git push` 通道恢复，不再走 Git Data API；详见 §3.2。
+- JD 匹配（2026-11-17）：「岗位匹配 JD MATCH」开发完成并本地全部验证通过——前端 SEC.03
+  视图（三个示例 JD / 空态-加载-结果-错误四态 / Markdown 导出 / 1440–390px 响应式 / 四主题
+  跟随）、云函数 `mode:"jd"` 分支（拆分 ≤14 条 / 逐条 TF-IDF 召回合并加权 / 两层输出约束与
+  证据 id 白名单 / 10 分钟 4 次独立额度 / 注入拦截不占额度）、README 板块与功能清单更新、
+  `docs/jd-match.md` v2 专题文档（调研 + 方案 + 进度）。
+  **上线收尾见 T10 / T11，部署前不算完成。**
 
 ---
 

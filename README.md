@@ -21,11 +21,12 @@ AI Agent 工程师求职个人网站：基于纯原生 HTML / CSS / JavaScript �
 ## 页面结构
 
 ### 作品集主页（index.html）
-单页作品集，涵盖 8 大板块：
+单页作品集，涵盖 9 大板块：
 | 板块 | 说明 |
 |---|---|
 | 关于我 ABOUT | 个人形象照 + 自我介绍 |
 | 求职意向 TARGET | 目标岗位与期望 |
+| 岗位匹配 JD MATCH | 粘贴 JD，由站内 RAG Agent 生成「要求 → 对应经历 → 缺口 → 追问点」对照表 |
 | 教育经历 EDUCATION | 全日制统招本科（中山大学新华学院 · 软件工程） |
 | 工作经历 EXPERIENCE | 进门财经 / Lessie / 房极客 / 周生生 |
 | 项目作品 WORKS | comein.cn / lessie.cn / hicreator.ai 等作品展示 |
@@ -55,6 +56,7 @@ AI Agent 工程师求职个人网站：基于纯原生 HTML / CSS / JavaScript �
 9. **全站访问计数器**：右下角复古里程表样式，显示全站真实访问次数（默认走免费计数服务，后端不可用时回退本机计数，不会显示 0）
 10. **3D AI 简历问答助手**：右下角可切换 9 款角色皮肤（3 款真 3D GLB + 本地 SVG 角色 + AI 生成立绘），无边框悬浮，待机/思考/回答都有对应动画；首次进入自动挥手打招呼并自我介绍「我是 AI 简历问答助手」；右键/双击/长按/快捷键 `S` 切换皮肤，数字 `1–9` 直达，选择本地记忆（设计文档：[docs/ai-avatar-skins.md](docs/ai-avatar-skins.md)）
 11. **AI 语音播报（Phase 1 + 2）**：助手把欢迎语与回答「说」出来，首次进页面打招呼也有语音；浏览器拦截自动播放时给「一点即播」引导、首次交互补播；一键开关（本地记忆）、右键换音色、分句队列、口型律动联动。底层是浏览器内置 `SpeechSynthesis`（Edge 优先在线神经语音，零 Key 零费用）；**另外接了腾讯云 TTS 云端通道**（精品音色 101001，800 万字符免费包），启动探测成功才切云端，失败/超时自动无感回落到浏览器语音，`?tts=browser` 可强制降级。密钥只存云函数环境变量，设计文档：[docs/ai-voice-survey.md](docs/ai-voice-survey.md)
+12. **岗位匹配（JD MATCH）**：招聘方粘贴 JD（≤1500 字），云函数把 JD 拆成需求条目，逐条在 37 段档案切片上做 TF-IDF 召回，模型在固定结构约束下输出「覆盖 / 部分 / 缺口 + 证据出处 + 面试追问点」，前端渲染对照表并支持复制 Markdown。与问答助手共用同一台云函数和同一份知识库，单独限流（10 分钟 4 次），设计文档：[docs/jd-match.md](docs/jd-match.md)
 
 简历页附加能力：
 - 一键「保存为 PDF」：调用浏览器打印，米白纸感样式与屏幕一致
@@ -84,6 +86,7 @@ AI Agent 工程师求职个人网站：基于纯原生 HTML / CSS / JavaScript �
 ├── css/style.css           # 设计系统 + 响应式 + 打印模式
 ├── js/
 │   ├── main.js             # 页面交互（10 大功能模块）+ 数据渲染
+│   ├── jd-match.js         # 岗位匹配：JD 表单、限流提示、对照表渲染与 Markdown 导出
 │   ├── ai-skins.js         # 3D AI 助手皮肤系统（角色舞台/皮肤切换/状态联动）
 │   ├── ai-voice.js         # 语音播报：开关 / 分句队列 / 自动播放解锁 / 口型联动
 │   ├── ai-voice-cloud.js   # 云端 TTS Provider：探测、缓存、失败回落浏览器语音
@@ -91,6 +94,7 @@ AI Agent 工程师求职个人网站：基于纯原生 HTML / CSS / JavaScript �
 │   └── visitor-count.js    # 全站访问计数（abacus / 自建 Worker 可切换）
 ├── css/
 │   ├── style.css           # 设计系统 + 响应式 + 打印模式
+│   ├── jd-match.css        # 岗位匹配区块样式（跟随四种主题变量）
 │   ├── ai-skins.css        # AI 助手角色皮肤样式
 │   └── ai-voice.css        # 语音开关 / 引导气泡 / 说话律动样式
 ├── assets/skins/           # 3D 模型 / model-viewer / AI 立绘 / 皮肤总览
@@ -100,7 +104,7 @@ AI Agent 工程师求职个人网站：基于纯原生 HTML / CSS / JavaScript �
 ├── images/                 # 形象照 / 项目图 / 证书 / 学信网二维码
 ├── functions/api/wall.js            # 留言墙 API（分页 / 限流 / 管理删除，KV 存储）
 ├── functions/api/deliver.js         # 简历转发到邮箱（Resend）
-├── functions/tencent/index.js       # CloudBase HTTP 云函数：/chat 问答 + TTS 语音合成
+├── functions/tencent/index.js       # CloudBase HTTP 云函数：/chat 问答 + JD 匹配 + TTS 路由
 ├── functions/tencent/tts.js         # 腾讯云 TextToVoice 直调（TC3 签名 / LRU 缓存 / 零依赖）
 ├── scripts/wall-check.sh            # 留言墙线上自检（默认只读）
 ├── scripts/dev-api-server.mjs       # 本地联调：静态站 + 真实 Functions + 内存 KV
@@ -112,6 +116,7 @@ AI Agent 工程师求职个人网站：基于纯原生 HTML / CSS / JavaScript �
 ├── docs/observability-and-cms.md    # 教程：统计与内容管理接入
 ├── docs/ai-assistant-survey.md      # AI 简历问答后端（RAG）方案与实施
 ├── docs/ai-voice-survey.md          # 语音播报：免费 TTS 调研、选型、两期实施与线上验收
+├── docs/jd-match.md                 # 岗位匹配：接口契约、检索与输出约束、部署与自测
 ├── docs/cloudflare-pages-deploy.md  # Cloudflare Pages 备用托管说明
 ├── docs/resume-delivery.md          # 留言墙 / 简历转发的部署、自检与排障
 ├── docs/TODO.md                     # 项目待办与未竟事项台账（唯一「还没做的事」清单）
@@ -183,3 +188,5 @@ python3 -m http.server 8000
 - GitHub：https://github.com/shenge-work
 - 作品集：https://shenge-work.github.io
 - 邮箱：shenge.work@gmail.com
+
+> AI生成
