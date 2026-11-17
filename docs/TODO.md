@@ -16,7 +16,7 @@
 已构建（生产首页含 `#jd` 区块与 `js/jd-match.js` / `css/jd-match.css` 引用）；云函数在并行会话
 部署语音链路时已一并带上 `mode:"jd"` 分支，线上实测用真实 hy3 返回结构化对照表
 （`ok:true`，score 75，4 条需求含证据出处与追问点），问答与 TTS 回归均为 200。
-**T10 已完成，线上端到端验收已通过**；T11 仅剩「预览子域 CORS」「`chat_logs` 查库」「移动端真机」三项人工复核（见 §3.11），不阻塞使用。
+**T10 已完成，T11 端到端验收已于 2026-11-18 全项完成**（含预览子域 CORS 修复、`chat_logs` 查库、移动端触屏验收，见 §3.11）；T5 同步关闭。
 方案、进度与验收清单详见 [jd-match.md](jd-match.md)。
 
 **既有功能的缺口仍是「访客填任意邮箱都能自动收到简历」**。Resend 尚未验证自有发信域名，
@@ -50,13 +50,13 @@
 | T2 | 本地 git 引用与远端 `main` 对齐 | `已完成（2026-11-17）` | — | 本机开发 | 本文 §3.2 |
 | T3 | 更新 `cloudflare-pages-deploy.md` 的过时描述 | `待办` | 中（文档准确性） | 部署文档 | [cloudflare-pages-deploy.md](cloudflare-pages-deploy.md) |
 | T4 | AI 问答助手 13.8「未做」清单复核 | `待复核` | 中 | AI 问答 / README | [ai-assistant-survey.md §13.8](ai-assistant-survey.md) |
-| T5 | 预览子域 `*.pages.dev` 的 CORS 通配（实测仍 403，需控制台改 `ALLOWED_ORIGINS`） | `待办` | 低（非阻塞） | 预览部署的 AI 问答 / JD 匹配 | 本文 §3.5（含实测结论与全量回传踩坑） |
+| T5 | 预览子域 `*.pages.dev` 的 CORS 通配 | `已完成（2026-11-18）` | — | 预览部署的 AI 问答 / JD 匹配 | 本文 §3.5（含配置修复与全量回传踩坑） |
 | T6 | 可选环境变量 `DELIVER_BCC` / `WALL_ADMIN_TOKEN` | `可选` | 低 | 转发备案 / 留言删除 | [resume-delivery.md §③](resume-delivery.md) |
 | T7 | Pages CMS 账号授权状态确认 | `待确认` | 低 | 网页改文案 | [observability-and-cms.md §一.3](observability-and-cms.md) |
 | T8 | AI 助手皮肤后续迭代池 | `思考池` | 低 | 右下角助手 | [ai-avatar-skins.md §9](ai-avatar-skins.md) |
 | T9 | 里程碑 M5「本地推理演示通道」 | `已决策不做` | — | AI 问答 | [ai-assistant-survey.md D4](ai-assistant-survey.md) |
 | T10 | 上线收尾：推送 JD 静态文件 + 云函数 `mode:jd` 生效 | `已完成（2026-11-17）` | — | AI 问答 / JD 匹配 | 本文 §3.10 / [jd-match.md §5](jd-match.md) |
-| T11 | JD 匹配端到端验收（仅剩预览子域 CORS / 日志查库 / 真机 3 项人工复核） | `进行中（2026-11-17）` | 低 | JD 匹配 | 本文 §3.11 / [jd-match.md §4.3](jd-match.md) |
+| T11 | JD 匹配端到端验收（含 3 项人工复核） | `已完成（2026-11-18）` | — | JD 匹配 | 本文 §3.11 / [jd-match.md §4.3](jd-match.md) |
 | T12 | JD 匹配迭代池（缓存 / 分享 / PDF / 追问直达 / 招聘方速览模式） | `思考池` | 低 | JD 匹配 | [jd-match.md §9](jd-match.md) |
 
 ---
@@ -201,30 +201,34 @@ git reset --mixed origin/main     # 只移动 refs + index，不动工作区
 
 ---
 
-### 3.5 T5 · 预览子域 CORS 通配（低优先级，2026-11-17 夜实测仍未生效）
+### 3.5 T5 · 预览子域 CORS 通配（已完成，2026-11-18）
 
-**实测结论（2026-11-17 夜）**：函数代码本身已支持通配——`DEFAULT_ORIGINS` 含
-`*.shenge-work.pages.dev`，`isAllowedOrigin()` 也实现了 `*.` 后缀匹配；但线上环境变量
-`ALLOWED_ORIGINS` 是**精确域名列表**，覆盖了代码默认值，因此带
-`Origin: https://abc123.shenge-work.pages.dev` 的请求仍返回 403 `origin_denied`。
-同一轮探测：主站 `shenge-work.github.io` 与备站 `shenge-work.pages.dev` 正常、外来域名 403、
-`OPTIONS` 预检 204 且 `Access-Control-Allow-Origin` 回显正确。
+**问题**：函数代码本身支持 `*.` 通配（`DEFAULT_ORIGINS` 含 `*.shenge-work.pages.dev`），
+但线上环境变量 `ALLOWED_ORIGINS` 是精确列表
+`https://shenge-work.github.io,https://shenge-work.pages.dev`，覆盖了代码默认值，
+因此 `Origin: https://abc123.shenge-work.pages.dev` 一直 403 `origin_denied`。
+**不是代码 bug，是线上配置没跟上**；`docs/jd-match.md` §4.3 里「随函数重部署自动生效」的推测不成立。
 
-**这不是代码 bug，是线上配置没跟上**。`docs/jd-match.md` §4.3 里「通配随函数重部署自动生效」
-的推测不成立，已在专题文档更正。JD 匹配与 AI 问答在主站 / 备站均不受影响，预览部署仍会 403。
+**处置（2026-11-18 02:14，Chrome 登录 CloudBase 新版开发平台）**：
+环境 `resume-ai` → 云函数 `resume-ai-chat` → 函数配置 → 编辑 → 环境配置 → 环境变量，
+把 `ALLOWED_ORIGINS` 改为
+`https://shenge-work.github.io,https://shenge-work.pages.dev,*.shenge-work.pages.dev`；
+其余 5 个变量（`AI_API_KEY` / `TTS_REGION` / `TTS_SECRET_ID` / `TTS_SECRET_KEY` /
+`TTS_VOICE_TYPE`）**一个没动**。**保存即生效**，无需重传代码、无需重新打包。
 
-**做法（二选一，都需要云函数配置权限）**：
+**复验（同轮线上直探）**：
 
-1. 更省事：把 `*.shenge-work.pages.dev` 显式写进 `ALLOWED_ORIGINS`，重新部署函数；
-2. 删掉线上 `ALLOWED_ORIGINS` 变量，改走代码默认值（含预览通配 + 本地 8000 白名单）。
+| 探测 | 结果 |
+|---|---|
+| `POST /chat` + 预览子域 Origin | 403 → **400 `bad_request`**（已越过 CORS 层） |
+| `OPTIONS` 预检 + 预览子域 Origin | 204，`Access-Control-Allow-Origin` 正确回显 |
+| 主站 / 备站 Origin | 正常 |
+| 外来域名 `evil.example.com` | 仍 403 `origin_denied` |
+| 问答 `{"question":...}` / `{"mode":"tts"}` | 均 200，服务端密钥未丢失 |
 
-> ⚠️ 用云 API 改配置时 `UpdateFunctionConfiguration` 必须**全量回传**环境变量，
-> 漏掉平台注入的 `AI_API_KEY` 会让 `/chat` 立刻失效（见 §3.2 语音部署踩坑）。
-> 本轮子用户密钥文件用后即删，当前无可用 SCF 凭据，因此需要本人登录 CloudBase 控制台操作，
-> 或重新提供具备 SCF 权限的临时密钥。**这是 T5 目前唯一的前置条件。**
-
-**验收**：打开某次预览部署 `https://<commit>.shenge-work.pages.dev`，AI 问答与 JD 匹配不报
-CORS / 403；主站与备站仍正常；外来域名仍返回 403。
+> ⚠️ 仍要记住：走云 API `UpdateFunctionConfiguration` 时必须**全量回传**环境变量，
+> 漏掉 `AI_API_KEY` 会让 `/chat` 立刻失效（见 §3.2）。控制台 UI 编辑会自动保留全部变量，
+> 这次没触发该坑，但日后用 API 改配置仍按全量处理。
 
 ---
 
@@ -305,29 +309,30 @@ curl -s -X POST https://resume-ai-d9g7zghnxda2ee2cb-1307508155.ap-shanghai.app.t
   -d '{"mode":"jd","jd":"岗位职责：负责企业级 AI Agent 平台架构设计，含任务规划与多智能体编排；建设 RAG 检索链路并做召回评测。"}'
 ```
 
-- 预览子域 CORS 通配（T5）仍按原状态单独复核，本条不再默认「随新函数自动生效」。
+- 预览子域 CORS 通配（T5）已于 2026-11-18 通过控制台配置修复并复验，详见 §3.5。
 
 ---
 
-### 3.11 T11 · JD 匹配端到端验收（进行中，2026-11-17）
+### 3.11 T11 · JD 匹配端到端验收（已完成，2026-11-18）
 
-**已通过（线上真实模型 + 真实浏览器）**：三个示例 JD 全部按固定结构出表（6.0–8.6 秒，
-快于预期）；证据 `src` 100% 命中 37 段真实切片；`jd_quota` 额度、注入拦截不占额度、CORS、
-非 JD 文本判定、问答 / TTS 回归、1440 / 390px 前端四态渲染与 Markdown 导出均通过。
-本轮另用生产域名独立直探 `POST /chat {mode:"jd"}` 复核（详见 [jd-match.md §4.2.1](jd-match.md)）。
-逐项数据：生产域名真实点击示例 **8.79 秒出表**（score 72 / 7 行 / Markdown 1405 字符）、
-非 JD 气象新闻 `score=0` +「无法判断」、太短与 1620 字超长均 400、非法 Origin 403、
-`OPTIONS` 预检 204 + CORS 回显、全程 0 个 JS `pageerror`。
+**已通过（线上真实模型 + 真实浏览器）**：三个示例 JD 全部按固定结构出表（6.0–8.6 秒）；
+证据 `src` 100% 命中 37 段真实切片；`jd_quota` 额度、注入拦截不占额度、CORS、非 JD 判定、
+问答 / TTS 回归、1440 / 390px 四态渲染与 Markdown 导出均通过。生产域名真实点击示例
+**8.79 秒出表**（score 72 / 7 行 / Markdown 1405 字符）、非 JD 新闻 `score=0` +「无法判断」、
+太短与 1620 字超长均 400、非法 Origin 403、`OPTIONS` 预检 204 + CORS 回显、0 个 JS `pageerror`。
+逐项数据见 [jd-match.md §4.2.1 / §6.3](jd-match.md)。
 
-**剩余 3 项人工复核**（不阻塞使用，按 [jd-match.md §6.3](jd-match.md) 清单执行）：
+**原 3 项人工复核全部收口（2026-11-18）**：
 
-| 待验证项 | 判定口径 |
+| 项 | 结果 |
 |---|---|
-| 预览子域 CORS | `*.shenge-work.pages.dev` 通配是否随新函数生效（与 T5 一并复核） |
-| `chat_logs` 查库 | `tag=jd` 有落库行且 `q` 为 ≤300 字脱敏摘要 |
-| 移动端真机 | 真机 WebView 打开 `#jd`，表单、示例按钮、结果卡无溢出（本轮仅 390px 视口模拟） |
+| 预览子域 CORS | 控制台把 `*.shenge-work.pages.dev` 追加进 `ALLOWED_ORIGINS` 后 403 消失；预检 / 主站 / 备站 / 外来域名 / 问答 / TTS 全部回归通过（详见 §3.5，T5 同步完成） |
+| `chat_logs` 查库 | PostgreSQL SQL 编辑器：全表 **126 行**，`tag=jd` **11 行**，`q` 长度 2–300（均值 102）、手机号正则 0 命中、最新一条为单行岗位摘要，时间窗 11-17 23:46:37 → 11-18 00:07:49 |
+| 移动端 | Chrome 移动设备模拟（`isMobile + hasTouch`，390 / 360 / 320px，DPR 3/3/2）全程 `tap()` 跑通 首屏 CTA → 示例 → 提交 → 结果 → 复制 → 重填 → 错误态；横向溢出 0、0 个 JS 错误、剪贴板 552 字符 |
 
-完成后回写 `jd-match.md` §4.2 / §4.3，并把 T11 置为 `已完成（日期）`。
+**真机 WebView** 仍建议本人用手机打开 `https://shenge-work.pages.dev/#jd` 扫一眼
+（确认字体渲染与 WebView 差异，约 30 秒）；桌面触屏模拟已覆盖布局与触摸事件，此项不再阻塞验收。
+T11 置为 `已完成（2026-11-18）`。
 
 ---
 
@@ -364,7 +369,7 @@ curl -s -X POST https://resume-ai-d9g7zghnxda2ee2cb-1307508155.ap-shanghai.app.t
   跟随）、云函数 `mode:"jd"` 分支（拆分 ≤14 条 / 逐条 TF-IDF 召回合并加权 / 两层输出约束与
   证据 id 白名单 / 10 分钟 4 次独立额度 / 注入拦截不占额度）、README 板块与功能清单更新、
   `docs/jd-match.md` v2 专题文档（调研 + 方案 + 进度）。
-  **已上线（`7c7b5e1`）并完成线上端到端验收**，详见 §3.10；仅余 3 项人工复核（T11）。
+  **已上线（`7c7b5e1`）并完成线上端到端验收（T11 于 2026-11-18 全项完成）**，详见 §3.10 / §3.11。
 
 ---
 
