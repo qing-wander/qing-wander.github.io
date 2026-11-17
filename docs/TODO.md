@@ -4,7 +4,7 @@
 > 统一在这里登记，每条给出状态、影响、前置条件、执行步骤与验收标准，并回链依据文档。
 > 目的：换会话、换机器、换协作人时，不用通读五份设计文档也能知道下一步该做什么、哪些是故意不做的。
 >
-> 最近一次盘点：**2026-11-17**（Resend 接入收尾）。
+> 最近一次盘点：**2026-11-17**（Resend 接入收尾 + T2 git refs 对齐）。
 
 ---
 
@@ -39,7 +39,7 @@
 | ID | 事项 | 状态 | 优先级 | 影响范围 | 依据 |
 |---|---|---|---|---|---|
 | T1 | 验证 Resend 发信域名，放开任意收件人自动发信 | `已决策暂缓` | 高（唯一功能缺口） | `resume.html` 发简历到邮箱 | [resume-delivery.md §①b](resume-delivery.md) |
-| T2 | 本地 git 引用与远端 `main` 对齐 | `待办` | 中（工程卫生） | 本机开发 | 本文 §3.2 |
+| T2 | 本地 git 引用与远端 `main` 对齐 | `已完成（2026-11-17）` | — | 本机开发 | 本文 §3.2 |
 | T3 | 更新 `cloudflare-pages-deploy.md` 的过时描述 | `待办` | 中（文档准确性） | 部署文档 | [cloudflare-pages-deploy.md](cloudflare-pages-deploy.md) |
 | T4 | AI 问答助手 13.8「未做」清单复核 | `待复核` | 中 | AI 问答 / README | [ai-assistant-survey.md §13.8](ai-assistant-survey.md) |
 | T5 | 预览子域 `*.pages.dev` 的 CORS 通配 | `待办` | 低（非阻塞） | 预览部署的 AI 问答 | [cloudflare-pages-deploy.md §CORS](cloudflare-pages-deploy.md) |
@@ -110,31 +110,42 @@ curl -s -X POST https://shenge-work.pages.dev/api/deliver \
 
 ---
 
-### 3.2 T2 · 本地 git 引用与远端 `main` 对齐
+### 3.2 T2 · 本地 git 引用与远端 `main` 对齐 ✅ 已完成（2026-11-17）
 
-**现状**：本机 `github.com` 代理不可达，`git fetch` / `git push` 都不通；远端写入改走
-GitHub **Git Data API** 通道（`git credential fill` 取 token → blobs / trees / commits →
-PATCH `refs/heads/main`；GitHub MCP 的 `create_or_update_file` 因集成无 `contents:write` 返回 403，别再用）。
+**结论**：本机 `github.com` 代理已恢复可达，`git fetch` / `git push` 均可用，**不再需要 Git Data API 中转**；
+本地 `HEAD` / `main` / `origin/main` 已统一到 `941da91`。
 
-- 本地 `HEAD` 仍停在 `fa64eb9`，远端 `main` 已到 `d5de5afe`（及后续文档提交），本地 refs 落后；
-- `git status` 显示 `docs/resume-delivery.md` 为 `M`，但**内容与远端一致**（改动通过 API 推上去了）；
-- `docs/ai-avatar-skins.md` 有一份**纯 markdown 格式化**改动（表格对齐、URL 用 `<>` 包裹、标题后补空行），
-  无实质内容变化，尚未入库，需决定是提交还是丢弃；
-- 本次新增的 `docs/TODO.md` 与 README 改动同样只在远端入库，本地工作区仍显示为新增 / 修改。
+**实测根因**：不是「代理不可达」，而是代理对 Git 的 HTTP/2 传输处理有问题——
+`git ls-remote` 与 `curl https://github.com/.../info/refs` 都返回 200，但 `git fetch`
+报 `Empty reply from server`。加 `-c http.version=HTTP/1.1` 后立刻成功。
+已写入本机 `.git/config`（`git config --local http.version HTTP/1.1`，**不入库**），
+此后直接 `git fetch` / `git push` 即可，无需带参数。
 
-**处理步骤**（等代理恢复、`git fetch origin` 能跑通时）：
+**实际执行步骤**：
 
 ```bash
-cd shenge-work.github.io
-git status --short                 # 先确认哪些是「内容已入库」的假改动
-git fetch origin
-git reset --hard origin/main       # 丢弃落后的 refs 与纯格式化改动
-git status --short                 # 期望干净
+git fetch --unshallow origin      # 若曾用 --depth=1 拉过，先补回完整历史
+git status --short                # 对齐前备份现场：HEAD / git diff / 未跟踪文件
+git reset --mixed origin/main     # 只移动 refs + index，不动工作区
 ```
 
-若想保留 `docs/ai-avatar-skins.md` 的排版，先 `git stash` 或直接把该格式化改动通过 API 提交入库再对齐。
+> ⚠️ **原步骤里的 `git reset --hard origin/main` 是错的，别照抄**：工作区当时还有一批
+> **未上线**的「岗位匹配 JD MATCH」改动与 `docs/ai-avatar-skins.md` 排版改动，
+> `--hard` 会把它们全部抹掉。只有 `--mixed` 能在对齐 refs 的同时保住这些文件。
 
-**验收**：`git rev-parse HEAD` 与远端 `main`（API 查 `git/ref/heads/main`）一致，`git status --short` 为空。
+**验收（已通过）**：
+- `git rev-parse HEAD` == `git rev-parse main` == `git rev-parse origin/main` == `941da91`，且仓库非 shallow；
+- `git push --dry-run origin main` 返回 `Everything up-to-date`（标准 push 通道恢复）；
+- `git status` 从 17 项收敛到 **9 项**，且 5 个语音文件（`js/ai-voice.js`、
+  `js/ai-voice-cloud.js`、`css/ai-voice.css`、`docs/ai-voice-survey.md`、
+  `functions/tencent/tts.js`）全部识别为「已提交且内容一致」，不再显示 `??`；
+- 剩余 9 项是**真实未上线工作**，与语音无关：6 个 `M`（`README.md` / `index.html` /
+  `js/main.js` / `functions/tencent/{index,prompt}.js` 的 JD 改动、
+  `docs/ai-avatar-skins.md` 纯排版）+ 3 个未跟踪（`css/jd-match.css`、
+  `js/jd-match.js`、`docs/jd-match.md`）。这是下一条要处理的线，**别误当脏状态清掉**。
+
+**顺带澄清**：`docs/resume-delivery.md` / `docs/TODO.md` / `docs/ai-assistant-survey.md`
+对齐后自动变干净——此前显示的 `M` 只是「内容已入库、本地 refs 落后」造成的假象，无需再单独提交。
 
 ---
 
@@ -252,7 +263,8 @@ git status --short                 # 期望干净
 - 测试产生的 KV `deliver:*` 限流计数已清空，临时 key 文件已删；
 - `docs/resume-delivery.md` 已记录配置进度、暂缓决定与 Windows 下重新部署做法，并推送远端 `main`（`d5de5afe`）；
 - 留言墙 KV `site-kv` 绑定 Production 已生效，`./scripts/wall-check.sh` 11/11 通过；
-- 2026-11-17 复核：`github:push` 自动构建已生效，且自动部署不会丢失 `/api/*` Functions。
+- 2026-11-17 复核：`github:push` 自动构建已生效，且自动部署不会丢失 `/api/*` Functions；
+- T2（2026-11-17）：本机 git refs 与远端 `main` 对齐到 `941da91`，`http.version=HTTP/1.1` 写入 `.git/config`，标准 `git fetch` / `git push` 通道恢复，不再走 Git Data API；详见 §3.2。
 
 ---
 
