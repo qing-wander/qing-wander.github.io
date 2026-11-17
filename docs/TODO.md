@@ -48,7 +48,7 @@
 |---|---|---|---|---|---|
 | T1 | 验证 Resend 发信域名，放开任意收件人自动发信 | `已决策暂缓` | 高（唯一功能缺口） | `resume.html` 发简历到邮箱 | [resume-delivery.md §①b](resume-delivery.md) |
 | T2 | 本地 git 引用与远端 `main` 对齐 | `已完成（2026-11-17）` | — | 本机开发 | 本文 §3.2 |
-| T3 | 更新 `cloudflare-pages-deploy.md` 的过时描述 | `待办` | 中（文档准确性） | 部署文档 | [cloudflare-pages-deploy.md](cloudflare-pages-deploy.md) |
+| T3 | 更新 `cloudflare-pages-deploy.md` 的过时描述 | `已完成（2026-11-18）` | 中（文档准确性） | 部署文档 | [cloudflare-pages-deploy.md](cloudflare-pages-deploy.md) |
 | T4 | AI 问答助手 13.8「未做」清单复核 | `待复核` | 中 | AI 问答 / README | [ai-assistant-survey.md §13.8](ai-assistant-survey.md) |
 | T5 | 预览子域 `*.pages.dev` 的 CORS 通配 | `已完成（2026-11-18）` | — | 预览部署的 AI 问答 / JD 匹配 | 本文 §3.5（含配置修复与全量回传踩坑） |
 | T6 | 可选环境变量 `DELIVER_BCC` / `WALL_ADMIN_TOKEN` | `可选` | 低 | 转发备案 / 留言删除 | [resume-delivery.md §③](resume-delivery.md) |
@@ -182,6 +182,13 @@ git reset --mixed origin/main     # 只移动 refs + index，不动工作区
 授权时间与授权人未在仓库中记录，如能查到请一并补上。
 
 **验收**：文档描述的部署链路与线上实测一致，且不再出现「push 不会触发构建」的误导性结论。
+
+**已完成（2026-11-18）**：`docs/cloudflare-pages-deploy.md` 的「当前实际形态」已重写为
+「push 即部署为主链路（附 2026-11-17 的 `github:push` 实测证据）」，`sync-pages-from-github.sh` /
+`deploy-pages.sh` 标注为兜底通道，launchd 段落明确列为历史方案并注明「换机后无需恢复」；
+README 第 12 行同类表述同步修正，并补一句「functions 不进 `dist` 仍会被编译，自动构建不会丢 API」。
+CORS 段也一并更新：`*.shenge-work.pages.dev` 已写入线上 `ALLOWED_ORIGINS`（2026-11-18 保存即生效）。
+授权时间与授权人仓库内仍无记录，保持未知。
 
 ---
 
@@ -373,6 +380,14 @@ T11 置为 `已完成（2026-11-18）`。
 | 10 | 本地发简历 403 | `deliver.js` 白名单补 `localhost/127.0.0.1:8877` | `functions/api/deliver.js` |
 | 11 | 零测试 | 新增 `tests/rag.test.mjs`（18 个用例）、`.github/workflows/test.yml`（语法检查 + 单测 + KB 幂等） | `tests/`、`.github/workflows/test.yml` |
 
+**线上状态（2026-11-18 04:50 已部署并冒烟）**
+
+- 云函数 `resume-ai-chat` 部署到 `$LATEST`，`CodeSize` 47783 字节，与本地包一致；环境变量未变。
+- 线上实测：问「他的教育背景」→ `sources` 只有 `edu-01`（0.06，章节意图生效，此前会带 0 分块）；
+  问「他会不会做饭」→ 固定话术拒答且 `sources` 为空；JD 过短 → 400；
+  正常 JD → `ok:true`、score 65、5 个需求点，`meta` 里出现 `merged` 字段。
+- 静态侧 GitHub Pages 已构建：`index.html` 显示「JD 正文不入库，只留哈希留痕」、`js/jd-match.js` 已带合并文案。
+
 **T15 仍是待办**（按优先级）：
 
 - **知识库覆盖缺口**：站点功能（留言墙、AI 语音、JD 匹配、四套主题）没有对应切片，问「留言墙用的什么存储」会答不上。
@@ -403,6 +418,11 @@ T11 置为 `已完成（2026-11-18）`。
   证据 id 白名单 / 10 分钟 4 次独立额度 / 注入拦截不占额度）、README 板块与功能清单更新、
   `docs/jd-match.md` v2 专题文档（调研 + 方案 + 进度）。
   **已上线（`7c7b5e1`）并完成线上端到端验收（T11 于 2026-11-18 全项完成）**，详见 §3.10 / §3.11。
+- T3（2026-11-18）：`docs/cloudflare-pages-deploy.md` + README 的「push 不触发构建」结论已修正为
+  「push 即部署为主链路」，launchd 列为历史方案，CORS 通配配置同步更新。
+- 简历长图依赖本地化（2026-11-18）：`html2canvas 1.4.1` 从 `cdn.jsdelivr.net` 改为自托管
+  `assets/vendor/html2canvas.min.js`（194 KB，带 `?v=`），断网或境外 CDN 不可达时仍能导出长图；
+  全站剩余外链只有 Google Fonts（异步加载，失败仅回退系统字体）。
 
 ---
 
