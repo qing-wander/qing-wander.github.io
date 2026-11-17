@@ -317,6 +317,43 @@ curl -s -X POST https://resume-ai-d9g7zghnxda2ee2cb-1307508155.ap-shanghai.app.t
 注入拦截不占额度、CORS、问答 / TTS 回归与 1440 / 390px 前端渲染均通过。本轮独立探测
 （上面的 curl）与之一致。
 
+**逐项明细（可复核，2026-11-17 夜 ~ 11-18 00:08）**
+
+① 三个示例 JD，真实模型全部 `200 / ok:true`，无一次 `parse_failed`：
+
+| 示例 | score / verdict | rows | 覆盖/部分/缺口 | 证据数 | 非法 src | ground | 服务端耗时 |
+|---|---|---|---|---|---|---|---|
+| `agent` 技术深度匹配 | 72 / 匹配 | 7 | 3 / 3 / 1 | 11 | 0 | 0.86–1.0 | 7.66s |
+| `backend` 同栈不同赛道 | 35 / 部分匹配 | 8 | 0 / 5 / 3 | 5 | 0 | 0.87–1.0 | 6.01s |
+| `solution` 明显跨岗 | 45 / 部分匹配 | 8 | 2 / 4 / 2 | 6 | 0 | 0.94–1.0 | 8.29s |
+
+三份输出均满足五档 `verdict`、0–100 整数分、1–8 行、三态 `status`、
+`covered` 行必有证据、`sources` 稳定 6 段、`meta` 齐全；`ground` 0.86–1.0，
+说明证据白名单与原文重合度校验在真实模型下都生效。
+
+② 边界、安全与回归（线上直探）：
+
+| 用例 | 结果 |
+|---|---|
+| JD < 30 字 / 1620 字 | 均 400 `bad_request`（超长回显当前字数） |
+| 含「忽略以上指令」 | 400 注入拦截，且不占额度（被拦后仍能连跑 4 次正常请求） |
+| 10 分钟窗口内第 5 次 | 429 `jd_quota`，文案含「10 分钟 4 次」与邮箱兜底 |
+| 非法 Origin / `OPTIONS` 预检 | 403 `origin_denied` / 204 + `Access-Control-Allow-Origin` 正确回显 |
+| 非 JD 气象新闻 | 200、`score=0` + `verdict=无法判断`，摘要说明「并非岗位 JD」（3.4s） |
+| 问答 / TTS 回归 | 200 `ok:true`（回答 134 字 / 合法 base64 MP3） |
+
+③ 生产前端（Edge headless，生产域名）：
+
+- GitHub Pages 与 Cloudflare Pages 首页均含 `id="jd"` 及两个 `?v=20261117a` 资源引用，
+  `js/jd-match.js` / `css/jd-match.css` / `js/main.js` 均 200；
+- **真实点击「AI Agent 工程师」示例 → 8.79 秒出表**（score 72 / 7 行 / 3 项统计），
+  Markdown 导出 1405 字符；空态 / 加载 / 结果 / 错误四态均可用，错误态保留已填 JD（334 字）；
+- 1440 / 390px 横向溢出均为 0，`window.CP_AI_ENDPOINT` 正常暴露，**0 个 JS `pageerror`**。
+
+④ 版本一致性：线上部署包 `resume-ai-chat.zip` 内 `index.js` / `prompt.js` / `tts.js` /
+`server.js` 与本地 `functions/tencent/` **逐字节相同**，同时含 JD 与 TTS 两套路由；
+四个 JS `node --check` 全过，仓库 `main` 已是同一份合并版。
+
 ### 4.3 未验证（仅剩 3 项人工复核，不阻塞使用）
 
 | 项 | 说明 |
@@ -337,8 +374,10 @@ curl -s -X POST https://resume-ai-d9g7zghnxda2ee2cb-1307508155.ap-shanghai.app.t
 
 **T10 已完成，勿重复上线**（2026-11-17 线上实测）：
 
-1. **静态发布**：`7c7b5e1` 已推送到 `origin/main` 并触发 GitHub Pages 构建，生产首页已含
-   `#jd` 区块及 `js/jd-match.js` / `css/jd-match.css` 引用；语音脚本引用完好。
+1. **静态发布**：`7c7b5e1` 已推送到 `origin/main` 并同时触发 GitHub Pages /
+   Cloudflare Pages 自动构建，两个生产域名首页均含 `#jd` 区块及
+   `js/jd-match.js?v=20261117a` / `css/jd-match.css?v=20261117a` 引用，三个静态资源 200；
+   语音脚本引用完好。
 2. **云函数**：部署语音链路时上传的 `functions/tencent/` 整包已同时含 JD 与 TTS 路由，
    线上 `POST /chat {mode:"jd"}` 用真实 hy3 返回 `ok:true` 与完整 `match`（见 §4.2.1），
    **无需再次重部署**；问答与 TTS 回归均 200。
@@ -371,7 +410,9 @@ curl -s -X POST https://resume-ai-d9g7zghnxda2ee2cb-1307508155.ap-shanghai.app.t
 线上直探 `POST /chat {mode:"jd"}` 返回 `ok:true` + 完整结构化 `match`（score 75、4 条 rows、
 真实证据 id 与追问点），`{"mode":"tts"}` 与问答均 200；生产首页含 `#jd` 与全部资源引用。
 浏览器侧（v3 验收）：三个示例 JD 全部出表（6.0–8.6 秒），`jd_quota` 第 5 次提示、
-注入拦截不占额度、1440 / 390px 四态渲染均通过；剩余项见 §4.3。
+注入拦截不占额度、1440 / 390px 四态渲染均通过；**生产域名真实点击示例 8.79 秒出表**
+（score 72 / 7 行，Markdown 1405 字符，0 个 JS 错误），非 JD 新闻返回 0 分「无法判断」。
+剩余三项人工复核见 §4.3。
 
 ### 6.3 端到端验收清单（对应 T11）
 
@@ -386,7 +427,8 @@ curl -s -X POST https://resume-ai-d9g7zghnxda2ee2cb-1307508155.ap-shanghai.app.t
 
 - [x] 三个示例 JD 各跑一次，真实模型按固定结构出表（6.0–8.6s），证据 `src` 100% 命中真实切片 id（§4.2.1）；
 - [x] 10 分钟内第 5 次触发 `jd_quota`；
-- [x] 粘贴非 JD 文本 → 0 分 +「无法判断」；
+- [x] 粘贴非 JD 文本（气象新闻）→ 200、`score=0` +「无法判断」（服务端 3.4s）；
+- [x] 生产域名真实点击示例 → 8.79 秒出表，Markdown 导出 1405 字符、0 个 JS `pageerror`；
 - [x] 含「忽略以上指令」的文本 → 400 注入拦截，且不占额度；
 - [x] 问答助手回归：`{"question":...}` → 200；另 `{"mode":"tts"}` → 200；
 - [x] 1440 / 390px 四态渲染与 Markdown 导出；

@@ -50,7 +50,7 @@
 | T2 | 本地 git 引用与远端 `main` 对齐 | `已完成（2026-11-17）` | — | 本机开发 | 本文 §3.2 |
 | T3 | 更新 `cloudflare-pages-deploy.md` 的过时描述 | `待办` | 中（文档准确性） | 部署文档 | [cloudflare-pages-deploy.md](cloudflare-pages-deploy.md) |
 | T4 | AI 问答助手 13.8「未做」清单复核 | `待复核` | 中 | AI 问答 / README | [ai-assistant-survey.md §13.8](ai-assistant-survey.md) |
-| T5 | 预览子域 `*.pages.dev` 的 CORS 通配 | `待办` | 低（非阻塞） | 预览部署的 AI 问答 | [cloudflare-pages-deploy.md §CORS](cloudflare-pages-deploy.md) |
+| T5 | 预览子域 `*.pages.dev` 的 CORS 通配（实测仍 403，需控制台改 `ALLOWED_ORIGINS`） | `待办` | 低（非阻塞） | 预览部署的 AI 问答 / JD 匹配 | 本文 §3.5（含实测结论与全量回传踩坑） |
 | T6 | 可选环境变量 `DELIVER_BCC` / `WALL_ADMIN_TOKEN` | `可选` | 低 | 转发备案 / 留言删除 | [resume-delivery.md §③](resume-delivery.md) |
 | T7 | Pages CMS 账号授权状态确认 | `待确认` | 低 | 网页改文案 | [observability-and-cms.md §一.3](observability-and-cms.md) |
 | T8 | AI 助手皮肤后续迭代池 | `思考池` | 低 | 右下角助手 | [ai-avatar-skins.md §9](ai-avatar-skins.md) |
@@ -315,6 +315,9 @@ curl -s -X POST https://resume-ai-d9g7zghnxda2ee2cb-1307508155.ap-shanghai.app.t
 快于预期）；证据 `src` 100% 命中 37 段真实切片；`jd_quota` 额度、注入拦截不占额度、CORS、
 非 JD 文本判定、问答 / TTS 回归、1440 / 390px 前端四态渲染与 Markdown 导出均通过。
 本轮另用生产域名独立直探 `POST /chat {mode:"jd"}` 复核（详见 [jd-match.md §4.2.1](jd-match.md)）。
+逐项数据：生产域名真实点击示例 **8.79 秒出表**（score 72 / 7 行 / Markdown 1405 字符）、
+非 JD 气象新闻 `score=0` +「无法判断」、太短与 1620 字超长均 400、非法 Origin 403、
+`OPTIONS` 预检 204 + CORS 回显、全程 0 个 JS `pageerror`。
 
 **剩余 3 项人工复核**（不阻塞使用，按 [jd-match.md §6.3](jd-match.md) 清单执行）：
 
