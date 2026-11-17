@@ -302,7 +302,7 @@
               '<span class="jd-summary-meta">' +
                 (meta.recalled || 0) + ' 段切片 · ' +
                 (meta.requirements || 0) + ' 条需求' +
-                (meta.merged && meta.merged !== meta.requirements ? ' → ' + meta.merged + ' 个需求点' : '') + ' · ' +
+                (meta.merged && meta.merged < meta.requirements ? ' → 合并为 ' + meta.merged + ' 个需求点' : '') + ' · ' +
                 state.elapsed.toFixed(1) + 's' +
               '</span>' +
             '</div>' +
