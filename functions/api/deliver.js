@@ -58,6 +58,9 @@ const DEFAULT_ORIGINS = [
   'http://127.0.0.1:8000',
   'http://localhost:8080',
   'http://127.0.0.1:8080',
+  /* 本地联调服务器 scripts/dev-api-server.mjs 的默认端口，与 wall.js 保持一致 */
+  'http://localhost:8877',
+  'http://127.0.0.1:8877',
 ];
 
 const RESUME_PRIMARY = 'https://shenge-work.github.io/resume.html';

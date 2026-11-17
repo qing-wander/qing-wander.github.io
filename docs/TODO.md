@@ -59,6 +59,8 @@
 | T11 | JD 匹配端到端验收（含 3 项人工复核） | `已完成（2026-11-18）` | — | JD 匹配 | 本文 §3.11 / [jd-match.md §4.3](jd-match.md) |
 | T12 | JD 匹配迭代池（缓存 / 分享 / PDF / 追问直达 / 招聘方速览模式）——追问直达已随面板模式完成，其余仍在思考池 | `思考池（追问直达已完成）` | 低 | JD 匹配 | [jd-match.md §9](jd-match.md) |
 | T13 | AI 助手面板内 JD 模式（模式切换 / 对话内紧凑结果卡 / 追问直达问答） | `已完成（2026-11-18）` | — | AI 问答 / JD 匹配 | [jd-match.md §10](jd-match.md) |
+| T14 | 代码审视整改 P0：检索门控、JD 额度与行数、JD 日志脱敏、限流取 IP | `已完成（2026-11-18）` | — | 云函数 / 前端文案 | 本文 §3.14 |
+| T15 | 代码审视遗留 P1/P2：语义向量、JD 额度落库、main.js 拆分、首屏 SSG、3D 预加载、弹窗焦点陷阱 | `待办` | 中 | 全站 | 本文 §3.14 |
 
 ---
 
@@ -351,6 +353,36 @@ T11 置为 `已完成（2026-11-18）`。
 需要排期时，先在本文件新建独立条目并给出验收标准，再动代码。
 
 ---
+
+
+### 3.14 T14 / T15 · 代码审视整改（2026-11-18）
+
+**T14 已完成**（改动均在 `functions/tencent/`，前端只动文案；`node --test tests/*.test.mjs` 18 个用例全绿）
+
+| # | 问题 | 改法 | 位置 |
+|---|---|---|---|
+| 1 | 检索把 0 分块当"依据" | 打分后 `score <= 0` 直接丢弃；阈值 0.01 → **0.05 绝对 + best×0.4 相对**，两者都过不了才回落关键词 | `index.js` `retrieve()` |
+| 2 | 无关问题照样带上下文进模型 | 关键词兜底要求至少命中 2 个 bigram；`OFFTOPIC_WORDS` 补生活闲聊词（做饭 / 星座 / 电影…） | `index.js` `keywordScore()`、`prompt.js` |
+| 3 | 词面缺口：问「教育背景」召回为空 | 标题命中加权 ×1.12–1.45；`section`（education / contact / skills…）意图加 0.06 兜底 | `index.js` `titleBoost()` `sectionHint()` |
+| 4 | JD 解析失败也扣额度 | `jdQuotaRefund()`，在 `!AI_KEY` / kb 失败 / `no_match` / `parse_failed` 四处退款 | `index.js` `handleJD()` |
+| 5 | 8 行截断与"逐条"文案矛盾 | 上限提到 10；API 返回 `meta.merged`；前端改「JD 拆出 M 条 → 合并为 N 个需求点」 | `index.js`、`prompt.js`、`main.js` |
+| 6 | 页面称"JD 不入库"，实际存 300 字 | 日志只写 `jd:<sha256 前 10 位>` + 需求条数 + 覆盖度；页面文案改「正文不入库，只留哈希留痕」 | `index.js` `jdTag()`、`index.html` |
+| 7 | `LOG_SALT` 默认固定常量，哈希可反推 | 显式 env → 由 `AI_API_KEY` 派生 → 实例级随机，不再有固定默认值 | `index.js` |
+| 8 | 限流取 `XFF` 首段可伪造 | 优先 `x-real-ip` / `x-client-ip` / `cf-connecting-ip`，其次取 XFF **末跳**；新增全站日额度 `GLOBAL_LIMIT_PER_DAY` 熔断 | `index.js` `clientIp()` `globalQuota()` |
+| 9 | 函数包知识库不随 CI 更新 | `build-kb.yml` 改跑 `--sync-functions`，加两份产物 `cmp` 同源校验，隐私闸门覆盖函数包 | `.github/workflows/build-kb.yml` |
+| 10 | 本地发简历 403 | `deliver.js` 白名单补 `localhost/127.0.0.1:8877` | `functions/api/deliver.js` |
+| 11 | 零测试 | 新增 `tests/rag.test.mjs`（18 个用例）、`.github/workflows/test.yml`（语法检查 + 单测 + KB 幂等） | `tests/`、`.github/workflows/test.yml` |
+
+**T15 仍是待办**（按优先级）：
+
+- **知识库覆盖缺口**：站点功能（留言墙、AI 语音、JD 匹配、四套主题）没有对应切片，问「留言墙用的什么存储」会答不上。
+  正确做法是在 `site-data.json` 增一个 `features` 段落并在 `build_kb.py` 里切块，**属于内容改动，需站长确认措辞后再动**。
+- **语义向量**：`build_kb.py --provider zhipu` 已支持，切换后 `index.js` 的 `loadKB` 需要放开 provider 校验并改检索实现。
+- **JD 额度落库**：`jdQuota` 仍是单实例内存，冷启动归零；要彻底防刷需按 `tag=jd` 查 `chat_logs`（PostgREST 过滤写法需先验证）。
+- **main.js 拆分 / 首屏 SSG / 3D 条件预载 / 弹窗焦点陷阱**：详见评估文档「P1/P2」章节，均为独立改动、无需与本次一起做。
+- **本地联调通道**：`scripts/dev-api-server.mjs` 只代理 `functions/api`（wall / deliver），问答走的仍是线上云函数；
+  本地静态站在 8877，云函数白名单只认 8000，所以本地点「问一句」会 403。要么把前端起在 8000，
+  要么给云函数配 `ALLOWED_ORIGINS` 环境变量（不建议为调试永久放宽线上白名单）。
 
 ## 4. 已完成（2026-11-16 / 17 收尾，勿重复做）
 
