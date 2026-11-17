@@ -57,7 +57,8 @@
 | T9 | 里程碑 M5「本地推理演示通道」 | `已决策不做` | — | AI 问答 | [ai-assistant-survey.md D4](ai-assistant-survey.md) |
 | T10 | 上线收尾：推送 JD 静态文件 + 云函数 `mode:jd` 生效 | `已完成（2026-11-17）` | — | AI 问答 / JD 匹配 | 本文 §3.10 / [jd-match.md §5](jd-match.md) |
 | T11 | JD 匹配端到端验收（含 3 项人工复核） | `已完成（2026-11-18）` | — | JD 匹配 | 本文 §3.11 / [jd-match.md §4.3](jd-match.md) |
-| T12 | JD 匹配迭代池（缓存 / 分享 / PDF / 追问直达 / 招聘方速览模式） | `思考池` | 低 | JD 匹配 | [jd-match.md §9](jd-match.md) |
+| T12 | JD 匹配迭代池（缓存 / 分享 / PDF / 追问直达 / 招聘方速览模式）——追问直达已随面板模式完成，其余仍在思考池 | `思考池（追问直达已完成）` | 低 | JD 匹配 | [jd-match.md §9](jd-match.md) |
+| T13 | AI 助手面板内 JD 模式（模式切换 / 对话内紧凑结果卡 / 追问直达问答） | `已完成（2026-11-18）` | — | AI 问答 / JD 匹配 | [jd-match.md §10](jd-match.md) |
 
 ---
 

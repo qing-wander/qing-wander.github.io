@@ -12,7 +12,6 @@
 
   var form = document.getElementById('jdForm');
   var stage = document.getElementById('jdStage');
-  if (!form || !stage) return;
 
   var CFG = {
     /* 端点与问答助手共用；main.js 在数据渲染后才会写入 window.CP_AI_ENDPOINT，
@@ -76,6 +75,20 @@
       '4. 有金融行业客户资源或项目经验优先。'
     ].join('\n')
   };
+
+  /* 对外工具：AI 助手面板的「JD 匹配」模式复用同一套请求 / 导出 / 错误文案，
+     避免两处口径漂移。均为惰性引用，调用时 IIFE 已执行完，安全。 */
+  window.CP_JD_UI = {
+    config: function () {
+      return { minChars: CFG.minChars, maxChars: CFG.maxChars, timeout: CFG.timeout, quota: CFG.quota };
+    },
+    examples: function () { return EXAMPLES; },
+    request: function (jd) { return request(jd); },
+    errorText: function (err) { return errorText(err); },
+    toMarkdown: function (data) { return toMarkdown(data); }
+  };
+
+  if (!form || !stage) return;
 
   var textEl = document.getElementById('jdText');
   var countEl = document.getElementById('jdCount');

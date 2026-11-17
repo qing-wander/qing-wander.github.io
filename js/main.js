@@ -701,7 +701,17 @@
         { q: '你主导过哪些 0→1 的系统？', label: '0→1 系统' },
         { q: 'Agent 架构这块你做到什么程度？', label: 'Agent 深度' },
         { q: '技术栈与方向？', label: '技术栈' }
-      ]
+      ],
+      /* JD 匹配：与问答共用 /chat 端点，靠 mode 分流；长度/额度口径以 jd-match.js 为准 */
+      jd: {
+        minChars: 30,
+        maxChars: 1500,
+        samples: [
+          { key: 'agent', label: 'Agent 岗' },
+          { key: 'backend', label: '后端岗' },
+          { key: 'solution', label: '售前岗' }
+        ]
+      }
     };
     var aiFab = $('aiFab');
     /* 「岗位匹配」独立脚本（js/jd-match.js）复用同一台云函数与同一个 /chat 端点 */
@@ -712,8 +722,19 @@
     var aiInput = $('aiInput');
     var aiSend = $('aiSend');
     var aiQuick = $('aiQuick');
+    var aiModeBar = $('aiModeBar');
     var aiReady = false;
     var aiBusy = false;
+    var aiMode = 'qa';   /* 'qa' | 'jd'：同一端点两种问法 */
+
+    function jdUI() { return window.CP_JD_UI || null; }
+    function jdCfg() {
+      var u = jdUI();
+      return u ? u.config() : {
+        minChars: AI_CONFIG.jd.minChars, maxChars: AI_CONFIG.jd.maxChars,
+        timeout: 38000, quota: '每人 10 分钟 4 次'
+      };
+    }
 
     function aiScroll() { aiBody.scrollTop = aiBody.scrollHeight; }
     function aiAppendMsg(who, html) {
@@ -730,6 +751,166 @@
       t.classList.add('ai-typing');
       return t;
     }
+
+    /* ── JD 模式：与问答共用端点 / 知识库 / 皮肤语音观察契约 ── */
+    function aiSetMode(next) {
+      if (next !== 'jd') next = 'qa';
+      if (aiMode === next) return;
+      aiMode = next;
+      if (aiPanel) aiPanel.classList.toggle('ai-mode-jd', next === 'jd');
+      if (aiModeBar) {
+        aiModeBar.querySelectorAll('[data-ai-mode]').forEach(function (b) {
+          var on = b.getAttribute('data-ai-mode') === next;
+          b.classList.toggle('on', on);
+          b.setAttribute('aria-pressed', on ? 'true' : 'false');
+        });
+      }
+      if (aiInput) {
+        aiInput.placeholder = next === 'jd'
+          ? '粘贴岗位 JD（30–1500 字），逐条对照档案…'
+          : '问问 CP.AI：他的 Agent 架构经验？';
+        aiInput.setAttribute('aria-label', next === 'jd' ? '输入岗位 JD' : '输入你的问题');
+      }
+      if (aiSend) aiSend.setAttribute('aria-label', next === 'jd' ? '开始匹配 JD' : '发送问题');
+      aiRenderQuick();
+      if (next === 'jd') {
+        aiAppendMsg('bot', '已切到 <b>JD 匹配</b>：粘贴岗位描述，我会拆成需求逐条对照档案证据，列出覆盖 / 部分 / 缺口与面试追问点。<br>一次 30–1500 字，' + jdCfg().quota + '；也可以点下面的示例直接填入。');
+      }
+      if (aiInput && aiPanel && !aiPanel.hidden) aiInput.focus();
+    }
+
+    function aiRenderQuick() {
+      if (!aiQuick) return;
+      if (aiMode === 'jd') {
+        aiQuick.innerHTML = AI_CONFIG.jd.samples.map(function (s) {
+          return '<button class="ai-chip" type="button" data-jd-sample="' + s.key + '">' + esc(s.label) + ' →</button>';
+        }).join('') + '<button class="ai-chip ai-chip-mode" type="button" data-ai-mode="qa">← 问答</button>';
+        return;
+      }
+      aiQuick.innerHTML = AI_CONFIG.quickQuestions.map(function (q) {
+        return '<button class="ai-chip" type="button">' + esc(q) + '</button>';
+      }).join('') + '<button class="ai-chip ai-chip-mode" type="button" data-ai-mode="jd">JD 匹配 ↗</button>';
+      aiQuick.querySelectorAll('.ai-chip').forEach(function (chip) {
+        if (chip.getAttribute('data-ai-mode')) return;
+        chip.addEventListener('click', function () { aiSubmit(chip.textContent); });
+      });
+    }
+
+    function aiSubmitJD(raw) {
+      var u = jdUI();
+      var cfg = jdCfg();
+      var jd = String(raw || '').trim();
+      if (jd.length < cfg.minChars) {
+        aiAppendMsg('bot', '▍JD 太短了（' + jd.length + '/' + cfg.minChars + ' 字），贴完整的岗位职责与任职要求再发。');
+        return;
+      }
+      if (jd.length > cfg.maxChars) {
+        aiAppendMsg('bot', '▍JD 超过 ' + cfg.maxChars + ' 字，删掉公司介绍和福利段落再发。');
+        return;
+      }
+      if (!u) {
+        aiAppendMsg('bot', '▍JD 组件还没加载好，刷新页面再试；急的话用页面下方的「JD 匹配」区块。');
+        return;
+      }
+      aiBusy = true;
+      if (aiSend) aiSend.disabled = true;
+      var flat = jd.replace(/\s+/g, ' ');
+      var preview = flat.slice(0, 52) + (flat.length > 52 ? '…' : '');
+      aiAppendMsg('user', esc(preview));
+      var typing = aiShowTyping();
+      var started = Date.now();
+      u.request(jd).then(function (data) {
+        typing.remove();
+        var m = data.match || {}, o = m.overall || {};
+        var score = Math.max(0, Math.min(100, Number(o.score) || 0));
+        var n = (m.rows && m.rows.length) || 0;
+        aiAppendMsg('bot', '覆盖度 <b>' + score + '/100</b>（' + esc(o.verdict || '已比对') + '），已逐条对照 ' + n + ' 条要求。完整对照表在下面 ↓');
+        aiAppendJDCard(data, (Date.now() - started) / 1000);
+      }).catch(function (err) {
+        typing.remove();
+        aiAppendMsg('bot', '▍' + esc(u.errorText(err)));
+      }).then(function () {
+        aiBusy = false;
+        if (aiSend) aiSend.disabled = false;
+        if (aiPanel && !aiPanel.hidden && aiInput) aiInput.focus();
+      });
+    }
+
+    function aiAppendJDCard(data, elapsed) {
+      var m = data.match || {}, o = m.overall || {};
+      var rows = Array.isArray(m.rows) ? m.rows : [];
+      var stats = m.stats || {};
+      var meta = data.meta || {};
+      var score = Math.max(0, Math.min(100, Number(o.score) || 0));
+      var band = score >= 80 ? 'high' : score >= 60 ? 'mid' : score >= 35 ? 'low' : 'none';
+      var CN = { covered: '覆盖', partial: '部分', gap: '缺口' };
+      var card = document.createElement('div');
+      card.className = 'ai-jd-card';
+      card._jdData = data;
+      var html =
+        '<div class="ai-jd-top">' +
+          '<div class="ai-jd-score" data-band="' + band + '"><b>' + score + '</b><span>/100</span></div>' +
+          '<div class="ai-jd-topmain">' +
+            '<p class="ai-jd-verdict">' + esc(o.verdict || '已比对') + '</p>' +
+            '<p class="ai-jd-sum">' + esc(o.summary || '已按 JD 逐条对照档案。') + '</p>' +
+            '<div class="ai-jd-stats"><span class="s-c">覆盖 ' + (stats.covered || 0) + '</span>' +
+              '<span class="s-p">部分 ' + (stats.partial || 0) + '</span>' +
+              '<span class="s-g">缺口 ' + (stats.gap || 0) + '</span></div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="ai-jd-meta">' + (meta.recalled || 0) + ' 段切片 · ' + (meta.requirements || 0) + ' 条需求 · ' + elapsed.toFixed(1) + 's</div>' +
+        '<div class="ai-jd-rows">';
+      rows.forEach(function (r, i) {
+        var st = CN[r.status] ? r.status : 'partial';
+        var ev = Array.isArray(r.evidence) ? r.evidence.slice(0, 2) : [];
+        var evHtml = ev.length ? ev.map(function (e) {
+          var title = String(e.title || '').split('｜')[0].slice(0, 18);
+          return '<li>' + esc(e.point) + '<span>' + esc(title) + '</span></li>';
+        }).join('') : '<li class="none">无匹配证据</li>';
+        html +=
+          '<div class="ai-jd-item" data-status="' + st + '">' +
+            '<div class="ai-jd-item-h"><span class="ai-jd-no">' + (i + 1 < 10 ? '0' : '') + (i + 1) + '</span>' +
+              '<span class="ai-jd-badge">' + CN[st] + '</span><p>' + esc(r.req) + '</p></div>' +
+            (r.gap && st !== 'covered' ? '<p class="ai-jd-gap">缺口：' + esc(r.gap) + '</p>' : '') +
+            '<ul class="ai-jd-ev">' + evHtml + '</ul>' +
+            (r.probe ? '<button class="ai-jd-probe" type="button" data-ai-probe="' + i + '">追问：' + esc(r.probe) + ' →</button>' : '') +
+          '</div>';
+      });
+      html += '</div>' +
+        '<div class="ai-jd-acts">' +
+          '<button class="ai-jd-act" type="button" data-jd-copy="1">复制 Markdown ⧉</button>' +
+          '<a class="ai-jd-act ai-jd-act-ghost" href="#jd">打开完整对照 ↗</a>' +
+        '</div>' +
+        '<p class="ai-jd-note">证据取自档案切片 · 缺口照实列出 · 点追问可直接问 CP.AI</p>';
+      card.innerHTML = html;
+      aiBody.appendChild(card);
+      aiScroll();
+      var copyBtn = card.querySelector('[data-jd-copy]');
+      if (copyBtn) {
+        copyBtn.addEventListener('click', function () {
+          var u = jdUI();
+          if (!u) return;
+          var text = u.toMarkdown(data);
+          var done = function (ok) {
+            copyBtn.textContent = ok ? '已复制 ✓' : '复制失败';
+            setTimeout(function () { copyBtn.textContent = '复制 Markdown ⧉'; }, 2000);
+          };
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).then(function () { done(true); }, function () { done(false); });
+          } else {
+            var ta = document.createElement('textarea');
+            ta.value = text; ta.setAttribute('readonly', '');
+            ta.style.position = 'fixed'; ta.style.top = '-1000px';
+            document.body.appendChild(ta); ta.select();
+            var ok = false;
+            try { ok = document.execCommand('copy'); } catch (e) {}
+            document.body.removeChild(ta);
+            done(ok);
+          }
+        });
+      }
+    }
+
     function aiOpenPanel(auto) {
       aiPanel.hidden = false;
       aiPanel.classList.add('opening');
@@ -738,12 +919,7 @@
       if (!aiReady) {
         aiReady = true;
         if (!auto) aiAppendMsg('bot', AI_CONFIG.welcome);
-        aiQuick.innerHTML = AI_CONFIG.quickQuestions.map(function (q) {
-          return '<button class="ai-chip" type="button">' + esc(q) + '</button>';
-        }).join('');
-        aiQuick.querySelectorAll('.ai-chip').forEach(function (chip) {
-          chip.addEventListener('click', function () { aiSubmit(chip.textContent); });
-        });
+        aiRenderQuick();
       }
       /* 自动弹出时不抢焦点：移动端不弹键盘，桌面端不打断当前阅读位置 */
       if (!auto) setTimeout(function () { aiInput.focus(); }, 60);
@@ -755,9 +931,10 @@
     function aiSubmit(text) {
       var q = (typeof text === 'string' ? text : aiInput.value).trim();
       if (!q || aiBusy) return;
+      if (aiMode === 'jd') { aiSubmitJD(q); return; }
+      if (aiPanel) aiPanel.classList.remove('ai-quiet');
       aiBusy = true;
       aiSend.disabled = true;
-      if (aiPanel) aiPanel.classList.remove('ai-quiet');
       aiAppendMsg('user', esc(q));
       aiInput.value = '';
       aiInput.style.height = '';
@@ -912,9 +1089,47 @@
       });
     }
     if (aiSend) aiSend.addEventListener('click', function () { aiManual = true; aiCancelAuto(); aiSubmit(); });
+
+    /* 模式栏 + 快捷 chips：问答 / JD 互切，JD 示例只填输入框不直接发 */
+    function aiModeClick(e) {
+      var btn = (e.target && e.target.closest) ? e.target.closest('[data-ai-mode]') : null;
+      if (!btn) return false;
+      e.preventDefault();
+      aiManual = true; aiCancelAuto();
+      aiSetMode(btn.getAttribute('data-ai-mode'));
+      return true;
+    }
+    if (aiModeBar) aiModeBar.addEventListener('click', aiModeClick);
+    if (aiQuick) {
+      aiQuick.addEventListener('click', function (e) {
+        if (aiModeClick(e)) return;
+        var sample = (e.target && e.target.closest) ? e.target.closest('[data-jd-sample]') : null;
+        if (!sample) return;
+        e.preventDefault();
+        aiManual = true; aiCancelAuto();
+        var u = jdUI();
+        var ex = u ? u.examples() : {};
+        var key = sample.getAttribute('data-jd-sample');
+        if (ex[key] && aiInput) {
+          aiInput.value = ex[key];
+          aiInput.style.height = Math.min(aiInput.scrollHeight, 88) + 'px';
+          aiInput.focus();
+        }
+      });
+    }
     /* 主动开场里的引导按钮统一走委托，点一下就等于替你问了一句 */
     if (aiBody) {
       aiBody.addEventListener('click', function (e) {
+        var probe = (e.target && e.target.closest) ? e.target.closest('[data-ai-probe]') : null;
+        if (probe) {
+          e.preventDefault();
+          var cardEl = probe.closest ? probe.closest('.ai-jd-card') : null;
+          var rows = cardEl && cardEl._jdData && cardEl._jdData.match && cardEl._jdData.match.rows;
+          var idx = parseInt(probe.getAttribute('data-ai-probe'), 10);
+          var q = rows && rows[idx] && rows[idx].probe;
+          if (q) { aiSetMode('qa'); aiSubmit(q); }
+          return;
+        }
         var btn = (e.target && e.target.closest) ? e.target.closest('[data-ai-q]') : null;
         if (!btn) return;
         e.preventDefault();

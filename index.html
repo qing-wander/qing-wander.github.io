@@ -15,10 +15,10 @@
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&display=swap"></noscript>
 <!-- 等宽英文字体本地自托管，不依赖境外 CDN -->
 <link rel="stylesheet" href="css/fonts.css?v=20261111a">
-<link rel="stylesheet" href="css/style.css?v=20261116a">
+<link rel="stylesheet" href="css/style.css?v=20261118a">
 <link rel="stylesheet" href="css/ai-skins.css?v=20261110b">
 <link rel="stylesheet" href="css/ai-voice.css?v=20261117a">
-<link rel="stylesheet" href="css/jd-match.css?v=20261117a">
+<link rel="stylesheet" href="css/jd-match.css?v=20261118a">
 <meta name="theme-color" content="#F3EEE2">
 <link rel="canonical" href="https://shenge-work.github.io/">
 <link rel="manifest" href="manifest.json">
@@ -520,6 +520,11 @@
     <span class="ai-head-status"><i class="ai-lamp" aria-hidden="true"></i>在线</span>
     <button class="ai-close" id="aiClose" aria-label="关闭 AI 助手">×</button>
   </div>
+  <div class="ai-modebar" id="aiModeBar" role="group" aria-label="助手模式">
+    <button class="ai-mode-btn on" type="button" data-ai-mode="qa" aria-pressed="true">问答</button>
+    <button class="ai-mode-btn" type="button" data-ai-mode="jd" aria-pressed="false">JD 匹配</button>
+    <span class="ai-mode-hint">同一档案 · 两种问法</span>
+  </div>
   <div class="ai-body" id="aiBody" aria-live="polite"></div>
   <div class="ai-quick" id="aiQuick"></div>
   <div class="ai-inputrow">
@@ -529,8 +534,8 @@
   <div class="ai-foot" aria-hidden="true">CLOUDBASE 云函数 · 静态 RAG · hy3 · AI 语音合成（可关闭 · 云端音色自动降级）// 已接入</div>
 </aside>
 
-<script src="js/main.js?v=20261117a"></script>
-<script src="js/jd-match.js?v=20261117a"></script>
+<script src="js/main.js?v=20261118a"></script>
+<script src="js/jd-match.js?v=20261118a"></script>
 <script src="js/ai-skins.js?v=20261110d"></script>
 <script src="js/ai-voice.js?v=20261117c"></script>
 <script src="js/ai-voice-cloud.js?v=20261117c"></script>

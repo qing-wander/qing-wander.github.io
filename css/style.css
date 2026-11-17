@@ -2280,6 +2280,76 @@ a.cap-ref:hover, a.cap-ref:focus-visible {
 /* 自动开场时收起底部快捷栏：开场按钮就是唯一入口，避免两排问题打架 */
 .ai-panel.ai-quiet .ai-quick { display: none; }
 
+/* ── JD 匹配模式：与问答共用面板，模式栏切换 ── */
+.ai-modebar {
+  display: flex; align-items: center; gap: 6px;
+  padding: 7px 12px; background: var(--card); border-bottom: 2px solid var(--ink);
+}
+.ai-mode-btn {
+  font-family: var(--font-mono); font-size: 10.5px; font-weight: 700; letter-spacing: .05em;
+  padding: 4px 9px; color: var(--ink-soft); background: var(--paper);
+  border: 2px solid var(--ink); cursor: pointer;
+  transition: background .12s ease, color .12s ease, transform .12s ease;
+}
+.ai-mode-btn:hover { color: var(--ink); transform: translate(-1px, -1px); }
+.ai-mode-btn.on { color: var(--accent-text); background: var(--orange); border-color: var(--ink); }
+.ai-mode-hint { margin-left: auto; font-family: var(--font-mono); font-size: 9px; color: rgba(var(--ink-rgb), .48); }
+.ai-mode-jd #aiInput { min-height: 52px; }
+.ai-chip-mode { border-style: dashed; color: var(--orange); }
+
+/* 面板内紧凑对照卡：窄面板放不下五列表，改成逐条卡片 */
+.ai-jd-card {
+  align-self: stretch; max-width: 100%;
+  background: var(--card); border: 2px solid var(--ink); box-shadow: 3px 3px 0 var(--ink);
+  font-size: 12px; animation: aiMsgIn .24s ease;
+}
+.ai-jd-top { display: flex; gap: 10px; padding: 11px 12px; border-bottom: 2px solid var(--ink); }
+.ai-jd-score {
+  flex: 0 0 74px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 6px; background: var(--ink); color: var(--paper);
+}
+.ai-jd-score b { font-family: var(--font-tech); font-size: 27px; line-height: 1; color: var(--orange); font-weight: 400; }
+.ai-jd-score span { font-family: var(--font-mono); font-size: 9px; opacity: .8; }
+.ai-jd-topmain { min-width: 0; flex: 1; }
+.ai-jd-verdict { font-weight: 900; font-size: 13px; margin-bottom: 3px; }
+.ai-jd-sum { font-size: 11.5px; line-height: 1.65; color: var(--ink-soft); }
+.ai-jd-stats { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 6px; }
+.ai-jd-stats span { font-family: var(--font-mono); font-size: 9.5px; padding: 2px 5px; border: 1.5px solid var(--ink); }
+.ai-jd-stats .s-c { color: var(--green); }
+.ai-jd-stats .s-p { color: var(--orange); }
+.ai-jd-stats .s-g { color: var(--ink-soft); }
+.ai-jd-meta { padding: 6px 12px; font-family: var(--font-mono); font-size: 9px; color: var(--ink-soft); background: var(--paper); border-bottom: 1.5px solid rgba(var(--ink-rgb), .2); }
+.ai-jd-rows { display: flex; flex-direction: column; max-height: 320px; overflow-y: auto; }
+.ai-jd-item { padding: 9px 12px; border-bottom: 1.5px dashed rgba(var(--ink-rgb), .25); }
+.ai-jd-item:last-child { border-bottom: 0; }
+.ai-jd-item-h { display: grid; grid-template-columns: 20px auto minmax(0, 1fr); gap: 6px; align-items: start; }
+.ai-jd-no { font-family: var(--font-tech); font-size: 10px; color: rgba(var(--ink-rgb), .45); padding-top: 2px; }
+.ai-jd-badge { font-family: var(--font-mono); font-size: 9px; font-weight: 700; padding: 1px 4px; border: 1.5px solid currentColor; color: var(--ink-soft); white-space: nowrap; }
+.ai-jd-item[data-status="covered"] .ai-jd-badge { color: var(--green); }
+.ai-jd-item[data-status="partial"] .ai-jd-badge { color: var(--orange); }
+.ai-jd-item[data-status="gap"] .ai-jd-badge { border-style: dashed; }
+.ai-jd-item-h p { font-size: 11.5px; font-weight: 700; line-height: 1.6; }
+.ai-jd-gap { margin: 5px 0 0 26px; font-size: 11px; line-height: 1.6; color: var(--orange); }
+.ai-jd-ev { margin: 5px 0 0 26px; display: flex; flex-direction: column; gap: 3px; }
+.ai-jd-ev li { font-size: 11px; line-height: 1.6; color: var(--ink-soft); }
+.ai-jd-ev li span { display: block; font-family: var(--font-mono); font-size: 9px; opacity: .7; }
+.ai-jd-ev li.none { color: rgba(var(--ink-rgb), .4); }
+.ai-jd-probe {
+  display: block; margin: 6px 0 0 26px; padding: 4px 7px;
+  font-family: var(--font-cn); font-size: 10.5px; text-align: left; color: var(--ink);
+  background: var(--paper); border: 1.5px solid var(--ink); cursor: pointer;
+}
+.ai-jd-probe:hover { background: var(--orange); color: var(--accent-text); }
+.ai-jd-acts { display: flex; gap: 7px; padding: 9px 12px; border-top: 2px solid var(--ink); }
+.ai-jd-act {
+  flex: 1; text-align: center; padding: 6px 8px;
+  font-family: var(--font-cn); font-size: 11px; font-weight: 700; color: var(--paper); background: var(--ink);
+  border: 2px solid var(--ink); cursor: pointer; text-decoration: none;
+}
+.ai-jd-act:hover { background: var(--orange); border-color: var(--orange); color: var(--accent-text); }
+.ai-jd-act-ghost { color: var(--ink); background: var(--card); }
+.ai-jd-note { padding: 0 12px 9px; font-family: var(--font-mono); font-size: 9px; color: rgba(var(--ink-rgb), .5); }
+
 @media (max-width: 620px) {
   .ai-fab { right: 12px; bottom: 96px; padding: 8px 11px; }
   .ai-fab-mark { font-size: 12px; }
