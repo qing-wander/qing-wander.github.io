@@ -43,7 +43,7 @@ AI Agent 工程师求职个人网站：基于纯原生 HTML / CSS / JavaScript �
 
 ## 功能特性
 
-页面交互由 `js/main.js` 实现，共 9 大模块：
+页面交互主要由 `js/main.js` 实现，模块清单：
 1. **移动端菜单**：汉堡菜单折叠导航，适配小屏
 2. **导航高亮**：滚动时自动高亮当前所在板块
 3. **滚动进场动画**：元素进入视口时渐进浮现
@@ -54,6 +54,7 @@ AI Agent 工程师求职个人网站：基于纯原生 HTML / CSS / JavaScript �
 8. **Toast 提示**：简历下载等操作轻提示
 9. **全站访问计数器**：右下角复古里程表样式，显示全站真实访问次数（默认走免费计数服务，后端不可用时回退本机计数，不会显示 0）
 10. **3D AI 简历问答助手**：右下角可切换 9 款角色皮肤（3 款真 3D GLB + 本地 SVG 角色 + AI 生成立绘），无边框悬浮，待机/思考/回答都有对应动画；首次进入自动挥手打招呼并自我介绍「我是 AI 简历问答助手」；右键/双击/长按/快捷键 `S` 切换皮肤，数字 `1–9` 直达，选择本地记忆（设计文档：[docs/ai-avatar-skins.md](docs/ai-avatar-skins.md)）
+11. **AI 语音播报（Phase 1 + 2）**：助手把欢迎语与回答「说」出来，首次进页面打招呼也有语音；浏览器拦截自动播放时给「一点即播」引导、首次交互补播；一键开关（本地记忆）、右键换音色、分句队列、口型律动联动。底层是浏览器内置 `SpeechSynthesis`（Edge 优先在线神经语音，零 Key 零费用）；**另外接了腾讯云 TTS 云端通道**（精品音色 101001，800 万字符免费包），启动探测成功才切云端，失败/超时自动无感回落到浏览器语音，`?tts=browser` 可强制降级。密钥只存云函数环境变量，设计文档：[docs/ai-voice-survey.md](docs/ai-voice-survey.md)
 
 简历页附加能力：
 - 一键「保存为 PDF」：调用浏览器打印，米白纸感样式与屏幕一致
@@ -84,11 +85,14 @@ AI Agent 工程师求职个人网站：基于纯原生 HTML / CSS / JavaScript �
 ├── js/
 │   ├── main.js             # 页面交互（10 大功能模块）+ 数据渲染
 │   ├── ai-skins.js         # 3D AI 助手皮肤系统（角色舞台/皮肤切换/状态联动）
+│   ├── ai-voice.js         # 语音播报：开关 / 分句队列 / 自动播放解锁 / 口型联动
+│   ├── ai-voice-cloud.js   # 云端 TTS Provider：探测、缓存、失败回落浏览器语音
 │   ├── analytics.js        # 埋点统一入口（Umami / Clarity，未填 ID 不发请求）
 │   └── visitor-count.js    # 全站访问计数（abacus / 自建 Worker 可切换）
 ├── css/
 │   ├── style.css           # 设计系统 + 响应式 + 打印模式
-│   └── ai-skins.css        # AI 助手角色皮肤样式
+│   ├── ai-skins.css        # AI 助手角色皮肤样式
+│   └── ai-voice.css        # 语音开关 / 引导气泡 / 说话律动样式
 ├── assets/skins/           # 3D 模型 / model-viewer / AI 立绘 / 皮肤总览
 ├── data/
 │   ├── site-data.json      # 唯一编辑源：全部文案、项目、证书、联系方式
@@ -96,6 +100,8 @@ AI Agent 工程师求职个人网站：基于纯原生 HTML / CSS / JavaScript �
 ├── images/                 # 形象照 / 项目图 / 证书 / 学信网二维码
 ├── functions/api/wall.js            # 留言墙 API（分页 / 限流 / 管理删除，KV 存储）
 ├── functions/api/deliver.js         # 简历转发到邮箱（Resend）
+├── functions/tencent/index.js       # CloudBase HTTP 云函数：/chat 问答 + TTS 语音合成
+├── functions/tencent/tts.js         # 腾讯云 TextToVoice 直调（TC3 签名 / LRU 缓存 / 零依赖）
 ├── scripts/wall-check.sh            # 留言墙线上自检（默认只读）
 ├── scripts/dev-api-server.mjs       # 本地联调：静态站 + 真实 Functions + 内存 KV
 ├── scripts/sync_site_data.py        # JSON → JS 快照，支持 --check
@@ -105,6 +111,7 @@ AI Agent 工程师求职个人网站：基于纯原生 HTML / CSS / JavaScript �
 ├── docs/ai-avatar-skins.md          # 3D AI 助手皮肤系统（设计 + 实施 + 迭代）
 ├── docs/observability-and-cms.md    # 教程：统计与内容管理接入
 ├── docs/ai-assistant-survey.md      # AI 简历问答后端（RAG）方案与实施
+├── docs/ai-voice-survey.md          # 语音播报：免费 TTS 调研、选型、两期实施与线上验收
 ├── docs/cloudflare-pages-deploy.md  # Cloudflare Pages 备用托管说明
 ├── docs/resume-delivery.md          # 留言墙 / 简历转发的部署、自检与排障
 ├── docs/TODO.md                     # 项目待办与未竟事项台账（唯一「还没做的事」清单）

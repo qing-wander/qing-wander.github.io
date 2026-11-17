@@ -6,6 +6,11 @@
  * 职责：CORS 白名单 → 限流 → 意图拦截 → TF-IDF 检索（与 knowledge/ 产物同源）
  *      → 组装提示词 → 调 CloudBase 内置大模型网关 → 返回 JSON + 结构化日志。
  *
+ * 两种请求：
+ *   POST { question }           简历问答（≤200 字，20 次/分钟、200 次/天）
+ *   POST { mode: 'tts', text }  语音合成（≤150 字，走腾讯云 TTS 免费包）
+ *                               返回 base64 mp3，见 tts.js / docs/ai-voice-survey.md 第 7 节
+ *
  * 零第三方依赖：只用 Node 内置 https / crypto / fs。
  * 知识库随包部署在 ./kb/，由 scripts/build_kb.py --sync-functions 生成。
  *
@@ -18,6 +23,9 @@
  *   LOG_SALT         可选，IP 盐化用
  *   LOG_RETENTION_DAYS 可选，默认 30（懒清理：写库时按 5% 概率触发删除过期行）
  *   RDB_LOG_URL      可选，默认本环境 PostgREST 的 chat_logs 端点
+ *   TTS_SECRET_ID / TTS_SECRET_KEY / TTS_TOKEN  可选，腾讯云 TTS 密钥；
+ *                    缺省时自动尝试 SCF 运行角色的临时密钥环境变量
+ *   TTS_VOICE_TYPE / TTS_REGION                 可选，默认 101001 / ap-shanghai
  */
 
 var https = require('https');
@@ -25,6 +33,7 @@ var crypto = require('crypto');
 var fs = require('fs');
 var path = require('path');
 var promptLib = require('./prompt.js');
+var ttsLib = require('./tts.js');
 
 var KB_DIR = path.join(__dirname, 'kb');
 
@@ -84,6 +93,13 @@ var MAX_ANSWER_CHARS = 700;
 var RATE_WINDOW_MS = 60 * 1000;
 var RATE_LIMIT_PER_WINDOW = 20;
 var RATE_LIMIT_PER_DAY = 200;
+
+// TTS：按句合成，一次回答会连发数条请求，额度比问答宽，但字符是真金白银，独立收一道
+var TTS_LIMIT_WINDOW_MS = 60 * 1000;
+var TTS_LIMIT_PER_WINDOW = 40;  // 每 IP 每分钟 40 段（约 10 次完整回答）
+var TTS_LIMIT_PER_DAY = 400;
+var TTS_MAX_TEXT_CHARS = ttsLib.maxChars;
+
 
 // ---------------------------------------------------------------- 知识库装载
 
@@ -445,6 +461,98 @@ function purgeOldLogs() {
   } catch (e) { /* 忽略 */ }
 }
 
+// ---------------------------------------------------------------- 语音合成（Phase 2）
+// POST /chat { mode:'tts', text, kind } 或 POST /tts（若另外配了路径映射）
+// → { ok, audio: base64 mp3, mime, cached, chars }
+//
+// 复用 /chat 的 Origin 白名单、IP 盐化与双窗口限流；密钥只在环境变量里。
+// 前端 AIVoiceCloud 探测失败会自动回落到浏览器 SpeechSynthesis，用户无感。
+
+var ttsBuckets = Object.create(null);
+
+function ttsQuota(key) {
+  var now = Date.now();
+  var b = ttsBuckets[key];
+  if (!b || now - b.windowStart > TTS_LIMIT_WINDOW_MS) {
+    b = ttsBuckets[key] = { windowStart: now, count: 0, dayStart: now, dayCount: 0 };
+  }
+  if (now - b.dayStart > 24 * 60 * 60 * 1000) { b.dayStart = now; b.dayCount = 0; }
+  b.count++;
+  b.dayCount++;
+  return {
+    blocked: b.count > TTS_LIMIT_PER_WINDOW || b.dayCount > TTS_LIMIT_PER_DAY,
+    reason: b.count > TTS_LIMIT_PER_WINDOW ? 'tts_window' : 'tts_day',
+    count: b.count
+  };
+}
+
+function replyTTS(status, origin, obj) {
+  var out = reply(status, origin, obj);
+  out.headers['Cache-Control'] = 'no-store';   // 音频不进 CDN 缓存
+  return out;
+}
+
+function ttsLog(obj) {
+  if (!LOG_ENABLED) return;
+  try { console.log('[tts_log] ' + JSON.stringify(obj)); } catch (e) { /* 忽略 */ }
+}
+
+async function handleTTS(body, origin, iph, started) {
+  var text = String(body.text || '').trim();
+  if (!text) {
+    return replyTTS(400, origin, { ok: false, error: 'bad_request', message: '缺少 text' });
+  }
+  if (text.length > TTS_MAX_TEXT_CHARS) {
+    return replyTTS(400, origin, {
+      ok: false, error: 'text_too_long',
+      message: '单段文本请控制在 ' + TTS_MAX_TEXT_CHARS + ' 字内（当前 ' + text.length + ' 字）'
+    });
+  }
+
+  var quota = ttsQuota(iph);
+  if (quota.blocked) {
+    ttsLog({ ts: started, origin: origin, ip_hash: iph, blocked: quota.reason, count: quota.count });
+    return replyTTS(429, origin, { ok: false, error: 'rate_limited', message: '语音请求有点急，稍等几秒再试' });
+  }
+
+  if (!ttsLib.available()) {
+    ttsLog({ ts: started, origin: origin, ip_hash: iph, error: 'tts_not_configured', chars: text.length });
+    return replyTTS(503, origin, {
+      ok: false, error: 'tts_not_configured',
+      message: '云端语音未配置密钥，已自动使用浏览器语音'
+    });
+  }
+
+  try {
+    var r = await ttsLib.synth(text, { kind: String(body.kind || 'answer'), voice: body.voice });
+    ttsLog({
+      ts: started, origin: origin, ip_hash: iph, chars: r.chars, cached: r.cached,
+      voice: r.voice, latency_ms: Date.now() - started
+    });
+    return replyTTS(200, origin, {
+      ok: true,
+      audio: r.audio,
+      mime: r.mime,
+      cached: !!r.cached,
+      chars: r.chars,
+      voice: r.voice,
+      ai_generated: true   // 《AI 生成合成内容标识办法》：音频元数据标识
+    });
+  } catch (e) {
+    var err = e || {};
+    var code = String(err.code || err.message || 'unknown');
+    ttsLog({
+      ts: started, origin: origin, ip_hash: iph, chars: text.length,
+      error: code.slice(0, 160), latency_ms: Date.now() - started
+    });
+    return replyTTS(502, origin, {
+      ok: false, error: 'tts_failed',
+      message: '云端语音暂时不可用，已自动使用浏览器语音',
+      code: /^(tts_|Invalid|Unsupported|AuthFailure|LimitExceeded)/.test(code) ? code.slice(0, 80) : undefined
+    });
+  }
+}
+
 // ---------------------------------------------------------------- 主流程
 
 exports.main = async function (event) {
@@ -465,6 +573,15 @@ exports.main = async function (event) {
   if (!body || typeof body !== 'object') {
     return reply(400, origin, { ok: false, error: 'bad_request', message: '请求体不是合法 JSON' });
   }
+  var ip = clientIp(event, headers);
+  var iph = ipHash(ip);
+
+  /* 语音合成：线上 HTTP 触发路径只配了 /chat，因此用 body.mode 路由，
+     不需要在控制台新增 /tts 路径映射；若日后单独配了 /tts 也一并识别。 */
+  if (String(body.mode || '') === 'tts' || /\/tts(?:\?|\/|$)/.test(String(event.path || ''))) {
+    return handleTTS(body, origin, iph, started);
+  }
+
   var question = String(body.question || '').trim();
   if (!question) {
     return reply(400, origin, { ok: false, error: 'bad_request', message: '缺少 question' });
@@ -473,8 +590,6 @@ exports.main = async function (event) {
     return reply(400, origin, { ok: false, error: 'bad_request', message: '问题太长了，请控制在 ' + MAX_QUESTION_CHARS + ' 字内' });
   }
 
-  var ip = clientIp(event, headers);
-  var iph = ipHash(ip);
   var rl = await rateCheck(iph);
   if (rl.blocked) {
     logLine({
