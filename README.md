@@ -120,7 +120,7 @@ AI Agent 工程师求职个人网站：基于纯原生 HTML / CSS / JavaScript �
 ├── docs/cloudflare-pages-deploy.md  # Cloudflare Pages 备用托管说明
 ├── docs/resume-delivery.md          # 留言墙 / 简历转发的部署、自检与排障
 ├── docs/TODO.md                     # 项目待办与未竟事项台账（唯一「还没做的事」清单）
-├── docs/portfolio-capabilities-and-learnings.md  # 功能全景 / 收获 / 32 条经验 / 能力矩阵
+├── docs/portfolio-capabilities-and-learnings.md  # 功能全景 / 收获 / 33 条经验 / 能力矩阵
 ├── worker/                 # 可选：自建 Cloudflare Worker 访客计数
 ├── .pages.yml              # Pages CMS 配置
 ├── .github/workflows/sync-site-data.yml  # JSON 变更后自动重建快照
@@ -180,7 +180,7 @@ python3 -m http.server 8000
 ## 项目复盘
 
 功能全景、收获与经验沉淀见 [docs/portfolio-capabilities-and-learnings.md](docs/portfolio-capabilities-and-learnings.md)：
-六层功能地图、32 条「踩过才知道」的经验、能力矩阵（可直接用于简历/面试）、诚实缺口清单与下一步优先级。
+六层功能地图、33 条「踩过才知道」的经验、能力矩阵（可直接用于简历/面试）、诚实缺口清单与下一步优先级。
 
 ## 项目待办
 
