@@ -405,6 +405,8 @@
       </div>
       <input class="wall-input" id="wallName" type="text" maxlength="16" placeholder="怎么称呼你？（可留空 = 匿名）" autocomplete="off">
       <textarea class="wall-input wall-textarea" id="wallText" maxlength="300" rows="4" placeholder="对我的经历或能力有想法？直接写在这里…" required></textarea>
+      <!-- 人机校验（Cloudflare Turnstile）：脚本加载失败时保持 hidden，留言照常可用 -->
+      <div class="wall-turnstile" id="wallTurnstile" hidden></div>
       <div class="wall-form-foot">
         <span class="wall-count" id="wallCount" aria-live="polite">0 / 300</span>
         <button class="wall-submit" type="submit" id="wallSubmit">贴上留言墙 ▶</button>
@@ -536,7 +538,8 @@
   <div class="ai-foot" aria-hidden="true">CLOUDBASE 云函数 · 静态 RAG · hy3 · AI 语音合成（可关闭 · 云端音色自动降级）// 已接入</div>
 </aside>
 
-<script src="js/main.js?v=20261118b"></script>
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
+<script src="js/main.js?v=20261119a"></script>
 <script src="js/jd-match.js?v=20261118a"></script>
 <script src="js/ai-skins.js?v=20261110d"></script>
 <script src="js/ai-voice.js?v=20261118d"></script>

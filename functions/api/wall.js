@@ -18,6 +18,13 @@
    环境变量（Cloudflare Pages → Settings → Variables）：
      ALLOWED_ORIGINS   可选，逗号分隔（默认 github.io / pages.dev / localhost）
      WALL_ADMIN_TOKEN  可选，管理删除令牌；未配置时 DELETE 一律 404
+     TURNSTILE_SECRET  可选，Cloudflare Turnstile 服务端密钥；未配置时跳过人机校验
+
+   人机校验（2026-11-19 接入）：POST 可带 turnstileToken 字段。
+     校验通过 → 走原额度（每 IP 10 分钟 3 条、全站每日 50 条）
+     未通过 / 未带（脚本被墙、加载失败）→ 走严格额度（每 IP 每小时 1 条、每日 10 条）
+     未配置 secret → 原额度，行为与接入前完全一致（向后兼容）
+   刻意 fail-open：宁可少挡一点刷子，也不能让正常访客因为脚本加载失败就留言不了。
 
    绑定：D1 数据库绑定名 DB（Settings → Functions → D1 bindings）。
    未绑定时：GET 返回 open=false + reason=db_not_bound（前端显示「暂未开放」），
@@ -40,6 +47,9 @@ const MAX_LIMIT = 50;         // 单页上限
 const IP_WINDOW_MS = 600000;  // 每 IP 限流窗口 10 分钟（固定窗，不是滑窗）
 const IP_LIMIT = 3;           // 每 IP 每窗口最多 3 条
 const DAY_LIMIT = 50;         // 全局每日最多 50 条
+const IP_STRICT_WINDOW_MS = 3600000; // 未通过人机校验：每 IP 每小时最多 1 条
+const IP_STRICT_LIMIT = 1;
+const DAY_STRICT_LIMIT = 10;  // 且未通过校验的当天全站最多 10 条（不和正常额度互相挤占）
 const DUP_WINDOW_MS = 300000; // 5 分钟内相同「称呼 + 内容」视为重复提交
 const DEFAULT_ORIGINS = [
   'https://shenge-work.github.io',
@@ -142,6 +152,30 @@ async function gate(db, bucket, window, limit, ttlSeconds) {
      RETURNING count`
   ).bind(bucket, window, expires, limit).first();
   return row ? Number(row.count) : null;
+}
+
+/* 人机校验（Cloudflare Turnstile）：返回 'ok' | 'unconfigured' | 'missing' | 'failed'
+   · 未配置 TURNSTILE_SECRET → 'unconfigured'，按原额度放行（与接入前一致）
+   · 校验请求本身异常（网络/边缘抖动）→ 'failed'，但不直接拒稿，而是降级到严格额度
+   这是刻意的 fail-open：刷子最多多贴两条，而正常访客不会因为脚本被墙就彻底没法留言。 */
+async function verifyTurnstile(env, token, ip) {
+  const secret = env.TURNSTILE_SECRET;
+  if (!secret) return 'unconfigured';
+  if (!token) return 'missing';
+  try {
+    const form = new FormData();
+    form.append('secret', secret);
+    form.append('response', String(token).slice(0, 2048));
+    if (ip && ip !== 'unknown') form.append('remoteip', ip);
+    const r = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+      method: 'POST',
+      body: form,
+    });
+    const d = await r.json();
+    return d && d.success ? 'ok' : 'failed';
+  } catch (e) {
+    return 'failed';
+  }
 }
 
 const COLS = 'id, name, text, created_at AS ts';
@@ -249,25 +283,35 @@ export async function onRequestPost({ request, env }) {
   const name = clean(body.name, MAX_NAME) || '匿名访客';
 
   const now = Date.now();
-  const win = Math.floor(now / IP_WINDOW_MS);
-  const winEnd = (win + 1) * IP_WINDOW_MS;
+  /* 先判人机校验，再决定用哪一档额度：通过 / 未配置走正常档，其余走严格档。
+     两档用不同 bucket 名，避免刷子把正常访客的每日额度吃光。 */
+  const trust = await verifyTurnstile(env, body.turnstileToken, ipOf(request));
+  const strict = trust !== 'ok' && trust !== 'unconfigured';
+  const ipKey = await ipHash(request);
+  const ipWindow = strict ? IP_STRICT_WINDOW_MS : IP_WINDOW_MS;
+  const win = Math.floor(now / ipWindow);
+  const winEnd = (win + 1) * ipWindow;
   const dayStart = new Date(now);
   const dayKey = dayStart.toISOString().slice(0, 10);
   const dayEnd = Date.UTC(dayStart.getUTCFullYear(), dayStart.getUTCMonth(), dayStart.getUTCDate() + 1);
 
   try {
-    const ipOk = await gate(db, 'wall:ip:' + (await ipHash(request)), String(win), IP_LIMIT,
-      Math.ceil((winEnd - now) / 1000) + 60);
+    const ipOk = await gate(db, (strict ? 'wall:ip:strict:' : 'wall:ip:') + ipKey, String(win),
+      strict ? IP_STRICT_LIMIT : IP_LIMIT, Math.ceil((winEnd - now) / 1000) + 60);
     if (ipOk === null) {
       return json({
         ok: false, error: 'rate_limited', message: '留言有点频繁，稍后再试',
+        verifyRequired: strict,
         retryAfter: Math.max(1, Math.ceil((winEnd - now) / 1000)),
       }, cors, 429);
     }
-    const dayOk = await gate(db, 'wall:day', dayKey, DAY_LIMIT,
-      Math.ceil((dayEnd - now) / 1000) + 3600);
+    const dayOk = await gate(db, strict ? 'wall:day:strict' : 'wall:day', dayKey,
+      strict ? DAY_STRICT_LIMIT : DAY_LIMIT, Math.ceil((dayEnd - now) / 1000) + 3600);
     if (dayOk === null) {
-      return json({ ok: false, error: 'rate_limited', message: '今日留言已达上限，明天再来' }, cors, 429);
+      return json({
+        ok: false, error: 'rate_limited', message: '今日留言已达上限，明天再来',
+        verifyRequired: strict,
+      }, cors, 429);
     }
 
     /* 幂等兜底：前端禁用了按钮，但双击 / 网络重试 / 脚本直连仍可能重复提交 */

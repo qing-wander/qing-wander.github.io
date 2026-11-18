@@ -84,6 +84,9 @@ const ENV = {
   DELIVER_BCC: process.env.DELIVER_BCC || '',
   /* 本地默认给一个测试令牌，方便验收 DELETE；不设就等于线上「未配置」形态 */
   WALL_ADMIN_TOKEN: process.env.WALL_ADMIN_TOKEN || 'local-admin-token',
+  /* 人机校验：默认不配 → 走正常额度（与线上未配置 secret 时一致）。
+     想验严格档就 TURNSTILE_SECRET=test 起服务，此时不带 token 的 POST 会降到每 IP 每小时 1 条。 */
+  TURNSTILE_SECRET: process.env.TURNSTILE_SECRET || '',
 };
 if (MOCK !== 'nokey') ENV.RESEND_API_KEY = 're_local_test';
 /* WALL_NO_DB=1 模拟「Pages 里忘了绑定 D1」的线上形态，用来验收关闭态 */

@@ -1162,8 +1162,8 @@
     aiScheduleAuto();
   }
 
-  /* ── 12. 留言墙（Cloudflare Pages Function /api/wall，KV 存储） ──
-     分页 / 刷新 / 新留言轮询 / 加载与错误态 / 快捷键 / 站长诊断。
+  /* ── 12. 留言墙（Cloudflare Pages Function /api/wall，D1 存储） ──
+     分页 / 刷新 / 新留言轮询 / 加载与错误态 / 快捷键 / 站长诊断 / 人机校验。
      file:// 或两条线路都不通 → 明确降级，不影响页面其余部分。 */
   function initWall() {
     var form = $('wallForm');
@@ -1183,6 +1183,48 @@
     var LIMIT = 20;
     var POLL_MS = 60000;
     var debugOn = /(?:^|[?&])wallDebug=1(?:&|$)/.test(location.search);
+
+    /* 人机校验（Cloudflare Turnstile，2026-11-19 接入）
+       · widget 懒渲染：脚本没到就轮询等待，最多 ~8 秒，超时视为不可用
+       · 脚本被墙 / 加载失败 → 容器保持 hidden，提交不带 token，
+         服务端会自动降到严格额度（每 IP 每小时 1 条），留言仍然可用
+       · sitekey 是公开值，放前端没问题；密钥只在 Pages 环境变量里 */
+    var TS_SITEKEY = '0x4AAAAAAGHnx0m992aGGpUJ';
+    var tsBox = $('wallTurnstile');
+    var tsToken = '';
+    var tsWidget = null;
+    var tsRendered = false;
+
+    function renderTurnstile() {
+      if (!tsBox || tsRendered || !window.turnstile || typeof window.turnstile.render !== 'function') return;
+      try {
+        tsWidget = window.turnstile.render(tsBox, {
+          sitekey: TS_SITEKEY,
+          theme: 'light',
+          size: 'normal',
+          callback: function (t) { tsToken = String(t || ''); },
+          'expired-callback': function () { tsToken = ''; },
+          'error-callback': function () { tsToken = ''; tsBox.hidden = true; }
+        });
+        tsRendered = true;
+        tsBox.hidden = false;
+      } catch (e) {
+        tsRendered = false;
+        tsBox.hidden = true;
+      }
+    }
+    (function waitTurnstile(n) {
+      if (window.turnstile && typeof window.turnstile.render === 'function') { renderTurnstile(); return; }
+      if ((n || 0) >= 40) return;
+      setTimeout(function () { waitTurnstile((n || 0) + 1); }, 200);
+    })();
+
+    function resetTurnstile() {
+      tsToken = '';
+      if (tsWidget != null && window.turnstile && typeof window.turnstile.reset === 'function') {
+        try { window.turnstile.reset(tsWidget); } catch (e) {}
+      }
+    }
 
     var state = {
       mode: 'loading',          /* loading | open | closed | error */
@@ -1519,7 +1561,7 @@
       apiFetch('/api/wall', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: name, text: text })
+        body: JSON.stringify({ name: name, text: text, turnstileToken: tsToken })
       })
         .then(function (res) {
           var d = res.body || {};
@@ -1535,6 +1577,7 @@
             textEl.value = '';
             nameEl.value = '';
             updateCount();
+            resetTurnstile();
             showToast(d.duplicate ? (T.duplicateText || '这条留言刚刚已经贴过啦')
               : (T.postOkText || '已贴上留言墙，感谢你的想法 ▶'), d.duplicate ? 'info' : 'ok');
             render();
@@ -1546,6 +1589,8 @@
             if (res.status === 429 && d.retryAfter) {
               msg += '（约 ' + Math.max(1, Math.ceil(Number(d.retryAfter) / 60)) + ' 分钟后）';
             }
+            /* 被打到严格额度：多半是人机校验没通过，重置 widget 让访客能重新验证 */
+            if (res.status === 429 && d.verifyRequired) resetTurnstile();
             showToast(msg, 'err');
           }
         })
