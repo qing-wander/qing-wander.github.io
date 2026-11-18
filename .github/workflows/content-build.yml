@@ -31,6 +31,7 @@ on:
       - 'resume.html'
       - 'scripts/render_resume.mjs'
       - 'scripts/validate_content.mjs'
+      - 'scripts/check_resume_pages.mjs'
   workflow_dispatch:
 
 permissions:
@@ -62,6 +63,11 @@ jobs:
 
       - name: 内容结构与预算校验
         run: node scripts/validate_content.mjs
+
+      # 字形预算只是近似值，这里用无头 Chrome 真打一份 PDF 数页数。
+      # ubuntu-latest 预装 Google Chrome，路径在 /usr/bin/google-chrome。
+      - name: 真页数校验（PDF ≤ 2 页）
+        run: node scripts/check_resume_pages.mjs
 
       - name: JS 快照是否最新
         run: python3 scripts/sync_site_data.py --check

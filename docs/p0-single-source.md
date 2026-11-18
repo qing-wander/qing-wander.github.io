@@ -210,7 +210,8 @@ cd admin && npx wrangler pages deploy --branch main
 ## 8. 未做 / 待办
 
 - [x] 后台 UI（设备台账 + 留言审核 + CSV 导出）
-- [ ] Playwright 打印页数校验（把「2 页」从近似预算变成真实测量）
+- [x] 真页数校验（无头 Chrome 打 PDF 数页数，CI 拦住 >2 页）：`scripts/check_resume_pages.mjs`
+      —— 实测当前 resume.html 打出来正好 2 页
 - [ ] RAG：切片（按 bullet id）、Vectorize 索引、问答、JD 匹配、动态简历变体
 - [ ] 跨设备查看（设备绑定码）
 - [ ] `resume.micro` 微调流水线（L0 锁定字段注入提示词）
