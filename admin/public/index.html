@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#F3EEE2">
+<title>后台 · 陈培胜作品集</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%2314110E'/%3E%3Ctext x='16' y='22' font-size='16' fill='%23F3EEE2' text-anchor='middle' font-family='monospace'%3ES%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="assets/admin.css">
+</head>
+<body>
+
+<!-- ── 登录 ── -->
+<section class="login" id="login" hidden>
+  <div class="login-card">
+    <p class="login-tag">PRIVATE CONSOLE</p>
+    <h1 class="login-title">后台登录</h1>
+    <p class="login-hint">只有站长本人能进。会话 12 小时，关浏览器即失效。</p>
+    <form id="loginForm" autocomplete="off">
+      <label class="field">
+        <span class="field-label">口令</span>
+        <input id="password" type="password" required autofocus autocomplete="current-password" placeholder="输入 ADMIN_PASSWORD">
+      </label>
+      <button class="btn btn-solid" type="submit" id="loginBtn">进入控制台</button>
+      <p class="login-error" id="loginError" role="alert"></p>
+    </form>
+    <p class="login-foot"><a href="https://shenge-work.pages.dev" target="_blank" rel="noopener">← 返回公开站</a></p>
+  </div>
+</section>
+
+<!-- ── 控制台 ── -->
+<main class="dash" id="dash" hidden>
+  <header class="dash-head">
+    <div class="brand">
+      <span class="brand-mark">S</span>
+      <div>
+        <p class="brand-name">SHENGE // CONSOLE</p>
+        <p class="brand-sub">作品集后台 · 同一个 D1</p>
+      </div>
+    </div>
+    <div class="head-actions">
+      <a class="btn btn-ghost" href="https://shenge-work.pages.dev" target="_blank" rel="noopener">公开站 ↗</a>
+      <button class="btn btn-ghost" id="refreshBtn" type="button">刷新</button>
+      <button class="btn btn-ghost" id="logoutBtn" type="button">退出</button>
+    </div>
+  </header>
+
+  <section class="stats" id="stats">
+    <article class="stat"><p class="stat-num" id="stPv">—</p><p class="stat-label">总浏览量</p></article>
+    <article class="stat"><p class="stat-num" id="stUv">—</p><p class="stat-label">独立访客</p></article>
+    <article class="stat"><p class="stat-num" id="stUv24">—</p><p class="stat-label">24h 访客</p></article>
+    <article class="stat"><p class="stat-num" id="stDevices">—</p><p class="stat-label">留言设备</p></article>
+    <article class="stat"><p class="stat-num" id="stMessages">—</p><p class="stat-label">留言总数</p></article>
+    <article class="stat"><p class="stat-num" id="stToday">—</p><p class="stat-label">今日新增</p></article>
+    <article class="stat"><p class="stat-num" id="stHidden">—</p><p class="stat-label">已隐藏</p></article>
+    <article class="stat"><p class="stat-num" id="stBlocked">—</p><p class="stat-label">已拉黑设备</p></article>
+  </section>
+
+  <div class="tabs" role="tablist">
+    <button class="tab is-on" id="tabDevices" type="button" role="tab" aria-selected="true">设备台账</button>
+    <button class="tab" id="tabMessages" type="button" role="tab" aria-selected="false">留言审核</button>
+  </div>
+
+  <!-- 设备台账 -->
+  <section class="panel" id="panelDevices" role="tabpanel">
+    <div class="toolbar">
+      <input class="search" id="devSearch" type="search" placeholder="按设备哈希前缀搜索…">
+      <button class="btn" id="devSearchBtn" type="button">搜索</button>
+      <span class="toolbar-note" id="devNote"></span>
+      <button class="btn btn-ghost" id="exportBtn" type="button">导出 CSV</button>
+    </div>
+    <div class="table-wrap">
+      <table class="table">
+        <thead>
+          <tr><th>设备</th><th>首见</th><th>最近活跃</th><th>留言</th><th>最近一条</th><th>状态</th><th class="th-act">操作</th></tr>
+        </thead>
+        <tbody id="devBody"><tr><td colspan="7" class="empty">加载中…</td></tr></tbody>
+      </table>
+    </div>
+    <div class="pager">
+      <button class="btn btn-ghost" id="devPrev" type="button">上一页</button>
+      <span class="pager-info" id="devPage">—</span>
+      <button class="btn btn-ghost" id="devNext" type="button">下一页</button>
+    </div>
+  </section>
+
+  <!-- 留言审核 -->
+  <section class="panel" id="panelMessages" role="tabpanel" hidden>
+    <div class="toolbar">
+      <input class="search" id="msgSearch" type="search" placeholder="搜内容 / 称呼…">
+      <select class="select" id="msgStatus">
+        <option value="">全部状态</option>
+        <option value="visible">正常</option>
+        <option value="hidden">已隐藏</option>
+      </select>
+      <button class="btn" id="msgSearchBtn" type="button">筛选</button>
+      <span class="toolbar-note" id="msgNote"></span>
+      <button class="btn btn-ghost" id="msgClearDevice" type="button" hidden>清除设备筛选</button>
+    </div>
+    <div class="table-wrap">
+      <table class="table">
+        <thead>
+          <tr><th>时间</th><th>设备</th><th>称呼</th><th>内容</th><th>状态</th><th class="th-act">操作</th></tr>
+        </thead>
+        <tbody id="msgBody"><tr><td colspan="6" class="empty">加载中…</td></tr></tbody>
+      </table>
+    </div>
+    <div class="pager">
+      <button class="btn btn-ghost" id="msgPrev" type="button">上一页</button>
+      <span class="pager-info" id="msgPage">—</span>
+      <button class="btn btn-ghost" id="msgNext" type="button">下一页</button>
+    </div>
+  </section>
+
+  <footer class="dash-foot">
+    <p>留言按设备隔离：访客看不到别人的留言，这里能看到全部。设备哈希不可逆，无法还原成原始设备 ID。</p>
+  </footer>
+</main>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="assets/admin.js"></script>
+</body>
+</html>

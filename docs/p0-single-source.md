@@ -160,18 +160,56 @@ node scripts/dev-api-server.mjs            # 本地 8877
 
 `wall-check.sh` 现在自带隔离契约验收：`W0` 无设备头不泄露正文、`W10c` 对照设备读不到、`W15` 写入后另一设备仍为 0、`W17/W18` 后台接口有/无令牌。
 
-## 7. 管理后台下一步（P1）
+## 7. 管理后台（已上线）
 
-后台独立站 `shenge-work-admin.pages.dev` 尚未创建。留言板管理已先把**接口**做好，后台只需：
+地址：**https://shenge-work-admin.pages.dev** · 独立 Pages 项目，与公开站共用同一个 D1 `portfolio-db`。
 
-1. GitHub OAuth（只允许 `shenge-work`）→ D1 session 表；
-2. 把 `/api/admin/wall/*` 的鉴权从 `X-Admin-Token` 切成 session（token 只留应急删除）；
-3. 三个页面：设备台账（含拉黑）、留言审核（隐藏/恢复/导出）、统计看板；
-4. 复用同一个 D1，不新建库。
+### 结构
+
+```
+admin/
+  wrangler.toml            name=shenge-work-admin，D1 绑定 DB，输出目录 public
+  public/                  静态页面（登录 + 控制台，无框架、无构建）
+  functions/api/           auth / stats / devices / messages / export
+  lib/admin.js             会话签名、鉴权、限流、CSV —— 放在 functions 外，
+                           否则 Pages 会把每个 .js 当成路由入口
+```
+
+### 鉴权（过渡方案，OAuth 可后接）
+
+- 口令登录 → HMAC-SHA256 签名的 `pa_sess` cookie（HttpOnly / Secure / SameSite=Lax，12 小时）
+- 登录限流：同 IP 15 分钟 8 次，落 `rate_limits` 表
+- 写操作三重校验：SameSite + `X-Admin-Request: 1` 自定义头 + Origin 同源
+- 会话签名不建表，零存储成本；换 GitHub OAuth 时只改 `functions/api/auth/login.js`，
+  `isAdmin()` 的判定换成语种即可
+- 应急通道：`X-Admin-Token == WALL_ADMIN_TOKEN` 仍可用（脚本/自检走这条）
+
+### 接口
+
+| 方法 | 路径 | 用途 |
+|---|---|---|
+| POST | `/api/auth/login` | 口令换 cookie |
+| POST | `/api/auth/logout` | 清 cookie |
+| GET | `/api/auth/me` | 前端判断登录态 |
+| GET | `/api/stats` | PV / UV / 24h UV / 设备数 / 留言数 / 今日新增 / 隐藏 / 拉黑 |
+| GET | `/api/devices` | 设备台账（首见、最近活跃、留言数、最近一条、状态） |
+| GET | `/api/messages` | 留言审核（按设备 / 状态 / 关键词过滤） |
+| POST | `/api/messages/status` | 隐藏 / 恢复 |
+| POST | `/api/devices/block` | 拉黑 / 解封 |
+| GET | `/api/export` | 导出 CSV（留言 + 设备两段） |
+
+### 部署与密钥
+
+```bash
+cd admin && npx wrangler pages deploy --branch main
+```
+
+项目密钥（已配置）：`ADMIN_PASSWORD`、`ADMIN_SESSION_SECRET`、`WALL_ADMIN_TOKEN`。
+本地值存在仓库根的 `.secrets.local`（已 gitignore），后台开发用 `admin/.dev.vars`。
 
 ## 8. 未做 / 待办
 
-- [ ] 后台 UI（设备台账 + 留言审核）——接口已就绪
+- [x] 后台 UI（设备台账 + 留言审核 + CSV 导出）
 - [ ] Playwright 打印页数校验（把「2 页」从近似预算变成真实测量）
 - [ ] RAG：切片（按 bullet id）、Vectorize 索引、问答、JD 匹配、动态简历变体
 - [ ] 跨设备查看（设备绑定码）

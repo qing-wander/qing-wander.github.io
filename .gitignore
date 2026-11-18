@@ -14,3 +14,6 @@ worker/*.log
 
 # 本地密钥（DEVICE_HASH_PEPPER / WALL_ADMIN_TOKEN 等，绝不入库）
 .secrets.local
+
+# 后台本地变量（ADMIN_PASSWORD / ADMIN_SESSION_SECRET 等，绝不入库）
+admin/.dev.vars

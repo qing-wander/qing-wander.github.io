@@ -1,0 +1,23 @@
+# 后台项目配置（shenge-work-admin.pages.dev）
+#
+# 独立 Pages 项目：静态页面在 public/，Functions 在 functions/，
+# 跟公开站共用同一个 D1（portfolio-db），不新建库。
+#
+# 部署：
+#   cd admin && npx wrangler pages deploy
+# 本地：
+#   cd admin && npx wrangler pages dev
+#
+# 变量（生产在控制台/secret 里配，本地用 .dev.vars，绝不入库）：
+#   ADMIN_PASSWORD        后台口令
+#   ADMIN_SESSION_SECRET  会话签名盐（32 字节以上；不配会退回用 ADMIN_PASSWORD 当盐）
+#   WALL_ADMIN_TOKEN      可选，应急令牌直连
+
+name = "shenge-work-admin"
+compatibility_date = "2025-01-01"
+pages_build_output_dir = "public"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "portfolio-db"
+database_id = "022be169-a84e-4791-b2f2-ee4f9c4f17c8"
