@@ -223,7 +223,7 @@ git push origin main                            # 427a12d → 部署 427a12db su
 | 连续 5 次 | 5/5 返回 200，耗时 1.07–1.25s |
 | `siteverify`（服务端调用） | 400（参数无效属正常响应），0.57s |
 
-结论：境内可用。但**本机是宽带环境**，正式结论仍需手机 4G 复核（见 §7.6）。
+结论：境内可用。**宽带与手机端均已实测通过**（手机端见 §7.6）。
 
 ### 7.2 widget 配置
 
@@ -287,7 +287,7 @@ printf '%s' "$(cat /tmp/ts_secret.txt)" | npx wrangler pages secret put TURNSTIL
 | 假 token | 429 |
 | 测试数据 | 已清理，`total:0`（真实访问计数未动） |
 
-### 7.6 两个踩坑 + 一个未验证项
+### 7.6 两个踩坑 + 验证闭环
 
 1. **部署后 Functions 生效慢于静态文件**。第一次测「无 token 连发」，第 1、2 条都 201
    （等于走了正常档），因为边缘还在跑旧函数；等部署 success 后约 2 分钟再测才正常。
@@ -303,9 +303,9 @@ printf '%s' "$(cat /tmp/ts_secret.txt)" | npx wrangler pages secret put TURNSTIL
    留言同时正常入库（`wmwmml7td31d0p`，11 字）。此前 curl 只能验证"未带 token 会降档"，
    这一条补上了"带真 token 会放行"的另一半。
 
-> 4G 复核建议：用手机流量打开 `https://shenge-work.pages.dev/#wall`，看留言框下方是否出现
-> Turnstile 小组件。若一片空白但留言仍能提交，说明脚本在移动网络下不可达——此时功能是安全的
-> （降到严格档），但防护等于没生效，可考虑改用域名前置或干脆撤掉 Turnstile。
+**手机端复核（2026-11-19，已通过）**：站长用手机打开 `https://shenge-work.pages.dev/#wall`，
+小组件正常显示，说明 `challenges.cloudflare.com` 在**移动网络**下同样可达，
+不存在「境内只有宽带能加载 Turnstile」的顾虑。至此可达性、校验通过、未通过降档三条全部实测闭环。
 
 ---
 

@@ -473,7 +473,8 @@ secret 用 `wrangler pages secret put` 单点写入，避免 PATCH 整体覆盖�
 **遗留（不阻塞）**：
 - 带**有效** token 的完整链路已由站长在浏览器补验（2026-11-19 05:20）：`rate_limits` 里出现
   无 `strict` 前缀的 `wall:ip:` 与 `wall:day`，说明校验通过、走正常档，留言正常入库（`wmwmml7td31d0p`）。
-- 手机 4G 下 Turnstile 脚本是否可达未验；不可达也不影响留言（只是防护不生效）。
+- 手机端（移动网络）Turnstile 脚本可达性已验证：站长手机上小组件正常显示（2026-11-19）。
+  至此「可达 / 校验通过 / 未通过降档」三项全部实测完成，本任务可归档。
 - 预览部署 hostname 未登记（免费版不支持任意 hostname），预览页留言墙本就 `open:false`。
 
 ---
