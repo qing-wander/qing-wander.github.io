@@ -72,7 +72,7 @@ Workers KV 迁到 D1（`portfolio-db`，4 张表），免费写额度从 1,000 �
 | T16 | 计数与留言墙从 KV 迁到 D1（`/api/visits` + `portfolio-db`），摆脱第三方计数 | `已完成（2026-11-19）` | — | 顶栏计数器 / 留言墙 | 本文 §3.15 / [cloudflare-free-resources.md](cloudflare-free-resources.md) |
 | T17 | 留言墙接入 Cloudflare Turnstile 人机校验（两档额度 + fail-open） | `已完成（2026-11-19）` | — | 留言墙 POST | 本文 §3.16 / [cloudflare-free-resources.md](cloudflare-free-resources.md) §7 |
 | T18 | D1 备份脚本 `scripts/backup-d1.sh`（本机存 SQL 快照，不进仓库） | `已完成（2026-11-19）` | — | 数据安全 | 本文 §3.16 / [cloudflare-free-resources.md](cloudflare-free-resources.md) §8 |
-| T19 | 可观测双路：Cloudflare Web Analytics 与 Umami 并行采集 | `进行中（代码已接，待填 token）` | — | 访问统计兜底 | 本文 §3.17 / [cloudflare-free-resources.md](cloudflare-free-resources.md) §9 |
+| T19 | 可观测双路：Cloudflare Web Analytics 与 Umami 并行采集 | `已完成（2026-11-19）` | — | 访问统计兜底 | 本文 §3.17 / [cloudflare-free-resources.md](cloudflare-free-resources.md) §9 |
 
 ---
 
@@ -480,7 +480,7 @@ secret 用 `wrangler pages secret put` 单点写入，避免 PATCH 整体覆盖�
 
 ---
 
-### 3.17 T19 · 可观测双路（代码已就绪，卡在一步手动操作）
+### 3.17 T19 · 可观测双路（已完成，2026-11-19）
 
 **目标**：Umami 之外再加一路独立采集，任一路被拦或额度打满，另一路仍能看出量级。
 
@@ -491,13 +491,17 @@ secret 用 `wrangler pages secret put` 单点写入，避免 PATCH 整体覆盖�
 token 留空完全不发请求；加载失败静默，不牵连 Umami/Clarity。`node --check` 通过。
 实测 `static.cloudflareinsights.com` 境内可达（5/5 200，31KB，0.6–0.9s）。
 
-**卡点**：wrangler 的 OAuth 登录态**没有 RUM 权限**，`/rum/site_info` 的 list 与 create
-都返回 `10000 Authentication error`，scope 列表里也确实没有 analytics 项
-（有 `challenge-widgets.write`，所以 Turnstile 能自动建站点，Web Analytics 不能）。
+**绕不开的一步**：wrangler 的 OAuth 登录态没有 RUM 权限，`/rum/site_info` 的 list 与 create
+都返回 `10000 Authentication error`，scope 里也确认没有 analytics 项（有 `challenge-widgets.write`，
+所以 Turnstile 能自动建站点、Web Analytics 不能）。最终在控制台建了站点
+`shenge-work.github.io`，token `e8d13ee29814404299a92efbdea4b73e` 填入 `cfBeaconToken`。
 
-**下一步（需人工，约 30 秒）**：控制台 Analytics & Logs → Web Analytics → Add site →
-填 `shenge-work.github.io` → 选 JS installation → 复制 snippet 里的 32 位 token →
-填进 `cfBeaconToken`。填完部署，DevTools 里应能看到 `beacon.min.js` 200。
+**pages.dev 建不了独立站点**：给 `shenge-work.pages.dev` 单独 Add site 时，「完成」始终置灰、
+主机名一失焦就被清空 —— 该表单只接受账号下的 zone 域名。两个 host 因此共用一个 token，
+beacon 从 `pages.dev` 上报同样 200，数据归到同一站点。
+
+**线上验收**：浏览器打开 `shenge-work.pages.dev` 抓请求，`cloudflareinsights.com/cdn-cgi/rum`
+多次 OPTIONS+POST 全 ok，同时 `cloud.umami.is/script.js` GET ok —— 两路并行成立。
 
 **注意**：CF 与 Umami 口径不同（CF 更严，剔除部分爬虫与预加载），两边 PV 对不上是正常的，
 不要当成 bug 去修。

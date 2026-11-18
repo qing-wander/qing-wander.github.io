@@ -357,7 +357,7 @@ token 留空则**完全不加载、不发任何请求**（与 Umami/Clarity 的"
 填入后注入 `beacon.min.js`，带 `data-cf-beacon` 的 token，脚本加载失败静默放弃，不影响另外两路。
 `file://` 与 `localhost` 仍被统一跳过，不污染线上数据。
 
-### 9.4 为什么这一步必须手动（API 走不通）
+### 9.4 站点是怎么建的（以及 pages.dev 的坑）
 
 wrangler 的 OAuth 登录态**没有 RUM/analytics 权限**，实测：
 
@@ -370,18 +370,31 @@ POST /accounts/<id>/rum/site_info       → 10000 Authentication error
 所以 Turnstile 能自动建、Web Analytics 不能）。要么在控制台点一次，要么另建一个带
 "Account Analytics:Edit" 的 API Token —— 后者反而更绕。
 
-**控制台操作（约 30 秒，只需一次）**：
-`dash.cloudflare.com` → 左侧 **Analytics & Logs → Web Analytics** → **Add site**
-→ 填 `shenge-work.github.io`（主站）→ 选 "JS installation"（不要选 automatic，那是 zone 专用）
-→ 复制 snippet 里 `"token":` 后面那串 32 位值 → 填进 `js/analytics.js` 的 `cfBeaconToken`。
+**已在控制台建好（2026-11-19）**：`Analytics → Web Analytics → 添加站点` →
+填 `shenge-work.github.io` → 进「管理站点」取 snippet 里的 token。
 
-想连 `shenge-work.pages.dev` 也分开统计，就再 Add 一次填该 host，然后按 host 切 token。
+| 项 | 值 |
+|---|---|
+| 站点 | `shenge-work.github.io` |
+| token | `e8d13ee29814404299a92efbdea4b73e`（公开值，写在页面里无害） |
+| 官方形态 | `<script type="module" src=".../beacon.min.js" data-cf-beacon='{"token":"..."}'>` |
 
-### 9.5 生效怎么确认
+**坑：`pages.dev` 建不了独立站点。** 给 `shenge-work.pages.dev` 单独 Add site 时，主机名填进去
+「完成」始终置灰、一失焦就被清空 —— 该表单只接受账号下的 zone 域名，不接受 CF 自己的子域。
+所以两个 host 共用这一个 token：beacon 从 `pages.dev` 上报同样返回 200，数据归到同一站点，
+只是 host 维度只列出已登记的 `github.io`。
 
-1. 部署后浏览器打开站点，DevTools → Network 过滤 `beacon.min.js`，应看到 200 与后续 POST
-2. CF 后台 Web Analytics 面板通常几分钟到几小时出数（不是实时）
-3. 与 Umami 同日 PV 对比：两者口径不同（CF 更严，会剔掉部分爬虫与预加载），数字对不上是正常的
+### 9.5 生效验证（已完成）
+
+线上实测（2026-11-19，浏览器打开 `shenge-work.pages.dev` 抓网络请求）：
+
+| 观察 | 结果 |
+|---|---|
+| `cloudflareinsights.com/cdn-cgi/rum` | 多次 OPTIONS + POST，状态全部 ok |
+| `cloud.umami.is/script.js` | GET ok |
+
+两路同时在跑，互不影响。CF 面板通常几分钟到几小时出数（不实时）；两边 PV 数字对不上是正常的
+（CF 口径更严，剔除部分爬虫与预加载），不要当 bug 去修。
 
 ---
 
