@@ -52,7 +52,7 @@ AI Agent 工程师求职个人网站：基于纯原生 HTML / CSS / JavaScript �
 6. **项目详情数据**：作品卡片数据驱动渲染
 7. **项目模态框**：点击作品弹出详情（多尺寸适配）
 8. **Toast 提示**：简历下载等操作轻提示
-9. **全站访问计数器**：右下角复古里程表样式，显示全站真实访问次数（默认走免费计数服务，后端不可用时回退本机计数，不会显示 0）
+9. **全站访问计数器**：顶栏复古里程表样式，显示全站真实访问次数（Pages Function `/api/visits` + D1 自建，不依赖第三方；接口异常时显示示例数字并在 title 注明「暂不可用」，不假装真实值）
 10. **3D AI 简历问答助手**：右下角可切换 9 款角色皮肤（3 款真 3D GLB + 本地 SVG 角色 + AI 生成立绘），无边框悬浮，待机/思考/回答都有对应动画；首次进入自动挥手打招呼并自我介绍「我是 AI 简历问答助手」；右键/双击/长按/快捷键 `S` 切换皮肤，数字 `1–9` 直达，选择本地记忆（设计文档：[docs/ai-avatar-skins.md](docs/ai-avatar-skins.md)）
 11. **AI 语音播报（Phase 1 + 2）**：助手把欢迎语与回答「说」出来，首次进页面打招呼也有语音；浏览器拦截自动播放时给「一点即播」引导、首次交互补播；一键开关（本地记忆）、右键换音色、分句队列、口型律动联动。底层是浏览器内置 `SpeechSynthesis`（Edge 优先在线神经语音，零 Key 零费用）；**另外接了腾讯云 TTS 云端通道**（精品音色 101001，800 万字符免费包），启动探测成功才切云端，失败/超时自动无感回落到浏览器语音，`?tts=browser` 可强制降级。密钥只存云函数环境变量，设计文档：[docs/ai-voice-survey.md](docs/ai-voice-survey.md)
 12. **岗位匹配（JD MATCH）**：招聘方粘贴 JD（≤1500 字），云函数把 JD 拆成需求条目，逐条在档案切片上做 TF-IDF 召回（标题加权 + 章节意图兜底，只回收非零命中的块），模型在固定结构约束下输出「覆盖 / 部分 / 缺口 + 证据出处 + 面试追问点」，前端渲染对照表并支持复制 Markdown。与问答助手共用同一台云函数和同一份知识库，单独限流（10 分钟 4 次；解析失败或上游异常不占额度，日志只留 JD 哈希、正文不入库）。**两种入口**：页面 `#jd` 区块的完整对照表，以及 AI 助手面板顶部切到「JD 匹配」后的对话内紧凑卡片（点卡片里的追问可直接转问答预演）。设计文档：[docs/jd-match.md](docs/jd-match.md)
@@ -90,7 +90,7 @@ AI Agent 工程师求职个人网站：基于纯原生 HTML / CSS / JavaScript �
 │   ├── ai-voice.js         # 语音播报：开关 / 分句队列 / 自动播放解锁 / 口型联动
 │   ├── ai-voice-cloud.js   # 云端 TTS Provider：探测、缓存、失败回落浏览器语音
 │   ├── analytics.js        # 埋点统一入口（Umami / Clarity，未填 ID 不发请求）
-│   └── visitor-count.js    # 全站访问计数（abacus / 自建 Worker 可切换）
+│   └── visitor-count.js    # 全站访问计数（默认 Pages Function /api/visits，abacus / Worker 可切）
 ├── css/
 │   ├── style.css           # 设计系统 + 响应式 + 打印模式
 │   ├── jd-match.css        # 岗位匹配区块样式（跟随四种主题变量）
@@ -102,12 +102,16 @@ AI Agent 工程师求职个人网站：基于纯原生 HTML / CSS / JavaScript �
 │   ├── site-data.json      # 唯一编辑源：全部文案、项目、证书、联系方式
 │   └── site-data.js        # 自动生成的 window.SITE_DATA 快照（勿手改）
 ├── images/                 # 形象照 / 项目图 / 证书 / 学信网二维码
-├── functions/api/wall.js            # 留言墙 API（分页 / 限流 / 管理删除，KV 存储）
+├── functions/api/visits.js          # 访问计数 API（D1 存储，自建、不依赖第三方）
+├── functions/api/wall.js            # 留言墙 API（分页 / 限流 / 管理删除，D1 存储）
 ├── functions/api/deliver.js         # 简历转发到邮箱（Resend）
+├── db/schema.sql                    # D1 表结构（counters / visitors / wall_messages / rate_limits）
+├── wrangler.toml                    # 本地 wrangler 用的 Pages 绑定声明（D1 / KV）
 ├── functions/tencent/index.js       # CloudBase HTTP 云函数：/chat 问答 + JD 匹配 + TTS 路由
 ├── functions/tencent/tts.js         # 腾讯云 TextToVoice 直调（TC3 签名 / LRU 缓存 / 零依赖）
 ├── scripts/wall-check.sh            # 留言墙线上自检（默认只读）
-├── scripts/dev-api-server.mjs       # 本地联调：静态站 + 真实 Functions + 内存 KV
+├── scripts/dev-api-server.mjs       # 本地联调：静态站 + 真实 Functions + node:sqlite 模拟 D1
+├── docs/cloudflare-free-resources.md # Cloudflare 免费额度盘点、D1 迁移与回滚方案
 ├── scripts/sync_site_data.py        # JSON → JS 快照，支持 --check
 ├── scripts/sync-pages-from-github.sh  # Cloudflare Pages 同步（api.github.com + 直传，幂等）
 ├── scripts/deploy-pages.sh          # Cloudflare Pages 兜底直传（支持 --dry-run）
@@ -121,7 +125,7 @@ AI Agent 工程师求职个人网站：基于纯原生 HTML / CSS / JavaScript �
 ├── docs/resume-delivery.md          # 留言墙 / 简历转发的部署、自检与排障
 ├── docs/TODO.md                     # 项目待办与未竟事项台账（唯一「还没做的事」清单）
 ├── docs/portfolio-capabilities-and-learnings.md  # 功能全景 / 收获 / 33 条经验 / 能力矩阵
-├── worker/                 # 可选：自建 Cloudflare Worker 访客计数
+├── worker/                 # 备用：独立 Worker 计数（需自有域名，当前未启用）
 ├── .pages.yml              # Pages CMS 配置
 ├── .github/workflows/sync-site-data.yml  # JSON 变更后自动重建快照
 └── favicon.png / favicon-64.png
@@ -168,7 +172,7 @@ python3 -m http.server 8000
 | 行为观测（录屏/热图） | Microsoft Clarity | 不限流量 | `js/analytics.js` → `clarityProjectId` |
 | 内容管理（网页改文案） | Pages CMS | 免费（GitHub App 直连） | `.pages.yml` |
 | 数据同步（JSON→快照） | GitHub Actions | 公开仓库免费 | `.github/workflows/sync-site-data.yml` |
-| 全站访问计数 | abacus（默认）/ Cloudflare Worker + KV（可选） | 免费 | `js/visitor-count.js` → `CONFIG` |
+| 全站访问计数 | Cloudflare Pages Functions + D1（默认）/ abacus / 独立 Worker（备选） | D1：10 万行写/天、5GB | `js/visitor-count.js` → `CONFIG` + Pages 的 `DB` 绑定 |
 
 接入只需填 ID：`js/analytics.js` 顶部 `CONFIG` 留空 = 不加载、不发任何请求。
 

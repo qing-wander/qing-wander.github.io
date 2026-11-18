@@ -4,7 +4,8 @@
 > 统一在这里登记，每条给出状态、影响、前置条件、执行步骤与验收标准，并回链依据文档。
 > 目的：换会话、换机器、换协作人时，不用通读五份设计文档也能知道下一步该做什么、哪些是故意不做的。
 >
-> 最近一次盘点：**2026-11-17**（Resend 接入收尾 + T2 git refs 对齐 +「岗位匹配 JD MATCH」上线与首轮线上验收，新增 T10–T12）。
+> 最近一次盘点：**2026-11-19**（Cloudflare 免费资源盘点 + 计数与留言墙迁到 D1（新增 T16，已完成）+
+> T1 暂缓原因补充为「支付问题未解决」，站点未新增任何域名依赖）。
 
 ---
 
@@ -24,8 +25,14 @@
 403 `recipient_not_verified` 拒绝，前端按设计自动切到「用邮箱客户端发送」的 mailto 兜底
 （收件人已填好），功能不中断，但不会自动收到邮件。
 
-站长已于 **2026-11-17 明确决定暂不配置域名**，因此这是「已决策暂缓」，**不是故障、不是 bug**。
+站长已于 **2026-11-17 明确决定暂不配置域名**，2026-11-19 补充原因为**支付问题未解决**，
+因此这是「已决策暂缓」，**不是故障、不是 bug**。
 其余条目都是文档过时、工程卫生、可选增强或思考型迭代池，**不阻塞既有线上功能**。
+
+**2026-11-19 数据层已落地（T16）**：访问计数（`/api/visits`）与留言墙（`/api/wall`）从
+Workers KV 迁到 D1（`portfolio-db`，4 张表），免费写额度从 1,000 写/天 提到 100,000 行写/天；
+前端计数不再依赖第三方 abacus，改为走 Pages 自身的 `/api/visits`，**全程不需要自有域名**。
+详见 [cloudflare-free-resources.md](cloudflare-free-resources.md)。
 
 ---
 
@@ -61,6 +68,7 @@
 | T13 | AI 助手面板内 JD 模式（模式切换 / 对话内紧凑结果卡 / 追问直达问答） | `已完成（2026-11-18）` | — | AI 问答 / JD 匹配 | [jd-match.md §10](jd-match.md) |
 | T14 | 代码审视整改 P0：检索门控、JD 额度与行数、JD 日志脱敏、限流取 IP | `已完成（2026-11-18）` | — | 云函数 / 前端文案 | 本文 §3.14 |
 | T15 | 代码审视遗留 P1/P2：语义向量、JD 额度落库、main.js 拆分、首屏 SSG、3D 预加载、弹窗焦点陷阱 | `待办` | 中 | 全站 | 本文 §3.14 |
+| T16 | 计数与留言墙从 KV 迁到 D1（`/api/visits` + `portfolio-db`），摆脱第三方计数 | `已完成（2026-11-19）` | — | 顶栏计数器 / 留言墙 | 本文 §3.15 / [cloudflare-free-resources.md](cloudflare-free-resources.md) |
 
 ---
 
@@ -119,8 +127,9 @@ curl -s -X POST https://shenge-work.pages.dev/api/deliver \
 不改任何前端 / 函数代码，`ALLOWED_ORIGINS`、`SITE_KV`、`RESEND_API_KEY` 都不用动。
 
 **决策记录**：2026-11-17 站长在「我有域名 / 帮我买 / 先不配域名」中明确选择**先不配域名**，
+2026-11-19 补充原因：**支付问题未解决**（比价 / 付款方式待定），不是忘了做。
 保持「自动发信仅支持账号邮箱 + 其他邮箱 mailto 兜底」。
-**重开触发条件**：访客反馈收不到自动邮件、或站长愿意提供 / 购买域名。
+**重开触发条件**：访客反馈收不到自动邮件、或站长解决支付方式愿意提供 / 购买域名。
 
 ---
 
@@ -399,6 +408,39 @@ T11 置为 `已完成（2026-11-18）`。
   本地静态站在 8877，云函数白名单只认 8000，所以本地点「问一句」会 403。要么把前端起在 8000，
   要么给云函数配 `ALLOWED_ORIGINS` 环境变量（不建议为调试永久放宽线上白名单）。
 
+### 3.15 T16 · 计数与留言墙迁到 D1（已完成，2026-11-19）
+
+**背景**：盘点 Cloudflare 免费额度时发现两处真瓶颈——KV 免费只有 **1,000 写/天**，而计数每 PV
+写一次、留言每次写 3–4 个键，日 PV 上千就会静默耗尽（前端失败会回退，表现只是「数字不涨」）；
+同时自建计数 Worker 因 `workers.dev` 境内被墙从未上线，前端一直依赖第三方 `abacus`，
+而 2026-11-19 实测 `abacus /get` 已返回 `{"error":"Failed to get data..."}`，取不到历史值。
+
+**方案**：不买域名也能解——把计数接口放进 Pages 项目自己的 `/api/visits`（`shenge-work.pages.dev`
+是既有可用链路），存储换 D1。留言墙同步从「KV 单条 JSON 数组」改为 D1 表（真 SQL 分页、
+并发不再互相覆盖）。
+
+**改动**：新增 `db/schema.sql`（`counters` / `visitors` / `wall_messages` / `rate_limits`）、
+`functions/api/visits.js`、根 `wrangler.toml`；改写 `functions/api/wall.js`、
+`js/visitor-count.js`（默认 `provider:'pages'`，abacus/worker 保留可切）、
+`scripts/dev-api-server.mjs`（node:sqlite 适配层）、`scripts/wall-check.sh`（诊断文案）；
+`worker/wrangler.toml` 标注为备用实现。**`deliver.js` 未动**（发信限额写量仅约 90 写/天，不冒风险）。
+
+**线上配置**：D1 `portfolio-db`（id `022be169-a84e-4791-b2f2-ee4f9c4f17c8`）已建表；
+Pages 生产环境已加 `DB` 绑定（API PATCH 实测是合并语义，`SITE_KV` 与三个环境变量全部保留）；
+代码随 `427a12d` push，部署 `427a12db` success。
+
+**验收**：本地 10 项、线上 6 项全通过（含同访客 `isNew:false`、非法 id 400、非白名单 Origin 403）；
+测试数据已清理，`GET /api/visits` 复查 `total:0, visitors:0`。
+留言写入**未在生产 POST 验证**（线上无 `WALL_ADMIN_TOKEN`，测试留言删不掉），改在本地完成。
+
+**踩坑记录**：访客去重最初用 `INSERT ... ON CONFLICT DO UPDATE`，该写法在 ID 已存在时也执行 UPDATE、
+`meta.changes` 恒为 1，会让 visitors 随每次 PV 增长；已改为 `INSERT OR IGNORE` + 单独刷新 `last_seen`。
+
+**已知遗留（不阻塞）**：预览环境未绑 D1（留言墙在预览页仍是 `open:false`，与改动前一致）；
+计数历史值无法迁移（abacus 取数失败），从 0 起算；`WALL_ADMIN_TOKEN` 仍未配（见 T6）。
+
+---
+
 ## 4. 已完成（2026-11-16 / 17 收尾，勿重复做）
 
 - 岗位匹配 JD MATCH 上线（2026-11-17）：静态 `7c7b5e1` 已推送、Pages 已构建、云函数 `mode:"jd"` 线上真实模型实测可用，问答与 TTS 回归 200（详见 §3.10）；**不要重复部署或重复 push**；
@@ -423,6 +465,9 @@ T11 置为 `已完成（2026-11-18）`。
 - 简历长图依赖本地化（2026-11-18）：`html2canvas 1.4.1` 从 `cdn.jsdelivr.net` 改为自托管
   `assets/vendor/html2canvas.min.js`（194 KB，带 `?v=`），断网或境外 CDN 不可达时仍能导出长图；
   全站剩余外链只有 Google Fonts（异步加载，失败仅回退系统字体）。
+- 计数与留言墙迁 D1（2026-11-19）：`/api/visits` 上线（D1 `portfolio-db`）、`/api/wall` 改写为 D1、
+  前端计数默认走自身接口；Pages 生产已绑 `DB`，KV `SITE_KV` 与三个环境变量确认保留；
+  线上部署 `427a12db`，测试数据已清理。**前端 `provider` 已固定为 `pages`，不要再让它回 abacus。**
 
 ---
 
