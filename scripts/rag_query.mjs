@@ -22,6 +22,20 @@ const CHUNKS = resolve(ROOT, 'rag/chunks.json');
 const K1 = 1.2;
 const B = 0.75;
 const TITLE_WEIGHT = 2;
+const HINT_BONUS = 1.6;
+
+/* 章节意图：口语化问题（「他几年经验」「换过几家公司」）词面几乎不打中正文，
+   靠意图把对应段落兜上来，避免明明有料却答「没写」。 */
+const INTENTS = [
+  { re: /(几年|多少年|工作经历|履历|几家公司|换过|就职|任职)/, sections: ['experience', 'about'] },
+  { re: /(项目|作品)/, sections: ['projects', 'works'] },
+  { re: /(学历|毕业|学校|专业|大学|奖学金|统招)/, sections: ['education'] },
+  { re: /(联系|邮箱|电话|微信|github|作品集)/i, sections: ['contact'] },
+  { re: /(技能|技术栈|会什么|熟悉什么)/, sections: ['skills'] },
+];
+
+const hintedSections = (query) =>
+  new Set(INTENTS.filter((i) => i.re.test(query)).flatMap((i) => i.sections));
 
 export function loadChunks(file = CHUNKS) {
   return JSON.parse(readFileSync(file, 'utf8'));
@@ -53,6 +67,7 @@ export function search(payload, query, top = 5) {
   /* 词面覆盖面闸门：只命中一个词（比如「深圳」这种地名）不足以说明相关。
      短查询（≤2 个 token）放宽到 1，避免「邮箱」这类单词查询被误杀。 */
   const minMatched = Math.min(qTokens.length <= 2 ? 1 : 2, qTokens.length);
+  const hints = hintedSections(query);
   const scored = docs.map((d) => {
     let score = 0;
     let matched = 0;
@@ -63,10 +78,13 @@ export function search(payload, query, top = 5) {
       const w = idf(df.get(t) || 0, n);
       score += w * (f * (K1 + 1)) / (f + K1 * (1 - B + (B * d.len) / avgdl));
     }
-    return { id: d.chunk.id, score, matched, text: d.chunk.text };
+    const inHint = hints.has(d.chunk.section);
+    if (inHint && matched > 0) score += HINT_BONUS * matched;
+    const need = inHint ? 1 : minMatched;
+    return { id: d.chunk.id, score, matched, need, text: d.chunk.text };
   });
   return scored
-    .filter((s) => s.score > 0 && s.matched >= minMatched)
+    .filter((s) => s.score > 0 && s.matched >= s.need)
     .sort((a, b) => b.score - a.score)
     .slice(0, top);
 }
