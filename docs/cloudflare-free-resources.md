@@ -5,7 +5,8 @@
 > 待办状态以 [TODO.md](TODO.md) 为唯一台账（本文对应 T16）；部署链路见
 > [cloudflare-pages-deploy.md](cloudflare-pages-deploy.md)。
 
-**最近更新：2026-11-19**（首次盘点 + T16 落地，线上已验收）。
+**最近更新：2026-11-19**（首次盘点 + T16 落地；同日追加 T17：留言墙接入 Turnstile 人机校验
++ D1 备份脚本，线上已验收）。
 
 ---
 
@@ -27,11 +28,11 @@
 | **KV** | 1GB；100,000 读/天；**1,000 写/天** | 仅 `SITE_KV` 给 deliver 做发信限额 | 写额度是硬瓶颈，已把大头迁走 |
 | **D1** | 5GB 总量；单库 500MB；5,000,000 行读/天；**100,000 行写/天**；10 个库 | 新增 `portfolio-db`：计数、留言、限流 | 够用，写额度是 KV 的 100 倍 |
 | **Durable Objects** | **免费计划已可用**（仅 SQLite 后端）：5GB / 500 万行读/天 / 10 万行写/天 | 暂未使用 | 代码注释里「需付费计划」是过期认知，已修正见 §3.4 |
-| **R2** | 10GB 存储；100 万次写 + 1000 万次读/月；**出站免费** | 未使用（视频 9.8MB 在仓库内，Pages 限制内） | 可选项，非必需 |
+| **R2** | 10GB 存储；100 万次写 + 1000 万次读/月；**出站免费** | 未使用 | **公开访问必须绑自定义域**：`r2.dev` 子域明确「非生产用」，有可变速率限制（秒级几百请求就 429）、带宽会被压、且不支持缓存/WAF，无域名前当不了图床 |
 | **Cloudflare Registrar** | 成本价、无溢价、免费 WHOIS 隐私 | 未使用（无域名） | **被支付问题卡住** |
 | **Email Routing** | 免费收信转发、无限别名 | 未使用（无域名） | 被域名卡住 |
 | **Zero Trust Access** | 50 用户内免费 | 未使用 | 需自有域名才能保护 Pages 站 |
-| **Turnstile** | 免费不限量 | 未使用（留言墙靠 IP 限流） | 被刷再加 |
+| **Turnstile** | 免费：**无限验证**、20 个 widget、每 widget 10 hostname，可独立使用（不必接 Cloudflare 网络） | 留言墙 POST 人机校验（2026-11-19 接入，见 §7） | **已用**，且是唯一「免费 + 不用域名 + 有真实安全收益」的产品 |
 | **Web Analytics** | 免费、无 Cookie | 未使用（已有 Umami + Clarity） | 重复，不建议加 |
 | **Cloudflare Tunnel** | 免费 | 未使用 | 本地联调需要外网时可用 |
 
@@ -205,7 +206,130 @@ git push origin main                            # 427a12d → 部署 427a12db su
 
 ---
 
-## 7. 备注
+## 7. 留言墙人机校验（Turnstile，T17）
+
+### 7.1 为什么选它，以及为什么先实测
+
+清单里能同时满足「免费 + 不需要域名 + 有真实收益」的只有 Turnstile。留言墙原来只靠 IP 限流
+（每 IP 10 分钟 3 条），代理池一刷就会写脏数据。
+
+按项目既有规矩，**先实测再上线**（深圳本机，2026-11-19 04:5x）：
+
+| 目标 | 结果 |
+|---|---|
+| DNS `challenges.cloudflare.com` | 104.18.95.41 / 104.18.94.41 |
+| `turnstile/v0/api.js` 直取 | 302（正常，版本化跳转），0.65s |
+| 跟随跳转到 `turnstile/v0/b/<hash>/api.js` | **200，86 KB，0.94s**，内容为 turnstile 脚本 |
+| 连续 5 次 | 5/5 返回 200，耗时 1.07–1.25s |
+| `siteverify`（服务端调用） | 400（参数无效属正常响应），0.57s |
+
+结论：境内可用。但**本机是宽带环境**，正式结论仍需手机 4G 复核（见 §7.6）。
+
+### 7.2 widget 配置
+
+| 项 | 值 |
+|---|---|
+| 名称 | `shenge-work-portfolio` |
+| sitekey | `0x4AAAAAAGHnx0m992aGGpUJ`（公开值，写在前端无害） |
+| secret | 只存 Pages 环境变量 `TURNSTILE_SECRET`（`secret_text` 类型） |
+| mode | `managed`（大多数真人无感通过） |
+| hostname | `shenge-work.github.io` / `shenge-work.pages.dev` / `localhost` |
+
+免费版**不支持"任意 hostname"**，必须预先登记域名。预览部署（`<commit>.shenge-work.pages.dev`）
+因此不在白名单里——但预览环境本来就没绑 D1（留言墙 `open:false`），不影响。
+
+### 7.3 两档额度（核心设计）
+
+| 情况 | 走的档位 | 额度 |
+|---|---|---|
+| 校验通过 | 正常档 `wall:ip:` / `wall:day` | 每 IP 10 分钟 3 条；全站每日 50 条 |
+| 未带 token / 校验失败 | 严格档 `wall:ip:strict:` / `wall:day:strict` | 每 IP **每小时 1 条**；全站每日 **10 条** |
+| 未配置 secret | 正常档 | 与接入前完全一致（向后兼容） |
+
+两档用不同 bucket 名，避免刷子把正常访客的每日额度吃光。
+
+**刻意 fail-open**：Turnstile 脚本哪天被墙或加载失败，widget 保持隐藏、提交不带 token，
+留言仍然可用，只是降到严格档。宁可少挡一点刷子，也不能让正常访客彻底留言不了。
+前端还会在 429 且 `verifyRequired:true` 时自动 `reset` widget，让访客能重新验证。
+
+### 7.4 部署方式（不要整体 PATCH）
+
+secret 用**单点写入**，别去 PATCH 整个 `deployment_configs`：
+
+```bash
+printf '%s' "$(cat /tmp/ts_secret.txt)" | npx wrangler pages secret put TURNSTILE_SECRET --project-name shenge-work
+```
+
+写入后复查：`env_vars` 里 `RESEND_API_KEY` 与 `TURNSTILE_SECRET` 两个 `secret_text` 都在，
+`DB`(D1) 与 `SITE_KV`(KV) 绑定都在（已核对通过）。
+
+**诊断标志**：`GET /api/wall` 现在多回一个布尔 `turnstile`（只报"是否已配置"，不暴露密钥）。
+线上实测 `"turnstile":true`，说明 secret 已注入函数运行时。
+
+### 7.5 验收记录
+
+本地（`PORT=8878 node scripts/dev-api-server.mjs`）：
+
+| 场景 | 结果 |
+|---|---|
+| 未配 secret，连发 4 条 | 201 / 201 / 201 / **429**（原额度，与改动前一致） |
+| `TURNSTILE_SECRET=test`，不带 token 连发 | 201 / **429 `verifyRequired:true`** |
+| 带假 token | **429**（校验失败 → 严格档） |
+
+线上（`https://shenge-work.pages.dev`）：
+
+| 项 | 结果 |
+|---|---|
+| 页面已带脚本与容器 | grep 命中 2 处（`challenges.cloudflare.com/turnstile` + `wallTurnstile`） |
+| `GET /api/wall` | `"turnstile":true` |
+| 无 token：IP-A 第 1 条 / 第 2 条 | 201 / **429 `verifyRequired:true, retryAfter≈2741s`** |
+| 无 token：IP-B 第 1 条 | 201（新 IP，独立计数，符合设计） |
+| 假 token | 429 |
+| 测试数据 | 已清理，`total:0`（真实访问计数未动） |
+
+### 7.6 两个踩坑 + 一个未验证项
+
+1. **部署后 Functions 生效慢于静态文件**。第一次测「无 token 连发」，第 1、2 条都 201
+   （等于走了正常档），因为边缘还在跑旧函数；等部署 success 后约 2 分钟再测才正常。
+   **教训**：验 Functions 行为，不能只看静态文件已更新。
+2. **出口 IP 双栈切换会让严格档"看起来失效"**。复测时第 3 条又 201，查
+   `SELECT bucket,count FROM rate_limits` 才发现有两个不同 IP hash
+   （`a750973d2c829429`、`dceb71d4ffc05954`），IPv4 与 IPv6 各算一个 IP，各自允许 1 条。
+   **这不是 bug**，是测试方法的假象；对真实访客影响有限（双栈最多给 2 条），且有
+   `wall:day:strict`（每日 10 条）兜底。
+3. **未验证**：带**有效** token 的完整链路（真浏览器渲染 widget → 提交）。curl 造不出真 token，
+   需站长自己打开站点发一条。自查方法：发完后跑
+   `npx wrangler d1 execute portfolio-db --remote --command "SELECT bucket,count FROM rate_limits"`
+   ——出现 `wall:ip:`（无 strict 前缀）即说明校验通过、走的是正常档。
+
+> 4G 复核建议：用手机流量打开 `https://shenge-work.pages.dev/#wall`，看留言框下方是否出现
+> Turnstile 小组件。若一片空白但留言仍能提交，说明脚本在移动网络下不可达——此时功能是安全的
+> （降到严格档），但防护等于没生效，可考虑改用域名前置或干脆撤掉 Turnstile。
+
+---
+
+## 8. D1 备份（T18）
+
+`scripts/backup-d1.sh`：
+
+```bash
+./scripts/backup-d1.sh                  # 备份 portfolio-db
+./scripts/backup-d1.sh portfolio-db     # 指定库
+KEEP=20 ./scripts/backup-d1.sh          # 保留最近 20 份（默认 10）
+```
+
+- 输出到 `~/.local/share/shenge-work/d1-backups/<库名>-<时间戳>.sql`，**不进 Git**
+  （含留言正文与访客哈希，属于访客数据）
+- 实测一次：4.0 KB，4 张表，6 条 INSERT
+- 自动清理超出 KEEP 的旧备份
+- 需要 wrangler 已登录；脚本用 `--remote` 导出线上库（不是本地 `.wrangler` 模拟库）
+
+为什么值得有：留言墙是唯一的用户产生内容，D1 免费层本身不做时间点恢复，
+删错了就是没了。这个脚本是"能重来一次"的底线。
+
+---
+
+## 9. 备注
 
 - 计数的历史值**没有迁移**：abacus 取数接口实测已返回 error，取不到原值，因此 D1 从 0 起算。
   这是有意接受的损失（原数字本身来自第三方、无法验证）。

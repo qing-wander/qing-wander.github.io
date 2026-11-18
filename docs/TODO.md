@@ -4,8 +4,9 @@
 > 统一在这里登记，每条给出状态、影响、前置条件、执行步骤与验收标准，并回链依据文档。
 > 目的：换会话、换机器、换协作人时，不用通读五份设计文档也能知道下一步该做什么、哪些是故意不做的。
 >
-> 最近一次盘点：**2026-11-19**（Cloudflare 免费资源盘点 + 计数与留言墙迁到 D1（新增 T16，已完成）+
-> T1 暂缓原因补充为「支付问题未解决」，站点未新增任何域名依赖）。
+> 最近一次盘点：**2026-11-19**（Cloudflare 免费资源盘点 + 计数与留言墙迁到 D1（T16）+
+> 留言墙接入 Turnstile 人机校验（T17）+ D1 备份脚本（T18），三件均已完成；
+> T1 暂缓原因补充为「支付问题未解决」，站点始终未新增任何域名依赖）。
 
 ---
 
@@ -69,6 +70,8 @@ Workers KV 迁到 D1（`portfolio-db`，4 张表），免费写额度从 1,000 �
 | T14 | 代码审视整改 P0：检索门控、JD 额度与行数、JD 日志脱敏、限流取 IP | `已完成（2026-11-18）` | — | 云函数 / 前端文案 | 本文 §3.14 |
 | T15 | 代码审视遗留 P1/P2：语义向量、JD 额度落库、main.js 拆分、首屏 SSG、3D 预加载、弹窗焦点陷阱 | `待办` | 中 | 全站 | 本文 §3.14 |
 | T16 | 计数与留言墙从 KV 迁到 D1（`/api/visits` + `portfolio-db`），摆脱第三方计数 | `已完成（2026-11-19）` | — | 顶栏计数器 / 留言墙 | 本文 §3.15 / [cloudflare-free-resources.md](cloudflare-free-resources.md) |
+| T17 | 留言墙接入 Cloudflare Turnstile 人机校验（两档额度 + fail-open） | `已完成（2026-11-19）` | — | 留言墙 POST | 本文 §3.16 / [cloudflare-free-resources.md](cloudflare-free-resources.md) §7 |
+| T18 | D1 备份脚本 `scripts/backup-d1.sh`（本机存 SQL 快照，不进仓库） | `已完成（2026-11-19）` | — | 数据安全 | 本文 §3.16 / [cloudflare-free-resources.md](cloudflare-free-resources.md) §8 |
 
 ---
 
@@ -441,6 +444,40 @@ Pages 生产环境已加 `DB` 绑定（API PATCH 实测是合并语义，`SITE_K
 
 ---
 
+### 3.16 T17 / T18 · Turnstile 人机校验 + D1 备份（已完成，2026-11-19）
+
+**为什么是 Turnstile**：翻完 Cloudflare 免费清单，能同时满足「免费 + 不需要域名 + 有真实收益」
+的只有它（无限验证、20 widget，可独立使用）。R2 看着能当图床，但 `r2.dev` 官方明确说非生产用
+（有速率限制、带宽会被压、不支持缓存），公开访问必须绑自定义域 —— 没域名前做不了。
+
+**先实测再上线**（深圳本机）：`challenges.cloudflare.com` 可达，`api.js` 302 → 版本化路径 200、
+86 KB、约 1 秒，连测 5 次全通。**但本机是宽带，4G 复核仍待办**（见下方遗留）。
+
+**改动**：`functions/api/wall.js` 校验 `turnstileToken` 并分两档额度
+（通过→每 IP 10 分钟 3 条；未通过/未带→每 IP 每小时 1 条、每日 10 条，两档分 bucket 不互相挤占）；
+`index.html`/`js/main.js` 懒渲染 widget（等不到脚本就保持 hidden）；`scripts/backup-d1.sh` 新增。
+secret 用 `wrangler pages secret put` 单点写入，避免 PATCH 整体覆盖掉 `RESEND_API_KEY`。
+
+**设计取舍：刻意 fail-open**。脚本被墙/加载失败时留言仍可用，只是降到严格档。宁可少挡一点刷子，
+也不能让正常访客彻底留言不了 —— 这与站点「降级但不死」的一贯做法一致。
+
+**验收**：本地两档行为符合预期（未配 secret 与改动前完全一致；配 secret 后不带 token 第 2 条即 429）；
+线上 `GET /api/wall` 回 `turnstile:true`，无 token 连发 201 → 429（`verifyRequired:true`）；
+测试数据已清理，`total:0`。
+
+**两个踩坑**：
+1. 部署后 **Functions 生效慢于静态文件**，首次测「第 2 条也通过」其实是还在跑旧函数，等约 2 分钟复测才正常。
+2. 复测时第 3 条又通过，查 `rate_limits` 发现是**出口 IP 双栈切换**（两个不同 IP hash 各允许 1 条），
+   不是代码 bug；对真实访客最多放宽到 2 条，且有 `wall:day:strict` 每日 10 条兜底。
+
+**遗留（不阻塞）**：
+- 带**有效** token 的完整链路未验（curl 造不出真 token）。自查方法：自己发一条后跑
+  `SELECT bucket,count FROM rate_limits`，出现无 `strict` 前缀的 `wall:ip:` 即说明校验通过。
+- 手机 4G 下 Turnstile 脚本是否可达未验；不可达也不影响留言（只是防护不生效）。
+- 预览部署 hostname 未登记（免费版不支持任意 hostname），预览页留言墙本就 `open:false`。
+
+---
+
 ## 4. 已完成（2026-11-16 / 17 收尾，勿重复做）
 
 - 岗位匹配 JD MATCH 上线（2026-11-17）：静态 `7c7b5e1` 已推送、Pages 已构建、云函数 `mode:"jd"` 线上真实模型实测可用，问答与 TTS 回归 200（详见 §3.10）；**不要重复部署或重复 push**；
@@ -468,6 +505,10 @@ Pages 生产环境已加 `DB` 绑定（API PATCH 实测是合并语义，`SITE_K
 - 计数与留言墙迁 D1（2026-11-19）：`/api/visits` 上线（D1 `portfolio-db`）、`/api/wall` 改写为 D1、
   前端计数默认走自身接口；Pages 生产已绑 `DB`，KV `SITE_KV` 与三个环境变量确认保留；
   线上部署 `427a12db`，测试数据已清理。**前端 `provider` 已固定为 `pages`，不要再让它回 abacus。**
+- 留言墙 Turnstile + D1 备份（2026-11-19）：widget `shenge-work-portfolio`
+  （sitekey `0x4AAAAAAGHnx0m992aGGpUJ`），secret 已写入 Pages 生产环境；
+  两档额度生效，`/api/wall` 回 `turnstile:true`；`scripts/backup-d1.sh` 已验证可导出（4 表 6 行）。
+  **注意**：环境变量改动请用 `wrangler pages secret put`，不要整体 PATCH `deployment_configs`。
 
 ---
 

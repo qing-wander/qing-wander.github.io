@@ -103,13 +103,14 @@ AI Agent 工程师求职个人网站：基于纯原生 HTML / CSS / JavaScript �
 │   └── site-data.js        # 自动生成的 window.SITE_DATA 快照（勿手改）
 ├── images/                 # 形象照 / 项目图 / 证书 / 学信网二维码
 ├── functions/api/visits.js          # 访问计数 API（D1 存储，自建、不依赖第三方）
-├── functions/api/wall.js            # 留言墙 API（分页 / 限流 / 管理删除，D1 存储）
+├── functions/api/wall.js            # 留言墙 API（Turnstile 校验 / 两档限流 / 管理删除，D1 存储）
 ├── functions/api/deliver.js         # 简历转发到邮箱（Resend）
 ├── db/schema.sql                    # D1 表结构（counters / visitors / wall_messages / rate_limits）
 ├── wrangler.toml                    # 本地 wrangler 用的 Pages 绑定声明（D1 / KV）
 ├── functions/tencent/index.js       # CloudBase HTTP 云函数：/chat 问答 + JD 匹配 + TTS 路由
 ├── functions/tencent/tts.js         # 腾讯云 TextToVoice 直调（TC3 签名 / LRU 缓存 / 零依赖）
 ├── scripts/wall-check.sh            # 留言墙线上自检（默认只读）
+├── scripts/backup-d1.sh             # D1 备份：导出 SQL 快照到本机（不进仓库）
 ├── scripts/dev-api-server.mjs       # 本地联调：静态站 + 真实 Functions + node:sqlite 模拟 D1
 ├── docs/cloudflare-free-resources.md # Cloudflare 免费额度盘点、D1 迁移与回滚方案
 ├── scripts/sync_site_data.py        # JSON → JS 快照，支持 --check
@@ -156,10 +157,14 @@ python3 -m http.server 8000
 
 ## 留言墙（主页 SEC.10）
 
-匿名访客可公开留言，后端是 Cloudflare Pages Function + KV；主站 `github.io` 是纯静态，API 走备用站 `pages.dev`（双线路自动切换）。
+## 留言墙（主页 SEC.11）
 
-- **线上自检**：`./scripts/wall-check.sh`（默认只读）。2026-11-16 已绑定 `SITE_KV`（`site-kv` namespace，Production 环境）并重新部署，`open=true`、11/11 全过，`./scripts/deploy-pages.sh` 部署结束也会自动检查这一项。绑定/环境变量变更需在控制台操作并重新部署才生效，见 [docs/resume-delivery.md](docs/resume-delivery.md) ②。
-- **本地联调**：`node scripts/dev-api-server.mjs` → `http://127.0.0.1:8877/index.html`；`本地预览.command` 的 8765 是纯静态服务，没有 `/api`。
+匿名访客可公开留言，后端是 Cloudflare Pages Function + D1；主站 `github.io` 是纯静态，API 走备用站 `pages.dev`（双线路自动切换）。
+
+- **人机校验**：表单底部接 Cloudflare Turnstile（widget `shenge-work-portfolio`）。校验通过走正常额度（每 IP 10 分钟 3 条、每日 50 条）；未通过或脚本加载失败降到严格档（每 IP 每小时 1 条、每日 10 条）——**脚本被墙也不影响留言，只是额度收紧**。`GET /api/wall` 的 `turnstile` 字段可自查是否已配置密钥。
+- **线上自检**：`./scripts/wall-check.sh`（默认只读）。2026-11-19 迁到 D1（`portfolio-db`）后 11/11 全过；绑定/环境变量变更需重新部署才生效，见 [docs/resume-delivery.md](docs/resume-delivery.md) ②。
+- **数据备份**：`./scripts/backup-d1.sh` 把线上库导出成 SQL 快照到 `~/.local/share/shenge-work/d1-backups/`（不进 Git，保留最近 10 份）。
+- **本地联调**：`node scripts/dev-api-server.mjs` → `http://127.0.0.1:8877/index.html`；`本地预览.command` 的 8765 是纯静态服务，没有 `/api`。想验严格档就加 `TURNSTILE_SECRET=test` 起服务。
 - **交互**：每页 20 条 + 加载更早、手动刷新、60 秒新留言提示、相对时间、`⌘/Ctrl + Enter` 提交、加载/错误状态；站长排障可加 `?wallDebug=1`。
 
 ## 可观测统计与内容管理

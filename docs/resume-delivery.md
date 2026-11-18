@@ -105,6 +105,7 @@
 | Variable | `DELIVER_BCC` | 如 `shenge.work@gmail.com`（可选） | 站长收一份转发备案，不配则完全不经手 |
 | Variable | `ALLOWED_ORIGINS` | `https://shenge-work.github.io,https://shenge-work.pages.dev` | 跨域白名单 |
 | Variable | `WALL_ADMIN_TOKEN` | 自拟一串随机字符（如 32 位） | 留言管理删除令牌（可选） |
+| Secret | `TURNSTILE_SECRET` | Cloudflare Turnstile widget「shenge-work-portfolio」的私钥 | 留言人机校验（可选；未配则完全跳过校验） |
 
 > Secret 类型选「**Secret**」而不是「Text」，加密存储。
 > 配完点 `Save`。**Pages 变量/KV 绑定修改后需要重新部署才生效**（重新跑一次部署脚本，或 Pages 控制台 Deployments → … → Retry deployment）。
@@ -152,7 +153,7 @@ PORT=8878 WALL_NO_KV=1 node scripts/dev-api-server.mjs  # 模拟「线上忘了�
 # 打开 http://127.0.0.1:8877/index.html?wallDebug=1 与 /resume.html 手动点一遍
 ```
 
-联调服务器默认带一个本地管理令牌 `local-admin-token`（可用 `WALL_ADMIN_TOKEN` 覆盖），内存 KV 会模拟 `expirationTtl`，所以固定窗口限流到期解锁也能测。注意 `本地预览.command` 起的是 8765 纯静态服务，**没有 `/api`**；页面会提示改用 8877 联调服务器。
+联调服务器默认带一个本地管理令牌 `local-admin-token`（可用 `WALL_ADMIN_TOKEN` 覆盖），并用 `node:sqlite` 内存库模拟 D1，所以固定窗口限流到期解锁也能测；想验「Turnstile 未通过→严格档」就加 `TURNSTILE_SECRET=test` 起服务。注意 `本地预览.command` 起的是 8765 纯静态服务，**没有 `/api`**；页面会提示改用 8877 联调服务器。
 
 已回归的点：留言 GET/分页/peek/POST/重复提交/固定窗口限流/换行与 emoji 截断/来源校验/管理员删除；转发接口的收件人解析（多收件人、去重、格式校验、最多 3 个）、Reply-To、主题与正文、每收件人/每 IP/全站限额；未配置与域名未验证两种情况的 mailto 兜底；移动端 320–390px 布局。
 
