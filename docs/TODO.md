@@ -471,8 +471,8 @@ secret 用 `wrangler pages secret put` 单点写入，避免 PATCH 整体覆盖�
    不是代码 bug；对真实访客最多放宽到 2 条，且有 `wall:day:strict` 每日 10 条兜底。
 
 **遗留（不阻塞）**：
-- 带**有效** token 的完整链路未验（curl 造不出真 token）。自查方法：自己发一条后跑
-  `SELECT bucket,count FROM rate_limits`，出现无 `strict` 前缀的 `wall:ip:` 即说明校验通过。
+- 带**有效** token 的完整链路已由站长在浏览器补验（2026-11-19 05:20）：`rate_limits` 里出现
+  无 `strict` 前缀的 `wall:ip:` 与 `wall:day`，说明校验通过、走正常档，留言正常入库（`wmwmml7td31d0p`）。
 - 手机 4G 下 Turnstile 脚本是否可达未验；不可达也不影响留言（只是防护不生效）。
 - 预览部署 hostname 未登记（免费版不支持任意 hostname），预览页留言墙本就 `open:false`。
 

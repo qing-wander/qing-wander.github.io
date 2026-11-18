@@ -297,10 +297,11 @@ printf '%s' "$(cat /tmp/ts_secret.txt)" | npx wrangler pages secret put TURNSTIL
    （`a750973d2c829429`、`dceb71d4ffc05954`），IPv4 与 IPv6 各算一个 IP，各自允许 1 条。
    **这不是 bug**，是测试方法的假象；对真实访客影响有限（双栈最多给 2 条），且有
    `wall:day:strict`（每日 10 条）兜底。
-3. **未验证**：带**有效** token 的完整链路（真浏览器渲染 widget → 提交）。curl 造不出真 token，
-   需站长自己打开站点发一条。自查方法：发完后跑
-   `npx wrangler d1 execute portfolio-db --remote --command "SELECT bucket,count FROM rate_limits"`
-   ——出现 `wall:ip:`（无 strict 前缀）即说明校验通过、走的是正常档。
+3. **已补验（2026-11-19 05:20）**：站长在浏览器里真实发了一条留言，库里随即出现
+   `wall:ip:6f85b7cf692090a9` 与 `wall:day`（**都不带 strict 前缀**），说明
+   「渲染 widget → 拿 token → siteverify 通过 → 走正常档」这条完整链路成立，
+   留言同时正常入库（`wmwmml7td31d0p`，11 字）。此前 curl 只能验证"未带 token 会降档"，
+   这一条补上了"带真 token 会放行"的另一半。
 
 > 4G 复核建议：用手机流量打开 `https://shenge-work.pages.dev/#wall`，看留言框下方是否出现
 > Turnstile 小组件。若一片空白但留言仍能提交，说明脚本在移动网络下不可达——此时功能是安全的
