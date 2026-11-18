@@ -67,7 +67,11 @@ jobs:
       # 字形预算只是近似值，这里用无头 Chrome 真打一份 PDF 数页数。
       # ubuntu-latest 预装 Google Chrome，路径在 /usr/bin/google-chrome。
       - name: 真页数校验（PDF ≤ 2 页）
-        run: node scripts/check_resume_pages.mjs
+        run: |
+          if [ -z "${CHROME_PATH:-}" ]; then
+            export CHROME_PATH=$(command -v google-chrome-stable || command -v google-chrome || command -v chromium || true)
+          fi
+          node scripts/check_resume_pages.mjs
 
       - name: JS 快照是否最新
         run: python3 scripts/sync_site_data.py --check
