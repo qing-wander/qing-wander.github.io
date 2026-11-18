@@ -1,0 +1,27 @@
+{
+  "_note": "RAG 词面检索金标集：每题给可接受的切片 id，命中任一即算对。gateHit3 是上线闸门。",
+  "gateHit3": 0.9,
+  "queries": [
+    { "q": "云沙箱 多租户隔离", "expect": ["skill-02", "proj-comein-01"] },
+    { "q": "QwenPaw 二次开发 Agent 基座", "expect": ["proj-comein-01", "skill-02"] },
+    { "q": "Flink AI 网关 计费 账单校准", "expect": ["proj-comein-04"] },
+    { "q": "分布式 IM 网关 飞书 企微 钉钉", "expect": ["proj-comein-05", "work-w03"] },
+    { "q": "Multi-Agent Supervisor ReAct 架构", "expect": ["exp-lessie-01", "proj-lessie-01"] },
+    { "q": "月均 50 万 邮件触达", "expect": ["exp-lessie-03", "proj-hicreator-02"] },
+    { "q": "学信网 学历验证码", "expect": ["edu-verify"] },
+    { "q": "期望城市 到岗时间", "expect": ["me-02"] },
+    { "q": "联系方式 邮箱 GitHub", "expect": ["contact-01"] },
+    { "q": "小鹿选房 房源 ERP 中台", "expect": ["exp-fangjike-01"] },
+    { "q": "潜客 CRM 日活 10W 转化率", "expect": ["exp-chowsang-01"] },
+    { "q": "帝舵官网 会员 订单 对账", "expect": ["exp-chowsang-02"] },
+    { "q": "Stripe 支付中台 订阅 退款对账", "expect": ["proj-hicreator-04"] },
+    { "q": "LangGraph LangChain LlamaIndex", "expect": ["skill-01"] },
+    { "q": "Milvus Kafka Redis 中间件", "expect": ["skill-04"] },
+    { "q": "他几年经验 什么学历", "expect": ["me-01", "me-03", "edu-main"] },
+    { "q": "评测体系 Langfuse 埋点", "expect": ["proj-lessie-04", "skill-02"] },
+    { "q": "SSE 流式 断点恢复 interrupt", "expect": ["proj-lessie-05"] },
+    { "q": "TikTok WhatsApp RPA 达人", "expect": ["proj-hicreator-02"] },
+    { "q": "他换过哪几家公司", "expect": ["me-03", "exp-inmen-01", "exp-lessie-01", "exp-chowsang-01", "exp-fangjike-01"] }
+  ],
+  "offTopic": ["今天深圳天气怎么样", "帮我写一个快速排序", "推荐几部电影"]
+}

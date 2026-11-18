@@ -207,11 +207,35 @@ cd admin && npx wrangler pages deploy --branch main
 项目密钥（已配置）：`ADMIN_PASSWORD`、`ADMIN_SESSION_SECRET`、`WALL_ADMIN_TOKEN`。
 本地值存在仓库根的 `.secrets.local`（已 gitignore），后台开发用 `admin/.dev.vars`。
 
+## 7.5 RAG 切片（词面层已落地）
+
+`scripts/build_rag_chunks.mjs` 从 `data/site-data.json` 切出 **42 片**（约 7.2 千字），
+产物 `rag/chunks.json` + `rag/kb-chunks.seed.sql`（D1 种子）。
+
+- **切片 id 就是 bullet id**（`exp-inmen-01` / `proj-comein-03`），内容改写不会让 id 漂移，
+  回答里的引用能精确回链到 `source_path`（`data/site-data.json#/resume/projects/0/bullets/2`）。
+- 元数据按规划落地：`kind / section / entity_id / entity_type / tags / visibility / lang / kb_version / source_path`。
+  `kb_version` 由内容哈希生成（`kb-5f9004b7`），内容一变版本就变，天然带版本语义。
+- 隐私闸门：联系方式只放邮箱 / GitHub / 博客 / 常驻城市，手机号永不进库（CI 断言）。
+- 索引形态：`kb_chunks`（正表）+ `kb_fts`（FTS5，`tokenize='unicode61'`，写入端已切好 bigram，
+  中文不赌分词器）。
+
+检索自测（无向量库也能测）：
+
+```bash
+node scripts/rag_query.mjs --q "云沙箱 多租户隔离"        # 看单条召回
+node scripts/rag_query.mjs --golden tests/golden-queries.json   # 金标集 hit@3
+```
+
+当前金标集 20 题，**hit@3 = 95%**（闸门 90%），无关问题（天气 / 写代码 / 电影）零召回。
+覆盖率闸门：查询命中 < 2 个 token 不返回结果，避免「深圳」这种地名把整页经历拉出来。
+
 ## 8. 未做 / 待办
 
 - [x] 后台 UI（设备台账 + 留言审核 + CSV 导出）
 - [x] 真页数校验（无头 Chrome 打 PDF 数页数，CI 拦住 >2 页）：`scripts/check_resume_pages.mjs`
       —— 实测当前 resume.html 打出来正好 2 页
-- [ ] RAG：切片（按 bullet id）、Vectorize 索引、问答、JD 匹配、动态简历变体
+- [x] RAG 切片（按 bullet id）+ D1 词面索引 + 金标集 hit@3 闸门：`rag/`、`scripts/build_rag_chunks.mjs`、`tests/golden-queries.json`
+- [ ] RAG：Vectorize 语义层（bge-m3 1024 维，需控制台建索引 + Workers AI 绑定）、`/api/chat`、JD 匹配、动态简历变体
 - [ ] 跨设备查看（设备绑定码）
 - [ ] `resume.micro` 微调流水线（L0 锁定字段注入提示词）
