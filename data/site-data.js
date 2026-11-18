@@ -93,7 +93,7 @@ window.SITE_DATA = {
     "photoAlt": "陈培胜——橙色连帽卫衣与黑框眼镜的半身插画肖像",
     "photoNo": "PHOTO NO.001",
     "stamp": "已审核<br>VERIFIED",
-    "lead": "不想直接联系我，又对我的经历或能力有想法？<strong>写在这里</strong>——留言只保存在这台设备上，换设备就看不到了；我看到都会回。",
+    "lead": "你好，我是<strong>陈培胜</strong>。一个把「从 0 到 1，再做到 N」当正事来办的 AI Agent 工程师。",
     "paragraphs": [
       "工程路从港企周生生起步：近两年 Java 后端深耕，独立负责多渠道潜客 CRM 与香港帝舵官网核心模块；后来到红杉投资的 AI 创业公司担任创始团队研发，主导 lessie.cn 人脉搜索引擎与 hicreator.ai 营销平台从零跑通到商业闭环。",
       "现在专注 AI 工程化：垂直领域 Agent 编排、二开通用 Agent 基座（QwenPaw / OpenCode）、Tool / MCP / Skill 统一扩展体系、多租户云沙箱，再用 Flink 搭起 AI 网关实时计费链路。写代码之外也立规矩：不停机、可回滚、最小改动。"
@@ -848,7 +848,7 @@ window.SITE_DATA = {
     }
   },
   "wall": {
-    "lead": "不想直接联系我，又对我的经历或能力有想法？<strong>写在这里</strong>——留言公开可见，我看到都会回。",
+    "lead": "不想直接联系我，又对我的经历或能力有想法？<strong>写在这里</strong>——留言只保存在这台设备上，换设备就看不到了；我看到都会回。",
     "emptyText": "这台设备还没有留言，写第一条试试 ▶",
     "closedText": "留言本暂未开放（站长还在配置存储），有事请走上面的联系方式 ▶",
     "errorText": "留言没能加载出来",
