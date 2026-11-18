@@ -227,7 +227,7 @@ node scripts/rag_query.mjs --q "云沙箱 多租户隔离"        # 看单条召
 node scripts/rag_query.mjs --golden tests/golden-queries.json   # 金标集 hit@3
 ```
 
-当前金标集 20 题，**hit@1 / hit@3 = 90%**（闸门 90%），无关问题（天气 / 写代码 / 电影）零召回。
+当前金标集 20 题：加章节意图兜底后 **hit@1 95% / hit@3 100%**（门禁 90%），无关问题（天气 / 写代码 / 电影 / 薪资 / 空窗期 / 外包）全部零召回。
 两道闸门：查询命中 < 2 个 token 不返回（避免「深圳」这种地名把整页经历拉出来）；
 命中章节意图（经验 / 项目 / 学历 / 联系 / 技能）时放宽到 1 并加小权重，防止口语问法空召回。
 
@@ -236,7 +236,9 @@ node scripts/rag_query.mjs --golden tests/golden-queries.json   # 金标集 hit@
 - [x] 后台 UI（设备台账 + 留言审核 + CSV 导出）
 - [x] 真页数校验（无头 Chrome 打 PDF 数页数，CI 拦住 >2 页）：`scripts/check_resume_pages.mjs`
       —— 实测当前 resume.html 打出来正好 2 页
+- [x] 语义层：`@cf/baai/bge-m3`（1024 维）向量化 42 片 → Vectorize `resume-kb` 已入库（42 条，id 带版本前缀 `kb-5f9004b7:`），`node scripts/rag_embed.mjs --query "…"` 可做语义自检
+- [ ] 混合检索（D1 FTS5 + Vectorize，RRF k=60）+ rerank + `/api/chat`
 - [x] RAG 切片（按 bullet id）+ D1 词面索引 + 金标集 hit@3 闸门：`rag/`、`scripts/build_rag_chunks.mjs`、`tests/golden-queries.json`
-- [ ] RAG：Vectorize 语义层（bge-m3 1024 维，需控制台建索引 + Workers AI 绑定）、`/api/chat`、JD 匹配、动态简历变体
+- [ ] RAG 余下：`/api/chat`（需给 Pages 项目挂 `[ai]` + `[[vectorize]]` 绑定）、JD 匹配、动态简历变体
 - [ ] 跨设备查看（设备绑定码）
 - [ ] `resume.micro` 微调流水线（L0 锁定字段注入提示词）
