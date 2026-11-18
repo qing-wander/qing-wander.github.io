@@ -1,0 +1,67 @@
+# 单一真相源 · 内容生成与漂移检查
+#
+# 目标：resume.html 只能是 data/site-data.json → resume 的生成物。
+# 任何直接手改 resume.html、或改了数据忘了重新生成，都在这里红掉。
+#
+# 三件事：
+#   1. render_resume.mjs --check : 生成物与数据是否逐字一致
+#   2. validate_content.mjs      : 结构、锁定字段（公司名 / 时间 / 学校）、两页预算
+#   3. sync_site_data.py --check : data/site-data.js 快照是否最新
+#
+# 修法永远只有一条：改 data/site-data.json（或模板），然后本地
+#   node scripts/render_resume.mjs && python3 scripts/sync_site_data.py
+
+name: content build
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'data/site-data.json'
+      - 'templates/resume.template.html'
+      - 'resume.html'
+      - 'scripts/render_resume.mjs'
+      - 'scripts/validate_content.mjs'
+      - 'scripts/sync_site_data.py'
+      - '.github/workflows/content-build.yml'
+  pull_request:
+    paths:
+      - 'data/site-data.json'
+      - 'templates/resume.template.html'
+      - 'resume.html'
+      - 'scripts/render_resume.mjs'
+      - 'scripts/validate_content.mjs'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  drift:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出仓库
+        uses: actions/checkout@v4
+
+      - name: 准备 Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: 准备 Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 生成物漂移检查
+        run: |
+          if ! node scripts/render_resume.mjs --check; then
+            echo "::error file=resume.html::resume.html 与 data/site-data.json 不一致。请运行 node scripts/render_resume.mjs 重新生成，不要手改生成物。"
+            exit 1
+          fi
+
+      - name: 内容结构与预算校验
+        run: node scripts/validate_content.mjs
+
+      - name: JS 快照是否最新
+        run: python3 scripts/sync_site_data.py --check

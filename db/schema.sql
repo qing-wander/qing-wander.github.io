@@ -30,14 +30,34 @@ CREATE TABLE IF NOT EXISTS visitors (
 
 CREATE INDEX IF NOT EXISTS idx_visitors_last_seen ON visitors (last_seen);
 
--- 留言墙（seq 只用来排序与裁剪，业务 id 仍由接口生成）
-CREATE TABLE IF NOT EXISTS wall_messages (
-  seq        INTEGER PRIMARY KEY AUTOINCREMENT,
-  id         TEXT NOT NULL UNIQUE,
-  name       TEXT NOT NULL,
-  text       TEXT NOT NULL,
-  created_at INTEGER NOT NULL
+-- 留言设备（2026-11-19 设备隔离）：只存 HMAC 哈希，不存原始 device_id。
+-- 网页读不到 MAC 地址，设备标识由前端 crypto.randomUUID() 生成并存 localStorage。
+CREATE TABLE IF NOT EXISTS wall_devices (
+  device_hash TEXT PRIMARY KEY,
+  first_seen  INTEGER NOT NULL,
+  last_seen   INTEGER NOT NULL,
+  post_count  INTEGER NOT NULL DEFAULT 0,
+  ua          TEXT,
+  status      TEXT NOT NULL DEFAULT 'active',   -- active | blocked
+  note        TEXT
 );
+
+CREATE INDEX IF NOT EXISTS idx_wall_devices_last_seen ON wall_devices (last_seen);
+
+-- 留言（seq 排序与裁剪；按 device_hash 分区；status 控制后台隐藏）
+CREATE TABLE IF NOT EXISTS wall_messages (
+  seq         INTEGER PRIMARY KEY AUTOINCREMENT,
+  id          TEXT NOT NULL UNIQUE,
+  name        TEXT NOT NULL,
+  text        TEXT NOT NULL,
+  created_at  INTEGER NOT NULL,
+  device_hash TEXT NOT NULL DEFAULT 'legacy',   -- 迁移前的旧留言统一归 legacy，只在后台可见
+  status      TEXT NOT NULL DEFAULT 'visible',  -- visible | hidden
+  admin_note  TEXT,
+  updated_at  INTEGER
+);
+
+CREATE INDEX IF NOT EXISTS idx_wall_messages_device ON wall_messages (device_hash, seq);
 
 -- 通用固定窗口限流（wall / visits 共用；bucket 形如 wall:ip:<hash>、wall:day）
 CREATE TABLE IF NOT EXISTS rate_limits (

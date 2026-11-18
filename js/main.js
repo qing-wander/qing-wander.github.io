@@ -1162,9 +1162,10 @@
     aiScheduleAuto();
   }
 
-  /* ── 12. 留言墙（Cloudflare Pages Function /api/wall，D1 存储） ──
-     分页 / 刷新 / 新留言轮询 / 加载与错误态 / 快捷键 / 站长诊断 / 人机校验。
-     file:// 或两条线路都不通 → 明确降级，不影响页面其余部分。 */
+  /* ── 12. 留言板（Cloudflare Pages Function /api/wall，D1 存储） ──
+     设备隔离：网页读不到 MAC 地址（浏览器没有这个 API，手机 MAC 还会随机化），
+     所以用 localStorage 里的随机 device_id 代替：换浏览器 / 清缓存 = 新设备，
+     同一人的手机与电脑算两台设备。这是「隐私分区」，不是安全认证。 */
   function initWall() {
     var form = $('wallForm');
     if (!form) return;
@@ -1183,6 +1184,21 @@
     var LIMIT = 20;
     var POLL_MS = 60000;
     var debugOn = /(?:^|[?&])wallDebug=1(?:&|$)/.test(location.search);
+
+    /* 设备标识：服务端只存它的 HMAC 哈希，库被拖走也还原不出原始 ID。
+       localStorage 不可用（隐私模式 / 禁用存储）时为空串，服务端会回 device_required。 */
+    var DEVICE_KEY = 'cp_device_id';
+    var deviceId = (function () {
+      try {
+        var saved = localStorage.getItem(DEVICE_KEY);
+        if (saved && /^[A-Za-z0-9_-]{8,64}$/.test(saved)) return saved;
+        var id = (window.crypto && typeof window.crypto.randomUUID === 'function')
+          ? window.crypto.randomUUID()
+          : 'd' + Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
+        localStorage.setItem(DEVICE_KEY, id);
+        return id;
+      } catch (e) { return ''; }
+    })();
 
     /* 人机校验（Cloudflare Turnstile，2026-11-19 接入）
        · widget 懒渲染：脚本没到就轮询等待，最多 ~8 秒，超时视为不可用
@@ -1283,9 +1299,14 @@
     })();
 
     /* 依次尝试线路；404/405 或非 JSON（静态主机把 /api 当文件返回）视为该线路没有 API。
-       serverFailover 只给 GET 用：POST 收到 5xx 时不能盲目换线路重试，可能重复写入。 */
+       serverFailover 只给 GET 用：POST 收到 5xx 时不能盲目换线路重试，可能重复写入。
+       所有请求统一带 X-Device-Id：服务端据此只返回这台设备的留言。 */
     function apiFetch(path, opts, serverFailover) {
       var i = 0, tried = {}, usedBase = '';
+      opts = opts || {};
+      var headers = Object.assign({}, opts.headers || {});
+      if (deviceId) headers['X-Device-Id'] = deviceId;
+      opts = Object.assign({}, opts, { headers: headers });
       function next() {
         if (i >= API_BASES.length) return Promise.reject(new Error('no_api'));
         var base = API_BASES[i++];
@@ -1374,15 +1395,19 @@
       var old = listEl.parentNode.querySelector('.wall-debug');
       if (old) old.parentNode.removeChild(old);
       var lines = [
-        '留言墙诊断 · ?wallDebug=1',
+        '留言板诊断 · ?wallDebug=1',
         'API 线路 : ' + (state.base || '（未发出请求）'),
         'HTTP     : ' + (state.status || '-'),
         'mode     : ' + state.mode,
         'open     : ' + (state.mode === 'open'),
         'reason   : ' + (state.reason || '-'),
-        'total    : ' + state.total
+        'total    : ' + state.total,
+        'device   : ' + (deviceId ? deviceId.slice(0, 8) + '…（localStorage）' : '（无，localStorage 被禁用）')
       ];
-      if (state.reason === 'kv_not_bound') {
+      if (state.reason === 'device_required') {
+        lines.push('', '→ 浏览器没给本地存储权限：允许本站使用 localStorage 后刷新即可。',
+          '→ 换浏览器 / 清缓存 = 新设备，旧留言只在原设备可见（站长后台仍能看到全部）。');
+      } else if (state.reason === 'kv_not_bound') {
         lines.push('', '→ Cloudflare Pages 未绑定 SITE_KV：Settings → Functions → KV namespace bindings 添加 SITE_KV，保存后重新部署。',
           '→ 一键自检：./scripts/wall-check.sh');
       } else if (state.reason === 'network_error') {
@@ -1442,6 +1467,16 @@
           if (d.open === false) {
             state.mode = 'closed';
             state.reason = d.reason || 'unknown';
+            state.messages = []; state.total = 0; state.hasMore = false;
+            state.showNew = false;
+            render();
+            return;
+          }
+          /* 没有设备标识（localStorage 被禁用）：明确告知，而不是显示「还没有留言」 */
+          if (d.reason === 'device_required') {
+            state.mode = 'closed';
+            state.reason = 'device_required';
+            state.closedMsg = T.deviceText || '这台设备拿不到本地存储权限，留言本无法分区显示；请在浏览器设置里允许本站使用本地存储后刷新。';
             state.messages = []; state.total = 0; state.hasMore = false;
             state.showNew = false;
             render();

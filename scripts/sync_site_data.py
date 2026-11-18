@@ -37,6 +37,9 @@ def render(text: str) -> str:
     missing = [k for k in REQUIRED_KEYS if k not in data]
     if missing:
         raise ValueError("缺少顶层字段：" + "、".join(missing))
+    # resume 块只服务于构建期（scripts/render_resume.mjs → resume.html），
+    # 生成物已经是渲染后的结果，主页用不到它；剔除以减小首屏下载体积。
+    data.pop("resume", None)
     return HEADER + "window.SITE_DATA = " + json.dumps(data, ensure_ascii=False, indent=2) + ";\n"
 
 

@@ -394,28 +394,28 @@
     <span class="section-no">SEC.11</span>
     <h2 class="section-title">留言墙 <span class="title-en">GUEST WALL</span></h2>
     <span class="section-line" aria-hidden="true"></span>
-    <span class="section-coord" aria-hidden="true">SIGNAL//OPEN-FORUM</span>
+    <span class="section-coord" aria-hidden="true">SIGNAL//PRIVATE-NOTE</span>
   </div>
   <p class="wall-lead reveal" id="wallLead"></p>
   <div class="wall-wrap">
     <form class="wall-form reveal" id="wallForm" novalidate>
       <div class="wall-form-head">
         <span class="wall-form-no">POST//NEW</span>
-        <span class="wall-form-hint">匿名可选 · 留言对所有人可见</span>
+        <span class="wall-form-hint">匿名可选 · 仅本设备可见</span>
       </div>
       <input class="wall-input" id="wallName" type="text" maxlength="16" placeholder="怎么称呼你？（可留空 = 匿名）" autocomplete="off">
-      <textarea class="wall-input wall-textarea" id="wallText" maxlength="300" rows="4" placeholder="对我的经历或能力有想法？直接写在这里…" required></textarea>
+      <textarea class="wall-input wall-textarea" id="wallText" maxlength="300" rows="4" placeholder="对我的经历或能力有想法？写在这里，只有这台设备能看到…" required></textarea>
       <!-- 人机校验（Cloudflare Turnstile）：脚本加载失败时保持 hidden，留言照常可用 -->
       <div class="wall-turnstile" id="wallTurnstile" hidden></div>
       <div class="wall-form-foot">
         <span class="wall-count" id="wallCount" aria-live="polite">0 / 300</span>
-        <button class="wall-submit" type="submit" id="wallSubmit">贴上留言墙 ▶</button>
+        <button class="wall-submit" type="submit" id="wallSubmit">写进本设备留言本 ▶</button>
       </div>
       <p class="wall-form-tip" id="wallFormTip">⌘ / Ctrl + Enter 快速提交 · 换行会保留</p>
     </form>
     <div class="wall-board">
       <div class="wall-board-head">
-        <span class="wall-board-title">WALL//FEED</span>
+        <span class="wall-board-title">NOTE//THIS-DEVICE</span>
         <span class="wall-board-count" id="wallTotal" aria-live="polite"></span>
         <span class="wall-board-actions">
           <button class="wall-new" type="button" id="wallNew" hidden>有新留言 ▲</button>

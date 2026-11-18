@@ -7,9 +7,11 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { DatabaseSync } from 'node:sqlite';
+import { createHmac } from 'node:crypto';
 import { onRequestGet as wallGet, onRequestPost as wallPost, onRequestDelete as wallDel, onRequestOptions as wallOpt } from '../functions/api/wall.js';
 import { onRequestGet as visitsGet, onRequestPost as visitsPost, onRequestOptions as visitsOpt } from '../functions/api/visits.js';
 import { onRequestPost as deliverPost, onRequestOptions as deliverOpt } from '../functions/api/deliver.js';
+import { onRequestGet as adminWallGet, onRequestPost as adminWallPost, onRequestOptions as adminWallOpt } from '../functions/api/admin/wall/[[path]].js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const PORT = Number(process.env.PORT || 8877);
@@ -55,21 +57,39 @@ const SITE_KV = {
   },
 };
 
-/* WALL_SEED=<n> 预置 n 条历史留言，用来验收分页 / 加载更多 */
+/* 设备隔离联调数据
+   WALL_SEED=<n>        预置 n 条「本设备」留言（验收分页 / 加载更多）
+   WALL_SEED_DEVICE=xx  指定这批留言归属的设备 ID（默认 dev-device-0001）
+   另外固定写入 2 条 legacy 旧留言：它们在公开端不该出现，只在后台可见。
+   设备哈希与线上同算法：HMAC-SHA256(DEVICE_HASH_PEPPER, device_id) 取前 32 位 hex。 */
+const PEPPER = process.env.DEVICE_HASH_PEPPER || 'dev-only-pepper-change-me';
+const hashDevice = (id) => createHmac('sha256', PEPPER).update(String(id)).digest('hex').slice(0, 32);
+
+const SEED_DEVICE = process.env.WALL_SEED_DEVICE || 'dev-device-0001';
 const SEED = Number(process.env.WALL_SEED || 0);
 if (SEED > 0) {
   const now = Date.now();
   const n = Math.min(SEED, 100);
-  const ins = sqlite.prepare('INSERT INTO wall_messages (id, name, text, created_at) VALUES (?, ?, ?, ?)');
+  const dh = hashDevice(SEED_DEVICE);
+  const ins = sqlite.prepare(
+    'INSERT INTO wall_messages (id, name, text, created_at, device_hash, status, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)'
+  );
   for (let i = 0; i < n; i++) {
     ins.run(
       'wseed' + i,
       i % 4 === 0 ? '匿名访客' : '访客' + (i + 1),
       '这是本地联调用的第 ' + (i + 1) + ' 条留言，用来检查分页与加载更多是否正常。',
-      now - i * 3600000
+      now - i * 3600000,
+      dh, 'visible', now - i * 3600000
     );
   }
-  console.log('[seed] 预置 ' + n + ' 条留言');
+  sqlite.prepare('INSERT INTO wall_devices (device_hash, first_seen, last_seen, post_count, ua) VALUES (?, ?, ?, ?, ?)')
+    .run(dh, now - n * 3600000, now, n, 'local-seed');
+  for (let i = 0; i < 2; i++) {
+    ins.run('wlegacy' + i, '旧访客', '迁移前的公开墙旧留言 #' + (i + 1) + '（公开端不可见，仅后台可见）',
+      now - (n + i) * 3600000, 'legacy', 'visible', now - (n + i) * 3600000);
+  }
+  console.log('[seed] 设备 ' + SEED_DEVICE + ' 预置 ' + n + ' 条留言 + 2 条 legacy 旧留言');
 }
 
 /* 本地模拟 Resend：只记录，不发真实邮件。
@@ -84,6 +104,8 @@ const ENV = {
   DELIVER_BCC: process.env.DELIVER_BCC || '',
   /* 本地默认给一个测试令牌，方便验收 DELETE；不设就等于线上「未配置」形态 */
   WALL_ADMIN_TOKEN: process.env.WALL_ADMIN_TOKEN || 'local-admin-token',
+  /* 设备哈希盐：本地与线上必须各自配置；这里给的默认值只够本地联调 */
+  DEVICE_HASH_PEPPER: PEPPER,
   /* 人机校验：默认不配 → 走正常额度（与线上未配置 secret 时一致）。
      想验严格档就 TURNSTILE_SECRET=test 起服务，此时不带 token 的 POST 会降到每 IP 每小时 1 条。 */
   TURNSTILE_SECRET: process.env.TURNSTILE_SECRET || '',
@@ -119,6 +141,12 @@ http.createServer(async (req, res) => {
   const url = new URL(req.url, 'http://127.0.0.1:' + PORT);
   const p = url.pathname;
   try {
+    if (p === '/api/admin/wall' || p.startsWith('/api/admin/wall/')) {
+      const r = req.method === 'POST' ? await handler(adminWallPost, req)
+        : req.method === 'GET' ? await handler(adminWallGet, req)
+        : await handler(adminWallOpt, req);
+      return send(res, r);
+    }
     if (p === '/api/wall') {
       const r = req.method === 'GET' ? await handler(wallGet, req)
         : req.method === 'POST' ? await handler(wallPost, req)

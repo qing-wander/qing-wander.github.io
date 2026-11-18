@@ -89,7 +89,7 @@
     "photoAlt": "陈培胜——橙色连帽卫衣与黑框眼镜的半身插画肖像",
     "photoNo": "PHOTO NO.001",
     "stamp": "已审核<br>VERIFIED",
-    "lead": "你好，我是<strong>陈培胜</strong>。一个把「从 0 到 1，再做到 N」当正事来办的 AI Agent 工程师。",
+    "lead": "不想直接联系我，又对我的经历或能力有想法？<strong>写在这里</strong>——留言只保存在这台设备上，换设备就看不到了；我看到都会回。",
     "paragraphs": [
       "工程路从港企周生生起步：近两年 Java 后端深耕，独立负责多渠道潜客 CRM 与香港帝舵官网核心模块；后来到红杉投资的 AI 创业公司担任创始团队研发，主导 lessie.cn 人脉搜索引擎与 hicreator.ai 营销平台从零跑通到商业闭环。",
       "现在专注 AI 工程化：垂直领域 Agent 编排、二开通用 Agent 基座（QwenPaw / OpenCode）、Tool / MCP / Skill 统一扩展体系、多租户云沙箱，再用 Flink 搭起 AI 网关实时计费链路。写代码之外也立规矩：不停机、可回滚、最小改动。"
@@ -843,25 +843,352 @@
       "resumeDownloadName": "陈培胜-AIAgent工程师-简历.html"
     }
   },
+  "resume": {
+    "_note": "简历唯一真相源：resume.html 由 scripts/render_resume.mjs 从本块生成，禁止手改生成物。",
+    "meta": {
+      "title": "陈培胜 · AI Agent 工程师 · 求职简历",
+      "ogTitle": "陈培胜 · AI Agent 工程师 · 求职简历",
+      "description": "陈培胜的网页版简历：5 年 Java 后端 + 2 年 AI Agent 工程，Agent 开发 / AI 工程化方向，支持打印导出 PDF。",
+      "ogDescription": "5 年 Java 后端 + 2 年 AI Agent 工程，Agent 开发 / AI 工程化方向，可直接打印为 PDF。",
+      "maxPages": 2
+    },
+    "basics": {
+      "editable": "manual",
+      "name": "陈培胜",
+      "role": "AI Agent 工程师 / AI 应用开发工程师",
+      "avatar": "images/portrait.jpg",
+      "avatarAlt": "陈培胜的个人形象照",
+      "lines": [
+        [
+          {
+            "label": "工作经验",
+            "value": "5年"
+          },
+          {
+            "label": "年龄",
+            "value": "29 岁"
+          },
+          {
+            "label": "学历",
+            "value": "软件工程 · 本科"
+          },
+          {
+            "label": "到岗",
+            "value": "随时 · 已离职"
+          }
+        ],
+        [
+          {
+            "label": "电话/微信",
+            "value": "+86 180 2283 4605"
+          },
+          {
+            "label": "邮箱",
+            "text": "shenge.work@gmail.com",
+            "href": "mailto:shenge.work@gmail.com",
+            "external": false
+          }
+        ],
+        [
+          {
+            "label": "作品集",
+            "text": "shenge-work.github.io",
+            "href": "https://shenge-work.github.io",
+            "external": true
+          },
+          {
+            "label": "GitHub",
+            "text": "github.com/shenge-work",
+            "href": "https://github.com/shenge-work",
+            "external": true
+          }
+        ]
+      ]
+    },
+    "summary": {
+      "editable": "ai",
+      "html": "红杉系初创 + 金融头部 AI 主力，擅长 Agent 工程化、RAG 及评测治理、AI 网关、分布式 IM 网关，把大模型能力从 Demo 推进到生产环境稳定运行；多套 Agent 系统 0→1——AI 金融投研工作台、AI 人脉搜索引擎、一站式营销 SaaS（云沙箱多租户）"
+    },
+    "experience": [
+      {
+        "id": "exp-inmen",
+        "company": "深圳进门财经科技股份有限公司",
+        "companyNote": "机构金融投研 SaaS",
+        "role": "Agent 工程师",
+        "period": "2026.01 — 07（组织架构调整）",
+        "lock": [
+          "company",
+          "companyNote",
+          "role",
+          "period"
+        ],
+        "editable": "ai",
+        "bullets": [
+          {
+            "id": "exp-inmen-01",
+            "html": "主导 AI 金融投研工作台（AI 进宝）核心基建研发：Agent 基座与多租户云沙箱、MCP / Skill 扩展、AI 资源计费、五端 IM 网关，<strong>支撑 Agent 从接入到计费全链路落地</strong>"
+          }
+        ]
+      },
+      {
+        "id": "exp-lessie",
+        "company": "深圳指数引力科技有限公司",
+        "companyNote": "网红营销 SaaS（红杉投资）",
+        "role": "Agent 工程师",
+        "period": "2024.03 — 2025.11",
+        "lock": [
+          "company",
+          "companyNote",
+          "role",
+          "period"
+        ],
+        "editable": "ai",
+        "bullets": [
+          {
+            "id": "exp-lessie-01",
+            "html": "主导 AI 人脉搜索引擎：Supervisor / Search / Review 多层级 ReAct Multi-Agent 架构，<strong>搜索精准度提升 30%、找人成本降低 80%、定位耗时缩短 60%</strong>"
+          },
+          {
+            "id": "exp-lessie-02",
+            "html": "主导红人营销 SaaS 研发：FDE 式定制业务流程，Grok LLM + Agent 工作流串联「客户→合同→付款→结算」，<strong>实现客户到结算的全流程自动化闭环</strong>"
+          },
+          {
+            "id": "exp-lessie-03",
+            "html": "0→1 搭建海外触达体系：邮件群发系统（AWS / SendGrid / 自建 SMTP 统一驱动）+ 邮箱 IP / 域名 AI 自动化预热，<strong>月均 50 万+ 有效触达、替代人工规模化运营</strong>"
+          },
+          {
+            "id": "exp-lessie-04",
+            "html": "搭建达人数据库飞轮体系：dataworks 数仓同步第三方平台达人画像与粉丝数据，合作过程人工标注 + 自动化沉淀优质达人，自动淘汰留存高质量达人，<strong>沉淀 300+ 万网红画像与视频数据日更、以高质量达人库提升合作效率</strong>"
+          }
+        ]
+      },
+      {
+        "id": "exp-fangjike",
+        "company": "深圳市房极客网络科技有限公司",
+        "companyNote": "房地产 SaaS",
+        "role": "Java 开发",
+        "period": "2023.08 — 2024.01",
+        "lock": [
+          "company",
+          "companyNote",
+          "role",
+          "period"
+        ],
+        "editable": "ai",
+        "bullets": [
+          {
+            "id": "exp-fangjike-01",
+            "html": "参与小鹿选房 C 端、看房日记 B 端、经纪人 ERP 中台研发，负责新房报备 / 上下架 / 房源跟进 / 权限控制 / 余额划转等模块，<strong>打通新房业务线上流转</strong>"
+          }
+        ]
+      },
+      {
+        "id": "exp-chowsang",
+        "company": "周生生（中国）商业有限公司",
+        "companyNote": "珠宝品牌自营数字化",
+        "role": "Java 开发",
+        "period": "2021.09 — 2023.06",
+        "lock": [
+          "company",
+          "companyNote",
+          "role",
+          "period"
+        ],
+        "editable": "ai",
+        "bullets": [
+          {
+            "id": "exp-chowsang-01",
+            "html": "负责多渠道潜客 CRM 平台研发，整合大陆、港澳台线上线下销售线索，<strong>日活 10W+、销售转化率提升 70%</strong>"
+          },
+          {
+            "id": "exp-chowsang-02",
+            "html": "参与香港帝舵官网研发，负责会员体系、订单支付与对账、库存同步模块，<strong>打通品牌官网会员、交易、库存一体的线上销售链路</strong>"
+          }
+        ]
+      }
+    ],
+    "projects": [
+      {
+        "id": "proj-comein",
+        "name": "comein.cn（进门财经）",
+        "url": "https://comein.cn",
+        "subtitle": "AI 金融投研工作台 · Agent 基座 / 云沙箱 / 计费 · AI Infra后台开发",
+        "period": "2026.01 — 07",
+        "lead": "面向券商研究所、上市公司及机构投资者等多类投研主体，构建合规、安全、可扩展的智能投研信息闭环",
+        "lock": [
+          "name",
+          "url",
+          "period"
+        ],
+        "editable": "ai",
+        "bullets": [
+          {
+            "id": "proj-comein-01",
+            "html": "<strong>Agent 基座</strong>：基于 QwenPaw / OpenCode 二次开发构建通用 Agent 基座，实现多租户云沙箱隔离执行与 Agent / Skill 全生命周期管控（创建 → 发布 → 下线）"
+          },
+          {
+            "id": "proj-comein-02",
+            "html": "<strong>能力扩展体系</strong>：设计 MCP / Skill 统一扩展规范，标准化注册、发现、调用、权限与版本管理，同时兼容 MCP 协议与外部 API，让新工具以配置化方式接入而非逐个硬编码"
+          },
+          {
+            "id": "proj-comein-03",
+            "html": "<strong>Skill Hub 技能中心</strong>：把分散在各 Agent 的工具能力收敛成统一技能库，提供技能上架与审核、分类检索、版本与权限管理、调用量与成功率统计；Skill 以配置化方式挂载到不同 Agent 与租户，配合云沙箱隔离运行与资源配额，<strong>新能力上线只需配置、无需改代码，能力复用与交付效率同步提升</strong>"
+          },
+          {
+            "id": "proj-comein-04",
+            "html": "<strong>成本与可观测</strong>：基于 Flink 实时消费腾讯云 AI 网关日志，设计多租户 AI 资源精细化计费链路（实时预扣 / 离线扣费 / 账单校准），日志落库即计量，做到成本实时计量与全链路追溯，支撑资源计费可信可审计"
+          },
+          {
+            "id": "proj-comein-05",
+            "html": "<strong>消息基建</strong>：自研分布式 IM 网关，统一承接飞书 / 企微 / 钉钉 / 微信 / QQ 五端消息，支持多副本扩缩容与滚动发布不丢消息"
+          }
+        ]
+      },
+      {
+        "id": "proj-lessie",
+        "name": "lessie.cn（指数引力）",
+        "url": "https://lessie.cn",
+        "subtitle": "AI 人脉搜索引擎 · Multi-Agent / Agentic RAG · Agent工程化",
+        "period": "2024.03 — 2025.11",
+        "lead": "一款智能代理搜索引擎，运用 Agent 技术实现即时“找人”，快速定位全球目标人物并初步联络，提升找人效率",
+        "lock": [
+          "name",
+          "url",
+          "period"
+        ],
+        "editable": "ai",
+        "bullets": [
+          {
+            "id": "proj-lessie-01",
+            "html": "<strong>多智能体架构</strong>：设计 Supervisor / Search / Review 多层级 ReAct Multi-Agent，用状态机 + 共享上下文消除任务冲突；Context Engineering（压缩 / 分层缓存 / 增量更新）平衡信息完整性与响应稳定性，显著提升搜索精准度、降低找人成本与目标定位耗时"
+          },
+          {
+            "id": "proj-lessie-02",
+            "html": "<strong>检索与数据融合</strong>：Search Agent 封装 Apollo / LinkedIn / Upfluence / Modash 等 10+ 数据源，Standardizer 统一人物 Schema 支撑多源融合排序；Review Agent 做相关性 / 指标匹配 / 事实校验多维质量评审，以策略模式支撑 B2B 与 KOL 双垂类"
+          },
+          {
+            "id": "proj-lessie-03",
+            "html": "<strong>自学习 RAG</strong>：RAG Few-Shot 策略（LangSmith 回流 + LlamaIndex + Milvus）动态注入，让检索策略随评测样本持续迭代"
+          },
+          {
+            "id": "proj-lessie-04",
+            "html": "<strong>评测体系</strong>：LLM / 工具 / 业务三级埋点经 Kafka 落数仓，把线上调用沉淀成可复用的评测样本集；结合 LangSmith / Langfuse 追踪覆盖响应质量、工具调用成功率与业务达成率，<strong>支撑模型选型与 Prompt / Agent 策略迭代，版本效果可量化对比</strong>"
+          },
+          {
+            "id": "proj-lessie-05",
+            "html": "<strong>流式会话</strong>：SSE 逐字输出降低首字等待、让推理过程可见；会话状态以 Checkpoint 持久化，配合 interrupt / resume 实现长任务中断恢复与断线重连，<strong>长任务失败可从中断点续跑，不必整段重来</strong>"
+          }
+        ]
+      },
+      {
+        "id": "proj-hicreator",
+        "name": "hicreator.ai（指数引力）",
+        "url": "https://hicreator.ai",
+        "subtitle": "海外红人营销一体化 SaaS 平台 · 业务 FDE 式落地",
+        "period": "2024.03 — 2025.11",
+        "lead": "一站式 AI 网红营销自动化系统，通过大模型与多模态数据分析，实现品牌与创作者全链路闭环管理",
+        "lock": [
+          "name",
+          "url",
+          "period"
+        ],
+        "editable": "ai",
+        "bullets": [
+          {
+            "id": "proj-hicreator-01",
+            "html": "<strong>业务流程 Agent 化</strong>：以 FDE 方式与业务各角色对齐诉求、定制标准作业流程，用 Grok LLM + Agent 工作流串联「客户 → 项目 → 合同 → 审批 → 付款 → 结算」自动化闭环，替代线下人工流转"
+          },
+          {
+            "id": "proj-hicreator-02",
+            "html": "<strong>触达体系</strong>：搭建 IM 通信平台打通 TikTok（WebDriver RPA）/ WhatsApp / 邮件渠道与风险检测评估；0→1 自建海外邮件群发系统（Resend / AWS SES / SendGrid 统一驱动 + 队列分片限流，LLM 生成营销内容自动调优策略），支撑月均 50 万+ 有效触达；配套邮箱 IP / 域名 AI 自动化预热与发送风险检测，保障发信信誉与送达率"
+          },
+          {
+            "id": "proj-hicreator-03",
+            "html": "<strong>数据与知识库</strong>：设计 dataworks 数仓同步链路实现 300+ 万网红画像与视频数据日更；自建 KOL 达人数据库与 SEO 引流 Toolkit（达人画像、商品类目、市场规则、合规话术垂直知识库），浏览器插件在 YouTube / IG / TikTok / X / FB 达人主页浮窗展示入库 / 拉黑 / 粉丝与项目信息"
+          },
+          {
+            "id": "proj-hicreator-04",
+            "html": "<strong>商业化闭环</strong>：自建支付中台集成 Stripe，覆盖会员订阅、优惠券、退款对账与风控；用户增长裂变与奖励任务 T+1 结算，PostHog 全链路追踪回溯"
+          }
+        ]
+      }
+    ],
+    "skills": [
+      {
+        "id": "skill-01",
+        "name": "Agent 框架",
+        "main": "<em>LangGraph</em><small>（精通 · 状态机 / 断点持久化 / 多 Agent 协作）</small> · <em>LangChain</em><small>（精通 · 工具链与链路编排）</small> · <em>LlamaIndex</em><small>（熟练 · 检索索引与 RAG 管道）</small> · <b>LangSmith / Langfuse</b><small>（熟练 · 追踪、评测与样本回流）</small>",
+        "sub": "Agent 范式：Supervisor / ReAct / 层级协作（精通）· Agentic RAG Few-Shot 自学习检索（熟练）· Context Engineering（熟练）· Tool Calling（精通）· MCP / A2A 协议（熟练 · 服务端开发与工具接入）· 多轮任务拆解与角色分配（熟练）"
+      },
+      {
+        "id": "skill-02",
+        "name": "Agent 工程化",
+        "main": "<em>通用 Agent 基座二开</em><small>（熟练 · QwenPaw / OpenCode）</small> · <b>Sandbox 云沙箱</b><small>（多租户隔离执行 · 弹性配额 · 环境快照与重建）</small> · <b>Tool / MCP / Skill 统一扩展体系</b> · <b>Agent / Skill 全生命周期管控</b>",
+        "sub": "LLM 评测体系（精通 · LLM / 工具 / 业务三级埋点与模型选型）· SSE 流式会话与 interrupt / resume 长任务恢复（熟练）· AI 资源精细化计费与链路追溯（熟练）· 多租户权限与资源隔离（熟练）· 发布依赖管理与日志上报"
+      },
+      {
+        "id": "skill-03",
+        "name": "AI 驱动编程",
+        "main": "<em class=\"em-b\">Claude Code / Codex / Cursor</em><small>（熟练 · 日常开发主力）</small> · <b>Vibe Coding 高效开发模式</b>",
+        "sub": "熟悉主流 Coding Agent 底层架构 · 从开发到部署全流程工程化落地"
+      },
+      {
+        "id": "skill-04",
+        "name": "数据与中间件",
+        "main": "<b>Milvus</b><small>（向量检索）</small> · <b>Kafka</b> · <b>Flink</b> · <b>Redis</b> · <b>PostgreSQL</b> · <b>MySQL</b> · <b>Elasticsearch</b>",
+        "sub": "RAG 检索链路与实时数据管道建设 · 缓存 / 消息队列场景化集成 · Agent 评测与会话埋点落仓"
+      },
+      {
+        "id": "skill-05",
+        "name": "开发语言",
+        "main": "<b>Python</b><small>（Agent 层主力）</small> · <em>Java</em><small>（主干 3 年）</small> · <b>TypeScript / Node</b><small>（服务与工具链）</small> · <b>Golang</b><small>（网关类服务）</small>",
+        "sub": "Agent 服务的接口设计、鉴权与限流、异步任务与消息驱动编排 · Java 生态 5 年工程基本功支撑高并发服务落地"
+      }
+    ],
+    "education": {
+      "editable": "manual",
+      "school": "中山大学新华学院",
+      "note": "全日制统招本科 · 软件工程 · 国家励志奖学金 · 校级奖学金",
+      "period": "2017.09 — 2021.06",
+      "bullets": [
+        {
+          "id": "edu-01",
+          "html": "主修 线性代数 · 数据结构与算法 · 数据库原理 · 计算机网络 · 计算机组成原理 · 软件工程导论"
+        },
+        {
+          "id": "edu-02",
+          "html": "大四实习前端，毕业后从 Java 后端起步，近两年跨栈至 Python / TypeScript 与 AI Agent 工程"
+        }
+      ],
+      "verify": {
+        "label": "学历在线验证码（学信网）",
+        "code": "AH96NG89HCCUWMEA",
+        "tip": "查验 www.chsi.com.cn/xlcx/bgcx.jsp · 或学信网 App 扫码 · 有效期至 2027-04-29",
+        "qrImage": "images/edu-verify-qr.png",
+        "qrAlt": "学信网学历在线验证二维码"
+      }
+    }
+  },
   "wall": {
     "lead": "不想直接联系我，又对我的经历或能力有想法？<strong>写在这里</strong>——留言公开可见，我看到都会回。",
-    "emptyText": "墙上还没有留言，来做第一个写下想法的人 ▶",
-    "closedText": "留言墙暂未开放（站长还在配置存储），有事请走上面的联系方式 ▶",
+    "emptyText": "这台设备还没有留言，写第一条试试 ▶",
+    "closedText": "留言本暂未开放（站长还在配置存储），有事请走上面的联系方式 ▶",
     "errorText": "留言没能加载出来",
     "retryText": "重试",
     "moreText": "加载更早的留言 ▼",
     "moreLoadingText": "读取中…",
     "newText": "有新留言 ▲",
-    "postOkText": "已贴上留言墙，感谢你的想法 ▶",
-    "duplicateText": "这条留言刚刚已经贴过啦",
+    "postOkText": "已写进本设备留言本，感谢你的想法 ▶",
+    "duplicateText": "这条留言刚刚已经写过啦",
     "postFailText": "留言失败，稍后再试",
     "netFailText": "网络异常，留言未能发送",
-    "fileText": "本地双击打开时留言墙不可用，请用「本地预览.command」启动 HTTP 服务",
+    "fileText": "本地双击打开时留言本不可用，请用「本地预览.command」启动 HTTP 服务",
     "localText": "本地静态预览没有留言 API · 联调请运行 node scripts/dev-api-server.mjs 并打开 8877 端口",
-    "countText": "共 {n} 条留言",
+    "countText": "本设备共 {n} 条留言",
     "shownText": "已显示 {shown} / {total} 条",
     "updatedText": "更新于 {time}",
     "tipText": "⌘ / Ctrl + Enter 快速提交 · 换行会保留",
+    "deviceText": "这台设备拿不到本地存储权限，留言本无法分区显示；请在浏览器设置里允许本站使用本地存储后刷新。",
     "shortText": "再多写两个字吧（至少 2 个字）",
     "emptyPostText": "先写点什么吧",
     "timeNow": "刚刚",
