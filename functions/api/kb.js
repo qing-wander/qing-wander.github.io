@@ -33,7 +33,8 @@ const MODEL = '@cf/baai/bge-m3';
 const INDEX = 'resume-kb';
 const DEFAULT_ACCOUNT = 'ead07d9f00f8e2ac69055a81cc198382';
 const RRF_K = 60;
-const SIM_FLOOR = 0.55;
+const SIM_FLOOR = 0.42;   // 地板：bge-m3 对任何中文都有 ~0.42-0.45 底噪，低于此必是噪音
+const SIM_WINDOW = 0.04;  // 相对窗口：只留与最高分相差 0.04 以内的（分数普遍挤在 0.45-0.53，绝对值不可靠）
 
 const CJK = /[\u4e00-\u9fff]/;
 
@@ -100,12 +101,37 @@ async function embed(query, env) {
   return d?.result?.data?.[0] || null;
 }
 
+/* cosine 分数在这个语料上挤成一坨（0.42-0.53），单看绝对值分不出好坏，
+   所以先卡地板（去底噪），再卡相对窗口（只留冠军梯队），最后交给覆盖闸门判相关性。 */
+export function pickSemantic(matches) {
+  if (!matches.length) return [];
+  const top = matches[0].score;
+  return matches
+    .filter((m) => m.score >= Math.max(SIM_FLOOR, top - SIM_WINDOW))
+    .map((m) => String(m.id).replace(/^[^:]+:/, ''));   // 剥掉 kb_version: 前缀，对上 D1 主键
+}
+
 async function semanticSearch(query, env, top = 20) {
+  /* 首选：语义层 Worker（resume-kb-api，里面挂了 AI + Vectorize 绑定）。
+     Pages 项目的绑定配置放不下 Workers AI，所以这条是主力路径；
+     浏览器不直连 Worker（境内 workers.dev 不可达），全部在服务端完成。 */
+  if (env.KB_WORKER_URL && env.KB_TOKEN) {
+    const r = await fetch(`${env.KB_WORKER_URL.replace(/\/$/, '')}/query`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-KB-Token': env.KB_TOKEN },
+      body: JSON.stringify({ text: query, topK: top }),
+    }).catch(() => null);
+    if (r && r.ok) {
+      const d = await r.json().catch(() => ({}));
+      if (d.ok) return pickSemantic(d.matches || []);
+    }
+  }
+  /* 次选：本 Function 自己跑（需要 AI 绑定或长期 token，正常不会走到这） */
   const vec = await embed(query, env).catch(() => null);
   if (!vec) return null;
   if (env.VECTORIZE?.query) {
     const r = await env.VECTORIZE.query(vec, { topK: top, returnMetadata: 'all', returnValues: false });
-    return (r?.matches || []).filter((m) => m.score >= SIM_FLOOR).map((m) => m.id);
+    return pickSemantic(r?.matches || []);
   }
   const tk = env.CF_API_TOKEN;
   if (!tk) return null;
@@ -116,7 +142,7 @@ async function semanticSearch(query, env, top = 20) {
     body: JSON.stringify({ vector: vec, topK: top, returnValues: false, returnMetadata: 'all' }),
   });
   const d = await r.json().catch(() => ({}));
-  return (d?.result?.matches || []).filter((m) => m.score >= SIM_FLOOR).map((m) => m.id);
+  return pickSemantic(d?.result?.matches || []);
 }
 
 /* 词面：把 token 拼成 OR 查询（FTS5 的 MATCH 语法里 OR 必须大写） */

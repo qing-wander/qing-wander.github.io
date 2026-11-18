@@ -161,6 +161,11 @@ body.has-ai-skin .ai-fab {
 | `assets/skins/vendor/model-viewer.min.js` | 960 KB | Apache-2.0      | 空闲懒加载，非阻塞       |
 | `assets/skins/generated.png`              | 136 KB | 自有              | AI 生成立绘，已抠背景    |
 | `assets/skins/preview.png`                | 120 KB | 自有              | 9 款皮肤总览图        |
+| `assets/skins/models/Xbot-ivory.glb`      | 2.8 MB | Mixamo（经 three.js 示例分发） | 档案人偶，已入库未接入 |
+| `assets/skins/models/Soldier.glb`         | 2.1 MB | 同上              | 先锋士兵，备选        |
+| `assets/skins/models/Michelle.glb`        | 3.1 MB | 同上              | Y2K 女孩，彩蛋（无 idle） |
+
+> 2026-11-19 新增的 4 个 3D 人物资产的逐个体盘点、实拍与接入片段，见 `docs/3d-character-library.md`。
 
 全部本地化，离线可用。5–7、9 号皮肤为**本地 SVG 等效实现**，未引入 Live2D/Rive/Petfolio 的外部 runtime，规避版权与境内 CDN 不稳。
 
@@ -280,4 +285,5 @@ window.CPAI_SKINS.current()   # 当前皮肤 id
 - Khronos glTF 示例资产：<https://github.com/KhronosGroup/glTF-Sample-Assets>
 - three.js 官方示例模型：<https://github.com/mrdoob/three.js/tree/dev/examples/models/gltf>
 - 姊妹篇（问答后端）：`docs/ai-assistant-survey.md`
+- 补篇（人物资产盘点）：`docs/3d-character-library.md`
 

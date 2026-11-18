@@ -1,0 +1,16 @@
+# 简历知识库语义层 Worker（resume-kb-api）
+# 部署：cd worker/kb && npx wrangler deploy
+# 密钥：npx wrangler secret put KB_TOKEN   （与 Pages 项目上的 KB_TOKEN 同值）
+#
+# 说明：Pages 项目的绑定配置不支持 Workers AI / Vectorize，所以把这两个
+# 绑定放在 Worker 里；浏览器不直连本 Worker，由 /api/kb 服务端调用。
+name = "resume-kb-api"
+main = "index.mjs"
+compatibility_date = "2025-01-01"
+
+[ai]
+binding = "AI"
+
+[[vectorize]]
+binding = "VECTORIZE"
+index_name = "resume-kb"

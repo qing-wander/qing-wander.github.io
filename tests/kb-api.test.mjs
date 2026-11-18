@@ -40,3 +40,22 @@ test('hintedSections：口语问法能识别章节意图', () => {
   assert.ok(hintedSections('他会哪些技能').has('skills'));
   assert.equal(hintedSections('今天天气怎么样').size, 0, '无关问题不该有意图');
 });
+
+test('pickSemantic：地板去底噪，相对窗口只留冠军梯队，且剥掉 kb_version 前缀', async () => {
+  const { pickSemantic } = await import('../functions/api/kb.js');
+  const keep = pickSemantic([
+    { id: 'kb-5f9004b7:proj-comein-01', score: 0.5279 },
+    { id: 'kb-5f9004b7:skill-02', score: 0.5193 },   // 与最高分差 0.0086 → 留
+    { id: 'kb-5f9004b7:me-01', score: 0.4910 },      // 差 0.0369 → 留（窗口 0.04）
+    { id: 'kb-5f9004b7:proj-comein-05', score: 0.4100 }, // 低于地板 0.42 → 丢
+  ]);
+  assert.equal(keep.length, 3);
+  assert.equal(keep[0], 'proj-comein-01', 'id 前缀要剥掉，才能对上 D1 主键');
+  assert.ok(!keep.includes('proj-comein-05'));
+});
+
+test('pickSemantic：全空时返回空数组，不抛', () => {
+  return import('../functions/api/kb.js').then(({ pickSemantic }) => {
+    assert.deepEqual(pickSemantic([]), []);
+  });
+});

@@ -237,7 +237,7 @@ node scripts/rag_query.mjs --golden tests/golden-queries.json   # 金标集 hit@
 - [x] 真页数校验（无头 Chrome 打 PDF 数页数，CI 拦住 >2 页）：`scripts/check_resume_pages.mjs`
       —— 实测当前 resume.html 打出来正好 2 页
 - [x] 语义层：`@cf/baai/bge-m3`（1024 维）向量化 42 片 → Vectorize `resume-kb` 已入库（42 条，id 带版本前缀 `kb-5f9004b7:`），`node scripts/rag_embed.mjs --query "…"` 可做语义自检
-- [x] 混合检索接口 `/api/kb`（D1 FTS5 BM25 + Vectorize cosine，RRF k=60 融合，cosine 地板 0.55）已上线；**当前 semantic=false**（Pages 项目还没挂 Workers AI 绑定），语义路自动降级为纯词面
+- [x] 混合检索接口 `/api/kb`（D1 FTS5 BM25 + Vectorize cosine，RRF k=60 融合，cosine 地板 0.55）已上线，**semantic=true**（语义路走 Worker `resume-kb-api`，见 7.7）
 - [ ] `/api/chat`（在 `/api/kb` 之上组织答案 + 引用切片）、rerank、JD 匹配
 - [x] RAG 切片（按 bullet id）+ D1 词面索引 + 金标集 hit@3 闸门：`rag/`、`scripts/build_rag_chunks.mjs`、`tests/golden-queries.json`
 - [ ] RAG 余下：`/api/chat`（需给 Pages 项目挂 `[ai]` + `[[vectorize]]` 绑定）、JD 匹配、动态简历变体
@@ -257,4 +257,19 @@ GET .../api/kb?q=今天深圳天气
 → count=0, empty=true（前端直答「简历里没写这块」）
 ```
 
-语义路要开：给 Pages 项目 `shenge-work` 加 Workers AI 绑定（Dashboard → Settings → Bindings → Workers AI，变量名 `AI`），或加 `CF_API_TOKEN` 密钥（脚本走 REST 兜底）。绑定到位后 `semantic` 自动变 `true`，无需改代码。
+语义路怎么通：Pages 项目的 `deployment_configs` 不支持 Workers AI / Vectorize 绑定（API 里根本没这两个 key，只能 Dashboard 点），
+所以把这两个绑定放进独立 Worker `resume-kb-api`（`worker/kb/`，`wrangler.toml` 里 `[ai]` + `[[vectorize]]`），
+`/api/kb` 在服务端拿 `KB_TOKEN` 调它。浏览器不直连 workers.dev，所以境内不可达不影响。
+
+### 7.7 混合检索实测（semantic=true）
+
+```
+他懂不懂多租户隔离和沙箱 → skill-02 + proj-comein-01（两路一致，RRF 并列 0.0325）
+他会不会写高并发网关   → skill-05
+他几年经验 什么学历    → me-03(experience) + edu-verify(education)  ← 意图赦免
+他会 Kubernetes 吗     → count=0（简历里没有，闸门挡掉）
+今天深圳天气           → count=0
+```
+
+相似度处理：bge-m3 在这批语料上分数挤在 0.42–0.53（无关问题也有 0.50），
+绝对值不可靠 → 先卡地板 0.42 去底噪，再只留与冠军差 ≤0.04 的梯队，最后交给覆盖闸门判相关性。

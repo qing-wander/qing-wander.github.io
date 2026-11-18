@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>3D 角色试衣间 · three.js 官方人物库存</title>
+<style>
+  :root{
+    --paper:#F3EEE2; --card:#FFFCF4; --ink:#141311; --ink-soft:#4A463F;
+    --orange:#FF5A1E; --blue:#2B4BE0; --green:#1FA658;
+    --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; padding:28px 18px 60px; background:var(--paper); color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  }
+  header{max-width:1180px;margin:0 auto 22px;border-bottom:3px solid var(--ink);padding-bottom:14px}
+  .kicker{font-family:var(--mono);font-size:11px;letter-spacing:.18em;color:var(--ink-soft);margin-bottom:6px}
+  h1{margin:0 0 8px;font-size:26px;letter-spacing:-.5px}
+  header p{margin:0;font-size:13px;line-height:1.75;color:var(--ink-soft);max-width:860px}
+  .bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:14px}
+  .chip{font-family:var(--mono);font-size:11px;padding:5px 9px;border:1.5px solid var(--ink);background:var(--card);cursor:pointer}
+  .chip:hover{background:var(--orange);color:#fff;border-color:var(--orange)}
+  .chip.is-on{background:var(--blue);color:#fff;border-color:var(--blue)}
+  .grid{max-width:1180px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:22px}
+  .card{background:var(--card);border:2px solid var(--ink);box-shadow:6px 6px 0 var(--ink);display:flex;flex-direction:column;overflow:hidden}
+  .stage{
+    height:330px;position:relative;border-bottom:2px solid var(--ink);
+    background:
+      linear-gradient(rgba(20,19,17,.06) 1px,transparent 1px) 0 0/100% 26px,
+      linear-gradient(90deg,rgba(20,19,17,.06) 1px,transparent 1px) 0 0/26px 100%,
+      #FBF7EC;
+  }
+  model-viewer{width:100%;height:100%;background:transparent}
+  .badge{position:absolute;left:8px;top:8px;z-index:3;font-family:var(--mono);font-size:10px;letter-spacing:.08em;padding:3px 6px;background:var(--ink);color:var(--card)}
+  .badge.is-star{background:var(--orange)}
+  .body{padding:12px 14px 14px}
+  h2{margin:0 0 4px;font-size:16px;display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+  h2 small{font-family:var(--mono);font-size:10px;color:var(--ink-soft);font-weight:400;letter-spacing:.08em}
+  .meta{font-family:var(--mono);font-size:10.5px;color:var(--ink-soft);line-height:1.75;margin-bottom:8px}
+  .note{font-size:12px;line-height:1.7;color:var(--ink-soft);margin:0 0 10px;min-height:58px}
+  .clips{display:flex;flex-wrap:wrap;gap:6px}
+  .clip{font-family:var(--mono);font-size:10.5px;padding:4px 7px;border:1.5px solid var(--ink);background:transparent;cursor:pointer;color:var(--ink)}
+  .clip:hover{background:var(--orange);color:#fff;border-color:var(--orange)}
+  .clip.is-on{background:var(--blue);color:#fff;border-color:var(--blue)}
+  .status{font-family:var(--mono);font-size:10px;color:var(--green);margin-top:8px;min-height:12px}
+  footer{max-width:1180px;margin:26px auto 0;font-size:12.5px;line-height:1.85;color:var(--ink-soft);border-top:2px dashed var(--ink);padding-top:14px}
+  footer b{color:var(--ink)}
+  footer code{font-family:var(--mono);font-size:11px;background:var(--card);border:1px solid var(--ink);padding:1px 4px}
+  @media (max-width:520px){.stage{height:280px}}
+</style>
+<script type="module" src="./vendor/model-viewer.min.js"></script>
+</head>
+<body>
+
+<header>
+  <div class="kicker">SHENGE / 3D CHARACTER LIBRARY / 2026-11-19</div>
+  <h1>3D 角色试衣间 · three.js 官方人物库存</h1>
+  <p>
+    这是 AI 问答助手皮肤系统的候选看板：左边开始是这次从 three.js 官方示例里扒出来的人物，
+    最后两个是现在线上已经在用的模型，放在一起方便比对比例、质感和动作。
+    点卡片下方的动作胶囊可以现场切动画，判断它当桌宠够不够“活”。
+  </p>
+  <div class="bar">
+    <button class="chip" id="btnSpin">自动转台：关</button>
+    <button class="chip" id="btnIdle">全部回待机</button>
+    <span class="chip" style="cursor:default">本地 http 预览，别用 file:// 直接双击</span>
+  </div>
+</header>
+
+<main class="grid" id="grid"></main>
+
+<footer>
+  <b>怎么判断一个模型能不能当桌宠</b>：① 有没有 <code>idle</code> 这类循环待机动作（没有就只能站着不动）；
+  ② 有没有可以表达「对 / 不对 / 思考」的动作（Xbot 的 <code>agree</code> 点头、<code>headShake</code> 摇头就是干这个的）；
+  ③ 体积能不能压在 3MB 以内（手机首屏等不起）；④ 造型在小尺寸下还认不认得出。
+  <br>
+  <b>被排除的</b>：<code>kira.glb</code>（整间卧室 + IK 少女，场景化，不是干净角色）、
+  <code>readyplayer.me.glb</code>（写实西装男，0 段动画，要接 Mixamo 重定向才能动）、
+  <code>duck.glb</code>（Draco 压缩，当前链路加载会卡住）、<code>bath_day.glb</code> / <code>dungeon_warkarma.glb</code>（都是场景）。
+  <br>
+  详细结论见仓库文档 <code>docs/3d-character-library.md</code>。
+</footer>
+
+<script>
+const LIST = [
+  {
+    id: 'archive-bot',
+    name: '档案人偶 ARCHIVE BOT',
+    sub: 'XBOT-ivory / 本站配色改造',
+    badge: '★ 主推',
+    star: true,
+    file: 'Xbot-ivory.glb',
+    size: '2.8 MB',
+    orbit: '0deg 80deg 255%',
+    fov: '26deg',
+    clips: ['idle', 'agree', 'headShake', 'walk', 'run', 'sneak_pose', 'sad_pose'],
+    note: 'Mixamo X Bot 的素模，把身体改成象牙白、关节改墨黑，和站点的档案纸配色同源。7 段动作里 agree 点头 / headShake 摇头，正好用来做问答反馈。'
+  },
+  {
+    id: 'xbot',
+    name: '数字人 XBOT 原色',
+    sub: 'XBOT / 原始材质',
+    badge: '原版',
+    file: 'Xbot.glb',
+    size: '2.8 MB',
+    orbit: '0deg 80deg 255%',
+    fov: '26deg',
+    clips: ['idle', 'agree', 'headShake', 'walk', 'run', 'sneak_pose', 'sad_pose'],
+    note: '同一套骨骼动作的原始粉色素模。留着当对照，也方便以后想换配色时直接改材质因子重出一版。'
+  },
+  {
+    id: 'soldier',
+    name: '先锋士兵 VANGUARD',
+    sub: 'SOLDIER / Idle·Walk·Run',
+    badge: '备选',
+    file: 'Soldier.glb',
+    size: '2.1 MB',
+    orbit: '180deg 80deg 260%',
+    fov: '26deg',
+    clips: ['Idle', 'Walk', 'Run', 'TPose'],
+    note: '科幻重甲士兵，自带贴图和战损。酷，但不太“讨喜”，适合做偏硬核的备选；只有待机/走/跑三套循环，状态区分弱。'
+  },
+  {
+    id: 'michelle',
+    name: 'Y2K 女孩 MICHELLE',
+    sub: 'MICHELLE / 仅 SambaDance',
+    badge: '彩蛋',
+    file: 'Michelle.glb',
+    size: '3.1 MB',
+    orbit: '0deg 78deg 250%',
+    fov: '26deg',
+    clips: ['SambaDance', 'TPose'],
+    note: '官方示例里造型最讨喜的一个（墨镜 + 爆炸头 + 黄色运动裤）。硬伤是只有一段 18 秒桑巴舞和 T-Pose，没有 idle，当迎宾/答对跳舞的彩蛋可以，当常驻待机不行。'
+  },
+  {
+    id: 'robot',
+    name: '机器人 ROBOT',
+    sub: '线上在用 / 14 段动作',
+    badge: '已在用',
+    file: 'RobotExpressive.glb',
+    size: '453 KB',
+    orbit: '0deg 82deg 270%',
+    fov: '26deg',
+    clips: ['Idle', 'Wave', 'ThumbsUp', 'Yes', 'No', 'Dance', 'Jump', 'Walking', 'Running', 'Standing', 'Sitting', 'Punch', 'WalkJump', 'Death'],
+    note: '当前默认皮肤。14 段动作 + 只有 453KB，是这批里“可玩性 / 体积”性价比最高的，机器人造型也天然贴合 AI 助手人设。'
+  },
+  {
+    id: 'fox',
+    name: '狐狸 FOX',
+    sub: '线上在用 / Survey·Walk·Run',
+    badge: '已在用',
+    file: 'Fox.glb',
+    size: '159 KB',
+    orbit: '90deg 80deg 200%',
+    fov: '30deg',
+    clips: ['Survey', 'Walk', 'Run'],
+    note: '四足动物侧视角，Survey 环顾四周很有生命感。只有 159KB，作为“可爱型桌宠”的兜底一直很稳。'
+  }
+];
+
+const grid = document.getElementById('grid');
+const cards = [];
+
+LIST.forEach(function (item) {
+  const el = document.createElement('section');
+  el.className = 'card';
+  el.innerHTML =
+    '<div class="stage">' +
+      '<span class="badge' + (item.star ? ' is-star' : '') + '">' + item.badge + '</span>' +
+      '<model-viewer src="./models/' + item.file + '" alt="' + item.name + '" autoplay ' +
+        'animation-name="' + item.clips[0] + '" animation-crossfade-duration="260" ' +
+        'camera-orbit="' + item.orbit + '" field-of-view="' + item.fov + '" ' +
+        'shadow-intensity="0.5" shadow-softness="0.85" exposure="1.05" ' +
+        'interaction-prompt="none" touch-action="pan-y"></model-viewer>' +
+    '</div>' +
+    '<div class="body">' +
+      '<h2>' + item.name + ' <small>' + item.sub + '</small></h2>' +
+      '<div class="meta">' + item.file + ' · ' + item.size + ' · ' + item.clips.length + ' 段动作</div>' +
+      '<p class="note">' + item.note + '</p>' +
+      '<div class="clips"></div>' +
+      '<div class="status">ready</div>' +
+    '</div>';
+
+  const mv = el.querySelector('model-viewer');
+  const clipsBox = el.querySelector('.clips');
+  const status = el.querySelector('.status');
+  const clipBtns = [];
+
+  item.clips.forEach(function (name, i) {
+    const b = document.createElement('button');
+    b.className = 'clip' + (i === 0 ? ' is-on' : '');
+    b.textContent = name;
+    b.addEventListener('click', function () {
+      mv.animationName = name;
+      clipBtns.forEach(function (x) { x.classList.remove('is-on'); });
+      b.classList.add('is-on');
+      status.textContent = 'playing: ' + name;
+    });
+    clipsBox.appendChild(b);
+    clipBtns.push(b);
+  });
+
+  mv.addEventListener('load', function () { status.textContent = 'loaded ✓'; });
+  mv.addEventListener('error', function () { status.textContent = '✗ 加载失败，检查是否走了 http'; });
+
+  cards.push({ el: el, mv: mv, idle: item.clips[0], btns: clipBtns, status: status });
+  grid.appendChild(el);
+});
+
+let spinning = false;
+document.getElementById('btnSpin').addEventListener('click', function () {
+  spinning = !spinning;
+  this.classList.toggle('is-on', spinning);
+  this.textContent = '自动转台：' + (spinning ? '开' : '关');
+  cards.forEach(function (c) {
+    if (spinning) {
+      c.mv.setAttribute('auto-rotate', '');
+      c.mv.setAttribute('auto-rotate-delay', '0');
+      c.mv.setAttribute('rotation-per-second', '12deg');
+    } else {
+      c.mv.removeAttribute('auto-rotate');
+    }
+  });
+});
+
+document.getElementById('btnIdle').addEventListener('click', function () {
+  cards.forEach(function (c) {
+    c.mv.animationName = c.idle;
+    c.btns.forEach(function (x, i) { x.classList.toggle('is-on', i === 0); });
+    c.status.textContent = 'playing: ' + c.idle;
+  });
+});
+</script>
+</body>
+</html>
