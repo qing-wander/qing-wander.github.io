@@ -5,7 +5,7 @@
 > 目的：换会话、换机器、换协作人时，不用通读五份设计文档也能知道下一步该做什么、哪些是故意不做的。
 >
 > 最近一次盘点：**2026-11-19**（Cloudflare 免费资源盘点 + 计数与留言墙迁到 D1（T16）+
-> 留言墙接入 Turnstile 人机校验（T17）+ D1 备份脚本（T18），三件均已完成；
+> 留言墙接入 Turnstile 人机校验（T17）+ D1 备份脚本（T18）+ 可观测接入 Web Analytics 双路（T19），
 > T1 暂缓原因补充为「支付问题未解决」，站点始终未新增任何域名依赖）。
 
 ---
@@ -72,6 +72,7 @@ Workers KV 迁到 D1（`portfolio-db`，4 张表），免费写额度从 1,000 �
 | T16 | 计数与留言墙从 KV 迁到 D1（`/api/visits` + `portfolio-db`），摆脱第三方计数 | `已完成（2026-11-19）` | — | 顶栏计数器 / 留言墙 | 本文 §3.15 / [cloudflare-free-resources.md](cloudflare-free-resources.md) |
 | T17 | 留言墙接入 Cloudflare Turnstile 人机校验（两档额度 + fail-open） | `已完成（2026-11-19）` | — | 留言墙 POST | 本文 §3.16 / [cloudflare-free-resources.md](cloudflare-free-resources.md) §7 |
 | T18 | D1 备份脚本 `scripts/backup-d1.sh`（本机存 SQL 快照，不进仓库） | `已完成（2026-11-19）` | — | 数据安全 | 本文 §3.16 / [cloudflare-free-resources.md](cloudflare-free-resources.md) §8 |
+| T19 | 可观测双路：Cloudflare Web Analytics 与 Umami 并行采集 | `进行中（代码已接，待填 token）` | — | 访问统计兜底 | 本文 §3.17 / [cloudflare-free-resources.md](cloudflare-free-resources.md) §9 |
 
 ---
 
@@ -476,6 +477,30 @@ secret 用 `wrangler pages secret put` 单点写入，避免 PATCH 整体覆盖�
 - 手机端（移动网络）Turnstile 脚本可达性已验证：站长手机上小组件正常显示（2026-11-19）。
   至此「可达 / 校验通过 / 未通过降档」三项全部实测完成，本任务可归档。
 - 预览部署 hostname 未登记（免费版不支持任意 hostname），预览页留言墙本就 `open:false`。
+
+---
+
+### 3.17 T19 · 可观测双路（代码已就绪，卡在一步手动操作）
+
+**目标**：Umami 之外再加一路独立采集，任一路被拦或额度打满，另一路仍能看出量级。
+
+**为什么是 Web Analytics**：免费不限量、无 cookie、只记页面浏览。它不参与事件体系，
+所以不能替代 Umami（滚动深度、项目打开、留言提交这些自定义事件仍只有 Umami 有）。
+
+**已做**：`js/analytics.js` 新增 `CONFIG.cfBeaconToken` 与 `loadCloudflareBeacon()`，
+token 留空完全不发请求；加载失败静默，不牵连 Umami/Clarity。`node --check` 通过。
+实测 `static.cloudflareinsights.com` 境内可达（5/5 200，31KB，0.6–0.9s）。
+
+**卡点**：wrangler 的 OAuth 登录态**没有 RUM 权限**，`/rum/site_info` 的 list 与 create
+都返回 `10000 Authentication error`，scope 列表里也确实没有 analytics 项
+（有 `challenge-widgets.write`，所以 Turnstile 能自动建站点，Web Analytics 不能）。
+
+**下一步（需人工，约 30 秒）**：控制台 Analytics & Logs → Web Analytics → Add site →
+填 `shenge-work.github.io` → 选 JS installation → 复制 snippet 里的 32 位 token →
+填进 `cfBeaconToken`。填完部署，DevTools 里应能看到 `beacon.min.js` 200。
+
+**注意**：CF 与 Umami 口径不同（CF 更严，剔除部分爬虫与预加载），两边 PV 对不上是正常的，
+不要当成 bug 去修。
 
 ---
 

@@ -330,7 +330,62 @@ KEEP=20 ./scripts/backup-d1.sh          # 保留最近 20 份（默认 10）
 
 ---
 
-## 9. 备注
+## 9. 可观测：Web Analytics 与 Umami 双路并行（T19）
+
+### 9.1 为什么值得加第二路
+
+现有统计只有 Umami Cloud 一家（10 万事件/月、1 个站点、6 个月留存）。单点风险有三：
+额度打满就断档、被浏览器插件拦掉就归零、服务方哪天调整免费策略就全丢。
+
+Cloudflare Web Analytics 免费、不限量、无 cookie，正好做兜底：它只看"有多少人来了、从哪来",
+不参与事件体系，所以**不能替代 Umami，只能补位**。两路互相独立，任一路挂了另一路仍能看出量级。
+
+### 9.2 实测可达性（先测再上）
+
+| 目标 | 结果 |
+|---|---|
+| DNS `static.cloudflareinsights.com` | 104.16.80.73，ping 192ms |
+| `beacon.min.js` 连续 5 次 | **5/5 HTTP 200，31,853B，0.60–0.94s** |
+
+境内宽带可用。手机端与 Turnstile 共用同一套 Cloudflare 边缘，Turnstile 已在移动网络验过，
+风险同源，未单独复测。
+
+### 9.3 已做的代码改动
+
+`js/analytics.js` 新增 `CONFIG.cfBeaconToken` 与 `loadCloudflareBeacon()`：
+token 留空则**完全不加载、不发任何请求**（与 Umami/Clarity 的"留空即静默"一致）；
+填入后注入 `beacon.min.js`，带 `data-cf-beacon` 的 token，脚本加载失败静默放弃，不影响另外两路。
+`file://` 与 `localhost` 仍被统一跳过，不污染线上数据。
+
+### 9.4 为什么这一步必须手动（API 走不通）
+
+wrangler 的 OAuth 登录态**没有 RUM/analytics 权限**，实测：
+
+```
+GET  /accounts/<id>/rum/site_info/list  → 10000 Authentication error
+POST /accounts/<id>/rum/site_info       → 10000 Authentication error
+```
+
+`wrangler whoami` 的 scope 列表里也确实没有 analytics 相关项（有 `challenge-widgets.write`，
+所以 Turnstile 能自动建、Web Analytics 不能）。要么在控制台点一次，要么另建一个带
+"Account Analytics:Edit" 的 API Token —— 后者反而更绕。
+
+**控制台操作（约 30 秒，只需一次）**：
+`dash.cloudflare.com` → 左侧 **Analytics & Logs → Web Analytics** → **Add site**
+→ 填 `shenge-work.github.io`（主站）→ 选 "JS installation"（不要选 automatic，那是 zone 专用）
+→ 复制 snippet 里 `"token":` 后面那串 32 位值 → 填进 `js/analytics.js` 的 `cfBeaconToken`。
+
+想连 `shenge-work.pages.dev` 也分开统计，就再 Add 一次填该 host，然后按 host 切 token。
+
+### 9.5 生效怎么确认
+
+1. 部署后浏览器打开站点，DevTools → Network 过滤 `beacon.min.js`，应看到 200 与后续 POST
+2. CF 后台 Web Analytics 面板通常几分钟到几小时出数（不是实时）
+3. 与 Umami 同日 PV 对比：两者口径不同（CF 更严，会剔掉部分爬虫与预加载），数字对不上是正常的
+
+---
+
+## 10. 备注
 
 - 计数的历史值**没有迁移**：abacus 取数接口实测已返回 error，取不到原值，因此 D1 从 0 起算。
   这是有意接受的损失（原数字本身来自第三方、无法验证）。

@@ -1,8 +1,10 @@
 /* ══════════════════════════════════════════════════════════════════════
    站点可观测埋点 · ANALYTICS
    ──────────────────────────────────────────────────────────────────────
-   接两家免费服务，配置留空就不加载、不发任何请求：
+   接三家免费服务，配置留空就不加载、不发任何请求：
      · Umami Cloud  —— 访问统计（PV / UV / 来源 / 设备 / 自定义事件）
+     · Cloudflare Web Analytics —— 独立的第二份访问统计（无 cookie、无事件），
+       与 Umami 互为备份：任一路被拦或额度打满，另一路仍能看出量
      · Microsoft Clarity —— 行为录屏 + 热点图（可选）
    只需填下面 CONFIG，其余代码不用动。
    file:// 双击打开、localhost 预览时自动跳过，不会污染线上数据。
@@ -17,6 +19,11 @@
 
     /* Microsoft Clarity：Project ID（10 位字母数字），不需要可留空 */
     clarityProjectId: 'z9bfezprgd',
+
+    /* Cloudflare Web Analytics：控制台 → Web Analytics → 添加站点后，
+       JS snippet 里 "token" 的值（32 位十六进制）。留空则不加载。
+       它与 Umami 是两条独立的采集路，任一被浏览器插件拦掉都还有另一条。 */
+    cfBeaconToken: '',
 
     /* 是否记录浏览深度（25% / 50% / 75% / 100%） */
     trackScrollDepth: true
@@ -49,6 +56,18 @@
       y = l.getElementsByTagName(r)[0];
       y.parentNode.insertBefore(t, y);
     })(window, document, 'clarity', 'script', CONFIG.clarityProjectId);
+  }
+
+  /* Cloudflare Web Analytics：只记页面浏览，不含自定义事件；
+     与 Umami 并行上报，任何一路失败都静默，不影响另一路和页面本身。 */
+  function loadCloudflareBeacon() {
+    if (!CONFIG.cfBeaconToken) return;
+    var s = document.createElement('script');
+    s.defer = true;
+    s.src = 'https://static.cloudflareinsights.com/beacon.min.js';
+    s.setAttribute('data-cf-beacon', JSON.stringify({ token: CONFIG.cfBeaconToken }));
+    s.onerror = function () { /* 脚本不可达就放弃，静默 */ };
+    document.head.appendChild(s);
   }
 
   /* ── 统一上报出口 ─────────────────────────────────────────────────── */
@@ -188,5 +207,6 @@
   document.addEventListener('click', handleClick, true);
   initScrollDepth();
   loadUmami();
+  loadCloudflareBeacon();
   loadClarity();
 })();

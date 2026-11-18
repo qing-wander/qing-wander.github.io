@@ -174,6 +174,7 @@ python3 -m http.server 8000
 | 能力 | 服务 | 免费额度 | 配置位置 |
 |---|---|---|---|
 | 访问统计（PV/UV/来源/事件） | Umami Cloud | 10 万事件/月、1 站点、6 个月留存 | `js/analytics.js` → `umamiWebsiteId` |
+| 访问统计（第二路，兜底） | Cloudflare Web Analytics | 免费、无 cookie、无事件 | `js/analytics.js` → `cfBeaconToken` |
 | 行为观测（录屏/热图） | Microsoft Clarity | 不限流量 | `js/analytics.js` → `clarityProjectId` |
 | 内容管理（网页改文案） | Pages CMS | 免费（GitHub App 直连） | `.pages.yml` |
 | 数据同步（JSON→快照） | GitHub Actions | 公开仓库免费 | `.github/workflows/sync-site-data.yml` |
