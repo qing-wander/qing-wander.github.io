@@ -1,15 +1,46 @@
-/* 本地联调服务器：静态文件 + 真实 functions/api 逻辑（内存 KV，拦截 Resend 发信） */
+/* 本地联调服务器：静态文件 + 真实 functions/api 逻辑
+   （D1 用 node:sqlite 内存库模拟，KV 用内存 Map，Resend 发信被拦截）
+   2026-11-19：留言墙 / 访问计数迁到 D1，本文件同步加了一层最小 D1 适配器，
+   表结构与线上一致（db/schema.sql），保证本地测的是同一套 SQL。 */
 import http from 'node:http';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { DatabaseSync } from 'node:sqlite';
 import { onRequestGet as wallGet, onRequestPost as wallPost, onRequestDelete as wallDel, onRequestOptions as wallOpt } from '../functions/api/wall.js';
+import { onRequestGet as visitsGet, onRequestPost as visitsPost, onRequestOptions as visitsOpt } from '../functions/api/visits.js';
 import { onRequestPost as deliverPost, onRequestOptions as deliverOpt } from '../functions/api/deliver.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const PORT = Number(process.env.PORT || 8877);
-/* 内存 KV：模拟 expirationTtl，否则本地测不出「固定窗口限流到期自动解锁」。
-   WALL_SEED=<n> 可预置 n 条历史留言，用来验收分页 / 加载更多。 */
+
+/* ── D1 的最小本地实现：接口形状对齐 Cloudflare（prepare/bind/all/first/run） ──
+   D1 的 first() 对 UPDATE ... RETURNING 也要能取到行，所以统一走 all() 再取首行。 */
+const sqlite = new DatabaseSync(':memory:');
+sqlite.exec(await fs.readFile(path.join(ROOT, 'db', 'schema.sql'), 'utf8'));
+
+const DB = {
+  prepare(sql) {
+    const stmt = sqlite.prepare(sql);
+    const make = (params) => ({
+      all: async () => ({ results: stmt.all(...params), success: true, meta: {} }),
+      first: async (col) => {
+        const rows = stmt.all(...params);
+        const r = rows && rows[0];
+        if (!r) return null;
+        return col ? (r[col] === undefined ? null : r[col]) : r;
+      },
+      run: async () => {
+        const info = stmt.run(...params);
+        return { success: true, meta: { changes: Number(info && info.changes) || 0 } };
+      },
+    });
+    return Object.assign(make([]), { bind: (...params) => make(params) });
+  },
+};
+
+/* 内存 KV：模拟 expirationTtl，deliver.js 的发信限额仍用它
+   （线上也保持 KV，写量可控：日上限 30 封 ≈ 90 写/天） */
 const KV = new Map();
 const SITE_KV = {
   async get(k) {
@@ -23,23 +54,30 @@ const SITE_KV = {
     KV.set(k, { value: String(v), expiresAt: ttl ? Date.now() + ttl * 1000 : 0 });
   },
 };
+
+/* WALL_SEED=<n> 预置 n 条历史留言，用来验收分页 / 加载更多 */
 const SEED = Number(process.env.WALL_SEED || 0);
 if (SEED > 0) {
   const now = Date.now();
-  const seed = Array.from({ length: Math.min(SEED, 100) }, (_, i) => ({
-    id: 'wseed' + i,
-    name: i % 4 === 0 ? '匿名访客' : '访客' + (i + 1),
-    text: '这是本地联调用的第 ' + (i + 1) + ' 条留言，用来检查分页与加载更多是否正常。',
-    ts: now - i * 3600000,
-  }));
-  KV.set('wall:messages', { value: JSON.stringify(seed), expiresAt: 0 });
-  console.log('[seed] 预置 ' + seed.length + ' 条留言');
+  const n = Math.min(SEED, 100);
+  const ins = sqlite.prepare('INSERT INTO wall_messages (id, name, text, created_at) VALUES (?, ?, ?, ?)');
+  for (let i = 0; i < n; i++) {
+    ins.run(
+      'wseed' + i,
+      i % 4 === 0 ? '匿名访客' : '访客' + (i + 1),
+      '这是本地联调用的第 ' + (i + 1) + ' 条留言，用来检查分页与加载更多是否正常。',
+      now - i * 3600000
+    );
+  }
+  console.log('[seed] 预置 ' + n + ' 条留言');
 }
+
 /* 本地模拟 Resend：只记录，不发真实邮件。
    MOCK_RESEND=unverified 时模拟「域名未验证」→ 422，用来验收 mailto 兜底。
    MOCK_RESEND=nokey 时模拟未配置 API Key → 503。 */
 const MOCK = process.env.MOCK_RESEND || '';
 const ENV = {
+  DB,
   SITE_KV,
   ALLOWED_ORIGINS: 'http://127.0.0.1:' + PORT + ',http://localhost:' + PORT,
   RESEND_FROM: process.env.RESEND_FROM || '',
@@ -48,10 +86,10 @@ const ENV = {
   WALL_ADMIN_TOKEN: process.env.WALL_ADMIN_TOKEN || 'local-admin-token',
 };
 if (MOCK !== 'nokey') ENV.RESEND_API_KEY = 're_local_test';
-/* WALL_NO_KV=1 模拟「Pages 里忘了绑定 SITE_KV」的线上形态，用来验收关闭态与 ?wallDebug=1 */
-if (process.env.WALL_NO_KV === '1') {
-  delete ENV.SITE_KV;
-  console.log('[mock] 未绑定 SITE_KV：/api/wall 将返回 open=false, reason=kv_not_bound');
+/* WALL_NO_DB=1 模拟「Pages 里忘了绑定 D1」的线上形态，用来验收关闭态 */
+if (process.env.WALL_NO_DB === '1' || process.env.WALL_NO_KV === '1') {
+  delete ENV.DB;
+  console.log('[mock] 未绑定 D1：/api/wall 将返回 open=false, reason=db_not_bound');
 }
 
 const REAL_FETCH = globalThis.fetch;
@@ -83,6 +121,12 @@ http.createServer(async (req, res) => {
         : req.method === 'POST' ? await handler(wallPost, req)
         : req.method === 'DELETE' ? await handler(wallDel, req)
         : await handler(wallOpt, req);
+      return send(res, r);
+    }
+    if (p === '/api/visits') {
+      const r = req.method === 'POST' ? await handler(visitsPost, req)
+        : req.method === 'GET' ? await handler(visitsGet, req)
+        : await handler(visitsOpt, req);
       return send(res, r);
     }
     if (p === '/api/deliver') {

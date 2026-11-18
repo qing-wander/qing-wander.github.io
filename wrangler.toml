@@ -1,0 +1,24 @@
+# ──────────────────────────────────────────────────────────────────────
+#  Cloudflare Pages 项目配置（仅用于本地 wrangler 命令与 D1 管理）
+# ──────────────────────────────────────────────────────────────────────
+#  说明：
+#   · 线上 Pages 项目 shenge-work 的绑定（KV / D1 / 环境变量）以控制台为准，
+#     本文件仅供 `wrangler d1 execute`、`wrangler pages dev` 等本地命令
+#     找到同名资源；GitHub 集成的自动构建不读本文件。
+#   · 正式部署仍走 `git push`（自动构建）或 ./scripts/deploy-pages.sh（兜底）。
+#   · functions/api/visits.js、wall.js 都通过 env.DB 访问 D1（表见 db/schema.sql）。
+# ──────────────────────────────────────────────────────────────────────
+
+name = "shenge-work"
+compatibility_date = "2025-01-01"
+pages_build_output_dir = "dist"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "portfolio-db"
+database_id = "022be169-a84e-4791-b2f2-ee4f9c4f17c8"
+
+# deliver.js 仍用 KV 做发信限额（写量可控：日上限 30 封 ≈ 90 写/天）
+[[kv_namespaces]]
+binding = "SITE_KV"
+id = "f5253a16b4d84a20a32c0cd497b1f269"

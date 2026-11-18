@@ -3,6 +3,9 @@ worker/.deploy-url
 worker/.wrangler/
 node_modules/
 
+# 本地 wrangler 缓存（wrangler d1 execute --local / pages dev 产生）
+.wrangler/
+
 # 部署日志（本地排查用，不入库）
 worker/*.log
 

@@ -11,23 +11,22 @@
      DELETE /api/wall {id} + X-Admin-Token     → 管理员删留言，返回第一页
      OPTIONS                                  → 204  CORS 预检
 
-   存储：KV（Pages 项目绑定的 SITE_KV）
-     wall:messages              JSON 数组，最新在前，最多留 CAP 条
-     wall:rl:<窗口号>:<ipHash>  固定时间窗内的 IP 计数（不存 IP 明文）
-     wall:day:<yyyymmdd>        全局每日计数
+   存储：D1（绑定名 DB，表结构见 db/schema.sql）
+     wall_messages     id / name / text / created_at，seq 负责排序与裁剪
+     rate_limits       bucket='wall:ip:<hash>' 或 'wall:day'，固定窗口计数
 
    环境变量（Cloudflare Pages → Settings → Variables）：
      ALLOWED_ORIGINS   可选，逗号分隔（默认 github.io / pages.dev / localhost）
      WALL_ADMIN_TOKEN  可选，管理删除令牌；未配置时 DELETE 一律 404
 
-   绑定：KV namespace 绑定名 SITE_KV（Settings → Functions → KV bindings）。
-   未绑定时：GET 返回 open=false + reason=kv_not_bound（前端显示「暂未开放」），
+   绑定：D1 数据库绑定名 DB（Settings → Functions → D1 bindings）。
+   未绑定时：GET 返回 open=false + reason=db_not_bound（前端显示「暂未开放」），
              POST / DELETE 返回 503。跑 scripts/wall-check.sh 可一键诊断。
 
-   设计取舍：KV 是「最终一致 + 非原子读改写」，极端并发下两条留言可能互相覆盖。
-   本函数在写前重读一次缩小竞争窗口，个人站点的量级足够；要严格不丢需换
-   Durable Objects（付费计划）。限流键按固定时间窗编号，避免被拒请求反复
-   刷新 TTL 把访客永久锁死。
+   迁移说明（2026-11-19）：原先存 KV 的 `wall:messages` 单条 JSON 数组，
+   每次留言都要整表重写，且 KV 免费额度只有 1,000 写/天；改 D1 后是一次
+   INSERT + 一次裁剪，并发下不再互相覆盖，分页也变成真正的 SQL 分页。
+   KV 里没有历史留言（迁库时实测为空），无需数据搬迁。
    ────────────────────────────────────────────────────────────────────── */
 
 const JSON_HEADERS = { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' };
@@ -112,70 +111,71 @@ function clean(s, max) {
     .slice(0, max).join('');
 }
 
-/* KV 里的历史数据可能被别的工具写坏，只把结构合法的条目交给前端 */
-function normalizeMessages(arr) {
-  return (Array.isArray(arr) ? arr : []).filter(function (m) {
-    return m && typeof m === 'object' && typeof m.text === 'string' &&
-      typeof m.id === 'string' && typeof m.ts === 'number';
-  });
-}
-
-async function readMessages(kv) {
-  if (!kv) return null;
-  try {
-    const raw = await kv.get('wall:messages');
-    return normalizeMessages(JSON.parse(raw || '[]'));
-  } catch (e) {
-    return [];
-  }
-}
-
-async function writeMessages(kv, arr) {
-  await kv.put('wall:messages', JSON.stringify(arr));
-}
-
-/* 分页视图：GET / POST / DELETE 返回同一形状，前端不用分情况处理 */
-function pageOf(messages, limit, offset) {
-  const page = messages.slice(offset, offset + limit);
-  return {
-    ok: true,
-    open: true,
-    messages: page,
-    total: messages.length,
-    limit: limit,
-    offset: offset,
-    hasMore: offset + page.length < messages.length,
-  };
-}
-
 function ipOf(request) {
   const xff = request.headers.get('CF-Connecting-IP') || request.headers.get('X-Forwarded-For') || '';
   return (xff.split(',')[0] || 'unknown').trim();
 }
 
-/* 限流键只留 IP 的 SHA-256 前 8 字节，KV 里不落明文 IP */
+/* 限流键只留 IP 的 SHA-256 前 8 字节，库里不落明文 IP */
 async function ipHash(request) {
   try {
     const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(ipOf(request)));
     return Array.from(new Uint8Array(buf)).slice(0, 8)
-      .map(function (b) { return b.toString(16).padStart(2, '0'); }).join('');
+      .map((b) => b.toString(16).padStart(2, '0')).join('');
   } catch (e) {
     return 'unknown';
   }
 }
 
-/* 固定窗口计数：先判断是否已达上限，只有放行才自增。
-   被拒请求不再写 KV，也就不会反复刷新 TTL 把访客永久锁死。 */
-async function gate(kv, key, limit, ttlSeconds) {
-  if (!kv) return true;
-  try {
-    const cur = Number(await kv.get(key)) || 0;
-    if (cur >= limit) return false;
-    await kv.put(key, String(cur + 1), { expirationTtl: Math.max(60, ttlSeconds) });
-    return true;
-  } catch (e) {
-    return true; /* KV 读写出错时不拦正常访客 */
-  }
+/* 固定窗口计数：条件 UPDATE 只在未达上限时自增，返回 null 表示被限。
+   被拒请求不再写库，也就不会把计数越堆越高、把访客永久锁死。 */
+async function gate(db, bucket, window, limit, ttlSeconds) {
+  const ttl = Math.max(60, ttlSeconds);
+  const expires = Date.now() + ttl * 1000;
+  const row = await db.prepare(
+    `INSERT INTO rate_limits (bucket, window, count, expires_at)
+     VALUES (?, ?, 1, ?)
+     ON CONFLICT (bucket, window) DO UPDATE SET
+       count = rate_limits.count + 1,
+       expires_at = excluded.expires_at
+     WHERE rate_limits.count < ?
+     RETURNING count`
+  ).bind(bucket, window, expires, limit).first();
+  return row ? Number(row.count) : null;
+}
+
+const COLS = 'id, name, text, created_at AS ts';
+
+/* 分页视图：GET / POST / DELETE 返回同一形状，前端不用分情况处理 */
+function pageOf(messages, total, limit, offset) {
+  const n = Number(total) || 0;
+  return {
+    ok: true,
+    open: true,
+    messages: messages,
+    total: n,
+    limit: limit,
+    offset: offset,
+    hasMore: offset + messages.length < n,
+  };
+}
+
+async function listPage(db, limit, offset) {
+  const rows = await db.prepare(
+    `SELECT ${COLS} FROM wall_messages ORDER BY seq DESC LIMIT ? OFFSET ?`
+  ).bind(limit, offset).all();
+  const cnt = await db.prepare('SELECT COUNT(*) AS n FROM wall_messages').first();
+  return pageOf(rows.results || [], cnt ? cnt.n : 0, limit, offset);
+}
+
+/* 裁剪到 CAP 条：只留最新 100 条，早期留言自动滚掉 */
+async function trim(db) {
+  await db.prepare(
+    `DELETE FROM wall_messages
+      WHERE seq < (SELECT MIN(seq) FROM (
+        SELECT seq FROM wall_messages ORDER BY seq DESC LIMIT ?
+      ))`
+  ).bind(CAP).run();
 }
 
 function safeEqual(a, b) {
@@ -193,28 +193,36 @@ export async function onRequestOptions({ request, env }) {
 
 export async function onRequestGet({ request, env }) {
   const cors = { 'Access-Control-Allow-Origin': '*', Vary: 'Origin' };
-  const messages = await readMessages(env.SITE_KV);
-  if (messages === null) {
-    /* 未绑定 KV：明确给出原因，站长可用 scripts/wall-check.sh 或 ?wallDebug=1 定位 */
+  const db = env.DB;
+  if (!db) {
+    /* 未绑定 D1：明确给出原因，站长可用 scripts/wall-check.sh 或 ?wallDebug=1 定位 */
     return json({
-      ok: true, open: false, reason: 'kv_not_bound', messages: [],
+      ok: true, open: false, reason: 'db_not_bound', messages: [],
       total: 0, limit: 0, offset: 0, hasMore: false,
     }, cors);
   }
 
   const url = new URL(request.url);
-  /* 轻量轮询：只回总数与最新一条的 id，不传正文，前端据此判断「有新留言」 */
-  if (url.searchParams.get('peek') === '1') {
-    const first = messages[0] || null;
-    return json({
-      ok: true, open: true, total: messages.length,
-      latest: first ? { id: first.id, ts: first.ts } : null,
-    }, cors);
-  }
 
-  const limit = intParam(url.searchParams.get('limit'), 1, MAX_LIMIT, DEFAULT_LIMIT);
-  const offset = intParam(url.searchParams.get('offset'), 0, CAP - 1, 0);
-  return json(pageOf(messages, limit, offset), cors);
+  try {
+    /* 轻量轮询：只回总数与最新一条的 id，不传正文，前端据此判断「有新留言」 */
+    if (url.searchParams.get('peek') === '1') {
+      const cnt = await db.prepare('SELECT COUNT(*) AS n FROM wall_messages').first();
+      const first = await db.prepare(
+        'SELECT id, created_at AS ts FROM wall_messages ORDER BY seq DESC LIMIT 1'
+      ).first();
+      return json({
+        ok: true, open: true, total: cnt ? cnt.n : 0,
+        latest: first ? { id: first.id, ts: first.ts } : null,
+      }, cors);
+    }
+
+    const limit = intParam(url.searchParams.get('limit'), 1, MAX_LIMIT, DEFAULT_LIMIT);
+    const offset = intParam(url.searchParams.get('offset'), 0, CAP - 1, 0);
+    return json(await listPage(db, limit, offset), cors);
+  } catch (e) {
+    return json({ ok: false, open: false, error: 'db_error' }, cors, 500);
+  }
 }
 
 export async function onRequestPost({ request, env }) {
@@ -224,8 +232,8 @@ export async function onRequestPost({ request, env }) {
     return json({ ok: false, error: 'origin_not_allowed' }, corsHeaders(origin, allow), 403);
   }
   const cors = corsHeaders(origin, allow);
-  const kv = env.SITE_KV;
-  if (!kv) return json({ ok: false, error: 'wall_not_configured', message: '留言墙存储未配置（Pages KV 绑定缺失）' }, cors, 503);
+  const db = env.DB;
+  if (!db) return json({ ok: false, error: 'wall_not_configured', message: '留言墙存储未配置（D1 绑定缺失）' }, cors, 503);
 
   let body = {};
   try { body = await request.json(); } catch (e) { body = null; }
@@ -244,46 +252,52 @@ export async function onRequestPost({ request, env }) {
   const win = Math.floor(now / IP_WINDOW_MS);
   const winEnd = (win + 1) * IP_WINDOW_MS;
   const dayStart = new Date(now);
-  const dayKey = 'wall:day:' + dayStart.toISOString().slice(0, 10);
+  const dayKey = dayStart.toISOString().slice(0, 10);
   const dayEnd = Date.UTC(dayStart.getUTCFullYear(), dayStart.getUTCMonth(), dayStart.getUTCDate() + 1);
 
-  const ipOk = await gate(kv, 'wall:rl:' + win + ':' + (await ipHash(request)), IP_LIMIT,
-    Math.ceil((winEnd - now) / 1000) + 60);
-  if (!ipOk) {
-    return json({
-      ok: false, error: 'rate_limited', message: '留言有点频繁，稍后再试',
-      retryAfter: Math.max(1, Math.ceil((winEnd - now) / 1000)),
-    }, cors, 429);
+  try {
+    const ipOk = await gate(db, 'wall:ip:' + (await ipHash(request)), String(win), IP_LIMIT,
+      Math.ceil((winEnd - now) / 1000) + 60);
+    if (ipOk === null) {
+      return json({
+        ok: false, error: 'rate_limited', message: '留言有点频繁，稍后再试',
+        retryAfter: Math.max(1, Math.ceil((winEnd - now) / 1000)),
+      }, cors, 429);
+    }
+    const dayOk = await gate(db, 'wall:day', dayKey, DAY_LIMIT,
+      Math.ceil((dayEnd - now) / 1000) + 3600);
+    if (dayOk === null) {
+      return json({ ok: false, error: 'rate_limited', message: '今日留言已达上限，明天再来' }, cors, 429);
+    }
+
+    /* 幂等兜底：前端禁用了按钮，但双击 / 网络重试 / 脚本直连仍可能重复提交 */
+    const dup = await db.prepare(
+      `SELECT 1 AS hit FROM wall_messages
+        WHERE name = ? AND text = ? AND created_at > ? LIMIT 1`
+    ).bind(name, text, now - DUP_WINDOW_MS).first();
+    if (dup) {
+      return json(Object.assign({ duplicate: true }, await listPage(db, DEFAULT_LIMIT, 0)), cors, 200);
+    }
+
+    const item = {
+      id: 'w' + now.toString(36) + Math.random().toString(36).slice(2, 7),
+      name: name,
+      text: text,
+      created_at: now,
+    };
+
+    const ins = await db.prepare(
+      'INSERT INTO wall_messages (id, name, text, created_at) VALUES (?, ?, ?, ?)'
+    ).bind(item.id, item.name, item.text, item.created_at).run();
+    if (!ins || !ins.success) {
+      return json({ ok: false, error: 'db_error' }, cors, 500);
+    }
+
+    await trim(db);
+    return json(await listPage(db, DEFAULT_LIMIT, 0), cors, 201);
+  } catch (e) {
+    return json({ ok: false, error: 'db_error' }, cors, 500);
   }
-  const dayOk = await gate(kv, dayKey, DAY_LIMIT, Math.ceil((dayEnd - now) / 1000) + 3600);
-  if (!dayOk) {
-    return json({ ok: false, error: 'rate_limited', message: '今日留言已达上限，明天再来' }, cors, 429);
-  }
-
-  let messages = await readMessages(kv) || [];
-
-  /* 幂等兜底：前端禁用了按钮，但双击 / 网络重试 / 脚本直连仍可能重复提交 */
-  const dup = messages.slice(0, 10).some(function (m) {
-    return m.name === name && m.text === text && (now - m.ts) < DUP_WINDOW_MS;
-  });
-  if (dup) {
-    return json(Object.assign({ duplicate: true }, pageOf(messages, DEFAULT_LIMIT, 0)), cors, 200);
-  }
-
-  const item = {
-    id: 'w' + now.toString(36) + Math.random().toString(36).slice(2, 7),
-    name: name,
-    text: text,
-    ts: now,
-  };
-
-  /* 写前重读：若期间有别人插了一条，以最新列表为基准合并，缩小 KV 非原子写的丢数据窗口 */
-  const latest = await readMessages(kv);
-  if (latest && latest.length !== messages.length) messages = latest;
-  const next = [item].concat(messages).slice(0, CAP);
-  await writeMessages(kv, next);
-
-  return json(pageOf(next, DEFAULT_LIMIT, 0), cors, 201);
 }
 
 export async function onRequestDelete({ request, env }) {
@@ -300,8 +314,8 @@ export async function onRequestDelete({ request, env }) {
     return json({ ok: false, error: 'forbidden' }, cors, 403);
   }
 
-  const kv = env.SITE_KV;
-  if (!kv) return json({ ok: false, error: 'wall_not_configured' }, cors, 503);
+  const db = env.DB;
+  if (!db) return json({ ok: false, error: 'wall_not_configured' }, cors, 503);
 
   let body = {};
   try { body = await request.json(); } catch (e) { body = {}; }
@@ -311,11 +325,13 @@ export async function onRequestDelete({ request, env }) {
   }
   if (!id) return json({ ok: false, error: 'bad_request', message: '缺少 id' }, cors, 400);
 
-  const messages = (await readMessages(kv)) || [];
-  const next = messages.filter((m) => m.id !== id);
-  if (next.length === messages.length) {
-    return json({ ok: false, error: 'not_found', message: '留言不存在' }, cors, 404);
+  try {
+    const del = await db.prepare('DELETE FROM wall_messages WHERE id = ?').bind(id).run();
+    if (!del || !del.meta || del.meta.changes === 0) {
+      return json({ ok: false, error: 'not_found', message: '留言不存在' }, cors, 404);
+    }
+    return json(await listPage(db, DEFAULT_LIMIT, 0), cors);
+  } catch (e) {
+    return json({ ok: false, error: 'db_error' }, cors, 500);
   }
-  await writeMessages(kv, next);
-  return json(pageOf(next, DEFAULT_LIMIT, 0), cors);
 }

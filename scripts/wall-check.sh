@@ -70,27 +70,28 @@ check() { # check <编号> <描述> <期望> <实际>
   fi
 }
 
-kv_guide() {
+db_guide() {
   cat <<'GUIDE'
   ─────────────────────────────────────────────────────────────
-  Cloudflare Pages 项目还没绑定 SITE_KV，函数会返回 open=false，
-  前端因此显示「留言墙暂未开放」。约 3 分钟即可修好：
+  Cloudflare Pages 项目还没绑定 D1 数据库 DB，函数会返回 open=false，
+  前端因此显示「留言墙暂未开放」。约 2 分钟即可修好：
 
-   1) Cloudflare Dashboard → Storage & Databases → KV → Create database
-      （名字随意，例如 site-kv；也可复用已有 namespace）
+   1) 确认 D1 库与表结构已就绪（一次性）：
+        npx wrangler d1 create portfolio-db
+        npx wrangler d1 execute portfolio-db --remote --file=db/schema.sql
    2) Workers & Pages → 项目 shenge-work → Settings → Functions
-      → KV namespace bindings → Add binding
-        Variable name : SITE_KV   ← 必须一字不差
-        KV database   : 选第 1 步创建的 namespace
-   3) 保存后必须重新部署才生效（变量 / 绑定改动不会热更新）：
-        ./scripts/deploy-pages.sh
-      或 Pages → Deployments → … → Retry deployment
+      → D1 database bindings → Add binding
+        Variable name  : DB              ← 必须一字不差
+        D1 database    : portfolio-db
+   3) 保存后必须重新部署才生效（绑定改动不会热更新）：
+        git push        （主链路，GitHub 集成自动构建）
+      或 ./scripts/deploy-pages.sh / Pages → Deployments → Retry deployment
    4) 重新跑：./scripts/wall-check.sh   直到出现 open=true
 
   可选变量（Settings → Variables and Secrets）：
     ALLOWED_ORIGINS    跨域白名单，默认已含 github.io / pages.dev / 本地端口
     WALL_ADMIN_TOKEN   管理删除令牌；不配则 DELETE 接口不暴露
-  详见 docs/resume-delivery.md
+  详见 docs/cloudflare-free-resources.md 与 docs/resume-delivery.md
   ─────────────────────────────────────────────────────────────
 GUIDE
 }
@@ -112,8 +113,8 @@ if [ "$OPEN" != "true" ]; then
   printf '%sFAIL%s  W3    留言墙已开放（open=true）\n       实际 open=%s reason=%s\n' \
     "$c_red" "$c_off" "${OPEN:-<空>}" "${REASON:-<空>}"
   FAIL=$((FAIL+1))
-  if [ "$REASON" = "kv_not_bound" ] || [ -z "$REASON" ]; then
-    kv_guide
+  if [ "$REASON" = "db_not_bound" ] || [ "$REASON" = "kv_not_bound" ] || [ -z "$REASON" ]; then
+    db_guide
   else
     echo "  reason=$REASON，先看 functions/api/wall.js 对应分支。"
   fi

@@ -1,4 +1,11 @@
-# Cloudflare Worker 配置 · 全站访客计数器
+# Cloudflare Worker 配置 · 全站访客计数器（备用实现，当前未启用）
+# ──────────────────────────────────────────────────────────────────────
+# 现状（2026-11-19）：线上计数已改走 Pages Function `/api/visits` + D1。
+#   原因：本 Worker 只能挂在 *.workers.dev（境内被墙，实测超时）或自有域名，
+#   而站长因支付问题暂未购买域名。代码与 KV 命名空间保留，等有域名时
+#   在 wrangler.toml 里加 routes（如 visits.你的域名/*）再 deploy 即可启用，
+#   前端 js/visitor-count.js 把 provider 切回 'worker' 并填 workerApi。
+# ──────────────────────────────────────────────────────────────────────
 # 部署前必须做：npx wrangler kv namespace create VISITS，把输出里的 id 填到下面
 name = "portfolio-visits"
 main = "index.mjs"

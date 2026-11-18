@@ -7,19 +7,27 @@
      · 本地环境（file:// / localhost / 127.0.0.1 / 192.168.x）：
         展示示例数字以便肉眼验收样式，不发请求、不取远程真实值
      · 线上 http(s)（部署环境）：
-        接 abacus 显示全站真实访问量，同一会话只计一次
+        接 Pages Function /api/visits（D1 存储），同一会话只计一次
 
    后端，改 CONFIG.provider 一行就能切：
-     · abacus（默认）—— 国内实测可达（200 / 0.6s），免费，无 SLA
-     · worker        —— 自己的 Cloudflare Worker，需要绑自有域名
+     · pages（默认）—— 自己站点上的 /api/visits，同源/白名单，D1 存储，
+                        不依赖任何第三方；pages.dev 是既有可用链路，境内可达
+     · abacus       —— 第三方免费计数（早期默认），国内可达但无 SLA，
+                        2026-11-19 实测其 /get 接口已返回 error，故降为备选
+     · worker       —— 独立 Cloudflare Worker，需要自有域名
                         （workers.dev 域名在境内被墙，实测超时）
    ────────────────────────────────────────────────────────────────────── */
 (function () {
   'use strict';
 
   var CONFIG = {
-    /* 'abacus'（默认，国内可达）或 'worker'（需 CONFIG.workerApi 配自有域名） */
-    provider: 'abacus',
+    /* 'pages'（默认）| 'abacus' | 'worker' */
+    provider: 'pages',
+
+    /* provider=pages 时的接口地址；留空则自动推导
+       · 当前页面在 *.pages.dev 上 → 同源 /api/visits
+       · 当前页面在 github.io 等别处 → 走备站域名（CORS 白名单已含 github.io） */
+    pagesApi: '',
 
     /* provider=worker 时必填，形如 https://visits.你的域名 */
     workerApi: '',
@@ -40,6 +48,12 @@
   var host = location.hostname;
   var IS_LOCAL = location.protocol === 'file:' || !host ||
     host === 'localhost' || host === '127.0.0.1' || host.indexOf('192.168.') === 0;
+
+  function pagesEndpoint() {
+    if (CONFIG.pagesApi) return CONFIG.pagesApi;
+    if (host.slice(-9) === '.pages.dev') return '/api/visits';
+    return 'https://shenge-work.pages.dev/api/visits';
+  }
 
   function alreadyCounted() {
     var store = window.sessionStorage;
@@ -97,7 +111,46 @@
     reveal(widget, CONFIG.demoValue, '本地预览 · 示例数字（线上展示全站真实访问量）');
   }
 
-  /* ── 线上：接远程真实访问量 ── */
+  /* ── 线上接口异常：不假装是真实数字，明确说明 ── */
+  function renderFallback(widget, why) {
+    reveal(widget, CONFIG.demoValue, '计数服务暂不可用（' + why + '）· 当前为示例数字');
+  }
+
+  /* ── 默认：站点自建 /api/visits（D1） ── */
+  function requestPages(widget, readOnly) {
+    var counted = readOnly === true || alreadyCounted();
+    var url = pagesEndpoint();
+    var opts = counted
+      ? { method: 'GET', credentials: 'omit', cache: 'no-store' }
+      : {
+        method: 'POST',
+        credentials: 'omit',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: visitorId() }),
+      };
+
+    fetch(url, opts)
+      .then(function (res) {
+        if (!res.ok) throw new Error('status ' + res.status);
+        return res.json();
+      })
+      .then(function (data) {
+        if (!data || data.ok === false) throw new Error(data && data.error || 'bad_payload');
+        if (!counted) markCounted();
+        var visitors = Number(data.visitors) || 0;
+        var total = Number(data.total) || 0;
+        var tip = '你是第 ' + visitors + ' 位访客 · 全站累计访问 ' + total + ' 次';
+        reveal(widget, visitors || total, tip);
+      })
+      .catch(function (err) {
+        /* 写入失败（限流/网络抖动）时降级为只读，仍把真实数字显示出来；
+           只读也失败才退回示例数字，避免把 0 或乱码当成真实访客数。 */
+        if (!counted) { requestPages(widget, true); return; }
+        renderFallback(widget, err && err.message ? err.message : '网络异常');
+      });
+  }
+
+  /* ── 备选：第三方 abacus ── */
   function requestAbacus(widget) {
     var counted = alreadyCounted();
     var path = (counted ? '/get/' : '/hit/') + CONFIG.abacusNamespace + '/' + CONFIG.abacusKey;
@@ -108,16 +161,18 @@
         return res.json();
       })
       .then(function (data) {
+        if (data && data.error) throw new Error('abacus_error');
         if (!counted) markCounted();
         var n = Number(data && (data.value !== undefined ? data.value : data.total));
+        if (!Number.isFinite(n)) throw new Error('no_value');
         reveal(widget, n, '全站累计访问 ' + n + ' 次 · 同一会话只计一次');
       })
       .catch(function () {
-        /* 线上请求失败：仍展示示例数字，保证样式可见、不空白 */
-        renderLocal(widget);
+        renderFallback(widget, 'abacus 不可用');
       });
   }
 
+  /* ── 备选：独立 Worker（需自有域名） ── */
   function requestWorker(widget) {
     var counted = alreadyCounted();
     var url = CONFIG.workerApi + (counted ? '/stats' : '/hit');
@@ -140,7 +195,7 @@
         var tip = '你是第 ' + visitors + ' 位访客 · 全站累计访问 ' + total + ' 次';
         reveal(widget, visitors || total, tip);
       })
-      .catch(function () { renderLocal(widget); });
+      .catch(function () { renderFallback(widget, 'Worker 不可用'); });
   }
 
   /* ── 启动 ── */
@@ -151,7 +206,9 @@
     renderLocal(widget);
   } else if (CONFIG.provider === 'worker') {
     requestWorker(widget);
-  } else {
+  } else if (CONFIG.provider === 'abacus') {
     requestAbacus(widget);
+  } else {
+    requestPages(widget);
   }
 })();
