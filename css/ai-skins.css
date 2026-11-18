@@ -49,6 +49,8 @@ body.has-ai-skin .ai-fab-tip { bottom: 240px; right: 18px; }
 .ai-skin-host { width: 100%; height: 100%; display: flex; align-items: flex-end; justify-content: center; }
 
 .ai-stage-name {
+  /* 名字标签已删除：保留 DOM 与 JS 赋值，仅隐藏，避免影响皮肤切换逻辑 */
+  display: none;
   position: absolute; left: 50%; bottom: 2px; transform: translateX(-50%);
   font-family: var(--font-mono); font-size: 9px; font-weight: 700;
   letter-spacing: .1em; white-space: nowrap;
