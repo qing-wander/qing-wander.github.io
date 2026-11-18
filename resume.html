@@ -736,7 +736,7 @@ body {
   <button class="btn btn-solid" onclick="window.print()">保存为 PDF（彩色）⎙</button>
   <button class="btn btn-blue" onclick="printBW()">打印 PDF（正式黑白）⎙</button>
   <button class="btn btn-green" id="btnLongImage" onclick="exportLongImage(this)">生成长图 ▤</button>
-  <button class="btn btn-deliver" id="btnDeliver" onclick="openDeliver()">发简历到邮箱 ✉</button>
+  <button class="btn btn-deliver" id="btnDeliver" data-analytics="resume_deliver_open" onclick="openDeliver()">发简历到邮箱 ✉</button>
   <a class="btn" href="index.html">← 返回作品集主页</a>
 </div>
 
@@ -744,7 +744,7 @@ body {
 <!-- ── 转发弹窗：浏览简历的人填收件人邮箱，把在线简历发到对方邮箱（无需下载附件） ── -->
 <div class="dl-overlay" id="dlOverlay" role="dialog" aria-modal="true" aria-labelledby="dlTitle">
   <div class="dl-panel">
-    <button class="dl-close" onclick="closeDeliver()" aria-label="关闭弹窗">×</button>
+    <button class="dl-close" onclick="closeDeliver()" data-analytics="resume_deliver_close" aria-label="关闭弹窗">×</button>
     <div class="dl-head">
       <span class="dl-badge">SHARE RESUME</span>
       <h3 id="dlTitle">把这份简历发到邮箱</h3>
@@ -770,11 +770,11 @@ body {
     </form>
     <div class="dl-foot">
       <span class="dl-tip" id="dlTip">邮件由系统发送，收件人点开链接即可查看完整简历</span>
-      <button class="btn btn-solid dl-send" id="dlSend" type="submit" form="dlForm">发送简历 ▶</button>
+      <button class="btn btn-solid dl-send" id="dlSend" data-analytics="resume_deliver_submit" type="submit" form="dlForm">发送简历 ▶</button>
     </div>
     <div class="dl-alt" id="dlAlt" hidden>
       <p>自动发信暂不可用，改用你的邮箱客户端发送（收件人已填好）：</p>
-      <a class="btn" id="dlMailto" href="#">用邮箱客户端发送 ↗</a>
+      <a class="btn" id="dlMailto" href="#" data-analytics="resume_deliver_mailto">用邮箱客户端发送 ↗</a>
     </div>
   </div>
 </div>
@@ -788,6 +788,11 @@ body {
    · 发送中防重复点击；成功后关窗 + 提示。 */
 var DL_STATE = { sending: false };
 var DL_EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
+/* 结果级埋点：只上报状态与数量，不上报邮箱等个人信息 */
+function dlTrack(name, data) {
+  if (typeof window.portfolioTrack === 'function') window.portfolioTrack(name, data || {});
+}
 
 function dlRecipients() {
   var raw = document.getElementById('dlTo').value || '';
@@ -885,6 +890,7 @@ document.getElementById('dlForm').addEventListener('submit', function (e) {
   tip.style.color = '';
 
   function showMailtoFallback(msg) {
+    dlTrack('resume_deliver_result', { status: 'fallback' });
     var a = document.getElementById('dlMailto');
     a.href = buildMailto();
     document.getElementById('dlAlt').hidden = false;
@@ -913,13 +919,16 @@ document.getElementById('dlForm').addEventListener('submit', function (e) {
     .then(function (res) {
       if (res.ok && res.body && res.body.ok) {
         var sentTo = (res.body.to || to).join('、');
+        dlTrack('resume_deliver_result', { status: 'success', recipients: to.length });
         closeDeliver();
         alert('已发送 ✉\n简历已发到：' + sentTo + '\n收件人点开邮件里的链接即可查看完整简历。');
       } else if (res.body && (res.body.error === 'resend_not_configured' || res.body.error === 'recipient_not_verified')) {
         showMailtoFallback(res.body.message || '自动发信暂不可用，请用邮箱客户端发送');
       } else if (res.body && res.body.error === 'rate_limited') {
+        dlTrack('resume_deliver_result', { status: 'rate_limited' });
         fail(res.body.message || '操作过于频繁，请稍后再试', 'dlTo');
       } else {
+        dlTrack('resume_deliver_result', { status: 'error' });
         fail((res.body && res.body.message) || '发送失败，请稍后再试', 'dlTo');
       }
     })
@@ -1094,6 +1103,6 @@ function exportLongImage(btn) {
 }
 </script>
 
-<script src="js/analytics.js" defer></script>
+<script src="js/analytics.js?v=20261119b" defer></script>
 </body>
 </html>

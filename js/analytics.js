@@ -23,7 +23,7 @@
     /* Cloudflare Web Analytics：控制台 → Web Analytics → 添加站点后，
        JS snippet 里 "token" 的值（32 位十六进制）。留空则不加载。
        它与 Umami 是两条独立的采集路，任一被浏览器插件拦掉都还有另一条。 */
-    cfBeaconToken: '',
+    cfBeaconToken: 'e8d13ee29814404299a92efbdea4b73e',
 
     /* 是否记录浏览深度（25% / 50% / 75% / 100%） */
     trackScrollDepth: true
@@ -63,7 +63,7 @@
   function loadCloudflareBeacon() {
     if (!CONFIG.cfBeaconToken) return;
     var s = document.createElement('script');
-    s.defer = true;
+    s.type = 'module';  /* 官方片段就是 module，天然 defer */
     s.src = 'https://static.cloudflareinsights.com/beacon.min.js';
     s.setAttribute('data-cf-beacon', JSON.stringify({ token: CONFIG.cfBeaconToken }));
     s.onerror = function () { /* 脚本不可达就放弃，静默 */ };
