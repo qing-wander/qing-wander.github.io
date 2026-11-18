@@ -238,6 +238,10 @@ export async function onRequestGet({ request, env }) {
 
   const url = new URL(request.url);
 
+  /* 诊断标志：告诉前端/自检脚本「人机校验是否已配置」，只回布尔、不暴露密钥。
+     若部署后这里长期是 false，说明 Pages 的 TURNSTILE_SECRET 没注入函数运行时。 */
+  const flags = { turnstile: !!env.TURNSTILE_SECRET };
+
   try {
     /* 轻量轮询：只回总数与最新一条的 id，不传正文，前端据此判断「有新留言」 */
     if (url.searchParams.get('peek') === '1') {
@@ -248,12 +252,13 @@ export async function onRequestGet({ request, env }) {
       return json({
         ok: true, open: true, total: cnt ? cnt.n : 0,
         latest: first ? { id: first.id, ts: first.ts } : null,
+        turnstile: flags.turnstile,
       }, cors);
     }
 
     const limit = intParam(url.searchParams.get('limit'), 1, MAX_LIMIT, DEFAULT_LIMIT);
     const offset = intParam(url.searchParams.get('offset'), 0, CAP - 1, 0);
-    return json(await listPage(db, limit, offset), cors);
+    return json(Object.assign(await listPage(db, limit, offset), flags), cors);
   } catch (e) {
     return json({ ok: false, open: false, error: 'db_error' }, cors, 500);
   }
