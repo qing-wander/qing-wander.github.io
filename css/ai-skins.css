@@ -69,9 +69,19 @@ body.has-ai-skin .ai-fab-tip { bottom: 240px; right: 18px; }
 }
 .ai-stage-menu-btn:hover { background: var(--orange); transform: rotate(45deg); }
 
-/* 面板展开时角色完整让位：PC / 移动端统一隐藏，关闭后平滑淡入。
-   旧的「挪到面板左侧」会与放大后居中的大窗叠在一起，已废弃。 */
+/* 面板展开时角色让位：
+   · 宽屏（≥780px）：角色挪到面板左侧继续露脸，首访第一眼就能看到它；
+   · 窄屏 / 移动端：面板基本占满宽度，仍整体隐藏，关闭后平滑淡入；
+   · 面板放大成遮罩大窗（.ai-panel.is-max）时一律隐藏，避免和居中大窗叠在一起。 */
 body.ai-panel-open .ai-stage { opacity: 0; pointer-events: none; }
+
+@media (min-width: 780px) {
+  body.ai-panel-open .ai-stage {
+    right: 418px;                     /* 18 面板右距 + 386 面板宽 + 14 间隙 */
+    opacity: 1; pointer-events: auto;
+  }
+  body.ai-panel-open:has(.ai-panel.is-max) .ai-stage { opacity: 0; pointer-events: none; }
+}
 
 /* ── 皮肤菜单小窗口 ───────────────────────────────────────── */
 .ai-skin-menu {
