@@ -11,6 +11,7 @@
    渲染前后逐字段比对，掉一个字段就直接 500，不返回半成品。
    ────────────────────────────────────────────────────────────── */
 import { render } from '../lib/resume-render.js';
+import { checkBullet, termsOf } from '../lib/bullet-guard.js';
 import siteData from '../lib/site-data.js';
 
 const KEEP_RATIO = 0.15;
@@ -18,6 +19,19 @@ const MAX_EXP_BULLETS = 3;
 const MAX_PROJECTS = 4;
 const MAX_PROJ_BULLETS = 3;
 const MAX_JD = 2000;
+const MAX_REWRITE = 18;      // 一次最多改这么多条，控住单次调用成本
+const REWRITE_SYSTEM = `你是简历文案微调器。任务：在不改变事实的前提下，让每条 bullet 更贴合目标 JD 的措辞。
+硬规则（违反即作废）：
+1. 不许新增任何数字、百分比、指标；原文的数字必须全部保留。
+2. 不许新增原文没有的技术名词、工具名、产品名、公司名。
+3. 原文的英文术语（如 Kafka、RAG、SLA）必须保留。
+4. 只能调整语序、动词、侧重点；不许删掉原文的核心事实点。
+5. 每条长度不超过原文字数 +12 个字符，不许写成两句以上。
+6. 只输出 JSON 数组，形如 [{"id":"exp-01-b1","text":"..."}]，不要解释、不要 markdown。`;
+
+const esc = (v) => String(v == null ? '' : v)
+  .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 
 const json = (body, status) => new Response(JSON.stringify(body), {
   status: status || 200,
@@ -83,10 +97,47 @@ function l0(resume) {
   });
 }
 
+const stripTags = (h) => String(h || '').replace(/<[^>]+>/g, '').replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>');
+
+/* 档案里出现过的英文术语全集：用来判定模型有没有凭空造技术栈 */
+function buildVocab() {
+  const set = new Set();
+  for (const t of termsOf(JSON.stringify(siteData))) set.add(t);
+  return set;
+}
+
+async function callWorker(env, messages, maxTokens) {
+  if (!env.KB_WORKER_URL || !env.KB_TOKEN) return { ok: false, reason: 'no-worker' };
+  const r = await fetch(`${env.KB_WORKER_URL.replace(/\/$/, '')}/chat`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-KB-Token': env.KB_TOKEN },
+    body: JSON.stringify({ messages, max_tokens: maxTokens, temperature: 0.2 }),
+  }).catch(() => null);
+  if (!r || !r.ok) return { ok: false, reason: 'worker-http' };
+  const d = await r.json().catch(() => ({}));
+  return d.ok ? { ok: true, text: d.text, ms: d.ms } : { ok: false, reason: d.error || 'worker-bad' };
+}
+
+function parseJsonArray(text) {
+  const s = String(text || '');
+  const start = s.indexOf('[');
+  const end = s.lastIndexOf(']');
+  if (start < 0 || end <= start) return null;
+  try {
+    const arr = JSON.parse(s.slice(start, end + 1));
+    return Array.isArray(arr) ? arr : null;
+  } catch (e) { return null; }
+}
+
 export async function onRequestPost({ request, env }) {
   let body = {};
   try { body = await request.json(); } catch (e) { return json({ ok: false, error: 'bad_json' }, 400); }
   const jd = String(body.jd || '').trim().slice(0, MAX_JD);
+  const wantRewrite = body.rewrite === true;
+  /* 改写要花模型 token，只允许带后台令牌的内部调用 */
+  if (wantRewrite && (!env.WALL_ADMIN_TOKEN || request.headers.get('X-Rewrite-Token') !== env.WALL_ADMIN_TOKEN)) {
+    return json({ ok: false, error: 'rewrite_forbidden', message: '改写需要后台令牌' }, 403);
+  }
   if (jd.length < 20) return json({ ok: false, error: 'jd_too_short', message: 'JD 至少 20 字' }, 400);
   if (!env.DB) return json({ ok: false, error: 'db_not_bound' }, 503);
 
@@ -139,6 +190,58 @@ export async function onRequestPost({ request, env }) {
   const byId = new Map(r.skills.map((g) => [g.id, g]));
   r.skills = skillOrder.map((id) => byId.get(id)).filter(Boolean);
 
+  /* ── 可选：按 JD 微调 bullet 文案（只改措辞，护栏逐条卡） ── */
+  let rewriteStats = { requested: wantRewrite, model: false, rewritten: 0, rejected: 0, chars_delta: 0, reasons: [] };
+  if (wantRewrite) {
+    const vocab = buildVocab();
+    const targets = [];
+    for (const exp of r.experience) for (const b of exp.bullets) targets.push({ id: b.id, text: b.plain || stripTags(b.html) });
+    for (const proj of r.projects) for (const b of proj.bullets) targets.push({ id: b.id, text: b.plain || stripTags(b.html) });
+    const list = targets.filter((t) => t.text.length >= 8).slice(0, MAX_REWRITE);
+
+    const prompt = `目标 JD:\n${jd}\n\n待改写的 bullet（id 与原文）：\n${JSON.stringify(list, null, 1)}`;
+    const call = await callWorker(env, [
+      { role: 'system', content: REWRITE_SYSTEM },
+      { role: 'user', content: prompt },
+    ], Math.min(2048, 160 + list.length * 90));
+
+    rewriteStats.requested = true;
+    if (!call.ok) {
+      rewriteStats.reason = call.reason;
+    } else {
+      rewriteStats.model = true;
+      const arr = parseJsonArray(call.text) || [];
+      const orig = new Map(list.map((t) => [t.id, t.text]));
+      const byId = new Map();
+      for (const item of arr) {
+        if (!item || typeof item.id !== 'string' || typeof item.text !== 'string') continue;
+        if (!orig.has(item.id)) continue;
+        byId.set(item.id, item.text);
+      }
+      let delta = 0;
+      const buckets = [
+        ...r.experience.flatMap((e) => e.bullets.map((b) => ({ b, kind: 'exp' }))),
+        ...r.projects.flatMap((p) => p.bullets.map((b) => ({ b, kind: 'proj' }))),
+      ];
+      for (const { b } of buckets) {
+        const o = orig.get(b.id);
+        const cand = byId.get(b.id);
+        if (!o || !cand) continue;
+        const verdict = checkBullet(o, cand, vocab);
+        if (verdict.ok && verdict.changed) {
+          b.html = esc(verdict.text);
+          b.plain = verdict.text;
+          rewriteStats.rewritten += 1;
+          delta += verdict.text.length - o.length;
+        } else if (!verdict.ok) {
+          rewriteStats.rejected += 1;
+          for (const why of verdict.reasons) if (!rewriteStats.reasons.includes(why.split(':')[0])) rewriteStats.reasons.push(why.split(':')[0]);
+        }
+      }
+      rewriteStats.chars_delta = delta;
+    }
+  }
+
   if (l0(r) !== before) {
     return json({ ok: false, error: 'l0_changed', message: '内部错误：L0 字段被改动，已中止' }, 500);
   }
@@ -165,6 +268,7 @@ export async function onRequestPost({ request, env }) {
       bytes: html.length,
       top_score: Number(top.toFixed(2)),
       skills_order: skillOrder,
+      rewrite: rewriteStats,
     },
   });
 }

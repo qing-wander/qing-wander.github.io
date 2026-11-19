@@ -15,12 +15,17 @@ export async function onRequestPost({ request, env }) {
   try { body = await request.json(); } catch (e) { return fail('bad_json', '请求体不是 JSON'); }
   const jd = String(body.jd || '').trim();
   if (jd.length < 20) return fail('jd_too_short', 'JD 至少 20 字');
+  const rewrite = body.rewrite === true;
 
   const base = String(env.MAIN_SITE_URL || 'https://shenge-work.pages.dev').replace(/\/$/, '');
   const r = await fetch(`${base}/api/variant`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ jd }),
+    headers: {
+      'Content-Type': 'application/json',
+      /* 改写要花模型 token，只有持后台令牌的调用才放行 */
+      ...(rewrite && env.WALL_ADMIN_TOKEN ? { 'X-Rewrite-Token': env.WALL_ADMIN_TOKEN } : {}),
+    },
+    body: JSON.stringify(rewrite ? { jd, rewrite: true } : { jd }),
   }).catch(() => null);
   if (!r) return json({ ok: false, error: 'upstream_unreachable', message: '主站接口不可达' }, 502);
 

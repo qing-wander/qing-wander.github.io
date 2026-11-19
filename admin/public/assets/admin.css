@@ -311,3 +311,15 @@ td.act { text-align: right; white-space: nowrap; }
   .table td.text { max-width: 220px; }
   .toolbar-note { margin-left: 0; }
 }
+
+/* 变体面板：改写开关 */
+.cfg-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 10px 0 4px;
+  font-size: 13px;
+  line-height: 1.5;
+  cursor: pointer;
+}
+.cfg-check input { margin-top: 2px; accent-color: #111; }

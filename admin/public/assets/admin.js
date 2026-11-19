@@ -412,7 +412,7 @@
     $('variantBtn').disabled = true;
     $('variantMeta').textContent = '生成中…（检索 + 选材 + 渲染）';
     var t0 = Date.now();
-    api('/api/variant', { method: 'POST', body: JSON.stringify({ jd: jd }) })
+    api('/api/variant', { method: 'POST', body: JSON.stringify({ jd: jd, rewrite: $('variantRewrite').checked }) })
       .then(function (d) {
         variantHtml = d.html || '';
         var s = d.stats || {};
@@ -429,6 +429,15 @@
         }).join('');
         $('variantStatsCard').hidden = false;
         $('variantOrder').textContent = '技能顺序：' + (s.skills_order || []).join(' → ');
+        var rw = s.rewrite || {};
+        if (rw.requested) {
+          var rwText = rw.model
+            ? '改写：' + rw.rewritten + ' 条通过护栏，' + rw.rejected + ' 条退回原文'
+              + (rw.chars_delta ? '（净增 ' + rw.chars_delta + ' 字）' : '')
+              + (rw.reasons && rw.reasons.length ? ' ｜ 拦截原因：' + rw.reasons.join('、') : '')
+            : '改写未生效：' + (rw.reason || '模型无响应') + '（已按原文输出）';
+          $('variantOrder').textContent = rwText;
+        }
         var name = 'resume-' + new Date().toISOString().slice(0, 10) + '.html';
         $('variantStat').textContent = name;
         $('variantSave').disabled = false;
