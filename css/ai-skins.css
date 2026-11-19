@@ -224,8 +224,10 @@ model-viewer.ai-mv {
   /* 画布整体下移，让角色站在窗口下部、上方留白；超出部分由舞台裁切 */
   position: absolute; left: 0; right: 0; top: 34%; width: 100%; height: 100%;
   background-color: transparent;
-  --poster-color: transparent; --progress-bar-color: var(--blue);
-  --progress-mask-color: rgba(var(--ink-rgb), .12);
+  --poster-color: transparent;
+  /* 进度条隐藏：刷新时蓝色进度条会横穿头像位置，视觉上像挡住角色 */
+  --progress-bar-color: transparent;
+  --progress-mask-color: transparent;
 }
 .ai-mv-hud {
   position: absolute; left: 4px; top: 6px; z-index: 3;

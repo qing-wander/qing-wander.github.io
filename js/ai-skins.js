@@ -14,6 +14,8 @@
 
   var BASE = 'assets/skins/';
   var STORE = 'cpai_skin_v2';
+  /* 性别切换模式：男女两套形象由隐藏按钮统一切换，不开放Public皮肤菜单 */
+  var GENDER_SWITCH_ONLY = true;
   /* 旧版 key 作废：清掉 2D 默认的残留，让所有访问者统一落到 3D 默认 */
   try { localStorage.removeItem('cpai_skin_v1'); } catch (e) {}
   var aiFab = document.getElementById('aiFab');
@@ -540,9 +542,20 @@
       meta: '混元 3D + Mixamo 骨骼 · 5 万面 / 0.85MB · 待机 / 挥手 / 盘腿坐',
       note: '混元 3D 直接导出 5 万面模型（自带完整 UV 与贴图），OBJ 上传 Mixamo 自动绑骨（41 根骨骼）一次成功，无需体素水密化与权重回灌：呼吸待机 Idle、双臂举高挥手 Wave、盘腿坐 Sit 三段真实骨骼动画，Draco + WebP 压缩后仅 0.85MB。首访落地先挥手，待机 10 秒盘腿坐；点击会再挥一次手。',
       create: create3D({
-        file: 'MaleRigged.glb?v=20261120H', name: '个人形象 3D', orbit: '0deg 78deg 80%', target: '0m 0.6m 0m', rotate: null, bob: true,
+        file: 'MaleRigged.glb?v=20261120H', name: '个人形象 3D', orbit: '0deg 78deg 100%', target: '0m 0.75m 0m', rotate: null, bob: true,
         clips: { idle: 'Idle', thinking: 'Idle', answer: 'Idle', greet: 'Wave', click: 'Wave' },
         seq: { intro: 'Wave', sit: 'Sit', sitAfter: 10000 },
+        hold: 2600
+      })
+    },
+    {
+      id: 'female3d', key: '2', group: '3D 真模型 · 本地 GLB', name: '温柔形象 3D',
+      meta: '混元 3D + Mixamo 骨骼 · 5 万面 / 0.82MB · 斯文问候 / 优雅翘腿坐',
+      note: '温柔斯文版：混元 3D 女性模型上传 Mixamo 自动绑骨，三段真实骨骼动画——Standing Greeting 斯文问候、Idle 呼吸待机、Sitting 优雅翘腿坐姿（双手交叠放膝）。Draco + WebP 压缩后 0.82MB。首访落地先问候，待机 10 秒翘腿端坐；点击会再问候一次。',
+      create: create3D({
+        file: 'FemaleRigged.glb?v=20261120K', name: '温柔形象 3D', orbit: '0deg 78deg 112%', target: '0m 0.92m 0m', rotate: null, bob: true,
+        clips: { idle: 'Idle', thinking: 'Idle', answer: 'Idle', greet: 'Greeting', click: 'Greeting' },
+        seq: { intro: 'Greeting', sit: 'Sit', sitAfter: 10000 },
         hold: 2600
       })
     }
@@ -648,7 +661,7 @@
   /* ─────────────── 菜单开关 ─────────────── */
 
   function openMenu() {
-    if (SKINS.length < 2) return;   /* 只剩一款皮肤，不再弹菜单 */
+    if (GENDER_SWITCH_ONLY || SKINS.length < 2) return;   /* 性别切换由隐藏按钮统一控制 */
     /* 换皮肤时先收起问答面板，避免两个浮层叠在一起 */
     if (!aiPanel.hidden) aiFab.click();
     menu.hidden = false;
@@ -679,7 +692,7 @@
   stage.addEventListener('keydown', function (e) {
     if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); aiFab.click(); }
   });
-  if (SKINS.length < 2) { stage.querySelector('#aiSkinBtn').style.display = 'none'; }
+  if (GENDER_SWITCH_ONLY || SKINS.length < 2) { stage.querySelector('#aiSkinBtn').style.display = 'none'; }
   stage.querySelector('#aiSkinBtn').addEventListener('click', function (e) {
     e.stopPropagation(); toggleMenu();
   });
@@ -718,6 +731,7 @@
     if (e.key === 'Escape') { closeMenu(); return; }
     var tag = (e.target && e.target.tagName || '').toLowerCase();
     if (tag === 'input' || tag === 'textarea' || e.target.isContentEditable) return;
+    if (GENDER_SWITCH_ONLY) return;   /* 数字键 / S 不绕过头像与模型的同步切换 */
     if (e.key >= '1' && e.key <= '9') { activate(SKINS[parseInt(e.key, 10) - 1].id); return; }
     if (e.key === 's' || e.key === 'S') { toggleMenu(); }
   });
