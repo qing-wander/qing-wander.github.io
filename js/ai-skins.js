@@ -534,93 +534,15 @@
 
   var SKINS = [
     {
-      id: 'robot3d', key: '1', group: '3D 真模型 · 本地 GLB', name: '机器人 ROBOT',
-      meta: 'Idle / Wave / ThumbsUp',
-      note: 'three.js 官方示例模型，CC0 / MIT，自带 14 段骨骼动画。待机循环 Idle，回答完自动比赞，点击跳跃。',
-      create: create3D({
-        file: 'RobotExpressive.glb', name: '机器人 ROBOT', orbit: '0deg 82deg 200%', fov: '26deg', rotate: null,
-        clips: { idle: 'Idle', thinking: 'Standing', answer: 'ThumbsUp', greet: 'Wave', click: 'Jump' }
-      })
-    },
-    {
-      id: 'fox3d', key: '2', group: '3D 真模型 · 本地 GLB', name: '狐狸 FOX',
-      meta: 'Survey / Walk / Run',
-      note: 'Khronos glTF 官方示例，CC0 + CC-BY 4.0。待机 Survey 环顾四周，思考时踱步，打招呼时小跑。',
-      create: create3D({
-        file: 'Fox.glb', name: '狐狸 FOX', orbit: '90deg 80deg 200%', fov: '30deg', rotate: null,
-        clips: { idle: 'Survey', thinking: 'Walk', answer: 'Run', greet: 'Run', click: 'Walk' }, hold: 1600
-      })
-    },
-    {
-      id: 'archive3d', key: '3', group: '3D 真模型 · 本地 GLB', name: '档案机甲 ARCHIVE',
-      meta: 'Idle / Wave / ThumbsUp · 14 段',
-      note: '和 1 号同一副骨骼、同一批 14 段动作，只把材质基色重调成站点档案配色：橙 #E8642A + 纸白 #F0E9DA + 墨黑 #141311，体积仍是 453KB。',
-      create: create3D({
-        file: 'Robot-archive.glb', name: '档案机甲 ARCHIVE', orbit: '0deg 82deg 200%', fov: '26deg', rotate: null,
-        clips: { idle: 'Idle', thinking: 'Standing', answer: 'ThumbsUp', greet: 'Wave', click: 'Jump' }
-      })
-    },
-    {
-      id: 'paper3d', key: '10', group: '3D 真模型 · 本地 GLB', name: '纸质档案精灵 PAPER',
-      meta: 'Idle / Wave / Jump · 自建 70KB',
-      note: '按站点四色（米白 #F0E9DA / 墨黑 #141311 / 橙 #E8642A / 粉 #F4739F）程序化生成的折纸低模：大头、圆点眼、粉腮、背后黑色标签夹，三段动作，体积 70KB。',
-      create: create3D({
-        file: 'PaperBot.glb', name: '纸质档案精灵', orbit: '0deg 82deg 172%', fov: '26deg', rotate: null,
-        clips: { idle: 'Idle', greet: 'Wave', click: 'Jump' }
-      })
-    },
-    {
-      id: 'cpbot', key: '4', group: '2D 本地角色 · 零外部依赖', name: 'CP.AI 档案机器人',
-      meta: 'SVG · 随主题换色',
-      note: '为本站配色定制的档案风机器人，零依赖、秒开。呼吸、眼睛扫描、天线摆动、状态灯闪烁。',
-      create: createStatic(SVG_CPBOT)
-    },
-    {
-      id: 'cat2d', key: '5', group: '2D 本地角色 · 零外部依赖', name: '猫宠 NYAN',
-      meta: 'SVG 状态动画',
-      note: 'Rive / Lottie 风格状态动画的本地 SVG 等效实现：6 秒呼吸循环、尾巴摆动、耳朵抖动、眨眼、抬爪。',
-      create: createStatic(SVG_CAT)
-    },
-    {
-      id: 'live2d', key: '6', group: '2D 本地角色 · 零外部依赖', name: '看板娘 ARCHIVIST',
-      meta: '分层视差 + 眨眼',
-      note: 'Live2D 风格的分层视差看板娘，鼠标跟随、眨眼、发丝摆动、回答时口型。本地 SVG 等效，规避 Cubism 授权与社区模型版权。',
-      create: createLive2D
-    },
-    {
-      id: 'deskpet', key: '7', group: '2D 本地角色 · 零外部依赖', name: '桌宠 SHIMEJI',
-      meta: '状态机 · 可拖拽',
-      note: 'Shimeji 桌宠状态机本地实现：随机走动 / 坐下 / 跳跃 / 挥手，还能用鼠标拖着玩。Shift 拖走不挡页面。',
-      create: createDeskPet
-    },
-    {
-      id: 'generated', key: '8', group: '实验 · 可扩展', name: '专属形象 GENERATED',
-      meta: 'AI 立绘 · 透明底',
-      note: 'WorkBuddy 图像生成产出的专属档案风机器人立绘（透明底 512px / 137KB），已抠掉背景与水印，配 CSS 呼吸与浮动。替换 assets/skins/generated.png 即可换形象。',
-      create: createGenerated
-    },
-    {
-      id: 'self2d', key: '11', group: '2D 本地角色 · 零外部依赖', name: '个人形象 ME',
-      meta: '粗描边立绘 · 透明底 115KB',
-      note: '把主页那张 PHOTO NO.001 头像向下推断成 5.5 头身全身立绘，粗黑描边 + 三色平涂和站点档案风格同一套线重，透明底无阴影，配呼吸、侧头思考、回答跳动。',
-      create: createSelfPet
-    },
-    {
-      id: 'self3d', key: '12', group: '3D 真模型 · 本地 GLB', name: '个人形象 3D',
+      id: 'self3d', key: '1', group: '3D 真模型 · 本地 GLB', name: '个人形象 3D',
       meta: '混元 3D + Mixamo 骨骼 · 45k 面 / 2.8MB · 待机 / 挥手 / 盘腿坐',
-      note: '主页 PHOTO NO.001 头像推的立绘做图生 3D，再用 Mixamo 自动绑骨（41 根骨骼）＋ Blender 把权重转到高模：呼吸待机 Idle、挥手 Wave、盘腿坐 Sit、三段真实骨骼动画（另备一段躺平暂不启用）。首访落地先挥手，待机 10 秒盘腿坐；点击会再挥一次手。',
+      note: '主页 PHOTO NO.001 头像推的立绘做图生 3D，再用 Mixamo 自动绑骨（41 根骨骼）＋ Blender 把权重转到高模：呼吸待机 Idle、挥手 Wave、盘腿坐 Sit 三段真实骨骼动画。首访落地先挥手，待机 10 秒盘腿坐；点击会再挥一次手。',
       create: create3D({
         file: 'PetSelfRigged.glb', name: '个人形象 3D', orbit: '0deg 78deg 150%', fov: '32deg', rotate: null, bob: true,
-        clips: { idle: 'Idle', thinking: 'Idle', answer: 'Idle', greet: 'Wave', click: 'Wave', lay: 'Lay' },
+        clips: { idle: 'Idle', thinking: 'Idle', answer: 'Idle', greet: 'Wave', click: 'Wave' },
         seq: { intro: 'Wave', sit: 'Sit', sitAfter: 10000 },
         hold: 2600
       })
-    },
-    {
-      id: 'talking', key: '9', group: '实验 · 可扩展', name: '实时数字人 LIVE',
-      meta: '说话波形 · 待接 API',
-      note: 'D-ID / HeyGen LiveAvatar 等实时数字人的本地等效皮肤：呼吸、口型、声波。真正接入需 API Key 与按分钟计费。',
-      create: createStatic(SVG_TALK)
     }
   ];
 
@@ -716,15 +638,15 @@
   function savedSkin() {
     try {
       var v = localStorage.getItem(STORE);
-      if (v === 'hybrid') v = 'archive3d';   /* 第 3 款已由 HYBRID 换成档案机甲，老访客平滑迁移 */
-      if (v && byId(v)) return v;
+      if (v && byId(v)) return v;   /* 只剩个人形象 3D，老访客的旧皮肤 id 统一回落 */
     } catch (e) {}
-    return 'archive3d';
+    return 'self3d';
   }
 
   /* ─────────────── 菜单开关 ─────────────── */
 
   function openMenu() {
+    if (SKINS.length < 2) return;   /* 只剩一款皮肤，不再弹菜单 */
     /* 换皮肤时先收起问答面板，避免两个浮层叠在一起 */
     if (!aiPanel.hidden) aiFab.click();
     menu.hidden = false;
@@ -755,6 +677,7 @@
   stage.addEventListener('keydown', function (e) {
     if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); aiFab.click(); }
   });
+  if (SKINS.length < 2) { stage.querySelector('#aiSkinBtn').style.display = 'none'; }
   stage.querySelector('#aiSkinBtn').addEventListener('click', function (e) {
     e.stopPropagation(); toggleMenu();
   });
