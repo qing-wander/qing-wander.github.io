@@ -191,7 +191,7 @@ export async function onRequestPost({ request, env }) {
   r.skills = skillOrder.map((id) => byId.get(id)).filter(Boolean);
 
   /* ── 可选：按 JD 微调 bullet 文案（只改措辞，护栏逐条卡） ── */
-  let rewriteStats = { requested: wantRewrite, model: false, rewritten: 0, rejected: 0, chars_delta: 0, reasons: [] };
+  let rewriteStats = { requested: wantRewrite, model: false, rewritten: 0, rejected: 0, chars_delta: 0, reasons: [], samples: [] };
   if (wantRewrite) {
     const vocab = buildVocab();
     const targets = [];
@@ -235,6 +235,10 @@ export async function onRequestPost({ request, env }) {
           delta += verdict.text.length - o.length;
         } else if (!verdict.ok) {
           rewriteStats.rejected += 1;
+          /* 留几条被拦的原样，方便人判断护栏是太松还是太紧 */
+          if (rewriteStats.samples.length < 5) {
+            rewriteStats.samples.push({ id: b.id, why: verdict.reasons.slice(0, 2).join('、'), before: o, after: cand });
+          }
           for (const why of verdict.reasons) if (!rewriteStats.reasons.includes(why.split(':')[0])) rewriteStats.reasons.push(why.split(':')[0]);
         }
       }
