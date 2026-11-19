@@ -73,6 +73,8 @@ Workers KV 迁到 D1（`portfolio-db`，4 张表），免费写额度从 1,000 �
 | T17 | 留言墙接入 Cloudflare Turnstile 人机校验（两档额度 + fail-open） | `已完成（2026-11-19）` | — | 留言墙 POST | 本文 §3.16 / [cloudflare-free-resources.md](cloudflare-free-resources.md) §7 |
 | T18 | D1 备份脚本 `scripts/backup-d1.sh`（本机存 SQL 快照，不进仓库） | `已完成（2026-11-19）` | — | 数据安全 | 本文 §3.16 / [cloudflare-free-resources.md](cloudflare-free-resources.md) §8 |
 | T19 | 可观测双路：Cloudflare Web Analytics 与 Umami 并行采集 | `已完成（2026-11-19）` | — | 访问统计兜底 | 本文 §3.17 / [cloudflare-free-resources.md](cloudflare-free-resources.md) §9 |
+| T20 | 角色皮肤收敛为单一 `self3d`（删 11 款皮肤与资源、隐藏换肤入口） | `已完成（2026-11-19）` | — | 右下角助手 | [pet-self3d-pipeline.md §6](pet-self3d-pipeline.md) |
+| T21 | 桌宠表现力升级：眨眼 / 口型 / 首屏体积≤1.2MB / 对称正盘腿 / 启用躺平 / 坐→站过渡 | `待办` | 中 | 右下角助手 | [pet-self3d-pipeline.md §8](pet-self3d-pipeline.md) |
 
 ---
 
