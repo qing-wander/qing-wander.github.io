@@ -81,9 +81,11 @@ async function rerank(query, items, env) {
     headers: { 'Content-Type': 'application/json', 'X-KB-Token': env.KB_TOKEN },
     body: JSON.stringify({ query, contexts: items.map((i) => i.text) }),
   }).catch(() => null);
-  if (!r || !r.ok) return null;
+  if (!r || !r.ok) return { __error: 'http ' + (r ? r.status : 'null') };
   const d = await r.json().catch(() => ({}));
-  if (!d.ok || !Array.isArray(d.scores) || d.scores.length !== items.length) return null;
+  if (!d.ok || !Array.isArray(d.scores) || d.scores.length !== items.length) {
+    return { __error: (d && d.error) || ('scores mismatch: got ' + (Array.isArray(d.scores) ? d.scores.length : 'none') + ' want ' + items.length) };
+  }
   const map = new Map();
   items.forEach((it, i) => map.set(it.id, Number(d.scores[i]) || 0));
   return map;
@@ -230,14 +232,17 @@ export async function retrieve(query, env, top = 5, opts = {}) {
   const wide = fusedAll.slice(0, Math.min(fusedAll.length, Math.max(top * 3, top + 2)));
   let order = wide;
   let reranked = false;
+  let rerankError = null;
   if (!opts.noRerank && wide.length > 1) {
-    const scores = await rerank(query, wide.map((f) => {
+    const scoreMap = await rerank(query, wide.map((f) => {
       const row = byId.get(f.id);
       return { id: f.id, text: `${row?.title || ''}\n${row?.text || ''}` };
-    }), env).catch(() => null);
-    if (scores) {
+    }), env).catch((e) => ({ __error: String(e && e.message || e) }));
+    if (scoreMap && !scoreMap.__error) {
       reranked = true;
-      order = [...wide].sort((a, b) => (scores.get(b.id) || 0) - (scores.get(a.id) || 0));
+      order = [...wide].sort((a, b) => (scoreMap.get(b.id) || 0) - (scoreMap.get(a.id) || 0));
+    } else if (scoreMap && scoreMap.__error) {
+      rerankError = scoreMap.__error;
     }
   }
   order = order.slice(0, top);
@@ -251,6 +256,7 @@ export async function retrieve(query, env, top = 5, opts = {}) {
     tokens,
     semantic: !!(sem && sem.length),
     reranked,
+    rerankError,
   };
 }
 
@@ -260,9 +266,11 @@ export async function onRequestGet({ request, env }) {
   const top = Math.min(Math.max(Number(url.searchParams.get('top') || 5), 1), 10);
   if (!q) return new Response(JSON.stringify({ ok: false, error: 'missing q' }), { status: 400, headers: JSON_HEADERS });
   const r = await retrieve(q, env, top);
+  const debug = url.searchParams.get('debug') === '1';
   return new Response(JSON.stringify({
     ok: true, q, semantic: r.semantic, reranked: r.reranked, tokens: r.tokens,
     count: r.hits.length,
+    ...(debug ? { rerank_error: r.rerankError } : {}),
     hits: r.hits.length ? r.hits : [],
     empty: r.hits.length === 0,   // true → 前端直接回「简历里没写这块」
   }), { headers: JSON_HEADERS });
