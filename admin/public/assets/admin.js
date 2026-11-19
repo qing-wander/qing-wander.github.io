@@ -257,6 +257,27 @@
         return '<li><span class="qa-q mono">' + esc(r.id) + '</span><span class="qa-n">' + r.n + ' 次</span></li>';
       }).join('') : '<li class="empty">还没有命中记录</li>';
 
+      api('/api/qa/topics?limit=200').then(function (t) {
+        var topics = (t && t.topics) || [];
+        $('qaTopics').innerHTML = topics.length ? topics.map(function (x) {
+          var badge = x.empty_rate >= 50 && x.count >= 2
+            ? '<span class="pill bad">空召回 ' + x.empty_rate + '%</span>'
+            : '<span class="pill">' + x.count + ' 次</span>';
+          return '<li><span class="qa-q" title="' + esc((x.examples || []).join(' / ')) + '">' + esc(x.topic) + '</span>' + badge + '</li>';
+        }).join('') : '<li class="empty">还没有足够的问题可聚类</li>';
+
+        var sug = (t && t.suggest) || [];
+        var box = $('qaSuggest');
+        if (sug.length) {
+          box.hidden = false;
+          box.innerHTML = '<strong>建议补切片：</strong>' + sug.map(function (x) {
+            return esc(x.topic) + '（' + x.count + ' 次，空召回 ' + x.empty_rate + '%）';
+          }).join(' · ');
+        } else {
+          box.hidden = true;
+        }
+      }).catch(function () { $('qaTopics').innerHTML = '<li class="empty">聚类接口不可用</li>'; });
+
       var rows = d.recent || [];
       $('qaRecent').innerHTML = rows.length ? rows.map(function (r) {
         return '<tr>' +

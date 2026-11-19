@@ -252,6 +252,12 @@ td.act { text-align: right; white-space: nowrap; }
 .pill.ok { border-color: #7B8F6B; color: #4B5A3F; }
 .pill.bad { border-color: var(--accent); color: var(--accent); }
 
+.qa-topics { margin-bottom: 14px; }
+.qa-suggest {
+  font-size: 12px; padding: 8px 10px; margin-bottom: 10px;
+  border: 1px solid var(--accent); color: var(--accent); background: #FFF7F4;
+}
+
 /* ── 模型与提示词配置 ── */
 .cfg-list { display: grid; gap: 14px; margin-top: 14px; }
 .cfg-card { border: 1px solid var(--line); background: #fff; padding: 16px; }
