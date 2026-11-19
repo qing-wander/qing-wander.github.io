@@ -483,7 +483,7 @@ HTML 42124 B，检索最高分 30.1，接口耗时 **0.5 s**，产出的 PDF **2
 
 ### 实测结论：金标集上 0 收益，还多 0.5 秒 → 默认关
 
-`scripts/eval_online_retrieval.mjs` 同一批 20 条金标题跑两遍：
+`scripts/eval_online_retrieval.mjs` 同一批 20 条金标 20 题跑两遍：
 
 | 指标 | 关精排 | 开精排 |
 |---|---|---|
