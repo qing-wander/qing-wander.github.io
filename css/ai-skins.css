@@ -289,3 +289,32 @@ model-viewer.ai-mv {
 .ai-stage[data-skin="deskpet"] .ai-skin-host { padding-bottom: 24px; }
 
 @media print { .ai-stage, .ai-skin-menu, .ai-stage-menu-btn { display: none !important; } }
+
+/* ── 本人形象立绘（透明底 PNG） ───────────────────────────── */
+.sk-pet-img {
+  max-width: 96%; max-height: 94%; object-fit: contain;
+  margin-bottom: 8px;
+  filter: drop-shadow(2px 3px 0 rgba(var(--ink-rgb), .18));
+  transform-origin: 50% 100%;
+  animation: skPetBob 3.8s ease-in-out infinite;
+}
+.sk-pet-shadow {
+  position: absolute; left: 50%; bottom: 8px; transform: translateX(-50%);
+  width: 52%; height: 9px; border-radius: 50%;
+  background: radial-gradient(ellipse at center, rgba(var(--ink-rgb), .3), rgba(var(--ink-rgb), 0) 72%);
+  pointer-events: none;
+}
+@keyframes skPetBob {
+  0%, 100% { transform: translateY(0) scaleY(1); }
+  50% { transform: translateY(-4px) scaleY(1.012); }
+}
+.ai-skin-host.is-thinking .sk-pet-img { animation: skPetTilt .85s ease-in-out infinite alternate; }
+@keyframes skPetTilt {
+  from { transform: rotate(-2.5deg) translateY(0); }
+  to { transform: rotate(2.5deg) translateY(-2px); }
+}
+.ai-skin-host.is-answer .sk-pet-img { animation: skPetHop .46s ease-in-out infinite alternate; }
+@keyframes skPetHop {
+  from { transform: translateY(0) scaleY(.99); }
+  to { transform: translateY(-9px) scaleY(1.02); }
+}

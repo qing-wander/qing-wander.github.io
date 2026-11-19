@@ -388,6 +388,25 @@
     };
   }
 
+  /* 本人形象：粗描边立绘（透明底 PNG），呼吸 / 侧头 / 跳动三态 */
+  function createSelfPet(host) {
+    var t = null;
+    host.innerHTML =
+      '<div class="sk-pet-shadow"></div>' +
+      '<img class="sk-pet-img" alt="个人形象 立绘" src="' + BASE + 'pet-self.png">';
+    return {
+      setState: function (s) {
+        host.classList.toggle('is-thinking', s === 'thinking');
+        if (s === 'answer' || s === 'greet' || s === 'click') {
+          host.classList.add('is-answer');
+          if (t) clearTimeout(t);
+          t = setTimeout(function () { host.classList.remove('is-answer'); }, s === 'click' ? 900 : 2400);
+        }
+      },
+      destroy: function () { if (t) clearTimeout(t); }
+    };
+  }
+
   /* ─────────────── 皮肤清单 ─────────────── */
 
   var SKINS = [
@@ -419,6 +438,15 @@
       })
     },
     {
+      id: 'paper3d', key: '10', group: '3D 真模型 · 本地 GLB', name: '纸质档案精灵 PAPER',
+      meta: 'Idle / Wave / Jump · 自建 70KB',
+      note: '按站点四色（米白 #F0E9DA / 墨黑 #141311 / 橙 #E8642A / 粉 #F4739F）程序化生成的折纸低模：大头、圆点眼、粉腮、背后黑色标签夹，三段动作，体积 70KB。',
+      create: create3D({
+        file: 'PaperBot.glb', name: '纸质档案精灵', orbit: '0deg 82deg 172%', fov: '26deg', rotate: null,
+        clips: { idle: 'Idle', greet: 'Wave', click: 'Jump' }
+      })
+    },
+    {
       id: 'cpbot', key: '4', group: '2D 本地角色 · 零外部依赖', name: 'CP.AI 档案机器人',
       meta: 'SVG · 随主题换色',
       note: '为本站配色定制的档案风机器人，零依赖、秒开。呼吸、眼睛扫描、天线摆动、状态灯闪烁。',
@@ -447,6 +475,12 @@
       meta: 'AI 立绘 · 透明底',
       note: 'WorkBuddy 图像生成产出的专属档案风机器人立绘（透明底 512px / 137KB），已抠掉背景与水印，配 CSS 呼吸与浮动。替换 assets/skins/generated.png 即可换形象。',
       create: createGenerated
+    },
+    {
+      id: 'self2d', key: '11', group: '2D 本地角色 · 零外部依赖', name: '个人形象 ME',
+      meta: '粗描边立绘 · 透明底 115KB',
+      note: '把主页那张 PHOTO NO.001 头像向下推断成 5.5 头身全身立绘，粗黑描边 + 三色平涂和站点档案风格同一套线重，透明底无阴影，配呼吸、侧头思考、回答跳动。',
+      create: createSelfPet
     },
     {
       id: 'talking', key: '9', group: '实验 · 可扩展', name: '实时数字人 LIVE',
