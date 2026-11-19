@@ -212,16 +212,100 @@
         var loading = host.querySelector('.ai-mv-loading');
         if (loading) loading.remove();
         host.appendChild(mv);
-        mv.addEventListener('load', function () { apply(state, true); });
+        mv.addEventListener('load', function () { if (cfg.seq) intro(); else apply(state, true); });
+        /* 一次性动作播完自动回到待机/坐姿（model-viewer 默认不循环） */
+        mv.addEventListener('finished', function () {
+          if (!cfg.seq) return;
+          if (restoreTimer) { clearTimeout(restoreTimer); restoreTimer = null; }
+          if (phase === 'intro' || phase === 'oneshot') {
+            if (restMode === 'sit') toSit(); else toIdle();
+          }
+        });
         mv.addEventListener('error', function () { fallback3D(host, '模型加载失败'); });
       }).catch(function () {
         if (disposed) return;
         fallback3D(host, '需用 http 预览');
       });
 
+      /* ── 骨骼动画序列（cfg.seq）：入场挥手 → 待机呼吸 → 停留后坐下 ── */
+      var seq = cfg.seq || null;
+      var phase = 'boot';        /* boot | intro | idle | sit | oneshot */
+      var sitTimer = null;
+      var restMode = 'idle';     /* 一次性动作结束后回到 idle 还是 sit */
+
+      function playClip(name) {
+        if (!name || !mv) return;
+        if (mv.animationName !== name) mv.animationName = name;
+        try { mv.play(); } catch (e) {}
+      }
+      function clearSit() {
+        if (sitTimer) { clearTimeout(sitTimer); sitTimer = null; }
+      }
+      function toIdle(restartTimer) {
+        clearSit();
+        phase = 'idle'; restMode = 'idle';
+        if (mv) mv.classList.remove('ai-mv-sit');
+        playClip(cfg.clips.idle);
+        if (restartTimer !== false && seq && seq.sit) {
+          sitTimer = setTimeout(function () { toSit(); }, seq.sitAfter || 10000);
+        }
+      }
+      function toSit() {
+        clearSit();
+        phase = 'sit'; restMode = 'sit';
+        if (mv) mv.classList.add('ai-mv-sit');
+        playClip(seq.sit);
+      }
+      function oneShot(name) {
+        if (!name || !mv) return;
+        clearSit();
+        var back = (phase === 'sit') ? 'sit' : 'idle';
+        phase = 'oneshot'; restMode = back;
+        if (back === 'sit') mv.classList.remove('ai-mv-sit');
+        playClip(name);
+        /* 兜底：万一 finished 事件没来，按时长回位 */
+        restoreTimer = setTimeout(function () {
+          if (phase !== 'oneshot') return;
+          if (restMode === 'sit') toSit(); else toIdle();
+        }, cfg.hold || 2600);
+      }
+      function applySeq(s, force) {
+        if (s === 'greet' || s === 'click') {
+          if (phase === 'boot') return;
+          oneShot(cfg.clips[s] || cfg.seq.intro);
+          return;
+        }
+        if (s === 'thinking' || s === 'answer') {
+          /* 说话时保持待机呼吸，不打断坐下状态 */
+          if (phase === 'boot' || phase === 'intro') return;
+          if (phase === 'oneshot') return;
+          if (phase !== 'sit') {
+            phase = 'idle'; mv.classList.remove('ai-mv-sit');
+            playClip(cfg.clips.idle);
+          }
+          return;
+        }
+        /* idle */
+        if (phase === 'boot' || phase === 'intro') return;
+        if (force || phase === 'oneshot') { if (restMode === 'sit') toSit(); else toIdle(); return; }
+        if (phase === 'idle') return;
+        toIdle();
+      }
+
+      function intro() {
+        if (!seq) { apply(state, true); return; }
+        phase = 'intro';
+        playClip(seq.intro || cfg.clips.greet);
+        restoreTimer = setTimeout(function () {
+          if (phase === 'intro') toIdle();
+        }, cfg.hold || 2600);
+      }
+      if (false) { /* noop */ }
+
       function apply(s, force) {
         state = s;
         if (!mv) return;
+        if (seq) { applySeq(s, force); return; }
         var clip = cfg.clips[s] || cfg.clips.idle;
         var transient = (s === 'answer' || s === 'greet' || s === 'click');
         if (mv.animationName !== clip || force) mv.animationName = clip;
@@ -232,7 +316,12 @@
       }
       return {
         setState: function (s) { apply(s); },
-        destroy: function () { disposed = true; if (restoreTimer) clearTimeout(restoreTimer); if (mv) mv.remove(); }
+        destroy: function () {
+          disposed = true;
+          if (restoreTimer) clearTimeout(restoreTimer);
+          clearSit();
+          if (mv) mv.remove();
+        }
       };
     };
   }
@@ -484,11 +573,13 @@
     },
     {
       id: 'self3d', key: '12', group: '3D 真模型 · 本地 GLB', name: '个人形象 3D',
-      meta: '混元 3D 图生模 · 30k 面 / 1.7MB',
-      note: '用主页 PHOTO NO.001 那张头像推出来的 5.5 头身立绘做图生 3D：橙色连帽衫、黑框眼镜、米白长裤、黑色帆布鞋全部还原，30k 三角面 + 512 贴图压到 1.7MB，待机上下轻浮。',
+      meta: '混元 3D + Mixamo 骨骼 · 45k 面 / 2.6MB · 3 段动作',
+      note: '主页 PHOTO NO.001 头像推的立绘做图生 3D，再用 Mixamo 自动绑骨（41 根骨骼）＋ Blender 把权重转到高模：呼吸待机 Idle、挥手 Wave、盘腿坐 Sit 三段真实骨骼动画。首访落地先挥手，待机 10 秒后坐下；点击会再挥一次手。',
       create: create3D({
-        file: 'PetSelf.glb', name: '个人形象 3D', orbit: '0deg 78deg 132%', fov: '32deg', rotate: null, bob: true,
-        clips: { idle: '', thinking: '', answer: '', greet: '', click: '' }
+        file: 'PetSelfRigged.glb', name: '个人形象 3D', orbit: '0deg 78deg 150%', fov: '32deg', rotate: null, bob: true,
+        clips: { idle: 'Idle', thinking: 'Idle', answer: 'Idle', greet: 'Wave', click: 'Wave' },
+        seq: { intro: 'Wave', sit: 'Sit', sitAfter: 10000 },
+        hold: 2600
       })
     },
     {
