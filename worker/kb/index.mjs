@@ -25,6 +25,7 @@ const MODEL = '@cf/baai/bge-m3';
    max_tokens=400 时正文直接为空；llama-3.3 只用 47 token、10.8 neurons 就出答案。
    若要换回 GLM，必须把 max_tokens 提到 1200+，否则答案会被思维链吃光。 */
 const DEFAULT_CHAT_MODEL = '@cf/meta/llama-3.3-70b-instruct-fp8-fast';
+const RERANK_MODEL = '@cf/baai/bge-reranker-base';
 
 const json = (data, status = 200) => new Response(JSON.stringify(data), { status, headers: JSON_HEADERS });
 
