@@ -191,7 +191,7 @@
       ensureModelViewer().then(function () {
         if (disposed) return;
         mv = document.createElement('model-viewer');
-        mv.className = 'ai-mv';
+        mv.className = 'ai-mv' + (cfg.bob ? ' ai-mv-bob' : '');
         mv.setAttribute('src', BASE + 'models/' + cfg.file);
         mv.setAttribute('alt', cfg.name + ' 3D 模型');
         mv.setAttribute('autoplay', '');
@@ -481,6 +481,15 @@
       meta: '粗描边立绘 · 透明底 115KB',
       note: '把主页那张 PHOTO NO.001 头像向下推断成 5.5 头身全身立绘，粗黑描边 + 三色平涂和站点档案风格同一套线重，透明底无阴影，配呼吸、侧头思考、回答跳动。',
       create: createSelfPet
+    },
+    {
+      id: 'self3d', key: '12', group: '3D 真模型 · 本地 GLB', name: '个人形象 3D',
+      meta: '混元 3D 图生模 · 30k 面 / 1.7MB',
+      note: '用主页 PHOTO NO.001 那张头像推出来的 5.5 头身立绘做图生 3D：橙色连帽衫、黑框眼镜、米白长裤、黑色帆布鞋全部还原，30k 三角面 + 512 贴图压到 1.7MB，待机上下轻浮。',
+      create: create3D({
+        file: 'PetSelf.glb', name: '个人形象 3D', orbit: '0deg 78deg 132%', fov: '32deg', rotate: null, bob: true,
+        clips: { idle: '', thinking: '', answer: '', greet: '', click: '' }
+      })
     },
     {
       id: 'talking', key: '9', group: '实验 · 可扩展', name: '实时数字人 LIVE',

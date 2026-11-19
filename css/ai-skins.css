@@ -318,3 +318,10 @@ model-viewer.ai-mv {
   from { transform: translateY(0) scaleY(.99); }
   to { transform: translateY(-9px) scaleY(1.02); }
 }
+
+/* 3D 立绘皮肤：无骨骼模型，用整体轻浮模仿呼吸 */
+model-viewer.ai-mv-bob { animation: skMvBob 3.6s ease-in-out infinite; }
+@keyframes skMvBob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
