@@ -369,3 +369,26 @@ api: 'https://portfolio-visits.xxx.workers.dev',
 **实测**：趋势接口 14 个点，今日 10 次问答 / 2 次空召回；JD 端点 `ok:true`，`meta.judge=model`，
 同一条 Agent JD 打 **71 分**（4 覆盖 / 3 部分 / 1 缺口）。注意同一份 JD 重复打分会有几分浮动，
 模型判定的方差写在这里，别把单次分数当绝对结论。
+
+## 后台第六阶段：GitHub OAuth 登录（2026-11-20 已上线）
+
+**App**：`shenge-work-admin`（创建于 GitHub → Settings → Developer settings → OAuth Apps），
+回调 `https://shenge-work-admin.pages.dev/api/auth/callback`，scope 只要 `read:user`。
+
+**流程**：`GET /api/auth/oauth` → 302 到 GitHub 授权页 → 回调 `/api/auth/callback`
+→ code 换 token → 拉 `/user` → 校验登录名在放行名单 → 签发原有 HMAC 会话 cookie（12h）→ 回 `/`。
+
+**state 防 CSRF**：`ts.nonce.HMAC(secret, "state|ts|nonce")`，10 分钟有效。
+签名密钥复用 `ADMIN_SESSION_SECRET`，不额外引入一套密钥管理。
+
+**保留口令登录**：OAuth 挂了不能把自己锁在门外。登录页两个入口并存，
+GitHub 回跳若失败会带 `?login=xxx`，前端把错误码翻译成人话（`not_allowed` / `bad_state` / `token_failed` 等）。
+
+**踩到的坑**：GitHub 授权页的「Authorize」按钮对新应用**一直是 disabled**
+（页面上写着 `Created less than a day ago`），常规点击点不动；
+提交后跳的是 `github.com/login/oauth/authorize` 的「OAuth application authorized」提示页而不是回调地址，
+再访问一次 `/api/auth/oauth`（此时用户已授权该 App）才会正常走 302 → 回调 → 登录态。
+所以**新建 OAuth App 后第一次授权要多走一次**，不是配置错了。
+
+**实测**：授权后控制台直接进入，`login_hidden=true / dash_hidden=false`，
+统计数据正常（PV 21 / 独立访客 21 / 留言设备 2）。

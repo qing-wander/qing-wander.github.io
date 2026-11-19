@@ -443,6 +443,24 @@
   }
 
   /* ── 启动 ── */
+  /* GitHub 登录回跳会带 ?login=xxx，把失败原因说人话（比静默回到登录页好排查） */
+  (function () {
+    var code = new URLSearchParams(location.search).get('login');
+    if (!code) return;
+    var map = {
+      not_allowed: '这个 GitHub 账号不在放行名单里（ADMIN_GITHUB_USERS）',
+      bad_state: '登录状态校验失败，请重试',
+      not_configured: '后台还没配 GITHUB_CLIENT_ID / SECRET',
+      token_failed: 'GitHub 换 token 失败，检查 client secret',
+      access_denied: '你取消了 GitHub 授权',
+      no_code: 'GitHub 没有回传 code',
+      exception: '登录过程出错，稍后重试',
+    };
+    var el = $('loginError');
+    if (el) el.textContent = map[code] || ('登录失败：' + code);
+    history.replaceState(null, '', '/');
+  })();
+
   api('/api/auth/me').then(function (d) {
     if (d.authed) { showDash(); loadAll(); } else { showLogin(); }
   }).catch(function () { showLogin(); });
