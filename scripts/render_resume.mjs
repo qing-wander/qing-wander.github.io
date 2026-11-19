@@ -186,6 +186,9 @@ function render(data) {
   return out.replace('<!DOCTYPE html>\n', '<!DOCTYPE html>\n' + BANNER + '\n');
 }
 
+export { render };
+
+function main() {
 const args = process.argv.slice(2);
 const data = JSON.parse(readFileSync(DATA_FILE, 'utf8'));
 const html = render(data);
@@ -205,3 +208,7 @@ if (args.includes('--stdout')) {
   writeFileSync(OUTPUT_FILE, html);
   console.log('[render_resume] 已生成 resume.html（' + Buffer.byteLength(html) + ' bytes）');
 }
+}
+
+const invokedDirectly = process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url);
+if (invokedDirectly) main();

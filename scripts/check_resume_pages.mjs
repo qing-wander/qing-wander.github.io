@@ -17,7 +17,9 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 
 const ROOT = resolve(import.meta.dirname, '..');
-const HTML = join(ROOT, 'resume.html');
+/* HTML_PATH 可指向变体文件：node scripts/check_resume_pages.mjs 前设
+   HTML_PATH=variants/agent-2026.html，就能单独校验变体的页数 */
+const HTML = process.env.HTML_PATH ? join(ROOT, process.env.HTML_PATH) : join(ROOT, 'resume.html');
 const MAX_PAGES = Number(process.env.MAX_PAGES || 2);
 const INFO_ONLY = process.argv.includes('--info');
 
@@ -68,7 +70,7 @@ try {
   const sizeKb = Math.round(buf.length / 1024);
 
   if (INFO_ONLY) {
-    console.log(`resume.html → PDF ${pages} 页，${sizeKb} KB（上限 ${MAX_PAGES} 页）`);
+    console.log(`${process.env.HTML_PATH || 'resume.html'} → PDF ${pages} 页，${sizeKb} KB（上限 ${MAX_PAGES} 页）`);
     process.exit(0);
   }
 

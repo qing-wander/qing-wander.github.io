@@ -1,0 +1,57 @@
+{
+  "slug": "agent-2026",
+  "jd_chars": 395,
+  "kb_version": "kb-5f9004b7",
+  "top_score": 65.767,
+  "keep": {
+    "experience": {
+      "exp-inmen": [
+        "exp-inmen-01"
+      ],
+      "exp-lessie": [
+        "exp-lessie-02",
+        "exp-lessie-03",
+        "exp-lessie-04"
+      ],
+      "exp-fangjike": [
+        "exp-fangjike-01"
+      ],
+      "exp-chowsang": [
+        "exp-chowsang-01",
+        "exp-chowsang-02"
+      ]
+    },
+    "projects": {
+      "proj-comein": [
+        "proj-comein-03",
+        "proj-comein-04",
+        "proj-comein-02"
+      ],
+      "proj-lessie": [
+        "proj-lessie-04",
+        "proj-lessie-01",
+        "proj-lessie-03"
+      ],
+      "proj-hicreator": [
+        "proj-hicreator-02",
+        "proj-hicreator-04",
+        "proj-hicreator-03"
+      ]
+    },
+    "skills": [],
+    "about": []
+  },
+  "dropped": [
+    {
+      "id": "exp-lessie-01",
+      "section": "experience",
+      "entity": "exp-lessie"
+    }
+  ],
+  "summary": {
+    "experiences": 4,
+    "projects_kept": 3,
+    "projects_total": 3,
+    "dropped_count": 1
+  }
+}

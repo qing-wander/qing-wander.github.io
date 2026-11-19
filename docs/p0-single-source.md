@@ -297,3 +297,24 @@ POST /api/chat  {"mode":"jd","jd":"…"}     或  POST /api/jd  {"jd":"…"}
 
 确定性判定保留为兜底（`meta.judge='auto'`），词频表 `kb_terms`（1610 词，随切片重建）也保留，
 后续 rerank 与「缺口推荐补材料」还会用。
+
+### 7.9 按 JD 生成简历变体（P2 第一步：选材）
+
+```bash
+node scripts/plan_variant.mjs   --jd jd.txt --slug agent-2026   # 选材单
+node scripts/render_variant.mjs --slug agent-2026               # 渲染变体
+HTML_PATH=variants/agent-2026.html node scripts/check_resume_pages.mjs --info  # 页数
+```
+
+选材逻辑：JD 当查询在 42 片切片里跑 BM25，按 `score ≥ 最高分 × 0.15` 保留；
+每段经历保底 2 条、最多 3 条 bullet，项目最多留 4 个、每个最多 3 条（2 页版面预算）。
+
+**为什么选材和改写拆两步**：选材是可控的（同一 JD → 同一份单子，可 diff 可审），
+改写交给 AI 单独一步，失败了只影响措辞，不会动到公司名/时间这类 L0 字段。
+
+**铁律由代码兑现，不靠提示词**：变体复用 `templates/resume.template.html`（样式零差异），
+渲染前后逐字段比对 `basics / education / 公司全称 / 岗位名 / 起止时间 / 项目名`，
+任一处变化直接 `exit 2` 并且不产出文件；有经历被删空也会红掉。
+
+实测（Agent JD）：22 → 16 条 bullet，项目 3/3，变体 PDF **2 页**，L0 全部未变。
+待做：变体里的个人简介/技能排序按 JD 改写（需接模型 + 注入 L0 约束提示词）。
