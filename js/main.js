@@ -1034,6 +1034,14 @@
       aiTipEl.className = 'ai-fab-tip';
       aiTipEl.textContent = AI_CONFIG.autoTip;
       aiFab.parentNode.appendChild(aiTipEl);
+      /* 打招呼气泡的小尾巴对准角色舞台水平中心：舞台在不同皮肤/视口下宽度不同，
+         用实测中心定位，避免气泡贴右缘、尾巴与角色错开 */
+      var stage = document.querySelector('.ai-stage');
+      if (stage && stage.getBoundingClientRect) {
+        var r = stage.getBoundingClientRect();
+        var centerFromRight = window.innerWidth - (r.left + r.width / 2);
+        aiTipEl.style.right = Math.max(8, centerFromRight - 22) + 'px';
+      }
     }
     function aiCancelAuto() {
       if (aiAutoTimer) { clearTimeout(aiAutoTimer); aiAutoTimer = null; }

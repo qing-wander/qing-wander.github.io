@@ -570,17 +570,9 @@
       return;
     }
 
-    if (ctaEl && ctaEl.parentNode) { ctaEl.style.display = ''; return; }
-    if (inlineEl && inlineEl.parentNode) {
-      inlineEl.parentNode.removeChild(inlineEl);
-      inlineEl = null;
-    }
-    ctaEl = document.createElement('div');
-    ctaEl.className = 'ai-voice-cta';
-    ctaEl.innerHTML = CTA_HTML;
-    document.body.appendChild(ctaEl);
-    bindCta(ctaEl);
-    if (!immediate) ctaEl.classList.add('is-late');
+    /* 浮动「听它说 / 先不用」语音引导气泡已移除（2026-11-20）：
+       面板未展开时不再弹出该引导，仅保留面板内的一点即播入口 */
+    return;
   }
 
   function hideCta() {
