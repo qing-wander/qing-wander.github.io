@@ -183,6 +183,31 @@ export_final.py # 从 merged_sit.blend 导出 raw glb
 
 ---
 
+## 6.1 坐姿错乱：根因定位与修复（2026-11-19 晚）
+
+**现象**：主页角色待机 10 秒进入 `Sit` 后，看起来是半蹲/悬空、腿部撕裂、脚仍在身体两侧，与 Mixamo 网页上预览的盘腿坐地不一致。
+
+**结论**：不是 Mixamo 绑骨失败，也不是「混元生成的角色比例与 Mixamo 标准骨架不匹配」。骨架与四段动作都是对的，**坏的是 `rig_merge2.py` 的权重转移**。
+
+**证据**（全部在成品 GLB 上量出来，不需要原始资产）：
+
+| 检查 | 结果 |
+|---|---|
+| FK 解算 `Sit` 骨骼 | Hips 高度 34 → 7.8、Head 88 → 57、膝盖前伸抬高、脚收回身下 —— 骨骼摆出的就是标准盘腿坐 |
+| `JOINTS_0`/`WEIGHTS_0` 统计 | **`LeftLeg`/`RightLeg`（小腿骨）主导顶点数为 0**，整段小腿被 `UpLeg` 与 `Foot` 瓜分；`LeftUpLeg` 顶点质心 y=-0.694（本该约 -0.57），系统性下移 |
+| `inverseBindMatrices` 反解交叉验证 | 顶点质心 ↔ bind 骨骼位置中位距离 0.066，坐标空间本身没错，错的是权重分配 |
+| 实拍对照 | Idle / Wave 完全正常，只有需要屈膝的 Sit / Lay 撕裂 —— 与「小腿骨无权重」完全吻合 |
+
+**为什么**：`rig_merge2.py` 把混元高模按 **bbox 等比缩放 + 脚底对齐** 后，用 KDTree 从 Mixamo 水密低模搬权重。两个网格的人体比例与关节高度并不一致，只对齐了总高和脚底，髋/膝/踝没有配准；KDTree 最近邻于是把「高模的小腿」匹配到了「低模的脚踝/脚掌」权重。站着腿是直的看不出来，一屈膝就穿帮。
+
+**修复**：`tools/character-pipeline/fix_skin_weights.py`。不需要 Blender、原始 FBX 或 `merged_sit.blend`（本机都没有，流水线当时是在另一台 Mac 上跑的），直接覆写 GLB 交错顶点块里的 `JOINTS_0`(@+0) 与 `WEIGHTS_0`(@+24) 四个 UBYTE：按顶点高度做高斯软分区重建 Hips/UpLeg/Leg/Foot/ToeBase，补回缺失的小腿段，髋部留 0.1 高度过渡带，上半身权重一字不改。**文件长度与 JSON chunk 完全不变**，材质、贴图、四段动画、inverseBindMatrices 全部原样保留。
+
+**结果**：重写 9,197 / 37,709 个顶点；`LeftLeg` 0→1,176、`RightLeg` 0→797 个主导顶点。四段动作实拍回归通过：Sit 呈正确屈膝折叠坐姿、Lay 躺卧正常、Idle/Wave 无新增变形。原 GLB 备份在 `%TEMP%/PetSelfRigged.original.glb`；`js/ai-skins.js` 与 `index.html` 资源版本号升到 `20261119M` 破 CDN 缓存。
+
+**给以后重跑流水线的人**：只要还用 `rig_merge2.py` 现成的 bbox 对齐 + KDTree 搬运，**重新下载多少次 FBX、重新 Auto-Rig 多少次都会复现同一个问题**。必须把配准改成关节级（用低模骨骼 bind 位置与高模对应关节做分段/非刚性对齐），或直接用本脚本在成品 GLB 上修权重。另外 `sit_tune3.py` 会把 `Sit` 首尾帧脚掌朝向强制改成站立朝向，若要与 Mixamo 预览逐帧一致，这一处也要一并回退。
+
+---
+
 ## 7. 复现与验收命令
 
 ```bash

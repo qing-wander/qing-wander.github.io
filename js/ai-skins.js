@@ -538,7 +538,7 @@
       meta: '混元 3D + Mixamo 骨骼 · 45k 面 / 2.8MB · 待机 / 挥手 / 盘腿坐',
       note: '主页 PHOTO NO.001 头像推的立绘做图生 3D，再用 Mixamo 自动绑骨（41 根骨骼）＋ Blender 把权重转到高模：呼吸待机 Idle、挥手 Wave、盘腿坐 Sit 三段真实骨骼动画。首访落地先挥手，待机 10 秒盘腿坐；点击会再挥一次手。',
       create: create3D({
-        file: 'PetSelfRigged.glb', name: '个人形象 3D', orbit: '0deg 78deg 150%', fov: '32deg', rotate: null, bob: true,
+        file: 'PetSelfRigged.glb?v=20261119M', name: '个人形象 3D', orbit: '0deg 78deg 150%', fov: '32deg', rotate: null, bob: true,
         clips: { idle: 'Idle', thinking: 'Idle', answer: 'Idle', greet: 'Wave', click: 'Wave' },
         seq: { intro: 'Wave', sit: 'Sit', sitAfter: 10000 },
         hold: 2600
