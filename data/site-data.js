@@ -56,10 +56,6 @@ window.SITE_DATA = {
           "dd": "陈培胜 / CHEN PEISHENG"
         },
         {
-          "dt": "性别 GENDER",
-          "dd": "男 MALE"
-        },
-        {
           "dt": "经验 EXP",
           "dd": "5 年 · 2021 至今"
         },

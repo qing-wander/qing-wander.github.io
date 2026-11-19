@@ -359,7 +359,7 @@ Origin: https://shenge-work.github.io
 | 位置 | 字段 | 值 | 作用 |
 |---|---|---|---|
 | `data/site-data.json` → `hero.gender` | 机器可读 | `"male"` / `"female"` | 自动切换的唯一依据，**不进知识库切片**（性别不参与问答语料） |
-| `hero.idcard.fields` | 展示项「性别 GENDER / 男 MALE」 | 男 MALE | 主页人才档案终端显示 |
+| `hero.idcard.fields`（主页档案卡） | 不单独列性别 | — | 头像已可辨性别，档案卡不重复展示 |
 | `resume.html` 头部基础信息 | 展示项「性别 男」 | 男 | 简历页与主站口径一致 |
 
 > 改性别只改 `hero.gender` 一处，`data/site-data.js` 快照由 `scripts/sync_site_data.py` 重建，页面与档案卡自动跟随，无需手改 JS。
