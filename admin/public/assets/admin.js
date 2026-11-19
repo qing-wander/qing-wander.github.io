@@ -378,7 +378,8 @@
       devices: ['tabDevices', 'panelDevices'],
       messages: ['tabMessages', 'panelMessages'],
       qa: ['tabQa', 'panelQa'],
-      config: ['tabConfig', 'panelConfig']
+      config: ['tabConfig', 'panelConfig'],
+      variant: ['tabVariant', 'panelVariant']
     };
     Object.keys(map).forEach(function (k) {
       var on = k === name;
@@ -395,6 +396,65 @@
   $('tabMessages').addEventListener('click', function () { switchTab('messages'); });
   $('tabQa').addEventListener('click', function () { switchTab('qa'); });
   $('tabConfig').addEventListener('click', function () { switchTab('config'); });
+  $('tabVariant').addEventListener('click', function () { switchTab('variant'); });
+
+  /* ── 按 JD 生成变体 ─────────────────────────────────────── */
+  var variantHtml = '';
+  var variantBusy = false;
+
+  function fmtNum(n) { return String(n == null ? '—' : n); }
+
+  $('variantBtn').addEventListener('click', function () {
+    if (variantBusy) return;
+    var jd = $('variantJd').value.trim();
+    if (jd.length < 20) { toast('JD 至少 20 字', true); return; }
+    variantBusy = true;
+    $('variantBtn').disabled = true;
+    $('variantMeta').textContent = '生成中…（检索 + 选材 + 渲染）';
+    var t0 = Date.now();
+    api('/api/variant', { method: 'POST', body: JSON.stringify({ jd: jd }) })
+      .then(function (d) {
+        variantHtml = d.html || '';
+        var s = d.stats || {};
+        var cards = [
+          ['bullet 数量', fmtNum(s.bullets_before) + ' → ' + fmtNum(s.bullets_after)],
+          ['删掉条目', fmtNum(s.bullets_dropped)],
+          ['项目', fmtNum(s.projects) + ' / ' + fmtNum(s.projects_total)],
+          ['HTML 体积', fmtNum(s.bytes) + ' B'],
+          ['检索最高分', fmtNum(s.top_score)],
+          ['耗时', ((Date.now() - t0) / 1000).toFixed(1) + ' s']
+        ];
+        $('variantStats').innerHTML = cards.map(function (c) {
+          return '<div class="stat"><span class="stat-num">' + esc(c[1]) + '</span><span class="stat-label">' + esc(c[0]) + '</span></div>';
+        }).join('');
+        $('variantStatsCard').hidden = false;
+        $('variantOrder').textContent = '技能顺序：' + (s.skills_order || []).join(' → ');
+        var name = 'resume-' + new Date().toISOString().slice(0, 10) + '.html';
+        $('variantStat').textContent = name;
+        $('variantSave').disabled = false;
+        $('variantMeta').textContent = '已生成，记得核对 2 页红线';
+        toast('变体已生成');
+      })
+      .catch(function (err) {
+        $('variantMeta').textContent = '生成失败：' + (err.message || '未知错误');
+        toast(err.message || '生成失败', true);
+      })
+      .then(function () {
+        variantBusy = false;
+        $('variantBtn').disabled = false;
+      });
+  });
+
+  $('variantSave').addEventListener('click', function () {
+    if (!variantHtml) return;
+    var blob = new Blob([variantHtml], { type: 'text/html; charset=utf-8' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'resume-' + new Date().toISOString().slice(0, 10) + '.html';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 3000);
+  });
 
   $('devSearchBtn').addEventListener('click', function () {
     state.dev.q = $('devSearch').value.trim();

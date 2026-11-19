@@ -63,6 +63,7 @@
     <button class="tab" id="tabMessages" type="button" role="tab" aria-selected="false">留言审核</button>
     <button class="tab" id="tabQa" type="button" role="tab" aria-selected="false">问答看板</button>
     <button class="tab" id="tabConfig" type="button" role="tab" aria-selected="false">模型与提示词</button>
+    <button class="tab" id="tabVariant" type="button" role="tab" aria-selected="false">生成变体</button>
   </div>
 
   <!-- 设备台账 -->
@@ -172,6 +173,28 @@
     </article>
 
     <div class="cfg-list" id="cfgList"><p class="empty">加载中…</p></div>
+  </section>
+
+  <!-- 按 JD 生成简历变体 -->
+  <section class="panel" id="panelVariant" role="tabpanel" hidden>
+    <div class="toolbar">
+      <span class="toolbar-note">贴一段 JD → 按命中度重新选材，产出与正式简历同版式的变体。只删不改文案，基本信息 / 教育 / 公司名 / 时间一律不动。</span>
+    </div>
+    <article class="cfg-card">
+      <div class="cfg-head"><h2>目标岗位 JD</h2><span class="pill" id="variantStat">空</span></div>
+      <p class="cfg-note">至少 20 字。生成后先核对下方统计，确认选材合理再下载。</p>
+      <textarea class="cfg-textarea" id="variantJd" rows="8" placeholder="把岗位职责 + 任职要求贴进来…"></textarea>
+      <div class="cfg-actions">
+        <span class="toolbar-note" id="variantMeta">尚未生成</span>
+        <button class="btn" id="variantBtn" type="button">生成变体</button>
+        <button class="btn btn-ghost" id="variantSave" type="button" disabled>下载 HTML</button>
+      </div>
+    </article>
+    <article class="cfg-card" id="variantStatsCard" hidden>
+      <div class="cfg-head"><h2>选材结果</h2></div>
+      <div class="stat-grid" id="variantStats"></div>
+      <p class="cfg-note" id="variantOrder">技能顺序：—</p>
+    </article>
   </section>
 
   <footer class="dash-foot">

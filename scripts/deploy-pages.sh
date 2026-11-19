@@ -39,6 +39,9 @@ done
 
 trap 'rm -rf "$STAGE"' EXIT
 
+# Functions 侧要渲染简历变体，模板/数据必须先嵌入（生成物，勿手改）
+node scripts/embed_assets.mjs
+
 echo "=== ① 收集静态资源 + Pages Functions"
 for item in index.html resume.html css js data images videos assets favicon-64.png favicon.png functions; do
   if [ ! -e "$item" ]; then

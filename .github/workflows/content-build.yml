@@ -21,6 +21,8 @@ on:
       - 'templates/resume.template.html'
       - 'resume.html'
       - 'scripts/render_resume.mjs'
+      - 'scripts/embed_assets.mjs'
+      - 'templates/resume.template.html'
       - 'scripts/validate_content.mjs'
       - 'scripts/sync_site_data.py'
       - '.github/workflows/content-build.yml'
@@ -30,6 +32,8 @@ on:
       - 'templates/resume.template.html'
       - 'resume.html'
       - 'scripts/render_resume.mjs'
+      - 'scripts/embed_assets.mjs'
+      - 'templates/resume.template.html'
       - 'scripts/validate_content.mjs'
       - 'scripts/check_resume_pages.mjs'
   workflow_dispatch:
@@ -56,6 +60,10 @@ jobs:
 
       - name: 生成物漂移检查
         run: |
+          if ! node scripts/embed_assets.mjs --check; then
+            echo "::error::functions/lib 与 templates/·data/ 不一致。请运行 node scripts/embed_assets.mjs"
+            exit 1
+          fi
           if ! node scripts/render_resume.mjs --check; then
             echo "::error file=resume.html::resume.html 与 data/site-data.json 不一致。请运行 node scripts/render_resume.mjs 重新生成，不要手改生成物。"
             exit 1
