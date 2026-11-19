@@ -117,8 +117,60 @@ Mixamo 素材可免费用于个人与商业**项目**，但不允许把素材本
 - 源模型：`assets/character-views/model/male/male50k.glb`（29MB，50k 原始）。
 - 中间：`MaleRigged50K_raw.glb`（31MB）、`MaleRigged50K_opt.glb`（0.87MB 成品）。
 - 动画素材：`assets/character-views/model/male/mixamo-downloads/` 下的 `Idle.fbx`（Breathing Idle）/ `Wave.fbx`（双臂挥手）/ `Sit.fbx`（盘腿坐）。
-- 站点成品：`assets/skins/models/MaleRigged.glb`（0.87MB）。
+- 站点成品：`assets/skins/models/MaleRigged.glb`（压缩后 0.87MB；第 9 节重做后为 0.85MB）。
 
-## 7. 原文关键术语速查
+## 9. 踩坑修复：模型糊成一团 / 无纹理（2026-11-20 三次重做，最终版）
+
+**症状**：50K 角色上线后浏览器里躺倒、折叠成一团、无纹理、只显示下半身。
+
+**根因（两个叠加）**：
+1. 50K 这轮**错误复用了 500K 的"代理→高模权重转移"脚本** `mixamo_proxy_to_highpoly.py`：它把躺倒朝向的源 `male50k.glb`（高度在 Z 轴负向、模型是躺的）当高模，按 bbox 对齐后把权重转移过去，网格拓扑朝向与直立骨架不匹配 → 蒙皮糊成一团。判据：`Hips.head_local` 高度错落在 Y 轴 `[0.001,0.591,0.005]`，蒙皮包围盒宽高倒置 `[68,110,33]`。
+2. Mixamo 下载的动画 FBX **自带蒙皮网格但不带材质/贴图**（灰模），直接导出会全白。
+
+**正解（最终采用，大幅简化）**：50K 是"直接上传最终模型绑骨"，Mixamo 每个动画 FBX 都自带完整蒙皮网格（34,485 顶点 / 5 万面）+ 权重，无需任何高模替换或权重转移。
+- 新脚本 `tools/character-pipeline/mixamo_fbx_nla_to_glb.py`：只用 `Idle.fbx` 的基础网格+骨架，其余 FBX 只取 Action 挂同一骨架，NLA tracks 导出 Idle/Wave/Sit。判据：`Hips.head_local=[0.001,-0.005,0.591]`（高度在 Z），蒙皮包围盒 `[44.5,27.5,112.6]` 标准直立人形。
+- 贴图找回：FBX 有 UV（`node_0DiffuseUVLayer`）且与源 `male50k.glb` 的 UV **逐顶点 100% 一致**，故从源 GLB 提取材质（`Material.001`，3 张 4096 贴图）按 UV 贴回 FBX 网格。材质用 `/tmp/src50k_mat.blend` 中转（脚本 `--material-blend` 参数）。
+- 压缩后 **0.85MB**（draco + webp，4096→2048），三动画 + 41 骨骼 + 3 张 WebP 贴图齐全。
+- **验证法**：Blender 读 `Hips.head_local` 高度必须在 Z 轴（站立 Z≈0.59）；蒙皮包围盒高≈112、宽≈45、厚≈28。若宽高倒置或 Hips 高度在 Y 轴，即为朝向错误。
+- 浏览器里"只看到下半身"是页面 AI 助手气泡遮挡了上半身，非模型问题。
+
+## 10. 网页端取景：让角色站满小窗口（2026-11-20 定稿）
+
+模型本身修好后，右下角 3D 小舞台仍有三个递进的显示问题：站立时**头部被水平裁掉**、角色**太小**、以及要求角色**站在窗口下部**（脚约在窗口 85% 高度，上方留白）。
+
+### 10.1 先排掉的错误方向
+
+| 试过的做法 | 结果 | 原因 |
+|---|---|---|
+| 放大 `.ai-stage` 容器 | 无效 | model-viewer 里模型占比由相机决定，与容器像素无关（放大只提升清晰度） |
+| `field-of-view: 32deg` | 反而更容易裁 | 收窄视角等于把模型放大 ~1.4 倍，头顶溢出 |
+| `camera-orbit` 距离 200% → 150% | 只是变小，仍裁头 | 距离只管远近，不改视线中心 |
+| `camera-target` 用 `0.5m / 0.6m / 1.2m` | 几乎无位移；负值画面全空 | **该 GLB 实际世界尺寸约 11387 单位**（节点 scale=100 × 厘米坐标），米值相对它趋近 0；Y 为负会被 clamp，把相机塞进模型内部 |
+
+### 10.2 定稿方案：CSS 画布下移 + 相机距离
+
+- `model-viewer.ai-mv`：`position: absolute; left/right: 0; top: 34%; width: 100%; height: 100%` —— 画布整体下移 34%，角色自然落在窗口下部、上方留白。
+- `.ai-stage-actor`：`overflow: hidden` —— 裁掉溢出画布的部分（原来 `visible` 会溢出到气泡区）。
+- `camera-orbit: '0deg 78deg 80%'` —— 80% 是"不裁头前提下最大"的距离。
+- `camera-target: '0m 0.6m 0m'` 保留但只作大致居中，**不作为定位手段**。
+- 窗口 `.ai-stage` 248×320 → **280×360**（移动端 178×230 → 196×252）。
+
+### 10.3 实测数据（280×360 容器，脚在窗口的高度比例）
+
+| orbit 距离 | 画布下移 | 效果 |
+|---|---|---|
+| 100% | 0% | 完整但偏小，脚在 65% |
+| 90% | 26% | 完整，脚在 78% |
+| **80%** | **34%** | **完整，脚在 85–88%（采用）** |
+| 72% | 38% | 发顶开始被切 |
+| 68% | — | 裁掉半张脸 |
+
+### 10.4 调参方法论（可复用）
+
+不要靠猜参数。建一个临时 `_camtest.html`，用同一模型并排渲染多组参数，用内置浏览器截图对比，一次定位最优档位；确认后写入主站、删掉测试页。注意同时验证三段动画（Idle / Wave 双臂举高 / Sit 盘腿坐）都不裁切——**Wave 举臂是最容易超框的姿态**。
+
+对应文件：`css/ai-skins.css`（画布定位、窗口尺寸、overflow）、`js/ai-skins.js`（`orbit` / `target` 配置与兜底值）、`index.html`（CSS/JS 缓存戳）。
+
+## 11. 原文关键术语速查（附录）
 
 `Auto Rigging` · `T Pose / A Pose` · `NEXT` · `DOWNLOAD` · `FBX Binary` · `With Skin` · `Keyframe Reduction` · `Root Motion` · `Enable Root Motion` · `Force Root Lock` · `Additive`
