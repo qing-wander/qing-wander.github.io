@@ -396,7 +396,7 @@
       meta: 'Idle / Wave / ThumbsUp',
       note: 'three.js 官方示例模型，CC0 / MIT，自带 14 段骨骼动画。待机循环 Idle，回答完自动比赞，点击跳跃。',
       create: create3D({
-        file: 'RobotExpressive.glb', name: '机器人 ROBOT', orbit: '0deg 82deg 200%', fov: '26deg', rotate: '10deg',
+        file: 'RobotExpressive.glb', name: '机器人 ROBOT', orbit: '0deg 82deg 200%', fov: '26deg', rotate: null,
         clips: { idle: 'Idle', thinking: 'Standing', answer: 'ThumbsUp', greet: 'Wave', click: 'Jump' }
       })
     },
@@ -414,7 +414,7 @@
       meta: 'Idle / Wave / ThumbsUp · 14 段',
       note: '和 1 号同一副骨骼、同一批 14 段动作，只把材质基色重调成站点档案配色：橙 #E8642A + 纸白 #F0E9DA + 墨黑 #141311，体积仍是 453KB。',
       create: create3D({
-        file: 'Robot-archive.glb', name: '档案机甲 ARCHIVE', orbit: '0deg 82deg 200%', fov: '26deg', rotate: '10deg',
+        file: 'Robot-archive.glb', name: '档案机甲 ARCHIVE', orbit: '0deg 82deg 200%', fov: '26deg', rotate: null,
         clips: { idle: 'Idle', thinking: 'Standing', answer: 'ThumbsUp', greet: 'Wave', click: 'Jump' }
       })
     },
