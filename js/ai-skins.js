@@ -196,7 +196,7 @@
         mv.setAttribute('alt', cfg.name + ' 3D 模型');
         mv.setAttribute('autoplay', '');
         mv.setAttribute('animation-name', cfg.clips.idle);
-        mv.setAttribute('animation-crossfade-duration', '280');
+        mv.setAttribute('animation-crossfade-duration', cfg.seq ? '620' : '280');
         /* 四足动物固定侧面视角更好看，靠骨骼 idle 动画提供活动；人形/机器人可缓慢自转 */
         if (cfg.rotate) {
           mv.setAttribute('auto-rotate', '');
@@ -244,7 +244,7 @@
       function toIdle(restartTimer) {
         clearSit();
         phase = 'idle'; restMode = 'idle';
-        if (mv) mv.classList.remove('ai-mv-sit');
+        if (mv) { mv.classList.remove('ai-mv-sit'); if (cfg.bob) mv.classList.add('ai-mv-bob'); }
         playClip(cfg.clips.idle);
         if (restartTimer !== false && seq && seq.sit) {
           sitTimer = setTimeout(function () { toSit(); }, seq.sitAfter || 10000);
@@ -253,7 +253,7 @@
       function toSit() {
         clearSit();
         phase = 'sit'; restMode = 'sit';
-        if (mv) mv.classList.add('ai-mv-sit');
+        if (mv) { mv.classList.add('ai-mv-sit'); mv.classList.remove('ai-mv-bob'); }
         playClip(seq.sit);
       }
       function oneShot(name) {
@@ -261,7 +261,7 @@
         clearSit();
         var back = (phase === 'sit') ? 'sit' : 'idle';
         phase = 'oneshot'; restMode = back;
-        if (back === 'sit') mv.classList.remove('ai-mv-sit');
+        if (back === 'sit') { mv.classList.remove('ai-mv-sit'); mv.classList.add('ai-mv-bob'); }
         playClip(name);
         /* 兜底：万一 finished 事件没来，按时长回位 */
         restoreTimer = setTimeout(function () {
