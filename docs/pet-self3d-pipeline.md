@@ -271,6 +271,7 @@ python3 -m http.server 8766    # 打开 http://127.0.0.1:8766/index.html
 | `assets/skins/models/RobotExpressive.glb` / `Fox.glb` / `Xbot*.glb` / `Michelle.glb` / `Soldier.glb` | 仅 `assets/skins/pet-lab.html`（模型实验室页）与 docs 引用，**皮肤系统已不再加载**；确认无用后可整目录删除 |
 | `assets/skins/vendor/model-viewer.min.js` | `<model-viewer>` 本体（离线） |
 | `tools/character-pipeline/*.py` | 本轮三个 Blender 脚本（从 `/tmp` 归档，避免重启丢失） |
+| `assets/character-views/` | **混元多视图素材（8 张独立 PNG + README）**：front / left / right / back / left45 / right45 / top / bottom，供下一轮混元 3D Studio 多视图生成直接上传；槽位对应表见目录内 README |
 | `docs/pet-self3d-pipeline.md` | 本文件 |
 
 授权与来源：
