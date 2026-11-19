@@ -257,6 +257,23 @@
         return '<li><span class="qa-q mono">' + esc(r.id) + '</span><span class="qa-n">' + r.n + ' 次</span></li>';
       }).join('') : '<li class="empty">还没有命中记录</li>';
 
+      api('/api/qa/trend?days=14').then(function (d2) {
+        var series = (d2 && d2.series) || [];
+        var max = Math.max.apply(null, series.map(function (x) { return x.total; }).concat([1]));
+        $('qaTrend').innerHTML = series.length ? series.map(function (x) {
+          var hTotal = Math.round((x.total / max) * 100);
+          var hEmpty = x.total ? Math.round((x.empty / max) * 100) : 0;
+          return '<div class="qa-trend-col" title="' + esc(x.date) + '：' + x.total + ' 次，空召回 ' + x.empty + '">' +
+            '<div class="qa-trend-stack">' +
+              '<div class="qa-trend-bar" style="height:' + Math.max(hTotal - hEmpty, 0) + '"></div>' +
+              '<div class="qa-trend-empty" style="height:' + hEmpty + '"></div>' +
+            '</div>' +
+            '<span class="qa-trend-x">' + esc(x.label) + '</span>' +
+            '<span class="qa-trend-n">' + (x.total || '') + '</span>' +
+            '</div>';
+        }).join('') : '<span class="empty">还没有数据</span>';
+      }).catch(function () { $('qaTrend').innerHTML = '<span class="empty">趋势接口不可用</span>'; });
+
       api('/api/qa/topics?limit=200').then(function (t) {
         var topics = (t && t.topics) || [];
         $('qaTopics').innerHTML = topics.length ? topics.map(function (x) {

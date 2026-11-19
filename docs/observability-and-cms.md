@@ -356,3 +356,16 @@ api: 'https://portfolio-visits.xxx.workers.dev',
 改模板后 `resume.html` 重置为 52040 bytes，PDF 仍 **2 页**，变体 2 页，`--check` 一致。
 
 **坑**：`/resume.html` 会被 Pages 308 跳到 `/resume`，验证线上内容要打 pretty URL，否则 curl 拿到空 body 会误判成"没部署上去"。
+
+## 后台第五阶段：趋势图 + JD 判定提示词接配置（2026-11-20 已上线）
+
+**`GET /api/qa/trend?days=14`**：按北京时间自然日聚合，输出 `{date,total,empty}` 补零到 N 天
+（缺天不补会让柱子"跳天"，看的人会误判成断流）。前端纯 CSS 柱状（灰=已作答、红=空召回），不引图表库。
+
+**JD 判定也吃后台配置**：`functions/api/jd.js` 读 `admin_config.jd_match` 的 `{model, prompt}`，
+`prompt` 作为「运营补充要求」追加在 `JUDGE_SYSTEM` 之后，`model` 透传 Worker `/chat`。
+判定口径（covered/partial/gap + 严格 JSON + 片段 id）不允许被运营改掉 —— 只能追加，不能替换。
+
+**实测**：趋势接口 14 个点，今日 10 次问答 / 2 次空召回；JD 端点 `ok:true`，`meta.judge=model`，
+同一条 Agent JD 打 **71 分**（4 覆盖 / 3 部分 / 1 缺口）。注意同一份 JD 重复打分会有几分浮动，
+模型判定的方差写在这里，别把单次分数当绝对结论。

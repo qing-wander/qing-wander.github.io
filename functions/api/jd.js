@@ -184,7 +184,20 @@ const JUDGE_SYSTEM = [
   '[{"i":0,"status":"covered"},{"i":1,"status":"gap"}]',
 ].join('\n');
 
-export function buildJudgeMessages(requirements, hitsByReq) {
+/* 后台可配：admin_config.jd_match 的 {model, prompt}。
+   提示词只能追加在判定规则之后 —— 判定口径（covered/partial/gap + 严格 JSON）不允许被运营改掉。 */
+async function readJdConfig(env) {
+  try {
+    const row = await env.DB?.prepare("SELECT value FROM admin_config WHERE key = 'jd_match'").first();
+    if (!row) return {};
+    const v = JSON.parse(row.value);
+    return { model: v.model, prompt: v.prompt };
+  } catch (e) {
+    return {};
+  }
+}
+
+export function buildJudgeMessages(requirements, hitsByReq, extraPrompt) {
   const material = requirements.map((req, i) => {
     const ev = (hitsByReq[i] || []).slice(0, 2)
       .map((h) => `  [${h.id}] ${(h.title ? h.title + '｜' : '')}${String(h.text || '').slice(0, 110)}`)
@@ -192,7 +205,7 @@ export function buildJudgeMessages(requirements, hitsByReq) {
     return `#${i} 需求：${req}\n${ev || '  （无片段）'}`;
   }).join('\n\n');
   return [
-    { role: 'system', content: JUDGE_SYSTEM },
+    { role: 'system', content: extraPrompt ? JUDGE_SYSTEM + '\n运营补充要求：' + extraPrompt : JUDGE_SYSTEM },
     { role: 'user', content: `候选人档案片段与 JD 需求点：\n\n${material}\n\n请逐条输出判定 JSON。` },
   ];
 }
@@ -214,12 +227,17 @@ export function parseJudge(text, n) {
   return out;
 }
 
-async function judgeByModel(requirements, hitsByReq, env) {
+async function judgeByModel(requirements, hitsByReq, env, cfg) {
   if (!env.KB_WORKER_URL || !env.KB_TOKEN) return null;
+  cfg = cfg || {};
   const r = await fetch(`${env.KB_WORKER_URL.replace(/\/$/, '')}/chat`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'X-KB-Token': env.KB_TOKEN },
-    body: JSON.stringify({ messages: buildJudgeMessages(requirements, hitsByReq), max_tokens: 600, temperature: 0 }),
+    body: JSON.stringify({
+      messages: buildJudgeMessages(requirements, hitsByReq, cfg.prompt),
+      max_tokens: 600, temperature: 0,
+      ...(cfg.model ? { model: cfg.model } : {}),
+    }),
   }).catch(() => null);
   if (!r || !r.ok) return null;
   const d = await r.json().catch(() => ({}));
@@ -258,7 +276,8 @@ export async function matchJD(jd, env) {
 
   /* 模型判定优先：词表小的时候 df 不可靠（「审计」只出现一次也被当专业词），
      单靠覆盖率会把财务 JD 判成 55 分。模型一次调用判完，解析失败才用兜底结果。 */
-  const judged = await judgeByModel(requirements, results.map((r) => r?.hits || []), env);
+  const jdCfg = await readJdConfig(env);
+  const judged = await judgeByModel(requirements, results.map((r) => r?.hits || []), env, jdCfg);
   if (judged) {
     rows.forEach((row, i) => {
       if (!judged[i]) return;
