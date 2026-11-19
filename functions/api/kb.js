@@ -81,7 +81,11 @@ async function rerank(query, items, env) {
     headers: { 'Content-Type': 'application/json', 'X-KB-Token': env.KB_TOKEN },
     body: JSON.stringify({ query, contexts: items.map((i) => i.text) }),
   }).catch(() => null);
-  if (!r || !r.ok) return { __error: 'http ' + (r ? r.status : 'null') };
+  if (!r) return { __error: 'fetch failed' };
+  if (!r.ok) {
+    const body = await r.text().catch(() => '');
+    return { __error: 'http ' + r.status + ' ' + body.slice(0, 160) };
+  }
   const d = await r.json().catch(() => ({}));
   if (!d.ok || !Array.isArray(d.scores) || d.scores.length !== items.length) {
     return { __error: (d && d.error) || ('scores mismatch: got ' + (Array.isArray(d.scores) ? d.scores.length : 'none') + ' want ' + items.length) };
