@@ -250,7 +250,7 @@ export async function matchJD(jd, env) {
   if (!requirements.length) return { ok: false, error: 'empty jd' };
 
   const idfMap = await loadIdf(requirements, env);
-  const results = await pool(requirements, CONCURRENCY, (req) => retrieve(req, env, TOP_K, { relax: true }));
+  const results = await pool(requirements, CONCURRENCY, (req) => retrieve(req, env, TOP_K, { relax: true, noRerank: false }));
 
   const rows = requirements.map((req, i) => {
     const hits = results[i]?.hits || [];

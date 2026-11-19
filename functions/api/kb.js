@@ -269,8 +269,8 @@ export async function onRequestGet({ request, env }) {
   const q = (url.searchParams.get('q') || '').trim();
   const top = Math.min(Math.max(Number(url.searchParams.get('top') || 5), 1), 10);
   if (!q) return new Response(JSON.stringify({ ok: false, error: 'missing q' }), { status: 400, headers: JSON_HEADERS });
-  /* rerank=0 用于 A/B（对比精排前后 hit@1），默认开 */
-  const r = await retrieve(q, env, top, { noRerank: url.searchParams.get('rerank') === '0' });
+  /* 精排默认关：实测金标题上 0 收益、每次多 ~0.5s；需要时用 rerank=1 显式打开 */
+  const r = await retrieve(q, env, top, { noRerank: url.searchParams.get('rerank') !== '1' });
   const debug = url.searchParams.get('debug') === '1';
   return new Response(JSON.stringify({
     ok: true, q, semantic: r.semantic, reranked: r.reranked, tokens: r.tokens,
