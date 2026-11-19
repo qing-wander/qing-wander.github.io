@@ -64,6 +64,26 @@ export default {
       return json({ ok: true, matches: res.matches || [] });
     }
 
+    /* ── /rerank：bge-reranker-base 精排
+       混合召回拿的是"可能相关"，精排解决的是"谁最相关"。
+       query + 候选正文成对打分，按分重排；模型不可用时上层自动回落 RRF 顺序。 */
+    if (url.pathname === '/rerank') {
+      const query = typeof body.query === 'string' ? body.query.trim() : '';
+      const contexts = Array.isArray(body.contexts) ? body.contexts.slice(0, 20) : [];
+      if (!query || !contexts.length) return json({ ok: false, error: 'empty input' }, 400);
+      const t0 = Date.now();
+      try {
+        const r = await env.AI.run(RERANK_MODEL, {
+          query,
+          contexts: contexts.map((c) => ({ text: String(c).slice(0, 1200) })),
+        });
+        const scores = (r?.response || []).map((x) => Number(x.score) || 0);
+        return json({ ok: true, scores, ms: Date.now() - t0 });
+      } catch (e) {
+        return json({ ok: false, error: 'rerank unavailable: ' + (e && e.message ? e.message : 'unknown') }, 502);
+      }
+    }
+
     if (url.pathname === '/chat') {
       const messages = Array.isArray(body.messages) ? body.messages.slice(-8) : [];
       if (!messages.length) return json({ ok: false, error: 'empty messages' }, 400);

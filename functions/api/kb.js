@@ -73,6 +73,22 @@ const INTENTS = [
 export const hintedSections = (query) =>
   new Set(INTENTS.filter((i) => i.re.test(query)).flatMap((i) => i.sections));
 
+/** 精排：调 Worker 的 bge-reranker-base，返回 id→score；不可用返回 null */
+async function rerank(query, items, env) {
+  if (!env.KB_WORKER_URL || !env.KB_TOKEN || items.length < 2) return null;
+  const r = await fetch(`${env.KB_WORKER_URL.replace(/\/$/, '')}/rerank`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-KB-Token': env.KB_TOKEN },
+    body: JSON.stringify({ query, contexts: items.map((i) => i.text) }),
+  }).catch(() => null);
+  if (!r || !r.ok) return null;
+  const d = await r.json().catch(() => ({}));
+  if (!d.ok || !Array.isArray(d.scores) || d.scores.length !== items.length) return null;
+  const map = new Map();
+  items.forEach((it, i) => map.set(it.id, Number(d.scores[i]) || 0));
+  return map;
+}
+
 /** RRF 融合：只看名次，rffScore = Σ 1/(K + rank) */
 export function rrf(lists, k = RRF_K) {
   const acc = new Map();
@@ -203,18 +219,38 @@ export async function retrieve(query, env, top = 5, opts = {}) {
     return row && cover(row) >= need(row);
   });
 
-  const fused = rrf([
+  const fusedAll = rrf([
     { items: lexList, weight: 1 },
     ...(semList.length ? [{ items: semList, weight: 1 }] : []),
-  ]).slice(0, top);
+  ]);
+
+  /* 精排：RRF 给的是"谁可能相关"，bge-reranker 给的是"谁最相关"。
+     多取 3 倍候选进精排，再截回 top —— 召回宽度不变，只换头部顺序。
+     精排不可用（模型下线/网络抖动）时静默回落 RRF 顺序，不影响问答可用性。 */
+  const wide = fusedAll.slice(0, Math.min(fusedAll.length, Math.max(top * 3, top + 2)));
+  let order = wide;
+  let reranked = false;
+  if (!opts.noRerank && wide.length > 1) {
+    const scores = await rerank(query, wide.map((f) => {
+      const row = byId.get(f.id);
+      return { id: f.id, text: `${row?.title || ''}\n${row?.text || ''}` };
+    }), env).catch(() => null);
+    if (scores) {
+      reranked = true;
+      order = [...wide].sort((a, b) => (scores.get(b.id) || 0) - (scores.get(a.id) || 0));
+    }
+  }
+  order = order.slice(0, top);
 
   return {
-    hits: fused.map((f) => {
+    hits: order.map((f) => {
       const row = byId.get(f.id);
       return { id: f.id, rrf: Number(f.score.toFixed(5)), ...row };
     }),
+    reranked,
     tokens,
     semantic: !!(sem && sem.length),
+    reranked,
   };
 }
 
@@ -225,7 +261,7 @@ export async function onRequestGet({ request, env }) {
   if (!q) return new Response(JSON.stringify({ ok: false, error: 'missing q' }), { status: 400, headers: JSON_HEADERS });
   const r = await retrieve(q, env, top);
   return new Response(JSON.stringify({
-    ok: true, q, semantic: r.semantic, tokens: r.tokens,
+    ok: true, q, semantic: r.semantic, reranked: r.reranked, tokens: r.tokens,
     count: r.hits.length,
     hits: r.hits.length ? r.hits : [],
     empty: r.hits.length === 0,   // true → 前端直接回「简历里没写这块」
