@@ -140,7 +140,7 @@ body.has-ai-skin .ai-fab {
 | - | ----------- | -------------- | ---------- | ---------------------------------- |
 | 1 | `robot3d`   | 机器人 ROBOT      | 真 3D GLB   | Idle 循环，思考→站立，答完→ThumbsUp，点击→Jump  |
 | 2 | `fox3d`     | 狐狸 FOX         | 真 3D GLB   | Survey 环顾，思考→Walk，打招呼→Run（侧面平视不自转） |
-| 3 | `hybrid`    | 混合 HYBRID      | 真 3D + HUD | 同 GLB + 档案风虚线框/扫描线/状态牌             |
+| 3 | `archive3d` | 档案机甲 ARCHIVE  | 真 3D GLB   | Idle 待机，思考→Standing，答完→ThumbsUp，点击→Jump |
 | 4 | `cpbot`     | CP.AI 档案机器人    | 本地 SVG     | 呼吸、眼睛扫描、天线摆动、状态灯                   |
 | 5 | `cat2d`     | 猫宠 NYAN        | 本地 SVG     | 6s 呼吸循环 + 尾巴/耳朵/眨眼/抬爪              |
 | 6 | `live2d`    | 看板娘 ARCHIVIST  | 本地 SVG     | 分层视差、眨眼、发丝、口型                      |
@@ -177,7 +177,7 @@ body.has-ai-skin .ai-fab {
 2. **AI 出图的"透明背景"是假的**：ImageGen 的 `transparent` 实际把棋盘格画进了 RGB（alpha 全 255）。用从四边 BFS 的连通域抠图（判定 `max-min<18 且 min>188`）才拿到真透明，顺带去掉右下角水印。
 3. **SVG 动画元素要统一 `transform-box: fill-box`**，否则 origin 在浏览器间不一致。
 4. **Fox 相机角度**：`90deg 80deg` 且关闭 auto-rotate 才是正常侧面站立；Robot 用 `175%→270%` 距离避免自转/透明舞台裁切。
-5. **透明舞台下 3D 模型会裁切**：去掉背板后模型占满全高，需要拉远 `camera-orbit` 距离（robot3d 270%、fox3d 200%、hybrid 250%）并减小 fov。
+5. **透明舞台下 3D 模型会裁切**：去掉背板后模型占满全高，需要拉远 `camera-orbit` 距离（robot3d 270%、fox3d 200%、archive3d 200%）并减小 fov。
 6. **素材下载通道**：本机 `raw.githubusercontent.com` 与 `cdn.jsdelivr.net` 不可达，`unpkg.com` / `registry.npmjs.org` 可达；GLB 走 `api.github.com/repos/.../contents/...` + `Accept: application/vnd.github.raw`。
 7. **脚本缓存会骗人**：GitHub Pages CDN 会吐旧 JS，前端脚本要加 `?v=YYYYMMDD` 版本参数（详见 ai-assistant-survey.md 13.6）。
 

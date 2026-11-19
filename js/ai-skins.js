@@ -396,7 +396,7 @@
       meta: 'Idle / Wave / ThumbsUp',
       note: 'three.js 官方示例模型，CC0 / MIT，自带 14 段骨骼动画。待机循环 Idle，回答完自动比赞，点击跳跃。',
       create: create3D({
-        file: 'RobotExpressive.glb', name: '机器人 ROBOT', orbit: '0deg 82deg 270%', fov: '26deg', rotate: '10deg',
+        file: 'RobotExpressive.glb', name: '机器人 ROBOT', orbit: '0deg 82deg 200%', fov: '26deg', rotate: '10deg',
         clips: { idle: 'Idle', thinking: 'Standing', answer: 'ThumbsUp', greet: 'Wave', click: 'Jump' }
       })
     },
@@ -410,12 +410,12 @@
       })
     },
     {
-      id: 'hybrid', key: '3', group: '3D 真模型 · 本地 GLB', name: '混合 HYBRID',
-      meta: '3D 模型 + 档案风 HUD',
-      note: '「现成 3D 容器 + 本站定制外观」的混合解：同一个 GLB，套上档案风边框、扫描线与状态牌。',
+      id: 'archive3d', key: '3', group: '3D 真模型 · 本地 GLB', name: '档案机甲 ARCHIVE',
+      meta: 'Idle / Wave / ThumbsUp · 14 段',
+      note: '和 1 号同一副骨骼、同一批 14 段动作，只把材质基色重调成站点档案配色：橙 #E8642A + 纸白 #F0E9DA + 墨黑 #141311，体积仍是 453KB。',
       create: create3D({
-        file: 'RobotExpressive.glb', name: '混合 HYBRID', hud: true, orbit: '12deg 82deg 250%', fov: '27deg', rotate: '14deg',
-        clips: { idle: 'Idle', thinking: 'Dance', answer: 'Yes', greet: 'Wave', click: 'Wave' }
+        file: 'Robot-archive.glb', name: '档案机甲 ARCHIVE', orbit: '0deg 82deg 200%', fov: '26deg', rotate: '10deg',
+        clips: { idle: 'Idle', thinking: 'Standing', answer: 'ThumbsUp', greet: 'Wave', click: 'Jump' }
       })
     },
     {
@@ -546,8 +546,12 @@
   }
 
   function savedSkin() {
-    try { var v = localStorage.getItem(STORE); if (v && byId(v)) return v; } catch (e) {}
-    return 'robot3d';
+    try {
+      var v = localStorage.getItem(STORE);
+      if (v === 'hybrid') v = 'archive3d';   /* 第 3 款已由 HYBRID 换成档案机甲，老访客平滑迁移 */
+      if (v && byId(v)) return v;
+    } catch (e) {}
+    return 'archive3d';
   }
 
   /* ─────────────── 菜单开关 ─────────────── */

@@ -44,6 +44,7 @@
 | `duck.glb` | 32 KB | 无 | 小黄鸭，1 个 mesh | ⚠️ 够轻够可爱，但 Draco + 无骨骼 |
 | `RobotExpressive.glb` | 453 KB | 14 段（Idle/Wave/ThumbsUp/Yes/No/Dance…） | 卡通机器人 | ✅ **已在用**，性价比最高 |
 | `Fox.glb` | 159 KB | `Survey` `Walk` `Run` | 低多边形狐狸 | ✅ **已在用** |
+| `Robot-archive.glb` | 453 KB | 同 14 段（仅改材质基色） | 卡通机器人·档案配色 | ✅ **第 3 款皮肤** |
 | `Flamingo` / `Parrot` / `Stork` / `Horse` | 75–178 KB | 各 1 段飞行/奔跑循环 | 动物 | ➖ 可做"宠物"备选，不是人物 |
 | `bath_day` / `dungeon_warkarma` / `LittlestTokyo` | 0.8–7.6 MB | 场景动画 | 浴室、地牢、东京街景 | ❌ 场景 |
 
@@ -78,6 +79,7 @@ python3 -m http.server 8766
 | --- | --- | --- | --- |
 | `assets/skins/models/Xbot.glb` | 2.8 MB | `threejs.org/examples/models/gltf/Xbot.glb` | 原版对照 |
 | `assets/skins/models/Xbot-ivory.glb` | 2.8 MB | 由上一行用 `scripts/recolor_glb.py` 生成 | 推荐接入 |
+| `assets/skins/models/Robot-archive.glb` | 453 KB | 由 `RobotExpressive.glb` 用 `scripts/recolor_glb.py` 改色生成 | ✅ 第 3 款皮肤 `archive3d` |
 | `assets/skins/models/Soldier.glb` | 2.1 MB | `threejs.org/examples/models/gltf/Soldier.glb` | 备选 |
 | `assets/skins/models/Michelle.glb` | 3.1 MB | `threejs.org/examples/models/gltf/Michelle.glb` | 彩蛋（迎宾/答对跳舞） |
 | `assets/skins/pet-lab.html` | — | 本次新建 | 角色试衣间看板（`noindex`，不进导航） |
