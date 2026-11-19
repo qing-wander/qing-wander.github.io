@@ -157,6 +157,12 @@
       <span class="toolbar-note">每个 AI 模块单独配模型 + 提示词。存 D1，保存即生效；简历内容仍以 Git 为唯一真相源。</span>
       <button class="btn btn-ghost" id="configReload" type="button">重新读取</button>
     </div>
+    <article class="cfg-card cfg-theme">
+      <div class="cfg-head"><h2>站点默认主题</h2><span class="pill" id="themeCur">—</span></div>
+      <p class="cfg-note">对所有访客生效；访客自己切过主题（localStorage 锁定）则仍以访客选择为准。<span class="mono"> · key=theme</span></p>
+      <div class="theme-chips" id="themeChips"><span class="empty">加载中…</span></div>
+    </article>
+
     <div class="cfg-list" id="cfgList"><p class="empty">加载中…</p></div>
   </section>
 

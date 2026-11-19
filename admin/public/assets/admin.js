@@ -326,7 +326,34 @@
       .then(function () { b.disabled = false; });
   });
 
-  $('configReload').addEventListener('click', function () { loadConfig(); toast('已重新读取'); });
+  /* ── 站点默认主题 ── */
+  function loadTheme() {
+    return api('/api/theme').then(function (d) {
+      var cur = d.theme || '';
+      $('themeCur').textContent = cur ? cur : '按日期轮换';
+      var list = d.themes || [];
+      $('themeChips').innerHTML = list.map(function (t) {
+        var on = t.id === cur ? ' is-on' : '';
+        return '<button class="theme-chip' + on + '" type="button" data-theme-id="' + esc(t.id) + '">' +
+          '<strong>' + esc(t.name) + '</strong><small>' + esc(t.note) + '</small></button>';
+      }).join('') + '<button class="theme-chip' + (cur ? '' : ' is-on') + '" type="button" data-theme-id="">' +
+        '<strong>自动轮换</strong><small>按日期每天换一套</small></button>';
+    });
+  }
+
+  $('themeChips').addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-theme-id]');
+    if (!b) return;
+    var theme = b.getAttribute('data-theme-id');
+    api('/api/theme', { method: 'POST', body: JSON.stringify({ theme: theme }) })
+      .then(function () {
+        toast(theme ? '已切到：' + theme : '已改为按日期轮换');
+        loadTheme();
+      })
+      .catch(function (err) { toast(err.message || '设置失败', true); });
+  });
+
+  $('configReload').addEventListener('click', function () { loadConfig(); loadTheme(); toast('已重新读取'); });
 
   function switchTab(name) {
     state.tab = name;
@@ -345,7 +372,7 @@
     if (name === 'devices') loadDevices();
     else if (name === 'messages') loadMessages();
     else if (name === 'qa') loadQa();
-    else if (name === 'config') loadConfig();
+    else if (name === 'config') { loadTheme(); loadConfig(); }
   }
   $('tabDevices').addEventListener('click', function () { switchTab('devices'); });
   $('tabMessages').addEventListener('click', function () { switchTab('messages'); });
@@ -395,7 +422,7 @@
     if (state.tab === 'devices') loadDevices();
     else if (state.tab === 'messages') loadMessages();
     else if (state.tab === 'qa') loadQa();
-    else if (state.tab === 'config') loadConfig();
+    else if (state.tab === 'config') { loadTheme(); loadConfig(); }
   }
 
   /* ── 启动 ── */

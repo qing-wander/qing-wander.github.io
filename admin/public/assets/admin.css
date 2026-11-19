@@ -258,6 +258,17 @@ td.act { text-align: right; white-space: nowrap; }
   border: 1px solid var(--accent); color: var(--accent); background: #FFF7F4;
 }
 
+/* ── 主题选择 ── */
+.cfg-theme { margin-top: 14px; }
+.theme-chips { display: flex; flex-wrap: wrap; gap: 10px; }
+.theme-chip {
+  text-align: left; padding: 10px 14px; border: 1px solid var(--line); background: var(--paper);
+  cursor: pointer; font: inherit; color: var(--ink); flex: 1 1 200px;
+}
+.theme-chip strong { display: block; font-size: 13px; }
+.theme-chip small { display: block; font-size: 11px; color: var(--ink-2); margin-top: 3px; line-height: 1.4; }
+.theme-chip.is-on { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+
 /* ── 模型与提示词配置 ── */
 .cfg-list { display: grid; gap: 14px; margin-top: 14px; }
 .cfg-card { border: 1px solid var(--line); background: #fff; padding: 16px; }

@@ -335,3 +335,24 @@ api: 'https://portfolio-visits.xxx.workers.dev',
 （`../../lib/topics.js` 指向 `functions/lib/`），Pages 构建直接失败，
 但 `wrangler pages deploy` **退出码仍是 0**，只有翻 `~/.wrangler/logs` 才看到 `BuildFailure`。
 教训：部署后必须验一个真实接口，不能只看退出码。
+
+## 后台第四阶段：站点默认主题切换（2026-11-20 已上线）
+
+主题在后台「模型与提示词」页里切：四套配色（档案纸 / 工程蓝图 / 复古新闻纸 / 夜色霓虹）+「自动轮换」。
+存 `admin_config.theme`，主站 `GET /api/theme` 下发（`Cache-Control: 60s`）。
+
+**优先级**（写进页面引导脚本，顺序不能改）：
+`?theme=` 参数 > 访客手动锁定 > 后台默认 > 按日期轮换
+
+访客自己切过主题就听访客的——后台只改"没选过的人看到的默认"。
+这条规则决定了不能把后台默认写成强制：强推会让老访客的偏好被无声覆盖。
+
+**简历页要单独补配色**：`resume.html` 是自包含样式（`style.css` 里的 `[data-theme]` 管不到它），
+所以在 `templates/resume.template.html` 里显式声明 blueprint / newsprint / noir 三套变量，
+否则后台切了主题，首页变了、简历页还是米黄纸。模板改了必须重跑 `render_resume.mjs`。
+
+**实测**：后台切 blueprint → `/api/theme` 立刻返回 blueprint → `resume` 页与首页引导脚本都已下发；
+切回「自动轮换」后返回 `theme:null`，页面回落到日期轮换。
+改模板后 `resume.html` 重置为 52040 bytes，PDF 仍 **2 页**，变体 2 页，`--check` 一致。
+
+**坑**：`/resume.html` 会被 Pages 308 跳到 `/resume`，验证线上内容要打 pretty URL，否则 curl 拿到空 body 会误判成"没部署上去"。

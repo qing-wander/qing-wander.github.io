@@ -23,6 +23,20 @@
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="https://shenge-work.github.io/images/%E9%99%88%E5%9F%B9%E8%83%9C-%E4%BD%9C%E5%93%81%E9%9B%86-%E5%88%86%E4%BA%AB%E5%8D%A1-%E6%96%B9%E5%BD%A2.png">
 <style>
+/* ── 主题（与首页同一套配色，后台可设站点默认；访客手动切换优先）── */
+[data-theme="blueprint"] {
+  --paper: #E9F1F8; --card: #F5FAFE; --ink: #123A5C; --ink-soft: #48678A;
+  --orange: #E03E36; --blue: #1D6FB8; --green: #2E8B57;
+}
+[data-theme="newsprint"] {
+  --paper: #F4EDDA; --card: #FAF5E6; --ink: #1C1812; --ink-soft: #59503E;
+  --orange: #C4112C; --blue: #1E3A5F; --green: #2F7D46;
+}
+[data-theme="noir"] {
+  --paper: #100E1A; --card: #1A1729; --ink: #ECE7FF; --ink-soft: #8F87AD;
+  --orange: #FF3D8F; --blue: #22D3EE; --green: #9EE86B;
+}
+
 :root {
   --paper: #F3EEE2; --card: #FFFCF4; --ink: #141311; --ink-soft: #4A463F;
   --orange: #FF5A1E; --blue: #2B4BE0; --green: #1FA658;
@@ -549,6 +563,29 @@ body {
   .edu-verify { flex-direction: column; align-items: flex-start; }
 }
 </style>
+
+<script>
+/* 主题引导（优先级：?theme= > 手动锁定 > 后台默认 > 按日期轮换）
+   后台默认由 /api/theme 下发（D1 admin_config），访客手动切换仍覆盖它。 */
+(function () {
+  var T = ['archive', 'blueprint', 'newsprint', 'noir'];
+  var qs = new URLSearchParams(location.search).get('theme');
+  var manual = null;
+  try { if (localStorage.getItem('portfolio_theme_mode') === 'manual') manual = localStorage.getItem('portfolio_theme_manual'); } catch (e) {}
+  var t = T.indexOf(qs) >= 0 ? qs : (T.indexOf(manual) >= 0 ? manual : null);
+  if (!t) {
+    var n = new Date();
+    var day = Math.floor((n - new Date(n.getFullYear(), 0, 0)) / 864e5);
+    t = T[day % T.length];
+    if (T.indexOf(qs) < 0 && !manual) {
+      fetch('/api/theme', { credentials: 'omit' }).then(function (r) { return r.json(); })
+        .then(function (d) { if (d && d.ok && T.indexOf(d.theme) >= 0) document.documentElement.setAttribute('data-theme', d.theme); })
+        .catch(function () {});
+    }
+  }
+  if (t) document.documentElement.setAttribute('data-theme', t);
+})();
+</script>
 </head>
 <body>
 

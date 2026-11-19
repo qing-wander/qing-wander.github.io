@@ -88,6 +88,12 @@
     }
   }
   document.documentElement.setAttribute('data-theme', t);
+  /* 后台设了站点默认主题时以它为先（访客手动锁定仍然优先；?theme= 最高） */
+  if (!qs && !(mode === 'manual' && manual)) {
+    fetch('/api/theme', { credentials: 'omit' }).then(function (r) { return r.json(); })
+      .then(function (d) { if (d && d.ok && T.indexOf(d.theme) >= 0) document.documentElement.setAttribute('data-theme', d.theme); })
+      .catch(function () {});
+  }
 })();
 </script>
 </head>
