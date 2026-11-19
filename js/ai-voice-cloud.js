@@ -1,20 +1,23 @@
 /* ════════════════════════════════════════════════════════════
    CP.AI 语音播报 · Phase 2 云端 Provider（设计依据：docs/ai-voice-survey.md 第 7 节）
    --------------------------------------------------------------
-   1) 只做一件事：实现 AIVoice.setProvider() 需要的 { synth(text, opts) }，
+   1) 只做一件事：实现 AIVoice.setProvider() 需要的 { synth(text, opts), prefetch(texts, opts) }，
       队列、去重、开关、口型联动、首次打招呼、降级全部复用 js/ai-voice.js。
    2) 复用已上线的 /chat HTTP 触发路径，用 body.mode='tts' 路由，
       不在控制台新增 /tts 路径映射（线上网关配置零改动）。
    3) 启动先探测一次全链路（合成「你好」两字），成功才注册 provider；
       没开通 / 没密钥 / 超时 → 保持浏览器 SpeechSynthesis，用户无感。
    4) 前端永远拿不到 SecretId/Key；返回的是 base64 mp3，按 text+kind 缓存。
+   5) 2026-11-19 优化：同句请求去重（pending）+ 播放预取（prefetch 2 句），
+      把「合成→播放→再合成」的串行空档压到接近 0；超时由 5.5s 放宽到 12s。
    ════════════════════════════════════════════════════════════ */
 (function () {
   'use strict';
 
   var STORE = 'cpai_voice_cloud_v1';
   var PROBE_TEXT = '你好';           // 探测只消耗 2 个字符
-  var REQUEST_TIMEOUT = 5500;      // 云端比浏览器语音多一跳，超时就降级
+  var REQUEST_TIMEOUT = 12000;     // 云端比浏览器语音多一跳；网络抖动时别急着降级
+  var PREFETCH_AHEAD = 2;          // 播放当前句时，并行预合成后面 2 句
   var CACHE_MAX = 80;
 
   var voice = window.AIVoice;
@@ -25,6 +28,7 @@
   var reason = '';
   var cache = Object.create(null);
   var cacheOrder = [];
+  var pending = Object.create(null);   // key -> Promise，避免预取与正式播报重复发请求
   var probeDone = false;
 
   try {
@@ -57,8 +61,15 @@
     }
   }
 
+  function keyOf(text, kind) {
+    return (kind || 'answer') + '|' + text;
+  }
+
   /** 请求云端合成；任何异常都抛出去，交给 ai-voice.js 的 fallbackToLocal 回落 */
   function request(text, kind) {
+    var key = keyOf(text, kind);
+    if (pending[key]) return pending[key];
+
     var ctrl = typeof AbortController === 'function' ? new AbortController() : null;
     var opts = {
       method: 'POST',
@@ -72,7 +83,7 @@
       if (ctrl) { try { ctrl.abort(); } catch (e) {} }
     }, REQUEST_TIMEOUT);
 
-    return fetch(endpoint(), opts).then(function (r) {
+    var p = fetch(endpoint(), opts).then(function (r) {
       clearTimeout(timer);
       if (!r.ok) return r.json().catch(function () { return {}; }).then(function (j) {
         throw new Error('tts_http_' + r.status + (j && j.error ? ':' + j.error : ''));
@@ -81,16 +92,23 @@
     }).then(function (j) {
       if (!j || !j.ok || !j.audio) throw new Error('tts_bad_payload');
       return 'data:' + (j.mime || 'audio/mpeg') + ';base64,' + j.audio;
-    }).catch(function (e) {
+    }).then(function (src) {
+      delete pending[key];
+      return src;
+    }, function (e) {
       clearTimeout(timer);
+      delete pending[key];
       throw e;
     });
+
+    pending[key] = p;
+    return p;
   }
 
   var provider = {
     synth: function (text, opts) {
       var kind = (opts && opts.kind) || 'answer';
-      var key = kind + '|' + text;
+      var key = keyOf(text, kind);
       if (cache[key] !== undefined) {
         return Promise.resolve({ src: cache[key], mime: 'audio/mpeg' });
       }
@@ -98,6 +116,23 @@
         cachePut(key, src);
         return { src: src, mime: 'audio/mpeg' };
       });
+    },
+
+    /** 预取：ai-voice.js 播当前句时把后面几句提前合成好，命中缓存后 synth 直接返回 */
+    prefetch: function (texts, opts) {
+      var kind = (opts && opts.kind) || 'answer';
+      var list = (texts || []).slice(0, PREFETCH_AHEAD);
+      for (var i = 0; i < list.length; i++) {
+        var t = list[i];
+        if (!t) continue;
+        var key = keyOf(t, kind);
+        if (cache[key] !== undefined || pending[key]) continue;
+        (function (k, txt) {
+          request(txt, kind).then(function (src) {
+            cachePut(k, src);          // 预取结果写进缓存，正式播报时直接命中
+          }).catch(function () {});     // 预取失败静默，交给正式播报时的正常降级
+        })(key, t);
+      }
     }
   };
 

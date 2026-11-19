@@ -23,7 +23,7 @@
   var MAX_PART = 110;           // 单句最长字符（规避 Chrome 15s 截断）
   var START_TIMEOUT = 1200;     // 浏览器通道：onstart 超时 → 判定被自动播放策略拦截
   var CLOUD_START_TIMEOUT = 6000; // 云端通道：多一次网络往返，看门狗放宽
-  var PART_TIMEOUT = 12000;     // 单句看门狗
+  var PART_TIMEOUT = 20000;     // 单句看门狗：要大于云端 PROVIDER 的 12s 请求超时
   var CTA_DELAY = 420;           // 浏览器通道：没出声多久显示引导
   var CLOUD_CTA_DELAY = 2200;    // 云端通道：合成本身要耗时，别误报「被拦截」
 
@@ -59,7 +59,8 @@
   var rateDelta = 0;
   var voices = [];
   var voicesBusy = false;          // loadVoices 重入保护（见下方注释）
-  var cloudProvider = null;       // Phase 2：{ synth(text, opts) -> Promise<{src}> }
+  var cloudProvider = null;       // Phase 2：{ synth(text, opts), prefetch?(texts, opts) -> Promise<{src}> }
+  var cloudFailStreak = 0;        // 连续失败句数：单句失败只补这一句，连续 3 句才整体降级
   var PENDING_NONE = {};
   var pendingProvider = PENDING_NONE;  // 播报中注册 provider：等这句念完再切，不打断
   var queue = [];
@@ -280,7 +281,7 @@
     if (welcomeState === 'pending') showCta(true);
   }
 
-  function nextPart(ctx) {
+  function nextPart(ctx, forceLocal) {
     if (!enabled || ctx.run !== runId) return;
     if (!queue.length) { current = null; setSpeaking(false); return; }
     var part = queue.shift();
@@ -303,18 +304,26 @@
       done();
     }, PART_TIMEOUT);
 
-    if (cloudProvider) {
+    if (cloudProvider && !forceLocal) {
       /* Phase 2：云端 provider 按句合成，队列 / 去重 / UI 全部复用。
          audio.play() 的 Promise 会明确告知是否被自动播放策略拦截，
          不能沿用浏览器通道的「1.2s 没 onstart 就算被拦」判定。 */
+      /* 预取：当前句还在合成/播放时，把队列里后面两句并行合成好。
+         队列已 shift 过，queue[0] 就是下一句；命中缓存后句间空档接近 0。 */
+      if (typeof cloudProvider.prefetch === 'function') {
+        try { cloudProvider.prefetch(queue.slice(0, 2), { kind: ctx.kind }); } catch (e) {}
+      }
       var degraded = false;
       var fallbackToLocal = function () {
         if (degraded || ctx.run !== runId) return;
         degraded = true;
         finished = true;
-        cloudProvider = null;        // 连续失败不拖慢后续每一句，本次会话回落浏览器通道
         currentAudio = null;
         if (partTimer) { clearTimeout(partTimer); partTimer = null; }
+        cloudFailStreak += 1;
+        /* 单句失败只用浏览器语音补这一句，下一句继续走云端；
+           连续 3 句都失败才判定链路不可用、整体降级，避免音色来回跳。 */
+        if (cloudFailStreak >= 3) cloudProvider = null;
         speakLocalAgain(ctx, part);
       };
       try {
@@ -331,6 +340,7 @@
           if (p && p.then) {
             p.then(function () {
               if (ctx.run !== runId) return;
+              cloudFailStreak = 0;      // 这一句云端播放成功，失败计数归零
               markStarted();
               setSpeaking(true);
             }).catch(function () {
@@ -371,11 +381,11 @@
     try { synth.speak(u); } catch (e) { done(); }
   }
 
-  /* 云端 provider 失败：把当前句和剩余队列退回浏览器通道，用户无感 */
+  /* 云端 provider 失败：把当前句退回浏览器通道念掉，剩余队列继续走云端 */
   function speakLocalAgain(ctx, part) {
     if (ctx.run !== runId || !enabled) return;
     queue.unshift(part);
-    nextPart(ctx);
+    nextPart(ctx, true);   // forceLocal：只这一句用浏览器语音，不再重试云端、不死循环
   }
 
   function say(text, opts) {
