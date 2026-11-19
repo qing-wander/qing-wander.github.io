@@ -70,3 +70,56 @@ test('buildMessages：提示词锁死公司名/学历/数字，且片段带 id �
   assert.ok(msgs[0].content.includes('简历里没写这块'), '要有拒答话术');
   assert.ok(msgs[1].content.includes('[exp-inmen-01]'), '片段 id 必须带进上下文，答案才能挂引用');
 });
+
+test('splitRequirements：去序号/去重/分号切/上限 14', async () => {
+  const { splitRequirements } = await import('../functions/api/jd.js');
+  const jd = ['1. 负责 Agent 编排与工具调用链路设计', '- 熟悉 Java 并发与 JVM 调优',
+    '（2）熟悉 Java 并发与 JVM 调优', '；只有三个字', '学历本科及以上；五年以上经验'].join('\n');
+  const reqs = splitRequirements(jd);
+  assert.ok(reqs.length >= 4 && reqs.length <= 14);
+  assert.equal(reqs[0], '负责 Agent 编排与工具调用链路设计');
+  assert.equal(reqs.filter((r) => r === '熟悉 Java 并发与 JVM 调优').length, 1, '重复要去掉');
+  assert.ok(!reqs.some((r) => r.length < 4));
+});
+
+test('statusOf：覆盖率三档阈值（0.55 / 0.25）', async () => {
+  const { statusOf } = await import('../functions/api/jd.js');
+  assert.equal(statusOf(0.9), 'covered');
+  assert.equal(statusOf(0.55), 'covered');
+  assert.equal(statusOf(0.54), 'partial');
+  assert.equal(statusOf(0.25), 'partial');
+  assert.equal(statusOf(0.24), 'gap');
+});
+
+test('coverageOf：命中专业词算覆盖，命中不了的技能算缺口', async () => {
+  const { coverageOf, statusOf } = await import('../functions/api/jd.js');
+  const text = '主导 AI 金融投研工作台核心基建研发：Agent 基座与多租户云沙箱隔离执行、弹性配额';
+  assert.equal(statusOf(coverageOf('多租户云沙箱隔离', text).ratio), 'covered');
+  assert.equal(statusOf(coverageOf('Kubernetes 与 CI/CD 落地经验', text).ratio), 'gap');
+});
+
+test('splitRequirements：标题行不进需求点', async () => {
+  const { splitRequirements } = await import('../functions/api/jd.js');
+  const reqs = splitRequirements('岗位职责：\n任职要求\n1. 负责 Agent 平台架构设计；2. 熟悉向量检索');
+  assert.ok(!reqs.some((r) => r === '任职要求'), '纯标题行要丢掉');
+  assert.ok(reqs.length >= 2);
+});
+
+test('parseJudge：从代码块/夹带文字里抠出 JSON 判定，非法项丢弃', async () => {
+  const { parseJudge } = await import('../functions/api/jd.js');
+  const text = '判定如下：\n```json\n[{"i":0,"status":"covered"},{"i":1,"status":"gap"},{"i":9,"status":"covered"},{"i":2,"status":"maybe"}]\n```';
+  const out = parseJudge(text, 3);
+  assert.ok(out, '应能从夹带文字里解析');
+  assert.equal(out[0], 'covered');
+  assert.equal(out[1], 'gap');
+  assert.equal(out[2], null, '非法状态丢弃');
+  assert.equal(parseJudge('没有 JSON', 2), null);
+});
+
+test('buildJudgeMessages：需求点带序号、片段带 id 与正文', async () => {
+  const { buildJudgeMessages } = await import('../functions/api/jd.js');
+  const msgs = buildJudgeMessages(['熟悉 Agent 编排'], [[{ id: 'proj-comein-01', title: 't', text: 'Agent 基座' }]]);
+  assert.ok(msgs[0].content.includes('covered'), '要给出三档定义');
+  assert.ok(msgs[1].content.includes('#0 需求：熟悉 Agent 编排'));
+  assert.ok(msgs[1].content.includes('[proj-comein-01]'), '片段 id 必须带进去');
+});

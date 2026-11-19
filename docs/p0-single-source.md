@@ -239,7 +239,10 @@ node scripts/rag_query.mjs --golden tests/golden-queries.json   # 金标集 hit@
 - [x] 语义层：`@cf/baai/bge-m3`（1024 维）向量化 42 片 → Vectorize `resume-kb` 已入库（42 条，id 带版本前缀 `kb-5f9004b7:`），`node scripts/rag_embed.mjs --query "…"` 可做语义自检
 - [x] 混合检索接口 `/api/kb`（D1 FTS5 BM25 + Vectorize cosine，RRF k=60 融合，cosine 地板 0.55）已上线，**semantic=true**（语义路走 Worker `resume-kb-api`，见 7.7）
 - [x] `/api/chat`：检索 → 空召回短路 → llama-3.3-70b 生成 → 返回 citations + 落 qa_logs（实测 1.7s / 5.2s；公司全称原样保留）
-- [ ] `/api/chat` 与页面问答框对接、rerank、JD 匹配
+- [x] `/api/chat` 与页面问答框对接（endpoint 已切，接口兼容 `{question}` / `sources`）
+- [x] JD 匹配搬到 Cloudflare：`/api/jd` + `/api/chat?mode=jd`，混合检索逐条召回 + 一次 LLM 判定
+      —— Agent JD 83/100（高度匹配）、财务 JD 22/100（差距较大，3 缺口），2.1-2.3s
+- [ ] rerank、动态简历变体
 - [x] RAG 切片（按 bullet id）+ D1 词面索引 + 金标集 hit@3 闸门：`rag/`、`scripts/build_rag_chunks.mjs`、`tests/golden-queries.json`
 - [ ] RAG 余下：`/api/chat`（需给 Pages 项目挂 `[ai]` + `[[vectorize]]` 绑定）、JD 匹配、动态简历变体
 - [ ] 跨设备查看（设备绑定码）
@@ -274,3 +277,23 @@ GET .../api/kb?q=今天深圳天气
 
 相似度处理：bge-m3 在这批语料上分数挤在 0.42–0.53（无关问题也有 0.50），
 绝对值不可靠 → 先卡地板 0.42 去底噪，再只留与冠军差 ≤0.04 的梯队，最后交给覆盖闸门判相关性。
+
+### 7.8 JD 匹配（Cloudflare 版）
+
+```
+POST /api/chat  {"mode":"jd","jd":"…"}     或  POST /api/jd  {"jd":"…"}
+→ {match:{overall:{score,verdict,summary}, stats:{covered,partial,gap},
+          rows:[{req,status,evidence:[{point,title,id}],gap,probe}]},
+   meta:{requirements,recalled,judge:"model"|"auto",ms}}
+```
+
+链路：拆需求点（去序号/去重、丢「任职要求」这类标题行）→ 逐条混合检索（闸门放宽到 1，JD 要召回不要精筛）
+→ 一次 LLM 调用判完所有需求点（covered / partial / gap，片段带 id）→ 失败回退确定性判定 → 打分。
+
+**为什么最终用模型判定**：先试了纯词面判（覆盖率 / IDF 加权 / 稀有词 df≤3），
+在这份 42 片的小语料上 df 完全不可靠（`审计` 只出现 1 次也被当专业词，`企业` df=2 却占了高权重），
+同一份 Agent JD 分数在 21 → 48 → 72 → 28 → 55 之间反复横跳；财务 JD 一度被抬到 44/55 分。
+改成「一次调用 + 严格 JSON」后：Agent JD 83（5 覆盖 / 3 部分 / 0 缺口），财务 JD 22（0 覆盖 / 2 部分 / 3 缺口）。
+
+确定性判定保留为兜底（`meta.judge='auto'`），词频表 `kb_terms`（1610 词，随切片重建）也保留，
+后续 rerank 与「缺口推荐补材料」还会用。

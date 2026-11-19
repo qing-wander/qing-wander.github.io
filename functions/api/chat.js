@@ -24,6 +24,7 @@
      DB                         D1（qa_logs / rate_limits）
    ────────────────────────────────────────────────────────────────────── */
 import { retrieve } from './kb.js';
+import { matchJD } from './jd.js';
 
 const JSON_HEADERS = { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' };
 const MODEL_LABEL = '@cf/meta/llama-3.3-70b-instruct-fp8-fast';   // 推理型模型（GLM-4.7-flash 等）会把 token 烧在思维链上，别换
@@ -98,6 +99,14 @@ export async function onRequestPost({ request, env }) {
   try { body = await request.json(); } catch { return json({ ok: false, error: 'bad json' }, 400); }
 
   /* 页面上的旧契约发的是 { question }，这里两种字段都收，省得前端为一个字段改两处 */
+  /* JD 匹配与问答共用同一端点（页面就是这么发的），按 mode 分流 */
+  if (body.mode === 'jd') {
+    const jd = String(body.jd || '').trim().slice(0, 1500);
+    if (jd.length < 20) return json({ ok: false, error: 'JD 太短，贴完整的岗位职责与任职要求' }, 400);
+    const r = await matchJD(jd, env);
+    return json(r, r.ok ? 200 : 400);
+  }
+
   const q = String(body.q || body.question || '').trim().slice(0, MAX_Q);
   if (!q) return json({ ok: false, error: 'missing q' }, 400);
 

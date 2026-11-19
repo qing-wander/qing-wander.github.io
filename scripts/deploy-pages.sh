@@ -71,7 +71,8 @@ echo "=== ② 前置检查：wrangler 登录状态"
 if [ -n "${WRANGLER_BIN:-}" ]; then
   WRANGLER=(node "$WRANGLER_BIN")
 else
-  WRANGLER=(npx --yes wrangler@latest)
+  # 固定版本：npm 镜像把 latest 指向了尚未发布的 4.165.0，@latest 会 ETARGET 失败
+  WRANGLER=(npx --yes wrangler@4.164.0)
 fi
 if ! "${WRANGLER[@]}" whoami >/dev/null 2>&1; then
   echo "尚未登录 Cloudflare，先执行：npx wrangler login"

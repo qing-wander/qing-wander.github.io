@@ -165,10 +165,12 @@ async function loadChunks(ids, env) {
   return rows?.results || [];
 }
 
-export async function retrieve(query, env, top = 5) {
+export async function retrieve(query, env, top = 5, opts = {}) {
   const tokens = Array.from(new Set(tokenize(query)));
   const hints = hintedSections(query);
-  const floor = tokens.length <= 2 ? 1 : 2;
+  /* relax：JD 匹配用。问答要"宁缺勿滥"，JD 对照要"先把候选都捞出来再判覆盖"，
+     所以这条链路把覆盖闸门放到 1，判定交给上层 coverage。 */
+  const floor = opts.relax ? 1 : (tokens.length <= 2 ? 1 : 2);
 
   const [lex, rawSem] = await Promise.all([
     lexicalSearch(tokens, env),
