@@ -392,3 +392,45 @@ GitHub 回跳若失败会带 `?login=xxx`，前端把错误码翻译成人话（
 
 **实测**：授权后控制台直接进入，`login_hidden=true / dash_hidden=false`，
 统计数据正常（PV 21 / 独立访客 21 / 留言设备 2）。
+
+## 后台第七阶段：贴 JD 一键生成变体（2026-11-20 已上线）
+
+以前出变体要本地跑三条命令（`plan_variant.mjs` → `rewrite_summary.mjs` → `render_variant.mjs`），
+现在后台「生成变体」标签贴 JD 直接出，**代价是 0.5 秒一次请求**。
+
+### 为什么能在边缘侧渲染
+
+Pages Functions 里没有 `fs`，读不到 `templates/resume.template.html`。解法是
+`scripts/embed_assets.mjs` 把三样东西序列化进 `functions/lib/`：
+
+| 生成物 | 源文件 | 体积 |
+|---|---|---|
+| `resume-template.js` | `templates/resume.template.html` | 37 KB |
+| `resume-render.js` | `scripts/render_resume.mjs` 的纯函数段 | 5.8 KB |
+| `site-data.js` | `data/site-data.json` | 52 KB |
+
+真相源不变，`functions/lib/` 只是构建产物。CI 里加了 `node scripts/embed_assets.mjs --check`，
+模板或数据改了忘重新嵌入会直接红。**已验证**：用嵌入版渲染器跑当前数据，输出与 `resume.html` 逐字节相同。
+
+### 接口分工
+
+- 主站 `POST /api/variant`：`{jd}` → BM25 选材（`KEEP_RATIO=0.15`、经历 bullet 2–3、项目 ≤4 每个 ≤3）、
+  技能按命中度重排、渲染 HTML、**L0 逐字段比对**（`basics` / `education` / 公司全称·岗位·时间 / 项目名·URL·时间）。
+  任一字段变化直接 500，不吐半成品。
+- 后台 `POST /api/variant`：服务端代理（跨域绕开 CORS）+ `requireAdmin` + `X-Admin-Request` 校验。
+  无 CSRF 头实测被拒：`{"ok":false,"error":"csrf"}`。
+
+### 实测
+
+Agent JD：bullet **22 → 15**（删 7 条），项目 **3/3**，技能顺序 `skill-05 → skill-04 → skill-02 → skill-01 → skill-03`，
+HTML 42124 B，检索最高分 30.1，接口耗时 **0.5 s**，产出的 PDF **2 页**（1779 KB）。
+`tests/variant.test.mjs` 3 条：JD 过短 400、正常 JD 只删不改、无交集不硬凑。全仓 `node --test tests/*.test.mjs` = **47/47**。
+
+### 两个新坑（值得记住）
+
+1. **Pages 部署后 API 生效有几十秒延迟**。刚部署完打接口可能是 405（静态兜底），别立刻判定失败；
+   实测同一 URL 在 20 秒后从 405 变 200。
+2. **仓库存在并发提交**。本轮中途主站被另一个提交（`7231dbe` 云端 TTS）触发 Git 集成构建覆盖，
+   因为我们的 `functions/api/variant.js` 当时还没提交，生产直接退回没有该接口的版本。
+   教训：**主站走 Git 集成构建**，本地未提交的新 Function 不等于线上有；改动要尽快提交推送，
+   并且只 `git add` 自己的文件，别把别人未完成的改动一起带上。
