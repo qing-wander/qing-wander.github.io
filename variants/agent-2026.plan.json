@@ -2,6 +2,7 @@
   "slug": "agent-2026",
   "jd_chars": 395,
   "kb_version": "kb-5f9004b7",
+  "jd_head": "岗位：AI Agent 工程师（企业智能体平台）\n1. 负责 Agent 平台的架构设计与核心模块开发，包含任务规划、工具调用、多智能体编排与记忆管理；\n2. 建设 RAG 检索链路：文档解析、切片策略、向量检索、重排与召回效果评测；\n3. 负责 Agent 运行时的可观测与治理：调用链追踪、成本与配额控制、失败重试与降级；\n4. 与业务团队共建行业智能体（金融投研、营销获客、客服等场景），推动 PoC 到上线。\n任职要求：\n1. 本科及以上学历，3 年以上后端研发经验，熟悉 Java、Go 或 Python 之一；\n2. 熟悉 LLM 应用开发，理解 Prompt 工程、Function Calling、MCP 等机制；\n3. 有向量数据库（Milvus / Elasticsearch）使用与检索评测经验；\n4. 熟悉分布式系统与高并发服务，能独立完成模块从 0 到 1 落地。",
   "top_score": 65.767,
   "keep": {
     "experience": {
@@ -38,7 +39,13 @@
         "proj-hicreator-03"
       ]
     },
-    "skills": [],
+    "skills": [
+      "skill-04",
+      "skill-05",
+      "skill-01",
+      "skill-02",
+      "skill-03"
+    ],
     "about": []
   },
   "dropped": [

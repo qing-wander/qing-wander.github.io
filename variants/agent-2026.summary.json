@@ -1,0 +1,15 @@
+{
+  "slug": "agent-2026",
+  "before": "红杉系初创 + 金融头部 AI 主力，擅长 Agent 工程化、RAG 及评测治理、AI 网关、分布式 IM 网关，把大模型能力从 Demo 推进到生产环境稳定运行；多套 Agent 系统 0→1——AI 金融投研工作台、AI 人脉搜索引擎、一站式营销 SaaS（云沙箱多租户）",
+  "after": "红杉系初创 + 金融头部 AI 主力，擅长 Agent 工程化、RAG 及评测治理、AI 网关、分布式 IM 网关，具有从 0 到 1 开发多套 Agent 系统的经验，包括 AI 金融投研工作台、AI 人脉搜索引擎、一站式营销 SaaS（云沙箱多租户），能够将大模型能力从 Demo 推进到生产环境稳定运行。",
+  "model": "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
+  "checks": {
+    "chars": 155,
+    "chars_limit": 220,
+    "digits_new": [],
+    "digits_dropped": [],
+    "latin_kept": 10,
+    "latin_total": 10,
+    "chunks_min": 0.94
+  }
+}

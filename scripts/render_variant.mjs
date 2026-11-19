@@ -74,7 +74,29 @@ r.projects = r.projects
     return { ...p, bullets: p.bullets.filter((b) => keep.includes(b.id)) };
   });
 
-/* 3) 技能 / 简介 / 教育 不动 —— AI 改写留到后续单独一步 */
+/* 3) 技能：只按 JD 命中度重排顺序，文案一个字不改（排序不影响 L0，也不影响篇幅） */
+const skillOrder = plan.keep.skills || [];
+if (skillOrder.length) {
+  const byId = new Map(r.skills.map((g) => [g.id, g]));
+  const ordered = skillOrder.map((id) => byId.get(id)).filter(Boolean);
+  const rest = r.skills.filter((g) => !skillOrder.includes(g.id));
+  r.skills = [...ordered, ...rest];
+}
+
+/* 4) 简介：如果存在 variants/<slug>.summary.json（AI 改写稿），合并进来。
+      简介是 editable 模块，允许改；但内容必须是纯文本，标签全部转义，且不超 220 字。 */
+const summaryFile = resolve(OUT_DIR, `${slug}.summary.json`);
+if (existsSync(summaryFile)) {
+  const sum = JSON.parse(readFileSync(summaryFile, 'utf8'));
+  const text = String(sum.after || '').trim();
+  if (text && [...text].length <= 220) {
+    const esc = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    r.summary = { ...r.summary, html: esc };
+    console.log(`  简介：已合并 AI 改写稿（${[...text].length} 字）`);
+  } else {
+    console.warn('  ⚠ 改写稿为空或超 220 字，本次沿用原文简介');
+  }
+}
 
 const after = l0(r);
 for (const k of Object.keys(before)) {

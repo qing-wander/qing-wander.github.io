@@ -60,6 +60,7 @@ const plan = {
     slug,
     jd_chars: jd.length,
     kb_version: payload.kb_version,
+    jd_head: jd.slice(0, 600),        // 留一段原文，选材单才能脱离 JD 文件单独复现
     top_score: Number(top.toFixed(3)),
     keep: { experience: {}, projects: {}, skills: [], about: [] },
     dropped: [],
@@ -89,6 +90,10 @@ for (const p of r.projects) {
         plan.dropped.push({ id: p.id, section: 'project', entity: p.id, reason: '版面预算（项目数超 4）' });
     }
 }
+
+/* 技能：按 JD 命中度重排（只排顺序，不动文案）。技能组 id 就是切片 id（skill-01…05） */
+const skillScore = (g) => scored.find((s) => s.id === g.id)?.score || 0;
+plan.keep.skills = [...r.skills].sort((a, b) => skillScore(b) - skillScore(a)).map((g) => g.id);
 
 plan.summary = {
     experiences: r.experience.length,
