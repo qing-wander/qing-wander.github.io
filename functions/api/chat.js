@@ -38,7 +38,20 @@ const MAX_Q = 200;           // 问题长度上限
    模型一旦改写（把「深圳进门财经科技股份有限公司」压成「进门财经」）就会失真。 */
 export const LOCKED_FIELDS = '公司全称、岗位名称、起止时间、学校名称、学历、专业、以及片段里出现的任何数字';
 
-export function buildMessages(q, hits) {
+/* 后台可配：admin_config 里 resume_chat 的 {model, prompt}。
+   提示词只能「追加」，不能删掉 L0 硬约束 —— 运营可以调语气和长度，不能放开公司全称。 */
+async function readChatConfig(env) {
+  try {
+    const row = await env.DB.prepare("SELECT value FROM admin_config WHERE key = 'resume_chat'").first();
+    if (!row) return {};
+    const v = JSON.parse(row.value);
+    return { model: v.model, prompt: v.prompt };
+  } catch (e) {
+    return {};
+  }
+}
+
+export function buildMessages(q, hits, extraPrompt) {
   const material = hits.map((h) => `[${h.id}] ${h.title ? h.title + '｜' : ''}${h.text}`).join('\n');
   return [
     {
@@ -50,18 +63,19 @@ export function buildMessages(q, hits) {
         '片段里没有的信息，直接说「简历里没写这块」，不要编一个看起来合理的答案。',
         '回答用简体中文，2-4 句，口语，像人在介绍同事；不要小标题、不要罗列、不要重复整段原文。',
         '不要提「根据资料片段」这类话，直接说事。',
-      ].join('\n'),
+        extraPrompt ? `运营补充要求：${extraPrompt}` : '',
+      ].filter(Boolean).join('\n'),
     },
     { role: 'user', content: `【资料片段】\n${material}\n\n【问题】${q}` },
   ];
 }
 
-async function callWorker(messages, env) {
+async function callWorker(messages, env, model) {
   if (!env.KB_WORKER_URL || !env.KB_TOKEN) return { ok: false, reason: 'no-worker' };
   const r = await fetch(`${env.KB_WORKER_URL.replace(/\/$/, '')}/chat`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'X-KB-Token': env.KB_TOKEN },
-    body: JSON.stringify({ messages, max_tokens: 400, temperature: 0.2 }),
+    body: JSON.stringify({ messages, max_tokens: 400, temperature: 0.2, ...(model ? { model } : {}) }),
   }).catch(() => null);
   if (!r || !r.ok) return { ok: false, reason: 'worker-http' };
   const d = await r.json().catch(() => ({}));
@@ -127,7 +141,8 @@ export async function onRequestPost({ request, env }) {
     return json({ ok: true, answer: NO_HIT_ANSWER, citations: [], sources: [], empty: true, ms: Date.now() - t0 });
   }
 
-  const call = await callWorker(buildMessages(q, r.hits), env);
+  const cfg = await readChatConfig(env);
+  const call = await callWorker(buildMessages(q, r.hits, cfg.prompt), env, cfg.model);
   const answer = call.ok ? call.text : '这条我暂时答不上来（模型服务不可用），你可以直接看页面上的原文。';
   const citations = r.hits.map((h) => ({ id: h.id, title: h.title, section: h.section, source_path: h.source_path }));
 

@@ -299,3 +299,20 @@ api: 'https://portfolio-visits.xxx.workers.dev',
 **本地双击预览（`file://`）走的是本地那份 `data/site-data.js` 快照**，不会同步线上：
 本地要看新数据，先 `git pull` 或跑 `python3 scripts/sync_site_data.py` 重新生成快照。
 
+
+## 后台第二阶段：问答看板 + 模型/提示词配置（2026-11-20 已上线）
+
+**为什么提示词存 D1 而不是 Git**：提示词是运营参数，改完要立刻对线上生效；简历内容才是 Git 真相源。
+所以 `admin_config(key, value, updated_at)` 只放运行期配置，不进内容流水线。
+
+**接口**
+- `GET /api/config` 列出 4 个模块（默认值 + 已存值 + `is_default` 标记）
+- `POST /api/config` 保存单个模块 `{key, model, prompt}`；key 走白名单，prompt ≤2000 字，必带 `X-Admin-Request: 1`
+- `GET /api/qa` 问答埋点聚合：总量 / 近 7 天 / 空召回数 / 空召回率 / 平均耗时、高频问题、命中片段热度、最近原始记录
+
+**配置真的生效**：`functions/api/chat.js` 启动时读 `resume_chat` 的 `{model, prompt}`，
+把 `prompt` 作为「运营补充要求」**追加**在系统提示词末尾，`model` 透传给 Worker `/chat`。
+追加而不是替换，是为了不让运营把 L0 硬约束（公司全称/时间/学历照抄）改掉。
+
+**踩到的坑**：`qa_logs.hit_ids` 落库是逗号串（`me-01,exp-lessie-03`），不是 JSON —— 聚合时按 JSON 解析会静默返回空列表，
+已改成逗号切分；顺带把 `ms >= 60000` 的超时样本从平均耗时里剔除（个别超时会把均值从 2s 抬到 9.7s）。

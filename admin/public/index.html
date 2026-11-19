@@ -60,6 +60,8 @@
   <div class="tabs" role="tablist">
     <button class="tab is-on" id="tabDevices" type="button" role="tab" aria-selected="true">设备台账</button>
     <button class="tab" id="tabMessages" type="button" role="tab" aria-selected="false">留言审核</button>
+    <button class="tab" id="tabQa" type="button" role="tab" aria-selected="false">问答看板</button>
+    <button class="tab" id="tabConfig" type="button" role="tab" aria-selected="false">模型与提示词</button>
   </div>
 
   <!-- 设备台账 -->
@@ -111,6 +113,45 @@
       <span class="pager-info" id="msgPage">—</span>
       <button class="btn btn-ghost" id="msgNext" type="button">下一页</button>
     </div>
+  </section>
+
+
+  <!-- 问答埋点看板 -->
+  <section class="panel" id="panelQa" role="tabpanel" hidden>
+    <div class="stats stats-qa">
+      <article class="stat"><p class="stat-num" id="qaTotal">—</p><p class="stat-label">问答总量</p></article>
+      <article class="stat"><p class="stat-num" id="qaLast7">—</p><p class="stat-label">近 7 天</p></article>
+      <article class="stat"><p class="stat-num" id="qaEmpty">—</p><p class="stat-label">空召回</p></article>
+      <article class="stat"><p class="stat-num" id="qaEmptyRate">—</p><p class="stat-label">空召回率</p></article>
+      <article class="stat"><p class="stat-num" id="qaMs">—</p><p class="stat-label">平均耗时 (ms)</p></article>
+    </div>
+
+    <div class="qa-grid">
+      <div class="qa-box">
+        <div class="qa-box-head"><h2>高频问题</h2><span class="toolbar-note">用户真正关心什么 —— 空召回的问题优先补切片</span></div>
+        <ul class="qa-list" id="qaTopQuestions"><li class="empty">加载中…</li></ul>
+      </div>
+      <div class="qa-box">
+        <div class="qa-box-head"><h2>命中片段热度</h2><span class="toolbar-note">哪些经历被反复引用</span></div>
+        <ul class="qa-list" id="qaTopHits"><li class="empty">加载中…</li></ul>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table class="table">
+        <thead><tr><th>时间</th><th>问题</th><th>命中</th><th>耗时</th><th>状态</th></tr></thead>
+        <tbody id="qaRecent"><tr><td colspan="5" class="empty">加载中…</td></tr></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 模型与提示词配置 -->
+  <section class="panel" id="panelConfig" role="tabpanel" hidden>
+    <div class="toolbar">
+      <span class="toolbar-note">每个 AI 模块单独配模型 + 提示词。存 D1，保存即生效；简历内容仍以 Git 为唯一真相源。</span>
+      <button class="btn btn-ghost" id="configReload" type="button">重新读取</button>
+    </div>
+    <div class="cfg-list" id="cfgList"><p class="empty">加载中…</p></div>
   </section>
 
   <footer class="dash-foot">

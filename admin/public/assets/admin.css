@@ -235,6 +235,46 @@ td.act { text-align: right; white-space: nowrap; }
 .toast.is-on { opacity: 1; transform: translate(-50%, 0); }
 .toast.is-bad { background: var(--accent); }
 
+
+/* ── 问答看板 ── */
+.stats-qa { grid-template-columns: repeat(5, 1fr); }
+.qa-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 14px; margin: 14px 0; }
+.qa-box { border: 1px solid var(--line); background: #fff; padding: 14px 16px; }
+.qa-box-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 10px; }
+.qa-box-head h2 { font-size: 13px; letter-spacing: .06em; margin: 0; }
+.qa-box-head .toolbar-note { margin-left: auto; }
+.qa-list { list-style: none; margin: 0; padding: 0; }
+.qa-list li { display: flex; gap: 10px; align-items: baseline; padding: 6px 0; border-bottom: 1px dashed var(--line); font-size: 13px; }
+.qa-list li:last-child { border-bottom: 0; }
+.qa-q { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.qa-n { font-family: var(--mono); font-size: 12px; color: var(--ink-2); }
+.pill { display: inline-block; padding: 1px 7px; font-family: var(--mono); font-size: 11px; border: 1px solid var(--line); }
+.pill.ok { border-color: #7B8F6B; color: #4B5A3F; }
+.pill.bad { border-color: var(--accent); color: var(--accent); }
+
+/* ── 模型与提示词配置 ── */
+.cfg-list { display: grid; gap: 14px; margin-top: 14px; }
+.cfg-card { border: 1px solid var(--line); background: #fff; padding: 16px; }
+.cfg-head { display: flex; align-items: baseline; gap: 10px; }
+.cfg-head h2 { font-size: 15px; margin: 0; }
+.cfg-note { font-size: 12px; color: var(--ink-2); margin: 6px 0 12px; }
+.cfg-label { display: block; font-size: 12px; color: var(--ink-2); margin-bottom: 10px; }
+.cfg-input, .cfg-textarea {
+  display: block; width: 100%; margin-top: 5px; padding: 8px 10px;
+  border: 1px solid var(--line); background: var(--paper); color: var(--ink);
+  font-size: 13px; box-sizing: border-box;
+}
+.cfg-input.mono, .cfg-textarea { font-family: var(--mono); }
+.cfg-textarea { resize: vertical; line-height: 1.55; }
+.cfg-actions { display: flex; align-items: center; gap: 12px; }
+.cfg-actions .toolbar-note { margin-left: 0; }
+.cfg-actions .btn { margin-left: auto; }
+
+@media (max-width: 860px) {
+  .stats-qa { grid-template-columns: repeat(2, 1fr); }
+  .qa-grid { grid-template-columns: 1fr; }
+}
+
 @media (max-width: 640px) {
   .dash { padding: 0 12px 48px; }
   .table td.text { max-width: 220px; }

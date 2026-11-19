@@ -237,19 +237,99 @@
   });
 
   /* ── 标签页 / 筛选 / 分页 ── */
+  /* ── 问答埋点看板 ── */
+  function loadQa() {
+    return api('/api/qa').then(function (d) {
+      var t = d.totals || {};
+      $('qaTotal').textContent = t.total == null ? '—' : t.total;
+      $('qaLast7').textContent = t.last7 == null ? '—' : t.last7;
+      $('qaEmpty').textContent = t.empty == null ? '—' : t.empty;
+      $('qaEmptyRate').textContent = (t.empty_rate == null ? '—' : t.empty_rate + '%');
+      $('qaMs').textContent = t.ms_avg == null ? '—' : t.ms_avg;
+
+      var qs = d.top_questions || [];
+      $('qaTopQuestions').innerHTML = qs.length ? qs.map(function (r) {
+        return '<li><span class="qa-q">' + esc(r.q) + '</span><span class="qa-n">' + r.n + ' 次</span></li>';
+      }).join('') : '<li class="empty">还没有问答记录</li>';
+
+      var hits = d.top_hits || [];
+      $('qaTopHits').innerHTML = hits.length ? hits.map(function (r) {
+        return '<li><span class="qa-q mono">' + esc(r.id) + '</span><span class="qa-n">' + r.n + ' 次</span></li>';
+      }).join('') : '<li class="empty">还没有命中记录</li>';
+
+      var rows = d.recent || [];
+      $('qaRecent').innerHTML = rows.length ? rows.map(function (r) {
+        return '<tr>' +
+          '<td class="mono">' + fmt(r.ts) + '</td>' +
+          '<td>' + esc(r.query) + '</td>' +
+          '<td class="mono">' + (r.hit_count || 0) + '</td>' +
+          '<td class="mono">' + (r.ms == null ? '—' : r.ms) + '</td>' +
+          '<td>' + (r.empty ? '<span class="pill bad">空召回</span>' : '<span class="pill">已作答</span>') + '</td>' +
+          '</tr>';
+      }).join('') : '<tr><td colspan="5" class="empty">还没有问答记录</td></tr>';
+    });
+  }
+
+  /* ── 模型与提示词配置 ── */
+  function loadConfig() {
+    return api('/api/config').then(function (d) {
+      var mods = d.modules || [];
+      $('cfgList').innerHTML = mods.map(function (m) {
+        return '<article class="cfg-card" data-key="' + esc(m.key) + '">' +
+          '<div class="cfg-head"><h2>' + esc(m.title) + '</h2>' +
+          (m.is_default ? '<span class="pill">默认配置</span>' : '<span class="pill ok">已自定义</span>') + '</div>' +
+          '<p class="cfg-note">' + esc(m.note) + '<span class="mono"> · key=' + esc(m.key) + '</span></p>' +
+          '<label class="cfg-label">模型 ID<input class="cfg-input mono" data-field="model" value="' + esc(m.model) + '"></label>' +
+          '<label class="cfg-label">提示词<textarea class="cfg-textarea" data-field="prompt" rows="4">' + esc(m.prompt) + '</textarea></label>' +
+          '<div class="cfg-actions"><span class="toolbar-note" data-role="meta">' + (m.updated_at ? '更新于 ' + fmt(m.updated_at) : '尚未保存过') + '</span>' +
+          '<button class="btn" type="button" data-act="save-config">保存</button></div>' +
+          '</article>';
+      }).join('') || '<p class="empty">没有可配置模块</p>';
+    });
+  }
+
+  $('cfgList').addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-act="save-config"]');
+    if (!b) return;
+    var card = b.closest('.cfg-card');
+    var key = card.getAttribute('data-key');
+    var model = card.querySelector('[data-field="model"]').value.trim();
+    var prompt = card.querySelector('[data-field="prompt"]').value.trim();
+    b.disabled = true;
+    api('/api/config', { method: 'POST', body: JSON.stringify({ key: key, model: model, prompt: prompt }) })
+      .then(function () {
+        toast('已保存：' + key);
+        card.querySelector('[data-role="meta"]').textContent = '刚保存';
+      })
+      .catch(function (err) { toast(err.message || '保存失败', true); })
+      .then(function () { b.disabled = false; });
+  });
+
+  $('configReload').addEventListener('click', function () { loadConfig(); toast('已重新读取'); });
+
   function switchTab(name) {
     state.tab = name;
-    var dev = name === 'devices';
-    $('tabDevices').classList.toggle('is-on', dev);
-    $('tabMessages').classList.toggle('is-on', !dev);
-    $('tabDevices').setAttribute('aria-selected', dev ? 'true' : 'false');
-    $('tabMessages').setAttribute('aria-selected', dev ? 'false' : 'true');
-    $('panelDevices').hidden = !dev;
-    $('panelMessages').hidden = dev;
-    if (dev) loadDevices(); else loadMessages();
+    var map = {
+      devices: ['tabDevices', 'panelDevices'],
+      messages: ['tabMessages', 'panelMessages'],
+      qa: ['tabQa', 'panelQa'],
+      config: ['tabConfig', 'panelConfig']
+    };
+    Object.keys(map).forEach(function (k) {
+      var on = k === name;
+      $(map[k][0]).classList.toggle('is-on', on);
+      $(map[k][0]).setAttribute('aria-selected', on ? 'true' : 'false');
+      $(map[k][1]).hidden = !on;
+    });
+    if (name === 'devices') loadDevices();
+    else if (name === 'messages') loadMessages();
+    else if (name === 'qa') loadQa();
+    else if (name === 'config') loadConfig();
   }
   $('tabDevices').addEventListener('click', function () { switchTab('devices'); });
   $('tabMessages').addEventListener('click', function () { switchTab('messages'); });
+  $('tabQa').addEventListener('click', function () { switchTab('qa'); });
+  $('tabConfig').addEventListener('click', function () { switchTab('config'); });
 
   $('devSearchBtn').addEventListener('click', function () {
     state.dev.q = $('devSearch').value.trim();
@@ -291,7 +371,10 @@
 
   function loadAll() {
     loadStats();
-    if (state.tab === 'devices') loadDevices(); else loadMessages();
+    if (state.tab === 'devices') loadDevices();
+    else if (state.tab === 'messages') loadMessages();
+    else if (state.tab === 'qa') loadQa();
+    else if (state.tab === 'config') loadConfig();
   }
 
   /* ── 启动 ── */
