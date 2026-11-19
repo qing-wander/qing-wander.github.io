@@ -20,6 +20,11 @@
 
 const JSON_HEADERS = { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' };
 const MODEL = '@cf/baai/bge-m3';
+/* 中文问答用 llama-3.3-70b-instruct-fp8-fast：
+   实测同一个问题 GLM-4.7-flash 是推理型，586 个 completion token 大半是思维链，
+   max_tokens=400 时正文直接为空；llama-3.3 只用 47 token、10.8 neurons 就出答案。
+   若要换回 GLM，必须把 max_tokens 提到 1200+，否则答案会被思维链吃光。 */
+const DEFAULT_CHAT_MODEL = '@cf/meta/llama-3.3-70b-instruct-fp8-fast';
 
 const json = (data, status = 200) => new Response(JSON.stringify(data), { status, headers: JSON_HEADERS });
 
@@ -57,6 +62,22 @@ export default {
       if (!vector) return json({ ok: false, error: 'embed failed' }, 502);
       const res = await env.VECTORIZE.query(vector, { topK, returnMetadata: 'all', returnValues: false });
       return json({ ok: true, matches: res.matches || [] });
+    }
+
+    if (url.pathname === '/chat') {
+      const messages = Array.isArray(body.messages) ? body.messages.slice(-8) : [];
+      if (!messages.length) return json({ ok: false, error: 'empty messages' }, 400);
+      const model = typeof body.model === 'string' ? body.model : DEFAULT_CHAT_MODEL;
+      const t0 = Date.now();
+      const r = await env.AI.run(model, {
+        messages,
+        max_tokens: Math.min(Math.max(Number(body.max_tokens) || 400, 128), 1200),
+        temperature: Number.isFinite(Number(body.temperature)) ? Number(body.temperature) : 0.2,
+      });
+      /* Workers AI 走 OpenAI 兼容结构时正文在 choices[0].message.content */
+      /* 三种返回形态都兜：OpenAI 兼容 message.content、旧版 response、choices[0].text */
+      const text = r?.choices?.[0]?.message?.content || r?.response || r?.choices?.[0]?.text || '';
+      return json({ ok: true, model, text: String(text).trim(), usage: r?.usage || null, ms: Date.now() - t0 });
     }
 
     return json({ ok: false, error: 'not found' }, 404);

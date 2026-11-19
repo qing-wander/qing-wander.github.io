@@ -238,7 +238,8 @@ node scripts/rag_query.mjs --golden tests/golden-queries.json   # 金标集 hit@
       —— 实测当前 resume.html 打出来正好 2 页
 - [x] 语义层：`@cf/baai/bge-m3`（1024 维）向量化 42 片 → Vectorize `resume-kb` 已入库（42 条，id 带版本前缀 `kb-5f9004b7:`），`node scripts/rag_embed.mjs --query "…"` 可做语义自检
 - [x] 混合检索接口 `/api/kb`（D1 FTS5 BM25 + Vectorize cosine，RRF k=60 融合，cosine 地板 0.55）已上线，**semantic=true**（语义路走 Worker `resume-kb-api`，见 7.7）
-- [ ] `/api/chat`（在 `/api/kb` 之上组织答案 + 引用切片）、rerank、JD 匹配
+- [x] `/api/chat`：检索 → 空召回短路 → llama-3.3-70b 生成 → 返回 citations + 落 qa_logs（实测 1.7s / 5.2s；公司全称原样保留）
+- [ ] `/api/chat` 与页面问答框对接、rerank、JD 匹配
 - [x] RAG 切片（按 bullet id）+ D1 词面索引 + 金标集 hit@3 闸门：`rag/`、`scripts/build_rag_chunks.mjs`、`tests/golden-queries.json`
 - [ ] RAG 余下：`/api/chat`（需给 Pages 项目挂 `[ai]` + `[[vectorize]]` 绑定）、JD 匹配、动态简历变体
 - [ ] 跨设备查看（设备绑定码）

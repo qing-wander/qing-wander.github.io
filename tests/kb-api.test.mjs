@@ -59,3 +59,14 @@ test('pickSemantic：全空时返回空数组，不抛', () => {
     assert.deepEqual(pickSemantic([]), []);
   });
 });
+
+test('buildMessages：提示词锁死公司名/学历/数字，且片段带 id 可回链', async () => {
+  const { buildMessages, LOCKED_FIELDS } = await import('../functions/api/chat.js');
+  const msgs = buildMessages('他在进门财经做什么', [
+    { id: 'exp-inmen-01', title: '深圳进门财经科技股份有限公司 · Agent 工程师', text: '主导 AI 金融投研工作台核心基建' },
+  ]);
+  assert.equal(msgs[0].role, 'system');
+  assert.ok(msgs[0].content.includes(LOCKED_FIELDS), '锁定字段要明写进系统提示');
+  assert.ok(msgs[0].content.includes('简历里没写这块'), '要有拒答话术');
+  assert.ok(msgs[1].content.includes('[exp-inmen-01]'), '片段 id 必须带进上下文，答案才能挂引用');
+});

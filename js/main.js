@@ -686,10 +686,10 @@
              → char-bigram TF-IDF 检索 knowledge/ 切片 → hy3 生成（带 <context> 约束）
        源码：functions/tencent/（index.js 业务主体 / prompt.js 提示词与拦截） */
     var AI_CONFIG = {
-      endpoint: 'https://resume-ai-d9g7zghnxda2ee2cb-1307508155.ap-shanghai.app.tcloudbase.com/chat',
+      endpoint: '/api/chat',   // Cloudflare Pages Function：混合检索（BM25 + Vectorize）→ 受约束生成
       timeout: 20000,       // 云函数执行超时 30s，前端留余量
       maxChars: 200,        // 与后端 MAX_QUESTION_CHARS 对齐
-      welcome: '你好，我是 CP.AI —— 陈培胜的档案问答助手。<br>后端跑在 <b>CloudBase 云函数</b>上：先用 TF-IDF 在简历档案切片里召回相关段落，再交给大模型受约束生成答案，每次回答都会标注依据来源。<br>可以问我项目细节、技术栈、工作经历。',
+      welcome: '你好，我是 CP.AI —— 陈培胜的档案问答助手。<br>后端跑在 <b>Cloudflare</b> 上：先用混合检索（词面 BM25 + 向量）在简历切片里召回相关段落，再交给大模型受约束生成答案，每次回答都会标注依据来源。<br>可以问我项目细节、技术栈、工作经历。',
       quickQuestions: ['主导过哪些 0→1 系统？', 'Agent 架构经验？', '技术栈与方向？', '联系方式？'],
       /* ── 主动性：停留 10 秒仍未开口，就主动把问题递到手边 ── */
       autoDelay: 10000,             // 展开面板的时刻（毫秒）
