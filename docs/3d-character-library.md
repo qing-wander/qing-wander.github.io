@@ -54,13 +54,7 @@
 
 同一套 `model-viewer` 参数（`field-of-view=26deg`、`shadow-intensity=0.5`、`exposure=1.05`）拍出来的原始效果，未做任何美化：
 
-| 档案人偶 ARCHIVE BOT（改色后，推荐） | 数字人 XBOT 原色 |
-| --- | --- |
-| ![archive-bot](3d-character-library/archive-bot.png) | ![xbot](3d-character-library/xbot-original.png) |
-
-| 先锋士兵 VANGUARD | Y2K 女孩 MICHELLE |
-| --- | --- |
-| ![soldier](3d-character-library/soldier.png) | ![michelle](3d-character-library/michelle.png) |
+> 实拍截图（archive-bot / xbot-original / soldier / michelle）已随旧图目录移除，此处仅保留文字盘点。
 
 全量对比看板（6 个模型同屏、可现场切动作）：
 
@@ -69,7 +63,7 @@ python3 -m http.server 8766
 # 打开 http://127.0.0.1:8766/assets/skins/pet-lab.html
 ```
 
-![lab](3d-character-library/lab-overview.png)
+> 全量对比看板截图已随旧图目录移除。
 
 ---
 
