@@ -434,7 +434,7 @@
           var rwText = rw.model
             ? '改写：' + rw.rewritten + ' 条通过护栏，' + rw.rejected + ' 条退回原文'
               + (rw.chars_delta ? '（净增 ' + rw.chars_delta + ' 字）' : '')
-              + (rw.reasons && rw.reasons.length ? ' ｜ 拦截原因：' + rw.reasons.join('、') : '')
+              + (rw.reasons && rw.reasons.length ? ' ｜ 拦截原因：' + rw.reasons.slice(0, 5).join('、') + (rw.reasons.length > 5 ? '…' : '') : '')
             : '改写未生效：' + (rw.reason || '模型无响应') + '（已按原文输出）';
           $('variantOrder').textContent = rwText;
         }
