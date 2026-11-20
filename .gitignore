@@ -17,8 +17,3 @@ worker/*.log
 
 # 后台本地变量（ADMIN_PASSWORD / ADMIN_SESSION_SECRET 等，绝不入库）
 admin/.dev.vars
-
-# 角色构建中间产物（Mixamo 原始 FBX、Blender 未压缩 GLB；站点只加载 assets/skins/models/*.glb）
-assets/character-views/model/*/mixamo-downloads/
-assets/character-views/model/*/FemaleRigged_raw.glb
-assets/character-views/model/*/FemaleRigged_opt.glb
