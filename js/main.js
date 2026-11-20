@@ -685,8 +685,19 @@
        链路：静态页 → CloudBase HTTP 网关 /chat → 云函数 resume-ai-chat
              → char-bigram TF-IDF 检索 knowledge/ 切片 → hy3 生成（带 <context> 约束）
        源码：functions/tencent/（index.js 业务主体 / prompt.js 提示词与拦截） */
+    /* API 线路：github.io 是纯静态托管，POST /api/chat 会回 405 HTML（不是 JSON），
+       所以问答与 JD 必须直接打 Cloudflare Pages 的同名函数；语音共用该变量，失败时仍回退浏览器合成。
+       这段规则与后面留言墙 apiFetch 共用同一份 API_BASES，避免两处配置漂移。 */
+    var API_BASES = (function () {
+      var host = location.hostname || '';
+      if (/^(localhost|127\.0\.0\.1|0\.0\.0\.0|\[::1\])$/.test(host)) return [''];
+      if (/\.github\.io$/i.test(host)) return ['https://shenge-work.pages.dev'];
+      return ['', 'https://shenge-work.pages.dev'];
+    })();
+    var AI_ENDPOINT = API_BASES[0] + '/api/chat';
+
     var AI_CONFIG = {
-      endpoint: '/api/chat',   // Cloudflare Pages Function：混合检索（BM25 + Vectorize）→ 受约束生成
+      endpoint: AI_ENDPOINT,   // Cloudflare Pages Function：混合检索 → 受约束生成；github.io 下自动跨站
       timeout: 20000,       // 云函数执行超时 30s，前端留余量
       maxChars: 200,        // 与后端 MAX_QUESTION_CHARS 对齐
       welcome: '我是 AI 档案问答助手。<br>后端跑在 <b>Cloudflare</b> 上：先用混合检索（词面 BM25 + 向量）在简历切片里召回相关段落，再交给大模型受约束生成答案，每次回答都会标注依据来源。<br>可以问我项目细节、技术栈、工作经历。',
@@ -1296,16 +1307,8 @@
       return d < 7 ? tpl(T.timeDay || '{n} 天前', { n: d }) : fmtTime(ts);
     }
 
-    /* API 双线路：GitHub Pages 只有静态文件，/api 不存在 →
-       自动切到 Cloudflare Pages（同一份 functions/api，github.io 已列入来源白名单）。
-       本地预览只打本机，避免测试留言被写进线上。 */
-    var API_BASES = (function () {
-      var host = location.hostname || '';
-      if (/^(localhost|127\.0\.0\.1|0\.0\.0\.0|\[::1\])$/.test(host)) return [''];
-      if (/\.github\.io$/i.test(host)) return ['https://shenge-work.pages.dev'];
-      return ['', 'https://shenge-work.pages.dev'];
-    })();
-
+    /* API 双线路规则（API_BASES）已在本节 AI_CONFIG 之前统一定义，问答与留言墙共用：
+       github.io 直连 pages.dev 的函数，本地预览只打本机。 */
     /* 依次尝试线路；404/405 或非 JSON（静态主机把 /api 当文件返回）视为该线路没有 API。
        serverFailover 只给 GET 用：POST 收到 5xx 时不能盲目换线路重试，可能重复写入。
        所有请求统一带 X-Device-Id：服务端据此只返回这台设备的留言。 */
