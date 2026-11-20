@@ -5,7 +5,43 @@ GitHub Pages 之外的备用线路，同一套静态文件。当前线上地址�
 - 作品集主页：https://shenge-work.pages.dev/
 - 在线简历：https://shenge-work.pages.dev/resume.html
 
-## 当前实际形态（2026-11-18 实测）
+## ⚠️ 当前故障：自动构建连续失败，`pages.dev` 停在旧版（2026-11-20）
+
+**现象**：`github.io` 已是最新版（含男女双 3D 形象），`pages.dev` 仍是 11-19 旧版，看不到新模型。
+两个域名内容不一致（登记为 [TODO.md T22](TODO.md)）。
+
+**根因**：构建命令把整个 `assets/` 拷进 `dist`，而 `assets/character-views/` 里有 27.5MiB 的
+`female.fbx` 等多个超过 **Cloudflare Pages 单文件 25MiB 上限**的原始素材。构建日志原文：
+
+```
+Executing user command: mkdir -p dist && cp -r index.html resume.html css js data images videos assets favicon-64.png favicon.png dist/
+✘ [ERROR] Error: Pages only supports files up to 25 MiB in size
+  assets/character-views/model/female/female.fbx is 27.5 MiB in size
+Failed to validate assets in the output directory with code: 1
+```
+
+`wrangler pages deployment list --project-name=shenge-work` 显示自 `aedf7ac`（11-20）起
+**7 个 production 部署全部 `Failure`**；线上在跑的是 23 小时前的 `01b2e1f`（11-19）。
+GitHub Pages 不吃这条构建命令、也无 25MiB 限制，所以没受影响。
+
+**已根治（2026-11-21）**，分两步，均不需要改 build command、不需要 R2/支付：
+
+1. **止血**（11-20 23:50）：wrangler 直传，`deploy-pages.sh`（已排除 `character-views`）
+   产出 70 文件 / 33MB，新 production 部署 `6241af37-852a-4075-855e-e0984418b8df`。
+2. **根治**（11-21）：把 `assets/character-views/` 57 文件 / 573MB 整目录归档到飞书云盘
+   （`https://my.feishu.cn/drive/folder/BnalfpLM8lzNYLdkYu3cqH71nAc`），`git rm --cached` + `.gitignore`
+   从仓库移除并 push。build command `cp -r ... assets ... dist/` 不再碰到大文件，
+   Cloudflare 自动构建从连续 `Failure` 恢复为 `Success`。
+
+两站现均引用 `ai-skins.js?v=20261120K5`、均含 `female3d`，首页 md5 一致
+（`efe367f5521b35298ccd1c60487c89dc`）。原始素材移出后本地物理文件仍保留，
+需要可从飞书 `+pull` 拉回，详见 [TODO.md T22 / T23](TODO.md)。
+
+> 历史背景：原计划归档到 Cloudflare R2，但账号无支付方式无法启用（错误 `10042`），
+> 已改用飞书云盘；`scripts/r2-sync.sh` 保留作参考但不再使用。
+> 未做：git 历史瘦身（filter-repo 强推，破坏性），工作区已清爽但 `.git` 历史仍含旧体积。
+
+## 当前实际形态（2026-11-18 实测；构建命令缺陷见上节）
 
 项目 `shenge-work` 已配置为 GitHub 数据源（`shenge-work/shenge-work.github.io`，生产分支 `main`），
 **GitHub App 授权已生效，`push` 即触发自动构建**——这是当前主链路。
@@ -63,6 +99,9 @@ GitHub Pages 之外的备用线路，同一套静态文件。当前线上地址�
 
 ## 与 GitHub Pages 的关系
 
-- 两边跑同一份仓库，最终内容一致
+- 两边跑同一份仓库，**正常时**最终内容一致；**2026-11-20 起因 T22 构建失败暂时分叉**（pages.dev 旧、github.io 新）
 - 统计 / 计数 / AI 问答后端与域名无关，两边共用同一套
 - 已知差异：Pages 默认 pretty URL，`/resume.html` 会 308 跳到 `/resume`；GitHub Pages 保持 `/resume.html`
+- **发布链路差异是 T22 的根源**：GitHub Pages 直接发布仓库静态文件、无单文件大小限制；
+  Cloudflare Pages 走「build command → `dist` → 上传校验」，受 25MiB/文件上限约束，
+  所以同一份仓库里一旦出现 >25MiB 文件，只有 pages.dev 会构建失败。改大文件时务必先看这一节。

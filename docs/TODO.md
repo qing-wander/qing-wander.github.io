@@ -4,9 +4,13 @@
 > 统一在这里登记，每条给出状态、影响、前置条件、执行步骤与验收标准，并回链依据文档。
 > 目的：换会话、换机器、换协作人时，不用通读五份设计文档也能知道下一步该做什么、哪些是故意不做的。
 >
-> 最近一次盘点：**2026-11-19**（Cloudflare 免费资源盘点 + 计数与留言墙迁到 D1（T16）+
-> 留言墙接入 Turnstile 人机校验（T17）+ D1 备份脚本（T18）+ 可观测接入 Web Analytics 双路（T19），
-> T1 暂缓原因补充为「支付问题未解决」，站点始终未新增任何域名依赖）。
+> 最近一次盘点：**2026-11-21**（T22 / T23 均已根治完成：`character-views` 原始素材 57 文件 / 573MB
+> 整目录归档到飞书云盘、从 git 移除并 push，Cloudflare Pages 自动构建由连续 `Failure` 恢复为 `Success`，
+> 两站内容一致；R2 方案因账号无支付方式废弃）。此前 2026-11-20 发现 `pages.dev` 自 `907a108` 起
+> 连续构建失败、线上停在 11-19 旧版，根因是构建命令把整个 `assets/` 拷进 `dist` 触发 25MiB 单文件上限。
+> 更早的 2026-11-19
+> 盘点完成 Cloudflare 免费资源盘点 + D1 迁移（T16）+ Turnstile（T17）+ D1 备份（T18）
+> + 可观测双路（T19），T1 暂缓原因补充为「支付问题未解决」。
 
 ---
 
@@ -20,6 +24,13 @@
 （`ok:true`，score 75，4 条需求含证据出处与追问点），问答与 TTS 回归均为 200。
 **T10 已完成，T11 端到端验收已于 2026-11-18 全项完成**（含预览子域 CORS 修复、`chat_logs` 查库、移动端触屏验收，见 §3.11）；T5 同步关闭。
 方案、进度与验收清单详见 [jd-match.md](jd-match.md)。
+
+**✅ 两个域名内容不一致（T22）已根治（2026-11-21）**：`github.io` 与 `pages.dev` 现均含男女双 3D 形象、
+内容一致。根因是构建命令 `cp -r ... assets ... dist/` 把 `assets/character-views/` 里的 27.5MiB FBX
+拷进产物，超过 Pages 单文件 25MiB 上限，自 `907a108`（11-20）起每次 push 都构建失败。
+两步解决：① 11-20 `deploy-pages.sh` 直传止血让 pages.dev 追平；② 11-21 把 `character-views`
+整目录归档到飞书云盘、从 git 移除并 push，自动构建随之恢复（无需改 build command、无需 R2/支付）。
+详见 §3.18 / §3.19。旧的 R2 方案（T23）因账号无支付方式已废弃，改为飞书归档。
 
 **既有功能的缺口仍是「访客填任意邮箱都能自动收到简历」**。Resend 尚未验证自有发信域名，
 `onboarding@resend.dev` 只能发给账号邮箱 `shenge.work@gmail.com`；其他邮箱会被 Resend 以
@@ -75,6 +86,8 @@ Workers KV 迁到 D1（`portfolio-db`，4 张表），免费写额度从 1,000 �
 | T19 | 可观测双路：Cloudflare Web Analytics 与 Umami 并行采集 | `已完成（2026-11-19）` | — | 访问统计兜底 | 本文 §3.17 / [cloudflare-free-resources.md](cloudflare-free-resources.md) §9 |
 | T20 | 角色皮肤收敛为单一 `self3d`（删 11 款皮肤与资源、隐藏换肤入口） | `已完成（2026-11-19）` | — | 右下角助手 | [pet-self3d-pipeline.md §6](pet-self3d-pipeline.md) |
 | T21 | 桌宠表现力升级：眨眼 / 口型 / 首屏体积≤1.2MB / 对称正盘腿 / 启用躺平 / 坐→站过渡 | `待办` | 中 | 右下角助手 | [pet-self3d-pipeline.md §8](pet-self3d-pipeline.md) |
+| T22 | 两个域名内容不一致：pages.dev 构建失败停在旧版，看不到新 3D 模型 | `已完成` | 高 | `pages.dev` 全站 | 本文 §3.18 / [cloudflare-pages-deploy.md](cloudflare-pages-deploy.md) |
+| T23 | `assets/character-views` 原始素材归档 + 移出仓库根治构建（R2 方案废弃 → 飞书云盘） | `已完成` | 中 | 仓库体积 / Pages 构建 | 本文 §3.19 / [cloudflare-free-resources.md](cloudflare-free-resources.md) §10 |
 
 ---
 
@@ -507,6 +520,119 @@ beacon 从 `pages.dev` 上报同样 200，数据归到同一站点。
 
 **注意**：CF 与 Umami 口径不同（CF 更严，剔除部分爬虫与预加载），两边 PV 对不上是正常的，
 不要当成 bug 去修。
+
+---
+
+### 3.18 T22 · 两个域名内容不一致：`pages.dev` 停在旧版（2026-11-20，已直传止血 / 自动构建待根治）
+
+**用户报告**：打开 `github.io` 且挂海外代理能看到新女性 3D 模型；打开 `pages.dev` 仍是旧模型、看不到新形象。
+
+**实测证据（2026-11-20，两站线上直取对比）**
+
+| 探测 | `github.io` | `pages.dev` |
+|---|---|---|
+| `index.html` 字节数 | 29,042（= 本地最新） | 28,985（旧） |
+| `index.html` 脚本引用 | `ai-skins.js?v=20261120K5` | `ai-skins.js?v=20261119M` |
+| `js/ai-skins.js` 大小 | 37,377 B | 35,903 B |
+| 脚本内含 `female3d` | ✅ 有 | ❌ 无 |
+| 脚本内模型版本 | `MaleRigged.glb?v=20261120H` / `FemaleRigged.glb?v=20261120K` | 无 female 项 |
+| `MaleRigged.glb` 响应 | 200 `model/gltf-binary` | 200 `text/html`（兜底页，文件其实不在产物里） |
+
+> 顺带澄清用户说的「开海外代理才能看到模型」：`github.io` 的模型文件本身两站都在、MIME 正确，
+> 是否挂代理只影响境内到 GitHub Pages 的连通性，与模型是否上线无关；`pages.dev` 的问题是**内容旧**，
+> 不是网络问题。
+
+**根因（已定位到 Cloudflare 构建日志）**
+
+- `wrangler pages deployment list --project-name=shenge-work` 显示：自 `aedf7ac`（11-20）起的
+  **7 个 production 部署全部 `Failure`**；线上真正在跑的是 23 小时前的 `01b2e1f`（11-19）。
+- 失败部署 `5a1edb2a`（commit `6dff252`）的 build log 原文：
+  ```
+  Executing user command: mkdir -p dist && cp -r index.html resume.html css js data images videos assets favicon-64.png favicon.png dist/
+  ✘ [ERROR] Error: Pages only supports files up to 25 MiB in size
+    assets/character-views/model/female/female.fbx is 27.5 MiB in size
+  Failed to validate assets in the output directory with code: 1
+  ```
+- 即：构建命令把**整个 `assets/`** 拷进 `dist`，其中包含 526MB 的混元/Mixamo 原始素材
+  （`female.fbx` 27.5MiB、`MaleRigged_raw.glb` 49MiB 等多个 >25MiB 文件），触发 Pages 单文件上限。
+- 为什么 `github.io` 没坏：GitHub Pages 从仓库根发布、不吃这条 `cp -r` 构建命令，也没有 25MiB 上限，
+  所以新提交正常生效。两条链路的分叉点正是 `907a108`（首次把原始素材入库，11-20）。
+
+**修复（两条路，先做①止血，再做②根治）**
+
+① **立即让 pages.dev 追平**（不依赖 R2、不依赖支付方式，已备好）：
+```bash
+cd /Users/shenge/Documents/shenge-work.github.io
+./scripts/deploy-pages.sh --dry-run   # 已验证：79 文件 / 33MB，无 character-views，无 >25MB 文件
+./scripts/deploy-pages.sh             # 走 wrangler 直传，绕过会失败的 GitHub 集成构建
+```
+`scripts/deploy-pages.sh` 已改：assets 用 `rsync -a --exclude='character-views' assets "$STAGE/"`。
+**注意**：这只是绕过自动构建；只要 Cloudflare 控制台的 build command 还写 `cp -r ... assets ... dist/`，
+下次 push 仍会失败。想一劳永逸需在 Pages 项目 Settings → Build 把命令改成排除 `character-views`
+（或等 T23 把素材移出仓库后改回默认）。
+
+② **根治（2026-11-21 已执行）**：见 T23——把原始素材整目录归档到飞书云盘、从 git 移除并 push，
+   build command 不再碰到大文件，自动构建随之恢复。**无需改 build command、无需 R2/支付**。
+
+**止血执行结果（2026-11-20 23:50，①完成）**
+
+```
+WRANGLER_BIN=~/.npm/_npx/3ab751a803c3c994/node_modules/wrangler/bin/wrangler.js ./scripts/deploy-pages.sh
+→ 70 文件 / 33MB；✨ Success! Uploaded 11 files (43 already uploaded)
+→ Deployment complete: https://6241af37.shenge-work.pages.dev  (Production / main)
+→ /api/wall open=true
+```
+
+- `pages.dev` 与 `github.io` 现均引用 `ai-skins.js?v=20261120K5`，脚本均含 `female3d`；
+  两个 GLB 从两站均返回 200。首页 md5 本地 = 线上 = `efe367f5521b35298ccd1c60487c89dc`。
+
+**根治执行结果（2026-11-21，②完成）**：素材移出仓库后 push 触发 Cloudflare 自动构建，
+部署从 `Failure` 转为 `Success`，两站内容一致。详见 §3.19。
+
+**验收标准**
+- `curl -sL https://shenge-work.pages.dev/js/ai-skins.js?v=20261120K5 | grep -c female3d` ≥ 1；
+- `pages.dev/index.html` 的脚本引用与 `github.io` 一致（`ai-skins.js?v=20261120K5`）；
+- 两个 `GLB` 从 pages.dev 取回应为 `model/gltf-binary` 而非 `text/html`；
+- 浏览器打开 pages.dev 能看到男/女 3D 形象并可用 G 键 / 左下角透明按钮切换。
+
+---
+
+### 3.19 T23 · 大文件归档到飞书云盘 + 移出仓库（2026-11-21，已完成）
+
+**背景**：`assets/character-views/` 共 **573MB / 57 个文件**（混元 3D + Mixamo 原始素材，
+页面未引用，见 [pet-self3d-pipeline.md §6](pet-self3d-pipeline.md)），其中多个单文件 28–49MiB。
+它一方面把工作区撑大，另一方面直接导致 T22 的 Pages 构建失败。
+
+**方案变更（R2 → 飞书云盘）**
+- 原方案 Cloudflare R2 废弃：账号（`ead07d9f…`，`shenge.work@gmail.com`）**无可绑定支付方式，R2 无法启用**，
+  `r2 bucket list/create` 报 `10042 Please enable R2 through the Cloudflare Dashboard`，无自助启用 API。
+  `scripts/r2-sync.sh` / `r2-cors.json` 保留作历史参考，但当前不再使用。
+- 新方案：**飞书云盘整目录归档**（用户 2026-11-21 选定）。飞书 connector 已登录（用户 `sheng`），
+  云空间容量足够，支持整目录镜像与分片上传，日后可原样 `+pull` 拉回继续做模型。
+
+**执行结果（2026-11-21，已完成）**
+1. 建归档文件夹：`https://my.feishu.cn/drive/folder/BnalfpLM8lzNYLdkYu3cqH71nAc`
+   （folder_token `BnalfpLM8lzNYLdkYu3cqH71nAc`）。
+2. `lark-cli drive +push --as user --local-dir assets/character-views --folder-token <上述> --if-exists skip`
+   → 首批 51 文件 + 补传 6 个 Thinking 素材，合计 **57 文件全部上传、failed=0**；
+   7 个子目录结构与本地一致。抽样下载 `Idle.fbx`，MD5 与本地逐字节相同（`589df972…`）。
+   `+status` 复核 `new_local=0`，云端已覆盖全部本地文件。
+3. `git rm -r --cached assets/character-views` + `.gitignore` 加 `assets/character-views/`：
+   文件从 git 索引移除但**本地物理文件保留**（仍可用于离线模型流水线），以后不会再误入库。
+4. commit + push → 触发 Cloudflare Pages 自动构建，从连续 `Failure` 恢复为 `Success`（T22 根治）。
+
+**拉回方式（需要重做模型时）**
+```bash
+cd /Users/shenge/Documents/shenge-work.github.io
+lark-cli drive +pull --as user --folder-token BnalfpLM8lzNYLdkYu3cqH71nAc \
+  --local-dir assets/character-views
+```
+
+**未做 / 边界**
+- **git 历史瘦身未做**：`git filter-repo` / BFG 重写 + 强推是破坏性操作，本次未执行。
+  工作区已不含大文件、构建已恢复，但 `.git` 历史对象里仍保留旧素材体积；彻底瘦身需另开一次专门操作。
+- 视频 `videos/lessie-demo.mp4`（9.8MB）仍在仓库、未被 `data/site-data.json` 引用改动，低于 25MiB 上限，不受影响。
+- 旧 commit 的线上预览链接可能引用已移除素材，但生产环境不使用历史预览，无需处理。
 
 ---
 

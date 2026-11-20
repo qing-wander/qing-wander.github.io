@@ -12,12 +12,17 @@
 #   预览环境  https://<commit>.shenge-work.pages.dev
 #
 # 说明：
-#   · 上传静态资源（HTML / CSS / JS / data / images / videos / assets(3D 皮肤) / favicon）
+#   · 上传静态资源（HTML / CSS / JS / data / images / videos / assets(3D 皮肤，排除 character-views 原始素材) / favicon）
 #     及 functions/api（Cloudflare Pages Functions：留言墙 /api/wall、简历投递 /api/deliver）；
-#     不上传 functions/tencent（腾讯云函数源码）、worker/、.git、docs；
+#     不上传 functions/tencent（腾讯云函数源码）、worker/、.git、docs、assets/character-views；
+#   · assets/character-views 为混元/Mixamo 原始素材（约 573MB，含 28–49MB 单文件），
+#     不参与线上部署；已从 git 移除（.gitignore 排除），整目录归档到飞书云盘：
+#     https://my.feishu.cn/drive/folder/BnalfpLM8lzNYLdkYu3cqH71nAc
+#     （用 lark-cli drive +pull 拉回；旧的 R2 方案因账号无支付方式已废弃，见 docs/TODO.md T23）；
 #   · Functions 需在 Pages 项目 Settings 里绑定 KV（SITE_KV）与变量
 #     （RESEND_API_KEY 等），见 docs/resume-delivery.md；
-#   · Cloudflare Pages 单文件上限 25MB，当前最大文件 videos/lessie-demo.mp4 约 9.8MB，安全；
+#   · Cloudflare Pages 单文件上限 25MB；线上最大文件为 videos/lessie-demo.mp4 约 9.8MB；
+#     原始模型素材已从部署清单排除并移出仓库，详见 docs/TODO.md T23。
 #   · 首次部署需登录：npx wrangler login（本机已登录，凭据在 ~/Library/Preferences/.wrangler）。
 
 set -euo pipefail
@@ -43,13 +48,19 @@ trap 'rm -rf "$STAGE"' EXIT
 node scripts/embed_assets.mjs
 
 echo "=== ① 收集静态资源 + Pages Functions"
-for item in index.html resume.html css js data images videos assets favicon-64.png favicon.png functions; do
+for item in index.html resume.html css js data images videos favicon-64.png favicon.png functions; do
   if [ ! -e "$item" ]; then
     echo "✗ 缺少 $item，先检查仓库是否完整"
     exit 1
   fi
   rsync -a "$item" "$STAGE/"
 done
+# assets：排除未上线的大体积原始素材，只带 skins/vendor 等线上在用的文件
+if [ ! -d assets ]; then
+  echo "✗ 缺少 assets/，先检查仓库是否完整"
+  exit 1
+fi
+rsync -a --exclude='character-views' assets "$STAGE/"
 # 只带 functions/api（留言墙 / 投递），不带 functions/tencent（腾讯云函数源码）
 rm -rf "$STAGE/functions/tencent"
 if [ ! -d "$STAGE/functions/api" ]; then

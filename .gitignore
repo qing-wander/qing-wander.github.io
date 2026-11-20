@@ -17,3 +17,9 @@ worker/*.log
 
 # 后台本地变量（ADMIN_PASSWORD / ADMIN_SESSION_SECRET 等，绝不入库）
 admin/.dev.vars
+
+# 3D 角色原始素材（Mixamo/混元 FBX/GLB，约 526MB）
+# 不参与线上部署、不入库：避免 Cloudflare Pages 25MiB 单文件上限导致自动构建失败。
+# 已整目录归档到飞书云盘：https://my.feishu.cn/drive/folder/BnalfpLM8lzNYLdkYu3cqH71nAc
+# 需要时用 lark-cli drive +pull 拉回；线上在用的是 assets/skins/models/*.glb（不受影响）。
+assets/character-views/

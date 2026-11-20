@@ -403,5 +403,16 @@ POST /accounts/<id>/rum/site_info       → 10000 Authentication error
 - 计数的历史值**没有迁移**：abacus 取数接口实测已返回 error，取不到原值，因此 D1 从 0 起算。
   这是有意接受的损失（原数字本身来自第三方、无法验证）。
 - `shenge-blog.pages.dev`、`career-agent` 两个 Pages 项目与本文无关，未做任何改动。
-- 后续若要接 R2：优先搬 `videos/lessie-demo.mp4`（9.8MB，`.git` 已 24MB），
-  但 Pages 单文件 25MB 限制内、带宽不限，属于「工程卫生」而非「必须」。
+- **R2 方案已废弃（2026-11-21）**：原计划把 `assets/character-views/` 归档到 Cloudflare R2 bucket
+  `shenge-assets`，但当前账号（`ead07d9f…`，`shenge.work@gmail.com`）**无可绑定支付方式，R2 无法启用**，
+  `wrangler r2 bucket list/create` 报 `10042 Please enable R2 through the Cloudflare Dashboard`，且无自助启用 API。
+  `scripts/r2-sync.sh` / `scripts/r2-cors.json` 保留作历史参考，**当前不再使用**。视频
+  `videos/lessie-demo.mp4`（9.8MB）仍在仓库、地址未改（低于 25MiB 上限，不受影响）。
+- **改用飞书云盘归档（2026-11-21 已完成，见 [TODO.md T23](TODO.md)）**：`character-views/`
+  57 文件 / 573MB 整目录归档到 `https://my.feishu.cn/drive/folder/BnalfpLM8lzNYLdkYu3cqH71nAc`，
+  抽样 MD5 校验一致；已从 git 移除（本地文件保留），Pages 自动构建随之恢复。需重做模型时用
+  `lark-cli drive +pull` 拉回。未做 git 历史瘦身（filter-repo 强推，破坏性）。
+- **连带故障 T22 已随之根治**：素材移出仓库后，构建命令 `cp -r ... assets ... dist/` 不再碰到大文件，
+  `pages.dev` 自动构建从连续 `Failure` 恢复为 `Success`，两站内容一致（11-20 曾先用
+  `deploy-pages.sh` 直传止血）。详见 [cloudflare-pages-deploy.md 故障节](cloudflare-pages-deploy.md)
+  与 [TODO.md §3.18](TODO.md)。
