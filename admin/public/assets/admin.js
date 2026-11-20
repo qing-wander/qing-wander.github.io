@@ -37,6 +37,8 @@
     clearTimeout(toastTimer);
     toastTimer = setTimeout(function () { el.className = 'toast'; }, 2600);
   }
+  /* 给其它面板模块（如 anim-console.js）复用同一条提示条 */
+  window.__adminToast = toast;
 
   function api(path, opts) {
     opts = opts || {};
@@ -379,7 +381,8 @@
       messages: ['tabMessages', 'panelMessages'],
       qa: ['tabQa', 'panelQa'],
       config: ['tabConfig', 'panelConfig'],
-      variant: ['tabVariant', 'panelVariant']
+      variant: ['tabVariant', 'panelVariant'],
+      anim: ['tabAnim', 'panelAnim']
     };
     Object.keys(map).forEach(function (k) {
       var on = k === name;
@@ -391,12 +394,14 @@
     else if (name === 'messages') loadMessages();
     else if (name === 'qa') loadQa();
     else if (name === 'config') { loadTheme(); loadConfig(); }
+    else if (name === 'anim' && window.AnimConsole) window.AnimConsole.init();
   }
   $('tabDevices').addEventListener('click', function () { switchTab('devices'); });
   $('tabMessages').addEventListener('click', function () { switchTab('messages'); });
   $('tabQa').addEventListener('click', function () { switchTab('qa'); });
   $('tabConfig').addEventListener('click', function () { switchTab('config'); });
   $('tabVariant').addEventListener('click', function () { switchTab('variant'); });
+  $('tabAnim').addEventListener('click', function () { switchTab('anim'); });
 
   /* ── 按 JD 生成变体 ─────────────────────────────────────── */
   var variantHtml = '';

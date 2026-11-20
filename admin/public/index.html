@@ -64,6 +64,7 @@
     <button class="tab" id="tabQa" type="button" role="tab" aria-selected="false">问答看板</button>
     <button class="tab" id="tabConfig" type="button" role="tab" aria-selected="false">模型与提示词</button>
     <button class="tab" id="tabVariant" type="button" role="tab" aria-selected="false">生成变体</button>
+    <button class="tab" id="tabAnim" type="button" role="tab" aria-selected="false">角色动画</button>
   </div>
 
   <!-- 设备台账 -->
@@ -198,6 +199,69 @@
     </article>
   </section>
 
+  <!-- 角色动画 -->
+  <section class="panel" id="panelAnim" role="tabpanel" hidden>
+    <div class="toolbar">
+      <span class="toolbar-note">角色动画台账：换角色 → 换动作 → 360° 验动作 → 用 280×360 小窗复核公开站取景。状态分「上线 / 候选 / 待评 / 弃用」。快捷键：空格播放暂停 · ←/→ 逐帧 · R 重播。</span>
+    </div>
+    <div class="anim">
+      <div class="anim-main">
+        <div class="anim-stage" id="animStage">
+          <span class="anim-tag" id="animTag">MALE / MaleRigged.glb</span>
+          <span class="anim-read" id="animRead">θ 0° · φ 78° · 80%</span>
+          <div class="anim-load" id="animLoad">载入模型…</div>
+        </div>
+        <div class="anim-transport">
+          <button class="btn btn-sm" id="animPlay" type="button">暂停</button>
+          <button class="btn btn-sm btn-ghost" id="animReplay" type="button">重播</button>
+          <button class="btn btn-sm btn-ghost is-on" id="animLoop" type="button">循环 开</button>
+          <input class="anim-seek" id="animSeek" type="range" min="0" max="1" step="0.001" value="0" aria-label="播放进度">
+          <span class="anim-time" id="animTime">0.00 / 0.00s</span>
+          <button class="btn btn-sm btn-ghost" id="animPrevF" type="button">◀ 1 帧</button>
+          <button class="btn btn-sm btn-ghost" id="animNextF" type="button">1 帧 ▶</button>
+          <select class="anim-speed" id="animSpeed" aria-label="播放速度">
+            <option value="0.25">0.25×</option>
+            <option value="0.5">0.5×</option>
+            <option value="1" selected>1.0×</option>
+            <option value="1.5">1.5×</option>
+          </select>
+        </div>
+        <div class="anim-views">
+          <span class="anim-label">视角</span>
+          <button class="btn btn-ghost" type="button" data-anim-orbit="0 80">正面</button>
+          <button class="btn btn-ghost" type="button" data-anim-orbit="45 78">右前 45</button>
+          <button class="btn btn-ghost" type="button" data-anim-orbit="90 80">右侧</button>
+          <button class="btn btn-ghost" type="button" data-anim-orbit="180 80">背面</button>
+          <button class="btn btn-ghost" type="button" data-anim-orbit="-90 80">左侧</button>
+          <button class="btn btn-ghost" type="button" data-anim-orbit="0 8">俯视</button>
+          <button class="btn btn-ghost" type="button" data-anim-orbit="0 80 0.55">看头部</button>
+          <button class="btn btn-ghost" id="animAuto" type="button">自动旋转</button>
+          <button class="btn btn-ghost" id="animReset" type="button">复位</button>
+          <button class="btn btn-ghost" id="animCopy" type="button">复制取景参数</button>
+          <button class="btn btn-ghost" id="animLight" type="button">深底</button>
+        </div>
+      </div>
+
+      <aside class="anim-side" id="animSide">
+        <div class="anim-block">
+          <h3>角色</h3>
+          <div class="anim-chars" id="animChars"></div>
+          <p class="anim-meta" id="animCharMeta">—</p>
+        </div>
+        <div class="anim-block">
+          <h3>动作清单</h3>
+          <div class="anim-clips" id="animClips"></div>
+          <p class="anim-meta" id="animClipNote">—</p>
+        </div>
+        <div class="anim-block">
+          <h3>公开站取景 280×360</h3>
+          <div class="anim-mini" id="animMini"></div>
+          <p class="anim-meta">复用首页取景：视口下移 34%，镜头随所选角色而定，可拖动旋转。</p>
+        </div>
+      </aside>
+    </div>
+  </section>
+
   <footer class="dash-foot">
     <p>留言按设备隔离：访客看不到别人的留言，这里能看到全部。设备哈希不可逆，无法还原成原始设备 ID。</p>
   </footer>
@@ -206,5 +270,6 @@
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script src="assets/admin.js"></script>
+<script src="assets/anim-console.js"></script>
 </body>
 </html>

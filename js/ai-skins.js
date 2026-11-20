@@ -190,13 +190,21 @@
           '</svg></div>' +
         (cfg.hud ? '<div class="ai-mv-frame"></div><div class="ai-mv-scan"></div><div class="ai-mv-hud">LIVE 3D // HYBRID</div>' : '');
 
-      ensureModelViewer().then(function () {
+      /* 首屏优先：model-viewer(≈979KB) + GLB(≈872KB) 合计近 1.8MB，
+         等页面 load 后浏览器空闲再拉，期间先显示 SVG 占位；点角色会立即触发加载。 */
+      var booted = false;
+      var reduceMotion = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+
+      function boot() {
+        if (booted || disposed) return;
+        booted = true;
+        ensureModelViewer().then(function () {
         if (disposed) return;
         mv = document.createElement('model-viewer');
         mv.className = 'ai-mv' + (cfg.bob ? ' ai-mv-bob' : '');
         mv.setAttribute('src', BASE + 'models/' + cfg.file);
         mv.setAttribute('alt', cfg.name + ' 3D 模型');
-        mv.setAttribute('autoplay', '');
+        if (!reduceMotion) mv.setAttribute('autoplay', '');
         mv.setAttribute('animation-name', cfg.clips.idle);
         mv.setAttribute('animation-crossfade-duration', cfg.seq ? '620' : '280');
         /* 四足动物固定侧面视角更好看，靠骨骼 idle 动画提供活动；人形/机器人可缓慢自转 */
@@ -205,33 +213,54 @@
           mv.setAttribute('auto-rotate-delay', '0');
           mv.setAttribute('rotation-per-second', cfg.rotate);
         }
-        mv.setAttribute('camera-orbit', cfg.orbit || '0deg 80deg 80%');
+        /* 窄屏舞台只有 116×156，同一取景距离下人物会更小；单独给一档镜头 */
+        var narrow = window.matchMedia && window.matchMedia('(max-width: 560px)').matches;
+        mv.setAttribute('camera-orbit', (narrow && cfg.orbitNarrow) || cfg.orbit || '0deg 80deg 80%');
         /* 显式视线中心：model-viewer 默认按根节点(脚底)取景，人形会顶掉头；对准人体中心 */
-        mv.setAttribute('camera-target', cfg.target || '0m 0.6m 0m');
+        mv.setAttribute('camera-target', (narrow && cfg.targetNarrow) || cfg.target || '0m 0.6m 0m');
         if (cfg.fov) mv.setAttribute('field-of-view', cfg.fov);
-        mv.setAttribute('shadow-intensity', '0');
+        /* 接触阴影：原本 shadow-intensity=0，人物完全悬空、和浅色页面对不上焦 */
+        mv.setAttribute('shadow-intensity', '0.55');
+        mv.setAttribute('shadow-softness', '1');
         mv.setAttribute('interaction-prompt', 'none');
         mv.setAttribute('touch-action', 'pan-y');
         mv.setAttribute('loading', 'eager');
         var loading = host.querySelector('.ai-mv-loading');
         if (loading) loading.remove();
         host.appendChild(mv);
-        mv.addEventListener('load', function () { if (cfg.seq) intro(); else apply(state, true); });
+        mv.addEventListener('load', function () {
+          stage.classList.add('is-mv-ready');
+          /* 减少动态偏好：停在待机首帧，不做入场挥手与坐姿序列 */
+          if (reduceMotion) { apply(state, true); try { mv.pause(); } catch (e) {} return; }
+          if (cfg.seq) intro(); else apply(state, true);
+        });
         /* 一次性动作播完自动回到待机/坐姿（model-viewer 默认不循环） */
         mv.addEventListener('finished', function () {
           if (!cfg.seq) return;
           if (restoreTimer) { clearTimeout(restoreTimer); restoreTimer = null; }
-          if (phase === 'intro' || phase === 'oneshot') {
-            if (restMode === 'lay') toLay();
-            else if (restMode === 'sit') toSit();
-            else toIdle();
-          }
+          if (phase === 'intro' || phase === 'oneshot') settle();
         });
         mv.addEventListener('error', function () { fallback3D(host, '模型加载失败'); });
-      }).catch(function () {
-        if (disposed) return;
-        fallback3D(host, '需用 http 预览');
-      });
+        }).catch(function () {
+          if (disposed) return;
+          fallback3D(host, '需用 http 预览');
+        });
+      }
+
+      var bootScheduled = false;
+      function scheduleBoot() {
+        if (bootScheduled) return;
+        bootScheduled = true;
+        var go = function () { setTimeout(boot, 400); };
+        if (window.requestIdleCallback) requestIdleCallback(go, { timeout: 2500 });
+        else setTimeout(go, 900);
+      }
+      if (document.readyState === 'complete') scheduleBoot();
+      else {
+        window.addEventListener('load', scheduleBoot, { once: true });
+        /* 兜底：Turnstile / 字体等第三方资源可能把 load 拖到十几秒，不能让角色一直停在占位 */
+        setTimeout(scheduleBoot, 2600);
+      }
 
       /* ── 骨骼动画序列（cfg.seq）：入场挥手 → 待机呼吸 → 停留后坐下 ── */
       var seq = cfg.seq || null;
@@ -239,7 +268,9 @@
       var sitTimer = null, layTimer = null;
       var restMode = 'idle';     /* 一次性动作结束后回到 idle 还是 sit */
 
-      var baseOrbit = cfg.orbit || '0deg 80deg 80%';
+      /* 与建模型时同一档镜头：窄屏用 orbitNarrow，否则 toIdle/toSit 切回时会把镜头拉远 */
+      var narrowView = !!(window.matchMedia && window.matchMedia('(max-width: 560px)').matches);
+      var baseOrbit = (narrowView && cfg.orbitNarrow) || cfg.orbit || '0deg 80deg 80%';
       function setView(mode) {
         if (!mv) return;
         if (mode === 'lay') {
@@ -253,11 +284,28 @@
       function playClip(name) {
         if (!name || !mv) return;
         if (mv.animationName !== name) mv.animationName = name;
+        if (reduceMotion) { try { mv.pause(); } catch (e) {} return; }
         try { mv.play(); } catch (e) {}
+      }
+      /* GLB 里可能还没有 Think 剪辑（Mixamo 后续补），按实际可用剪辑回退 */
+      function hasAnim(name) {
+        var list = (mv && mv.availableAnimations) || [];
+        return !!name && list.indexOf(name) >= 0;
+      }
+      function pickClip(name, fallback) {
+        if (!name) return fallback;
+        var list = (mv && mv.availableAnimations) || [];
+        if (!list.length || hasAnim(name)) return name;
+        return fallback;
       }
       function clearSit() {
         if (sitTimer) { clearTimeout(sitTimer); sitTimer = null; }
         if (layTimer) { clearTimeout(layTimer); layTimer = null; }
+      }
+      /* 久坐计时单独抽出：起身答完一轮后要能把"10 秒后盘腿坐"重新接上 */
+      function armSit() {
+        if (!seq || !seq.sit || sitTimer) return;
+        sitTimer = setTimeout(function () { sitTimer = null; toSit(); }, seq.sitAfter || 10000);
       }
       function toIdle(restartTimer) {
         clearSit();
@@ -265,9 +313,7 @@
         if (mv) { mv.classList.remove('ai-mv-sit', 'ai-mv-lay'); if (cfg.bob) mv.classList.add('ai-mv-bob'); }
         setView('stand');
         playClip(cfg.clips.idle);
-        if (restartTimer !== false && seq && seq.sit) {
-          sitTimer = setTimeout(function () { toSit(); }, seq.sitAfter || 10000);
-        }
+        if (restartTimer !== false) armSit();
       }
       function toSit() {
         clearSit();
@@ -284,6 +330,17 @@
         setView('lay');
         playClip(seq.lay);
       }
+      /* 一次性动作/入场结束后落位：期间用户已经提问，就把 thinking/answer 补上 */
+      function settle() {
+        if (state === 'thinking' || state === 'answer') {
+          toIdle(false);
+          apply(state, true);
+          return;
+        }
+        if (restMode === 'lay') toLay();
+        else if (restMode === 'sit') toSit();
+        else toIdle();
+      }
       function oneShot(name) {
         if (!name || !mv) return;
         clearSit();
@@ -295,9 +352,7 @@
         /* 兜底：万一 finished 事件没来，按时长回位 */
         restoreTimer = setTimeout(function () {
           if (phase !== 'oneshot') return;
-          if (restMode === 'lay') toLay();
-          else if (restMode === 'sit') toSit();
-          else toIdle();
+          settle();
         }, cfg.hold || 2600);
       }
       function applySeq(s, force) {
@@ -307,14 +362,21 @@
           return;
         }
         if (s === 'thinking' || s === 'answer') {
-          /* 说话时保持待机呼吸，不打断坐下状态 */
-          if (phase === 'boot' || phase === 'intro') return;
-          if (phase === 'oneshot') return;
-          if (phase !== 'sit' && phase !== 'lay') {
+          if (phase === 'boot' || phase === 'intro' || phase === 'oneshot') return;
+          /* 坐着/躺着被提问时先起身：盘腿坐着一动不动，完全没有"在处理"的肢体信号 */
+          if (phase === 'sit' || phase === 'lay') toIdle(false);
+          else {
             phase = 'idle';
             if (mv) mv.classList.remove('ai-mv-sit', 'ai-mv-lay');
             setView('stand');
-            playClip(cfg.clips.idle);
+          }
+          /* 思考期间不许坐下（久坐计时会正好在这时候触发）；回答完再把计时接上 */
+          if (s === 'thinking') {
+            clearSit();
+            playClip(pickClip(cfg.clips.thinking, cfg.clips.idle));
+          } else {
+            playClip(cfg.clips.answer);
+            armSit();
           }
           return;
         }
@@ -335,13 +397,22 @@
         phase = 'intro';
         playClip(seq.intro || cfg.clips.greet);
         restoreTimer = setTimeout(function () {
-          if (phase === 'intro') toIdle();
+          if (phase !== 'intro') return;
+          /* 入场挥手期间用户就提问了：先把状态补上，否则 thinking/answer 会一直丢到面板关闭 */
+          settle();
         }, cfg.hold || 2600);
       }
       if (false) { /* noop */ }
 
       function apply(s, force) {
         state = s;
+        /* 思考态放到舞台上：没有 Think 骨骼时用头顶"正在输入"小点补足反馈；
+           有真实 Think 动画时关掉人工前倾/提速，避免和骨骼动画叠成双重动作 */
+        if (stage) {
+          var thinking = s === 'thinking';
+          if (stage.classList.contains('is-thinking') !== thinking) stage.classList.toggle('is-thinking', thinking);
+          stage.classList.toggle('is-think-anim', thinking && hasAnim(cfg.clips.thinking));
+        }
         if (!mv) return;
         if (seq) { applySeq(s, force); return; }
         var clip = cfg.clips[s] || cfg.clips.idle;
@@ -354,10 +425,12 @@
       }
       return {
         setState: function (s) { apply(s); },
+        boot: boot,
         destroy: function () {
           disposed = true;
           if (restoreTimer) clearTimeout(restoreTimer);
           clearSit();
+          if (stage) stage.classList.remove('is-thinking');
           if (mv) mv.remove();
         }
       };
@@ -542,8 +615,10 @@
       meta: '混元 3D + Mixamo 骨骼 · 5 万面 / 0.85MB · 待机 / 挥手 / 盘腿坐',
       note: '混元 3D 直接导出 5 万面模型（自带完整 UV 与贴图），OBJ 上传 Mixamo 自动绑骨（41 根骨骼）一次成功，无需体素水密化与权重回灌：呼吸待机 Idle、双臂举高挥手 Wave、盘腿坐 Sit 三段真实骨骼动画，Draco + WebP 压缩后仅 0.85MB。首访落地先挥手，待机 10 秒盘腿坐；点击会再挥一次手。',
       create: create3D({
-        file: 'MaleRigged.glb?v=20261120H', name: '个人形象 3D', orbit: '0deg 78deg 100%', target: '0m 0.75m 0m', rotate: null, bob: true,
-        clips: { idle: 'Idle', thinking: 'Idle', answer: 'Idle', greet: 'Wave', click: 'Wave' },
+        file: 'MaleRigged.glb?v=20261120H', name: '个人形象 3D',
+        orbit: '0deg 77deg 82%', target: '0m 0.75m 0m', orbitNarrow: '0deg 78deg 88%', targetNarrow: '0m 0.75m 0m',
+        rotate: null, bob: true,
+        clips: { idle: 'Idle', thinking: 'Think', answer: 'Idle', greet: 'Wave', click: 'Wave' },
         seq: { intro: 'Wave', sit: 'Sit', sitAfter: 10000 },
         hold: 2600
       })
@@ -553,8 +628,10 @@
       meta: '混元 3D + Mixamo 骨骼 · 5 万面 / 0.82MB · 斯文问候 / 优雅翘腿坐',
       note: '温柔斯文版：混元 3D 女性模型上传 Mixamo 自动绑骨，三段真实骨骼动画——Standing Greeting 斯文问候、Idle 呼吸待机、Sitting 优雅翘腿坐姿（双手交叠放膝）。Draco + WebP 压缩后 0.82MB。首访落地先问候，待机 10 秒翘腿端坐；点击会再问候一次。',
       create: create3D({
-        file: 'FemaleRigged.glb?v=20261120K', name: '温柔形象 3D', orbit: '0deg 78deg 112%', target: '0m 0.92m 0m', rotate: null, bob: true,
-        clips: { idle: 'Idle', thinking: 'Idle', answer: 'Idle', greet: 'Greeting', click: 'Greeting' },
+        file: 'FemaleRigged.glb?v=20261121U', name: '温柔形象 3D',
+        orbit: '0deg 78deg 88%', target: '0m 0.92m 0m', orbitNarrow: '0deg 79deg 108%', targetNarrow: '0m 0.92m 0m',
+        rotate: null, bob: true,
+        clips: { idle: 'Idle', thinking: 'Think', answer: 'Idle', greet: 'Greeting', click: 'Greeting' },
         seq: { intro: 'Greeting', sit: 'Sit', sitAfter: 10000 },
         hold: 2600
       })
@@ -570,10 +647,13 @@
   stage.id = 'aiStage';
   stage.setAttribute('role', 'button');
   stage.setAttribute('tabindex', '0');
-  stage.setAttribute('aria-label', 'CP.AI 角色，点击打开简历问答，右键或双击更换皮肤');
+  stage.setAttribute('aria-label', 'CP.AI 简历问答助手角色，点击打开问答');
   stage.innerHTML =
     '<div class="ai-stage-actor" id="aiActor"></div>' +
+    '<div class="ai-stage-ground" aria-hidden="true"></div>' +
     '<div class="ai-stage-name" id="aiSkinName"></div>' +
+    '<div class="ai-stage-hint" id="aiStageHint"><i class="ai-stage-hint-dot" aria-hidden="true"></i>点我问 <b>CP.AI</b></div>' +
+    '<div class="ai-stage-think" id="aiStageThink" aria-hidden="true"><i></i><i></i><i></i></div>' +
     '<button class="ai-stage-menu-btn" id="aiSkinBtn" type="button" aria-label="打开皮肤菜单">&#9672;</button>';
   aiFab.parentNode.insertBefore(stage, aiFab);
 
@@ -644,6 +724,9 @@
     }
     try { localStorage.setItem(STORE, id); } catch (e) {}
     stage.classList.remove('is-switching');
+    stage.classList.remove('is-mv-ready');
+    stage.classList.remove('is-thinking');
+    stage.classList.remove('is-think-anim');
     void stage.offsetWidth;
     stage.classList.add('is-switching');
     if (!silent) setState('greet');
@@ -669,28 +752,42 @@
   function closeMenu() { menu.hidden = true; }
   function toggleMenu() { menu.hidden ? openMenu() : closeMenu(); }
 
-  stage.addEventListener('contextmenu', function (e) { e.preventDefault(); toggleMenu(); });
+  /* ── 常驻入口提示 ─────────────────────────────────────────────
+     角色是把 ai-fab 视觉隐藏后的唯一入口，之前没有任何标识；
+     首屏 2.6s 浮出一次、11s 自动收起，hover / 键盘聚焦再出现，点击即收。 */
+  var hintEl = stage.querySelector('#aiStageHint');
+  var hintSettled = false;
+  function showHint() { if (hintEl) hintEl.classList.add('is-on'); }
+  function hideHint() { if (hintEl) hintEl.classList.remove('is-on'); }
+  setTimeout(function () {
+    /* 首访 2s 左右会先冒招呼气泡，气泡本身已经指向角色，标签就不要再叠上去 */
+    if (aiPanel.hidden && !document.body.classList.contains('ai-panel-open') && !document.querySelector('.ai-fab-tip')) showHint();
+  }, 2600);
+  setTimeout(function () {
+    hintSettled = true;
+    if (!stage.matches || !stage.matches(':hover')) hideHint();
+  }, 11000);
+  stage.addEventListener('mouseenter', showHint);
+  stage.addEventListener('mouseleave', function () { if (hintSettled) hideHint(); });
+  stage.addEventListener('focus', showHint);
+  stage.addEventListener('blur', function () { if (hintSettled) hideHint(); });
 
-  /* 单击 = 打开问答（走原 aiFab，完全复用原逻辑）；双击 = 打开皮肤菜单 */
-  var clickTimer = null, clickCount = 0;
+  /* 单击 = 打开问答（走原 aiFab，完全复用原逻辑）。
+     皮肤菜单由性别切换统一接管（GENDER_SWITCH_ONLY），不再需要双击判定，
+     因此去掉原来的 230ms 等待：点击即时响应，移动端也不用再区分长按。 */
   stage.addEventListener('click', function (e) {
     if (e.target.closest && e.target.closest('.ai-stage-menu-btn')) return;
-    clickCount++;
-    if (clickCount >= 2) {
-      if (clickTimer) clearTimeout(clickTimer);
-      clickTimer = null; clickCount = 0;
-      openMenu();
-      return;
-    }
-    clickTimer = setTimeout(function () {
-      clickCount = 0; clickTimer = null;
-      aiFab.click();
-      setState('click');
-    }, 230);
+    if (instance && instance.boot) instance.boot();   /* 点击即插队加载 3D，不等 idle */
+    hideHint();
+    aiFab.click();
+    setState('click');
   });
-  stage.addEventListener('dblclick', function (e) { e.preventDefault(); openMenu(); });
   stage.addEventListener('keydown', function (e) {
-    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); aiFab.click(); }
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      hideHint();
+      aiFab.click();
+    }
   });
   if (GENDER_SWITCH_ONLY || SKINS.length < 2) { stage.querySelector('#aiSkinBtn').style.display = 'none'; }
   stage.querySelector('#aiSkinBtn').addEventListener('click', function (e) {
@@ -701,39 +798,6 @@
     var btn = e.target.closest ? e.target.closest('[data-skin]') : null;
     if (!btn) return;
     activate(btn.getAttribute('data-skin'));
-  });
-
-  /* 移动端长按 */
-  var pressTimer = null, longPressed = false;
-  stage.addEventListener('touchstart', function (e) {
-    if (e.target.closest && e.target.closest('.ai-stage-menu-btn')) return;
-    longPressed = false;
-    pressTimer = setTimeout(function () { longPressed = true; openMenu(); }, 550);
-  }, { passive: true });
-  stage.addEventListener('touchend', function () {
-    if (pressTimer) clearTimeout(pressTimer);
-    if (longPressed) {
-      longPressed = false;
-      if (clickTimer) { clearTimeout(clickTimer); clickTimer = null; clickCount = 0; }
-    }
-  }, { passive: true });
-  stage.addEventListener('touchmove', function () {
-    if (pressTimer) { clearTimeout(pressTimer); pressTimer = null; }
-  }, { passive: true });
-
-  document.addEventListener('pointerdown', function (e) {
-    if (menu.hidden) return;
-    if (menu.contains(e.target) || stage.contains(e.target)) return;
-    closeMenu();
-  }, true);
-
-  document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape') { closeMenu(); return; }
-    var tag = (e.target && e.target.tagName || '').toLowerCase();
-    if (tag === 'input' || tag === 'textarea' || e.target.isContentEditable) return;
-    if (GENDER_SWITCH_ONLY) return;   /* 数字键 / S 不绕过头像与模型的同步切换 */
-    if (e.key >= '1' && e.key <= '9') { activate(SKINS[parseInt(e.key, 10) - 1].id); return; }
-    if (e.key === 's' || e.key === 'S') { toggleMenu(); }
   });
 
   /* ─────────────── 与问答面板的状态联动（不修改 main.js） ─────── */
@@ -767,6 +831,9 @@
         wasTip = now;
         if (now && aiPanel.hidden) setState('greet');
         else if (!now && aiPanel.hidden) setState('idle');
+        /* 气泡和常驻标签都指向人物头顶，两层文案会叠在一起：气泡在时让标签先退场 */
+        if (now) hideHint();
+        else if (!hintSettled) showHint();
       }
     });
     tipMo.observe(aiFab.parentNode, { childList: true });
@@ -777,9 +844,14 @@
   activate(savedSkin(), true);
   document.body.classList.add('has-ai-skin');
 
-  function preload3D() { ensureModelViewer().catch(function () {}); }
-  if (window.requestIdleCallback) requestIdleCallback(preload3D, { timeout: 4000 });
-  else setTimeout(preload3D, 2500);
+  /* 3D 组件不再和首屏抢带宽：等页面 load 且空闲后再预取，实际建模由 create3D 的 scheduleBoot 触发 */
+  function preload3D() {
+    var go = function () { ensureModelViewer().catch(function () {}); };
+    if (window.requestIdleCallback) requestIdleCallback(go, { timeout: 3000 });
+    else setTimeout(go, 1200);
+  }
+  if (document.readyState === 'complete') preload3D();
+  else window.addEventListener('load', preload3D, { once: true });
 
   /* 控制台快捷入口，方便调试：window.CPAI_SKINS.list() / .use('fox3d') */
   window.CPAI_SKINS = {

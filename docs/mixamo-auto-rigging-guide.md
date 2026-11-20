@@ -171,6 +171,28 @@ Mixamo 素材可免费用于个人与商业**项目**，但不允许把素材本
 
 对应文件：`css/ai-skins.css`（画布定位、窗口尺寸、overflow）、`js/ai-skins.js`（`orbit` / `target` 配置与兜底值）、`index.html`（CSS/JS 缓存戳）。
 
-## 11. 原文关键术语速查（附录）
+## 11. 改造 Mixamo 动画：把「女性化」姿势改成男性向（2026-11-21）
+
+**问题**：Mixamo 的「思考」类动画（`Thinking`、`Thoughtful Head Nod`、`Thoughtful Head Shake`）全部是同一套时装姿势——**单手指托腮 + 另一手叉腰（肘外张）+ 一条腿交叉在前**。放到男性角色上依然显得妖娆，这与角色性别无关，是动作本身带的。库里搜 `contemplating` / `ponder` / `hand on chin` 都没有真正对应「男性思考」的站姿。
+
+**思路**：保留上半身（含托腮的右手），把**造成女性化的两个部分**（叉腰的左臂链、交叉的双腿链）替换成同一角色 Idle 的曲线——手臂自然下垂、双腿并拢站立。
+
+**做法**（脚本 `tools/character-pipeline/fix_thinking_male.py`）：
+1. 先导入同角色的 `Idle.fbx`，逐帧采样目标骨骼的 `rotation_quaternion` 与 `location`（默认 30fps，302 帧足够覆盖）。
+2. 再导入 `Thinking.fbx`，删掉目标骨骼原有的 `rotation_quaternion` / `rotation_euler` / `location` 曲线。
+3. 按 Thinking 的帧范围逐帧写入 Idle 的采样值（帧数不足则取模循环）。
+4. 导出 GLB → `gltf-transform optimize --compress draco --texture-compress webp`（16MB → 0.54MB）。
+
+**目标骨骼清单**（20 根，按名字去前缀匹配 `mixamorig:`）：
+- 左臂：`LeftShoulder` / `LeftArm` / `LeftForeArm` / `LeftHand` + 全部手指骨
+- 双腿：`LeftUpLeg` / `LeftLeg` / `LeftFoot` / `LeftToeBase` / `LeftToe_End`，右侧同
+
+**关键约束**：**不能直接删曲线了事**——Mixamo 骨骼是 T-pose 静置，删掉曲线手臂会水平张开。必须用另一段动画（Idle）的值覆盖。`Hips` 不能替换，它是全身根骨，换掉会把上半身姿势一起抹平。
+
+**验证**：`bpy` 直接 EEVEE 渲染 → 看 32/64 帧是「右手托腮 + 左臂下垂 + 双腿站直」，96/120 帧自然收手。两个渲染坑：模型经 glTF 导入后 `armature scale=0.01`、总高仅 0.0114，正交相机必须设 `clip_start = H*0.01`，否则默认 0.1 的近距离裁剪会把整个模型裁没（画面全空）。
+
+**本机 bpy 环境**：Blender DMG 卷卸载后，用 `uv venv --python 3.11` + `uv pip install --index-url https://mirrors.aliyun.com/pypi/simple/ bpy==4.5.9` 即可拿到 `bpy` 模块（约 679MB）。官方 PyPI 走代理几乎不通，必须用国内镜像。
+
+## 12. 原文关键术语速查（附录）
 
 `Auto Rigging` · `T Pose / A Pose` · `NEXT` · `DOWNLOAD` · `FBX Binary` · `With Skin` · `Keyframe Reduction` · `Root Motion` · `Enable Root Motion` · `Force Root Lock` · `Additive`

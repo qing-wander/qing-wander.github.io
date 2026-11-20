@@ -13,12 +13,15 @@ body.has-ai-skin .ai-fab {
   opacity: 0;
   pointer-events: none;
 }
-/* 主动打招呼气泡：从对齐旧方框改为对齐角色卡上方 */
-body.has-ai-skin .ai-fab-tip { bottom: 240px; right: 18px; }
+/* 主动打招呼气泡：锚到角色头顶正上方（原来 240px 落在角色胸口，看起来像贴在人身上） */
+body.has-ai-skin .ai-fab-tip { bottom: 300px; right: 18px; }
+@media (max-width: 560px) {
+  body.has-ai-skin .ai-fab-tip { bottom: 124px; right: 10px; }
+}
 
 /* ── 角色舞台 ─────────────────────────────────────────────── */
 .ai-stage {
-  position: fixed; right: 18px; bottom: 18px; z-index: 96;
+  position: fixed; right: 20px; bottom: 22px; z-index: 96;
   width: 280px; height: 360px;
   /* 透明悬浮：无背景、无边框、无阴影，角色直接浮在页面上 */
   background: transparent;
@@ -32,7 +35,10 @@ body.has-ai-skin .ai-fab-tip { bottom: 240px; right: 18px; }
 }
 .ai-stage::before { display: none; }
 .ai-stage::after { display: none; }
-.ai-stage:hover { transform: translateY(-3px); }
+/* hover 不再整体上移：外移会与模型自身的呼吸浮动叠加，看起来像"弹一下"；
+   改成内部轻微放大，热区位置保持不动 */
+.ai-stage-actor { transition: transform .3s cubic-bezier(.2, .9, .3, 1); }
+.ai-stage:hover .ai-stage-actor { transform: scale(1.015); }
 .ai-stage.is-switching { animation: aiStagePop .42s cubic-bezier(.2, .9, .3, 1.15); }
 @keyframes aiStagePop {
   0% { transform: scale(.86) rotate(-3deg); opacity: .35; }
@@ -69,19 +75,101 @@ body.has-ai-skin .ai-fab-tip { bottom: 240px; right: 18px; }
 }
 .ai-stage-menu-btn:hover { background: var(--orange); transform: rotate(45deg); }
 
+/* ── 常驻入口提示：右侧小人此前没有任何"可点"标识 ───────────── */
+.ai-stage-hint {
+  position: absolute; left: 50%; top: 74px; z-index: 3;
+  display: flex; align-items: center; gap: 5px;
+  font-family: var(--font-mono); font-size: 9.5px; font-weight: 700;
+  letter-spacing: .08em; line-height: 1; white-space: nowrap;
+  color: var(--ink); background: var(--card);
+  border: 2px solid var(--ink); padding: 5px 8px 6px;
+  box-shadow: 3px 3px 0 rgba(var(--ink-rgb), .16);
+  transform: translate(-50%, -5px);
+  opacity: 0; pointer-events: none;
+  transition: opacity .26s ease, transform .26s ease;
+}
+.ai-stage-hint.is-on { opacity: .97; transform: translate(-50%, 0); }
+.ai-stage-hint b { color: var(--orange); font-weight: 900; letter-spacing: .04em; }
+.ai-stage-hint-dot {
+  width: 5px; height: 5px; border-radius: 50%; background: var(--green);
+  animation: aiHintLamp 1.9s ease-in-out infinite;
+}
+@keyframes aiHintLamp { 0%, 100% { opacity: 1; } 50% { opacity: .22; } }
+body.ai-panel-open .ai-stage-hint { opacity: 0; }
+
+/* ── 思考态 ─────────────────────────────────────────────────────
+   模型只有 Idle / Wave / Sit 三段，没有 Think 骨骼，坐着回答时整个角色
+   一动不动。这里补两件事：思考时先起身（JS），再在头顶挂「正在输入」小点、
+   整体轻微前倾，让"在算"这件事有可见的肢体信号。 */
+.ai-stage-think {
+  position: absolute; left: 50%; top: 86px; z-index: 3;
+  display: flex; align-items: center; gap: 4px;
+  padding: 6px 8px; background: var(--ink);
+  border: 2px solid var(--card); border-radius: 999px;
+  box-shadow: 0 2px 8px rgba(var(--ink-rgb), .28);
+  transform: translate(-50%, 4px);
+  opacity: 0; pointer-events: none;
+  transition: opacity .2s ease, transform .2s ease;
+}
+/* 小尾巴指向头部：透明舞台上飘一个孤立的点状标签，很容易被当成页面原有元素 */
+.ai-stage-think::after {
+  content: ''; position: absolute; left: 50%; bottom: -5px;
+  width: 7px; height: 7px; background: var(--ink);
+  border-right: 2px solid var(--card); border-bottom: 2px solid var(--card);
+  transform: translateX(-50%) rotate(45deg);
+}
+.ai-stage.is-thinking .ai-stage-think { opacity: .97; transform: translate(-50%, 0); }
+.ai-stage-think i {
+  width: 4px; height: 4px; border-radius: 50%; background: var(--card);
+  animation: aiThinkDot 1.15s ease-in-out infinite;
+}
+.ai-stage-think i:nth-child(2) { animation-delay: .16s; }
+.ai-stage-think i:nth-child(3) { animation-delay: .32s; }
+@keyframes aiThinkDot {
+  0%, 70%, 100% { opacity: .22; transform: translateY(0); }
+  35% { opacity: 1; transform: translateY(-2px); }
+}
+/* 标签和思考小点抢同一个位置，思考时让标签退场 */
+.ai-stage.is-thinking .ai-stage-hint { opacity: 0; transform: translate(-50%, -5px); }
+/* 前倾一点点（1.5% 的放大在透明背景上看不出来，配合上移 2px 才有"凑近"感） */
+.ai-stage.is-thinking .ai-stage-actor { transform: scale(1.022) translateY(-2px); }
+/* 呼吸节奏加快，视觉上比常驻待机更"忙" */
+.ai-stage.is-thinking model-viewer.ai-mv-bob { animation-duration: 2.2s; }
+
+/* 女性模型已有 Mixamo 的 Think 骨骼动画（手托下巴 + 叉腰微晃）：
+   真实动画自带前倾与节奏，关掉上面两处人工放大，避免双重动作 */
+.ai-stage.is-thinking.is-think-anim .ai-stage-actor { transform: none; }
+.ai-stage.is-thinking.is-think-anim model-viewer.ai-mv-bob { animation: none; }  /* 骨骼动画已在动，关掉整体浮动，免得双脚离地 */
+
 /* 面板展开时角色让位：
-   · 宽屏（≥780px）：角色挪到面板左侧继续露脸，首访第一眼就能看到它；
-   · 窄屏 / 移动端：面板基本占满宽度，仍整体隐藏，关闭后平滑淡入；
+   · 超宽屏（≥1600px）：有足够横向留白，角色挪到面板左侧继续露脸；
+   · 笔记本 / 平板（780–1599px）：横移会正好落进正文，改为淡出，关闭面板后再淡入；
+   · 窄屏 / 移动端：面板基本占满宽度，整体隐藏；
    · 面板放大成遮罩大窗（.ai-panel.is-max）时一律隐藏，避免和居中大窗叠在一起。 */
 body.ai-panel-open .ai-stage { opacity: 0; pointer-events: none; }
 
-@media (min-width: 780px) {
+/* 只有 ≥1600px 才值得横移让位：18 面板右距 + 386 面板宽 + 14 间隙 */
+@media (min-width: 1600px) {
   body.ai-panel-open .ai-stage {
-    right: 418px;                     /* 18 面板右距 + 386 面板宽 + 14 间隙 */
+    right: 418px;
     opacity: 1; pointer-events: auto;
   }
   body.ai-panel-open:has(.ai-panel.is-max) .ai-stage { opacity: 0; pointer-events: none; }
 }
+
+/* ── 3D 接触影：模型加载后脚下垫一层椭圆柔影（model-viewer 自带阴影在浅色页面上几乎看不见） ── */
+.ai-stage-ground {
+  display: none;
+  position: absolute; left: 50%; bottom: 50px; transform: translateX(-50%);
+  width: 108px; height: 15px; border-radius: 50%;
+  background: radial-gradient(ellipse at center,
+    rgba(var(--ink-rgb), .30) 0%,
+    rgba(var(--ink-rgb), .13) 46%,
+    rgba(var(--ink-rgb), 0) 74%);
+  pointer-events: none; z-index: 2;
+}
+.ai-stage.is-mv-ready .ai-stage-ground { display: block; animation: aiGroundIn .6s ease both; }
+@keyframes aiGroundIn { from { opacity: 0; } to { opacity: 1; } }
 
 /* ── 皮肤菜单小窗口 ───────────────────────────────────────── */
 .ai-skin-menu {
@@ -245,12 +333,17 @@ model-viewer.ai-mv {
 
 /* ── 响应式 / 可访问性 ───────────────────────────────────── */
 @media (max-width: 560px) {
-  .ai-stage { width: 196px; height: 252px; bottom: 12px; }
+  .ai-stage { width: 116px; height: 156px; right: 10px; bottom: 10px; }
+  .ai-stage-hint { top: 2px; font-size: 8.5px; letter-spacing: .04em; padding: 3px 5px 4px; }
+  .ai-stage-think { top: 22px; padding: 4px 6px; gap: 3px; }
+  .ai-stage-think::after { width: 6px; height: 6px; bottom: -4px; }
+  .ai-stage-think i { width: 3px; height: 3px; }
+  .ai-stage-ground { bottom: 20px; width: 62px; height: 10px; }
   .ai-skin-menu { right: 12px; left: 12px; bottom: 64px; width: auto; }
   .ai-skin-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .ai-stage, .ai-skin-host, .ai-stage.is-switching,
+  .ai-stage, .ai-stage-actor, .ai-skin-host, .ai-stage.is-switching, .ai-stage-think i,
   .ai-sk-svg *, .sk-pet, model-viewer.ai-mv { animation: none !important; transition: none !important; }
 }
 /* SVG 变换基准统一为元素自身包围盒，消除浏览器对 view-box 默认值差异 */

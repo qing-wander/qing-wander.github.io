@@ -191,9 +191,10 @@ body.has-ai-skin .ai-fab {
 
 | 时间点  | 动作                                  |
 | ---- | ----------------------------------- |
-| 0.5s | 3D 模型加载完成（预加载，非阻塞）                  |
-| 1.5s | 气泡出现「👋 我是 AI 简历问答助手，点我直接问～」+ 机器人挥手 |
-| 3.5s | 挥手结束回 idle，气泡持续显示                   |
+| 1.5s | 气泡出现「👋 我是 AI 简历问答助手，点我直接问～」（此时角色可能还是 SVG 占位） |
+| 2.6s | 无气泡时（回访）头顶浮出「点我问 · CP.AI」标签，11s 自动收起       |
+| ~4s  | 首屏 load + 空闲后才拉 3D 组件与 GLB（合计近 1.8MB），不再和首屏抢带宽 |
+| 6–8s | 模型就绪，切到骨骼入场动画（挥手 → 待机）              |
 | 10s  | 仍未搭理才展开面板，递上 3 个快捷入口                |
 
 **关键参数**（`js/main.js` 的 `AI_CONFIG`）：
@@ -214,9 +215,9 @@ body.has-ai-skin .ai-fab {
 | 默认皮肤             | 机器人 ROBOT（3D，`loaded=true`）✅ |
 | 舞台背景/边框/阴影       | 全透明 / none / none ✅          |
 | 原方框按钮            | `visibility:hidden`、不可点击 ✅   |
-| 单击角色开面板          | ✅                            |
-| 右键/双击/长按/◈/S 开菜单 | ✅                            |
-| 9 款皮肤切换          | 全通过 ✅                        |
+| 单击角色开面板          | ✅ 即时响应（已去掉 230ms 双击判定）        |
+| 男女形象切换（含镜头档位）    | ✅ 桌面 / 移动端各一套 `orbit`           |
+| 面板打开时角色让位        | ≥1600px 横移；≤1599px 淡出 ✅        |
 | 首次进入打招呼（气泡+挥手）   | ✅ 时序符合第 7 节                  |
 | 390px 移动端横向溢出    | 无 ✅                          |
 | 控制台报错            | 0 ✅                          |
@@ -289,3 +290,102 @@ window.CPAI_SKINS.current()   # 当前皮肤 id
 - 姊妹篇（问答后端）：`docs/ai-assistant-survey.md`
 - 补篇（人物资产盘点）：`docs/3d-character-library.md`
 
+
+---
+
+## 10. 2026-11-21 视觉与加载优化（已落地）
+
+| 项 | 改动 |
+| --- | --- |
+| 取景 | 桌面 `orbit` 男 82% / 女 88%，窄屏男 88% / 女 108%；人物可视高度 154px → ~195px（占舞台 43% → 55%） |
+| 落地感 | `shadow-intensity=0.55` + `shadow-softness=1`，另加 `.ai-stage-ground` 椭圆柔影（仅 3D 皮肤、模型 load 后显示） |
+| 入口 | 新增 `.ai-stage-hint`「点我问 CP.AI」：2.6s 浮出、11s 收起，hover/focus 再显；与打招呼气泡互斥，不会叠在头顶 |
+| 移动端 | 舞台 196×252 → 116×156，避免压住档案卡正文；hint/ground 各自缩一档 |
+| 让位 | 面板打开时，≥1600px 才横移 `right:418px`；780–1599px 改为淡出（横移会落进正文） |
+| 加载 | 3D 组件与 GLB 改为页面 `load` + 空闲后（≈4s）加载，回退兜底 2.6s；点击角色可插队 `instance.boot()` |
+| 交互 | 移除双击/右键/长按/S 皮肤菜单监听（已由性别切换接管）与 230ms 点击判定，单击即时开面板 |
+| 无障碍 | `aria-label` 改为「点击打开问答」；`prefers-reduced-motion` 下不 autoplay、停在待机首帧 |
+
+已知未做（后续已在 §11 补齐）：思考（thinking）时若角色处于坐姿仍保持坐姿，缺少“在想”的肢体反馈。
+
+---
+
+## 11. 2026-11-21 思考态（已落地）
+
+角色在待机 10s 后会自动盘腿坐，而问答触发思考时原来仍保持坐姿、一动不动，看不出「在算」。本轮补齐：
+
+| 项 | 实现 |
+| --- | --- |
+| 起身 | `applySeq('thinking')` 命中 `sit/lay` 时先 `toIdle(false)` 站起；思考期间 `clearSit()`，久坐计时不会中途把角色按回去 |
+| 复位 | 回答结束（`answer`）后 `armSit()` 重新接上 10s 久坐计时，不会一直杵着 |
+| 可见反馈 | 舞台加 `.is-thinking`：头顶浮出「···」小气泡（`.ai-stage-think`，三点错峰跳动）、整体 `scale(1.022) translateY(-2px)` 前倾、`ai-mv-bob` 呼吸从 3.6s 提速到 2.2s；同时压掉 `.ai-stage-hint`，两者不叠加 |
+| 剪辑 | `clips.thinking` 已指向 `'Think'`；`pickClip()` 检查 `availableAnimations`，GLB 里没有该剪辑时回退 `Idle` |
+
+**给 Mixamo 新动画留的口子**：把导出剪辑命名为 `Think` 再替换 `assets/skins/models/*Rigged.glb` 即可自动生效，不用改代码；替换后记得把 `js/ai-skins.js` 里 `file: 'MaleRigged.glb?v=...'` 的版本号也改一下，否则浏览器会用旧缓存。
+
+| 验证 | 结果 |
+| --- | --- |
+| 坐着 → 提问 | 起身，`anim=Idle`，`.ai-stage-think` opacity 0.97，hint 0 |
+| 持续思考 13s | 仍站立（不会中途坐回去） |
+| 回答结束 | `.is-thinking` 移除，11s 后重新坐下 |
+| 移动端 390px | 气泡在头顶上方约 40px，未压头部 |
+
+
+---
+
+## 12. 女性角色接入 Think 骨骼动画（2026-11-21）
+
+Mixamo 导出的 `Thinking.fbx`（16MB，4.23s / 30fps / 128 帧 / 28 根骨骼）已并进女性成品 GLB，男性模型暂缺，仍走 `Idle` + 头顶气泡的兜底。
+
+### 12.1 为什么不是 Blender 重导
+
+成品 `FemaleRigged.glb` 是 Draco + WebP 压过的（842KB），用 Blender 重新导出会把网格和贴图整条链路重做一遍。改为**只往 glTF 的 `animations` 数组追加通道**，其余字节原样保留，文件 842KB → 905KB（Think 段 54KB）。
+
+### 12.2 三个必须知道的坑
+
+1. **骨骼旋转空间不同**：FBX 的骨骼旋转是骨骼局部空间，glTF 节点旋转是父节点空间，直接搬运会让模型塌成一团（实测全程软成一坨）。
+   解法：拿同一角色的旧动作反推每根骨骼的常量四元数 `qc = q_glb * inverse(q_fbx)`，再对 Think 逐帧左乘。本站结果是 **只有 Hips 差 −90°X**，其余 27 根都是单位四元数。
+   用 `Sit` 做交叉验证：预测 vs 实际 **中位误差 0.44°，p95 4.04°，最大 9.03°**（误差主要来自两者采样率不同）。
+2. **只搬 rotation**：FBX 的 bones 位移单位是厘米、glTF 是米，而且 Root Motion 会让角色走出舞台，所以丢掉了 position/scale 轨道。副作用是髋部没有上下起伏，肉眼几乎看不出。
+3. **accessor 索引顺序**：建 sampler 时必须先取 `output` 的 accessor 索引，再调建时间轴的函数；否则字典求值顺序会让 `output` 指到时间轴上，表现为 Hips 通道的"四元数"其实是秒数、单帧骨骼输出全 0。
+
+### 12.3 复现步骤
+
+```bash
+# 1) 浏览器里把 FBX 转成轨道 JSON（three.js FBXLoader，只取 quaternion 轨道）
+#    片段见 tools/character-pipeline/add_fbx_anim_to_glb.py 头部注释
+# 2) 反推校正 + 注入（--ref-* 用于算常量校正并交叉验证）
+python3 tools/character-pipeline/add_fbx_anim_to_glb.py \
+  --glb  assets/character-views/model/female/FemaleRigged_before_think.glb \
+  --tracks Thinking_tracks.json --name Think \
+  --ref-glb assets/character-views/model/female/FemaleRigged_before_think.glb \
+  --ref-anim Idle --ref-tracks Idle_tracks.json \
+  --ref-check Sit --ref-check-tracks Sit_tracks.json \
+  --out FemaleRigged_think.glb
+# 3) 校验 + 替换
+npx -y @gltf-transform/cli@latest inspect FemaleRigged_think.glb
+```
+
+女性成品：`assets/skins/models/FemaleRigged.glb`（`?v=20261121U`）。原文件在 git HEAD 里可随时回滚，中间产物不入库；源 FBX 在 `assets/character-views/model/female/mixamo-downloads/Thinking.fbx`，按 12.3 可重新生成。
+
+### 12.4 有真实动画后调了什么
+
+| 项 | 处理 |
+| --- | --- |
+| 双重动作 | 舞台加 `.is-think-anim`（仅当 `availableAnimations` 里真有 `Think`）：取消人工前倾 `scale(1.022)`，并关掉 `ai-mv-bob` 整体浮动 —— 否则骨骼动画在晃、整块模型又在浮，双脚会离地 |
+| 气泡 | 头顶「···」保留：小舞台上远看仍需要一个"在算"的信号；位置从 `top:104` 上移到 `86px`（女性头顶比男性高约 20px），移动端 `22px` |
+| 起身 | 坐着被提问仍先起身再播 Think；思考期间清掉久坐计时，答完再接回 |
+| 时长 | 4.23s 整段循环，首尾接缝 0.01°，不需要裁切（裁到 1.07–2.73s 反而有 5.35° 的跳变） |
+
+### 12.5 顺手修的两个 bug
+
+- 入场挥手（`intro`）期间就提问，`thinking` 会被丢掉：新增 `settle()`，入场/一次性动作结束后若 `state` 是 `thinking`/`answer` 就补上（`greet` 不补，否则会重播一遍挥手）。
+- `activate()` 切皮肤后残留 `is-think-anim`，已一并清掉。
+
+| 验证 | 结果 |
+| --- | --- |
+| 女性坐下 → 提问 | 起身，`anim=Think`，`bob:none`，`is-think-anim` 生效 |
+| 持续思考 5s 以上 | 一直播 Think，不会中途坐回 |
+| 回答结束 | 回 `Idle`，11s 后重新坐下 |
+| 男性（无 Think 剪辑） | `anim=Idle` 兜底，`bob` 仍是 `skMvBob`，气泡照常 |
+| 移动端 390px | Think 正常，气泡在头顶上方约 12px |
