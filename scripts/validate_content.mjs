@@ -185,6 +185,74 @@ if (!v.qrImage || /^data:/i.test(v.qrImage)) fail('学信网二维码必须是 i
 if (v.qrImage && !existsSync(resolve(ROOT, v.qrImage))) fail(`二维码文件不存在：${v.qrImage}`);
 if (!existsSync(QR_FILE)) fail('缺少 images/edu-verify-qr.png');
 
+/* ── 3.5 公司档案（company-profiles.json） ──
+   规则：结构齐全、来源编号连续且被引用处可回查、图片落盘存在、
+   experience.profileId 必须能索引到档案。 */
+const PROFILES_FILE = resolve(ROOT, 'data/company-profiles.json');
+if (existsSync(PROFILES_FILE)) {
+  let profiles = null;
+  try {
+    profiles = JSON.parse(readFileSync(PROFILES_FILE, 'utf8'));
+  } catch (err) {
+    fail(`data/company-profiles.json 不是合法 JSON：${err.message}`);
+  }
+  if (profiles && profiles.companies) {
+    const comps = profiles.companies;
+    Object.keys(comps).forEach((cid) => {
+      const c = comps[cid];
+      const where = `company-profiles.companies.${cid}`;
+      if (c.id !== cid) fail(`${where}.id 与键名不一致`);
+      need(c, 'name', where);
+      need(c, 'code', where);
+      need(c, 'oneLine', where);
+      if (!Array.isArray(c.quickStats) || c.quickStats.length < 2 || c.quickStats.length > 4)
+        fail(`${where}.quickStats 应为 2–4 条速览数据`);
+      if (!Array.isArray(c.kpis) || c.kpis.length !== 4)
+        fail(`${where}.kpis 必须正好 4 格（成立 / 融资或营收 / 团队 / 关键数字）`);
+      ['main', 'model', 'position'].forEach((k) => {
+        if (!c.business || !c.business[k]) fail(`${where}.business.${k} 缺失`);
+      });
+
+      /* 来源编号：1..n 连续，引用处必须存在 */
+      const nums = (c.sources || []).map((s) => s.n);
+      nums.forEach((n, i) => { if (n !== i + 1) fail(`${where}.sources[${i}].n 必须是 ${i + 1}（连续编号）`); });
+      const refd = new Set();
+      const collectRef = (val) => { if (Number.isInteger(val) && val > 0) refd.add(val); };
+      (c.kpis || []).forEach((k) => collectRef(k.source));
+      if (c.registry) collectRef(c.registry.source);
+      ((c.funding && c.funding.rounds) || []).forEach((rr) => collectRef(rr.source));
+      (c.recognition || []).forEach((rz) => collectRef(rz.source));
+      if (c.chart) collectRef(c.chart.source);
+      refd.forEach((n) => { if (!nums.includes(n)) fail(`${where} 引用了不存在的来源编号 [${n}]`); });
+
+      /* 图表与融资至少有一样成内容 */
+      if (!c.chart && !(c.funding && c.funding.rounds && c.funding.rounds.length))
+        fail(`${where} 既没有 chart 也没有 funding.rounds（发展数据模块不能为空）`);
+
+      /* 办公图：非占位必须真实落盘 */
+      (c.office || []).forEach((o, i) => {
+        if (!o.placeholder && !o.img) fail(`${where}.office[${i}] 缺 img 或 placeholder 标记`);
+        if (o.img && !existsSync(resolve(ROOT, o.img))) fail(`${where}.office[${i}] 图片不存在：${o.img}`);
+        if (o.img && /^data:/i.test(o.img)) fail(`${where}.office[${i}] 不能内联 base64，请放 images/`);
+      });
+    });
+
+    /* experience.profileId → 档案索引一致 */
+    (r.experience || []).forEach((e, i) => {
+      if (e.profileId && !comps[e.profileId])
+        fail(`resume.experience[${i}].profileId="${e.profileId}" 在 company-profiles.json 中不存在`);
+    });
+    (data.experience || []).forEach((e, i) => {
+      if (e.profileId && !comps[e.profileId])
+        fail(`experience[${i}].profileId="${e.profileId}" 在 company-profiles.json 中不存在`);
+    });
+  } else {
+    warn('data/company-profiles.json 缺少 companies 字段，公司档案入口将不可用');
+  }
+} else {
+  fail('缺少 data/company-profiles.json（公司档案数据源）');
+}
+
 /* ── 4. 页面预算（近似） ── */
 const totalChars = chars(summaryText) +
   (r.experience || []).reduce((n, x) => n + (x.bullets || []).reduce((m, bl) => m + chars(bl.html), 0), 0) +

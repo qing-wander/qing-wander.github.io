@@ -205,6 +205,7 @@
   },
   "experience": [
     {
+      "profileId": "comein",
       "company": "进门财经 · 深圳进门财经科技股份有限公司",
       "role": "机构金融投研 SaaS · Agent 工程师",
       "time": "2026.01 — 2026.07（组织架构调整）",
@@ -237,6 +238,7 @@
       ]
     },
     {
+      "profileId": "zhishu",
       "company": "Lessie · 深圳指数引力科技有限公司",
       "role": "Agent 工程师 · 创始团队成员（红杉投资 AI 初创）",
       "time": "2024.03 — 2025.11",
@@ -269,6 +271,7 @@
       ]
     },
     {
+      "profileId": "fanggeek",
       "company": "房极客 · 深圳市房极客网络科技有限公司",
       "role": "房地产 SaaS · Java 开发工程师",
       "time": "2023.08 — 2024.01",
@@ -288,6 +291,7 @@
       ]
     },
     {
+      "profileId": "chowsang",
       "company": "周生生（中国）商业有限公司",
       "role": "Java 开发工程师 · 获评「高级程序员」职称（港企 · 电商零售）",
       "time": "2021.09 — 2023.06",
@@ -913,6 +917,7 @@
     "experience": [
       {
         "id": "exp-inmen",
+        "profileId": "comein",
         "company": "深圳进门财经科技股份有限公司",
         "companyNote": "机构金融投研 SaaS",
         "role": "Agent 工程师",
@@ -933,6 +938,7 @@
       },
       {
         "id": "exp-lessie",
+        "profileId": "zhishu",
         "company": "深圳指数引力科技有限公司",
         "companyNote": "网红营销 SaaS（红杉投资）",
         "role": "Agent 工程师",
@@ -965,6 +971,7 @@
       },
       {
         "id": "exp-fangjike",
+        "profileId": "fanggeek",
         "company": "深圳市房极客网络科技有限公司",
         "companyNote": "房地产 SaaS",
         "role": "Java 开发",
@@ -985,6 +992,7 @@
       },
       {
         "id": "exp-chowsang",
+        "profileId": "chowsang",
         "company": "周生生（中国）商业有限公司",
         "companyNote": "珠宝品牌自营数字化",
         "role": "Java 开发",

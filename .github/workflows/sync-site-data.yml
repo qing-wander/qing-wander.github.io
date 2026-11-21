@@ -14,7 +14,9 @@ on:
     branches: [main]
     paths:
       - 'data/site-data.json'
+      - 'data/company-profiles.json'
       - 'scripts/sync_site_data.py'
+      - 'scripts/sync_company_profiles.py'
       - '.github/workflows/sync-site-data.yml'
   workflow_dispatch:
 
@@ -40,18 +42,20 @@ jobs:
           python-version: '3.11'
 
       - name: 校验 JSON 并重建快照
-        run: python3 scripts/sync_site_data.py
+        run: |
+          python3 scripts/sync_site_data.py
+          python3 scripts/sync_company_profiles.py
 
       - name: 提交快照变更
         run: |
-          if git diff --quiet -- data/site-data.js; then
+          if git diff --quiet -- data/site-data.js data/company-profiles.js; then
             echo "快照已是最新，无需提交"
             exit 0
           fi
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/site-data.js
-          git commit -m "chore(data): 由 site-data.json 重建 JS 快照"
+          git add data/site-data.js data/company-profiles.js
+          git commit -m "chore(data): 由 JSON 重建 JS 快照"
           for i in 1 2 3; do
             if ! git fetch origin main --quiet; then
               echo "::warning::fetch 失败，重试"; sleep 5; continue

@@ -15,3 +15,9 @@ content:
     type: file
     path: data/site-data.json
     format: code
+
+  - name: company-profiles
+    label: 公司档案（工作经历公司背景调研数据）
+    type: file
+    path: data/company-profiles.json
+    format: code

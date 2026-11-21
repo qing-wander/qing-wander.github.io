@@ -209,6 +209,7 @@ window.SITE_DATA = {
   },
   "experience": [
     {
+      "profileId": "comein",
       "company": "进门财经 · 深圳进门财经科技股份有限公司",
       "role": "机构金融投研 SaaS · Agent 工程师",
       "time": "2026.01 — 2026.07（组织架构调整）",
@@ -241,6 +242,7 @@ window.SITE_DATA = {
       ]
     },
     {
+      "profileId": "zhishu",
       "company": "Lessie · 深圳指数引力科技有限公司",
       "role": "Agent 工程师 · 创始团队成员（红杉投资 AI 初创）",
       "time": "2024.03 — 2025.11",
@@ -273,6 +275,7 @@ window.SITE_DATA = {
       ]
     },
     {
+      "profileId": "fanggeek",
       "company": "房极客 · 深圳市房极客网络科技有限公司",
       "role": "房地产 SaaS · Java 开发工程师",
       "time": "2023.08 — 2024.01",
@@ -292,6 +295,7 @@ window.SITE_DATA = {
       ]
     },
     {
+      "profileId": "chowsang",
       "company": "周生生（中国）商业有限公司",
       "role": "Java 开发工程师 · 获评「高级程序员」职称（港企 · 电商零售）",
       "time": "2021.09 — 2023.06",

@@ -14,6 +14,8 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&display=swap" media="print" onload="this.media='all'">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&display=swap"></noscript>
 <link rel="stylesheet" href="css/fonts.css?v=20261111a">
+<!-- 公司档案（徽章 / 速览行 / 抽屉）：数据源 data/company-profiles.js，打印时自动隐藏 -->
+<link rel="stylesheet" href="css/company-profile.css?v=20261121a">
 <meta name="description" content="陈培胜的网页版简历：5 年 Java 后端 + 2 年 AI Agent 工程，Agent 开发 / AI 工程化方向，支持打印导出 PDF。">
 <meta name="theme-color" content="#F3EEE2">
 <link rel="canonical" href="https://shenge-work.github.io/resume.html">
@@ -602,7 +604,7 @@ body {
         <p class="head-role">AI Agent 工程师 / AI 应用开发工程师</p>
       </div>
       <div class="head-meta">
-        <p><b>工作经验</b> 5年　<b>性别</b> 男　<b>年龄</b> 29 岁　<b>学历</b> 软件工程 · 本科　<b>到岗</b> 随时 · 已离职</p>
+        <p><b>工作经验</b> 5年　<b>年龄</b> 29 岁　<b>学历</b> 软件工程 · 本科　<b>到岗</b> 随时 · 已离职</p>
         <p><b>电话/微信</b> +86 180 2283 4605　<b>邮箱</b> <a class="link" href="mailto:shenge.work@gmail.com">shenge.work@gmail.com</a></p>
         <p><b>作品集</b> <a class="link" href="https://shenge-work.github.io" target="_blank" rel="noopener noreferrer">shenge-work.github.io</a>　<b>GitHub</b> <a class="link" href="https://github.com/shenge-work" target="_blank" rel="noopener noreferrer">github.com/shenge-work</a></p>
       </div>
@@ -620,18 +622,22 @@ body {
     <div class="sec-title"><span class="sec-no">02</span><h2>工作经历</h2><span class="sec-line"></span></div>
     <div class="item">
       <div class="item-head">
-        <p class="item-title">深圳进门财经科技股份有限公司<span> 机构金融投研 SaaS</span><span>Agent 工程师</span></p>
+        <p class="item-title"><button class="cp-badge" type="button" data-cp="comein" aria-label="查看 深圳进门财经科技股份有限公司 公司档案" title="公司档案：背景 / 业务 / 融资 / 前景">档</button>深圳进门财经科技股份有限公司<span> 机构金融投研 SaaS</span><span>Agent 工程师</span></p>
         <span class="item-time">2026.01 — 07（组织架构调整）</span>
       </div>
+        <p class="cp-quick" data-cp-quick="comein"></p>
+        <p class="cp-print-link">公司档案 → shenge-work.github.io/resume.html#company=comein</p>
       <ul class="pts">
         <li>主导 AI 金融投研工作台（AI 进宝）核心基建研发：Agent 基座与多租户云沙箱、MCP / Skill 扩展、AI 资源计费、五端 IM 网关，<strong>支撑 Agent 从接入到计费全链路落地</strong></li>
       </ul>
     </div>
     <div class="item">
       <div class="item-head">
-        <p class="item-title">深圳指数引力科技有限公司<span> 网红营销 SaaS（红杉投资）</span><span>Agent 工程师</span></p>
+        <p class="item-title"><button class="cp-badge" type="button" data-cp="zhishu" aria-label="查看 深圳指数引力科技有限公司 公司档案" title="公司档案：背景 / 业务 / 融资 / 前景">档</button>深圳指数引力科技有限公司<span> 网红营销 SaaS（红杉投资）</span><span>Agent 工程师</span></p>
         <span class="item-time">2024.03 — 2025.11</span>
       </div>
+        <p class="cp-quick" data-cp-quick="zhishu"></p>
+        <p class="cp-print-link">公司档案 → shenge-work.github.io/resume.html#company=zhishu</p>
       <ul class="pts">
         <li>主导 AI 人脉搜索引擎：Supervisor / Search / Review 多层级 ReAct Multi-Agent 架构，<strong>搜索精准度提升 30%、找人成本降低 80%、定位耗时缩短 60%</strong></li>
         <li>主导红人营销 SaaS 研发：FDE 式定制业务流程，Grok LLM + Agent 工作流串联「客户→合同→付款→结算」，<strong>实现客户到结算的全流程自动化闭环</strong></li>
@@ -641,18 +647,22 @@ body {
     </div>
     <div class="item">
       <div class="item-head">
-        <p class="item-title">深圳市房极客网络科技有限公司<span> 房地产 SaaS</span><span>Java 开发</span></p>
+        <p class="item-title"><button class="cp-badge" type="button" data-cp="fanggeek" aria-label="查看 深圳市房极客网络科技有限公司 公司档案" title="公司档案：背景 / 业务 / 融资 / 前景">档</button>深圳市房极客网络科技有限公司<span> 房地产 SaaS</span><span>Java 开发</span></p>
         <span class="item-time">2023.08 — 2024.01</span>
       </div>
+        <p class="cp-quick" data-cp-quick="fanggeek"></p>
+        <p class="cp-print-link">公司档案 → shenge-work.github.io/resume.html#company=fanggeek</p>
       <ul class="pts">
         <li>参与小鹿选房 C 端、看房日记 B 端、经纪人 ERP 中台研发，负责新房报备 / 上下架 / 房源跟进 / 权限控制 / 余额划转等模块，<strong>打通新房业务线上流转</strong></li>
       </ul>
     </div>
     <div class="item">
       <div class="item-head">
-        <p class="item-title">周生生（中国）商业有限公司<span> 珠宝品牌自营数字化</span><span>Java 开发</span></p>
+        <p class="item-title"><button class="cp-badge" type="button" data-cp="chowsang" aria-label="查看 周生生（中国）商业有限公司 公司档案" title="公司档案：背景 / 业务 / 融资 / 前景">档</button>周生生（中国）商业有限公司<span> 珠宝品牌自营数字化</span><span>Java 开发</span></p>
         <span class="item-time">2021.09 — 2023.06</span>
       </div>
+        <p class="cp-quick" data-cp-quick="chowsang"></p>
+        <p class="cp-print-link">公司档案 → shenge-work.github.io/resume.html#company=chowsang</p>
       <ul class="pts">
         <li>负责多渠道潜客 CRM 平台研发，整合大陆、港澳台线上线下销售线索，<strong>日活 10W+、销售转化率提升 70%</strong></li>
         <li>参与香港帝舵官网研发，负责会员体系、订单支付与对账、库存同步模块，<strong>打通品牌官网会员、交易、库存一体的线上销售链路</strong></li>
@@ -1144,5 +1154,8 @@ function exportLongImage(btn) {
 </script>
 
 <script src="js/analytics.js?v=20261119b" defer></script>
+<!-- 公司档案数据快照 + 抽屉组件（resume.html 与 index.html 共用） -->
+<script src="data/company-profiles.js?v=20261121a"></script>
+<script src="js/company-profile.js?v=20261121a" defer></script>
 </body>
 </html>

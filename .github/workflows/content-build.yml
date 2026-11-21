@@ -18,6 +18,7 @@ on:
     branches: [main]
     paths:
       - 'data/site-data.json'
+      - 'data/company-profiles.json'
       - 'templates/resume.template.html'
       - 'resume.html'
       - 'scripts/render_resume.mjs'
@@ -29,6 +30,7 @@ on:
   pull_request:
     paths:
       - 'data/site-data.json'
+      - 'data/company-profiles.json'
       - 'templates/resume.template.html'
       - 'resume.html'
       - 'scripts/render_resume.mjs'
@@ -82,4 +84,6 @@ jobs:
           node scripts/check_resume_pages.mjs
 
       - name: JS 快照是否最新
-        run: python3 scripts/sync_site_data.py --check
+        run: |
+          python3 scripts/sync_site_data.py --check
+          python3 scripts/sync_company_profiles.py --check

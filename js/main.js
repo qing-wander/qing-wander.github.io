@@ -151,10 +151,20 @@
     }).join('') + '</div>';
     $('eduGrid').innerHTML = eduMain + eduSides;
 
-    /* ── 工作经历 ── */
+    /* ── 工作经历 ──
+       profileId 关联 data/company-profiles.json：徽章与速览行由
+       js/company-profile.js 读取快照填充并接管点击（抽屉）。 */
     $('expList').innerHTML = (d.experience || []).map(function (x) {
+      var badge = '';
+      var quick = '';
+      if (x.profileId) {
+        badge = '<button class="cp-badge" type="button" data-cp="' + esc(x.profileId) +
+          '" aria-label="查看 ' + esc(x.company) + ' 公司档案" title="公司档案：背景 / 业务 / 融资 / 前景">档</button>';
+        quick = '<p class="cp-quick" data-cp-quick="' + esc(x.profileId) + '" hidden></p>';
+      }
       return '<article class="exp-card reveal">' +
-        '<div class="exp-head"><div><h3 class="exp-company">' + esc(x.company) + '</h3>' +
+        '<div class="exp-head"><div><h3 class="exp-company">' + badge + esc(x.company) + '</h3>' +
+        quick +
         '<p class="exp-role">' + esc(x.role) + '</p></div><span class="exp-time">' + esc(x.time) + '</span></div>' +
         '<ul class="exp-points">' + (x.points || []).map(function (p) {
           return '<li>' + p + '</li>'; /* 要点支持 <strong> 内联标记 */

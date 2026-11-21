@@ -141,21 +141,43 @@ body.ai-panel-open .ai-stage-hint { opacity: 0; }
 .ai-stage.is-thinking.is-think-anim .ai-stage-actor { transform: none; }
 .ai-stage.is-thinking.is-think-anim model-viewer.ai-mv-bob { animation: none; }  /* 骨骼动画已在动，关掉整体浮动，免得双脚离地 */
 
-/* 面板展开时角色让位：
-   · 超宽屏（≥1600px）：有足够横向留白，角色挪到面板左侧继续露脸；
-   · 笔记本 / 平板（780–1599px）：横移会正好落进正文，改为淡出，关闭面板后再淡入；
-   · 窄屏 / 移动端：面板基本占满宽度，整体隐藏；
-   · 面板放大成遮罩大窗（.ai-panel.is-max）时一律隐藏，避免和居中大窗叠在一起。 */
+/* 面板展开时角色让位（v2）：不再淡出消失，而是缩小后贴到面板左缘继续"在场"，
+   让「人在说话、面板里的文字是字幕」这层关系成立——笔记本屏才是多数访客的屏，
+   之前 780–1599px 直接 fade 掉，等于角色一开口就没了。
+   · ≥1600px：留白充裕，缩到 0.78 站在面板左侧；
+   · 1200–1599px：0.68；
+   · 900–1199px：0.58（再小就只剩一团色块，不如收起）；
+   · <900px：面板已占大半屏，仍整体隐藏，关闭后淡入；
+   · 面板放大成遮罩大窗（.ai-panel.is-max）时一律隐藏，避免和居中大窗叠在一起。
+   右侧 412px = 面板右距 18 + 面板宽 386 + 8 间隙；底部对齐面板 18。 */
 body.ai-panel-open .ai-stage { opacity: 0; pointer-events: none; }
 
-/* 只有 ≥1600px 才值得横移让位：18 面板右距 + 386 面板宽 + 14 间隙 */
-@media (min-width: 1600px) {
+@media (min-width: 900px) {
   body.ai-panel-open .ai-stage {
-    right: 418px;
-    opacity: 1; pointer-events: auto;
+    right: 412px; bottom: 18px;
+    transform: scale(.58);
+    transform-origin: right bottom;
+    opacity: 1;
+    /* 说话中的角色不接受点击：面板已开，再点它等于把面板关掉，容易误触 */
+    pointer-events: none;
   }
-  body.ai-panel-open:has(.ai-panel.is-max) .ai-stage { opacity: 0; pointer-events: none; }
+  /* 整体缩放会把头顶的思考点压到 5px 字，这里反向放大抵消 */
+  body.ai-panel-open .ai-stage.is-thinking .ai-stage-think {
+    transform: translate(-50%, 0) scale(1.7);
+    transform-origin: 50% 100%;
+  }
 }
+@media (min-width: 1200px) {
+  body.ai-panel-open .ai-stage { transform: scale(.68); }
+}
+@media (min-width: 1600px) {
+  body.ai-panel-open .ai-stage { transform: scale(.78); }
+}
+
+/* 放大成遮罩大窗时角色必须退场：舞台在右缘会压住居中窗口。
+   body.ai-panel-max 由 js/ai-panel-ux.js 在放大时切换，作为 :has() 的兜底 */
+body.ai-panel-open:has(.ai-panel.is-max) .ai-stage,
+body.ai-panel-max .ai-stage { opacity: 0; pointer-events: none; }
 
 /* ── 3D 接触影：模型加载后脚下垫一层椭圆柔影（model-viewer 自带阴影在浅色页面上几乎看不见） ── */
 .ai-stage-ground {

@@ -1,0 +1,140 @@
+/* ════════════════════════════════════════════════════════════
+   CP.AI 角色 ↔ 问答面板「语义联动」视觉层
+   --------------------------------------------------------------
+   · 说话节拍：语音朗读时头顶挂音波条（替代思考点），角色已由
+     ai-voice.css 的 aiVoiceBob 提供轻微律动
+   · 指路票：回答命中某个页面区块时，角色头顶递出一张「去看看」小票，
+     点击才滚动，绝不自动抢滚动权
+   · 目标高亮：滚动落点用独立浮层描边，不侵入 section 自身布局
+   依赖：css/style.css 的变量（--orange / --ink / --card / --paper）
+   挂载：js/ai-stage-link.js（面板与角色状态全部只读，不改 main.js）
+   ════════════════════════════════════════════════════════════ */
+
+/* ── 1) 说话音波：语音真的出声时才出现 ─────────────────────── */
+/* 头顶只有一条「状态槽」：hint(74px) 是常驻入口提示，
+   思考点/音波统一放 86px，且三者显式互斥 —— 不靠"面板打开顺手压掉"这种间接关系。 */
+.ai-stage-talk {
+  position: absolute; left: 50%; top: 86px; z-index: 3;
+  display: flex; align-items: center; gap: 4px;
+  padding: 6px 9px 7px; background: var(--ink);
+  border: 2px solid var(--card); border-radius: 999px;
+  box-shadow: 0 2px 8px rgba(var(--ink-rgb), .28);
+  transform: translate(-50%, 4px);
+  opacity: 0; pointer-events: none;
+  transition: opacity .2s ease, transform .2s ease;
+}
+.ai-stage-talk::after {
+  content: ''; position: absolute; left: 50%; bottom: -5px;
+  width: 7px; height: 7px; background: var(--ink);
+  border-right: 2px solid var(--card); border-bottom: 2px solid var(--card);
+  transform: translateX(-50%) rotate(45deg);
+}
+.ai-stage-talk i {
+  width: 3px; height: 9px; border-radius: 2px; background: var(--card);
+  transform-origin: center bottom;
+  animation: aiTalkBar .62s ease-in-out infinite;
+}
+.ai-stage-talk i:nth-child(2) { animation-delay: .14s; height: 12px; }
+.ai-stage-talk i:nth-child(3) { animation-delay: .28s; height: 7px; }
+.ai-stage-talk i:nth-child(4) { animation-delay: .42s; height: 11px; }
+@keyframes aiTalkBar {
+  0%, 100% { transform: scaleY(.35); opacity: .55; }
+  45% { transform: scaleY(1); opacity: 1; }
+}
+.ai-stage.is-speaking .ai-stage-talk { opacity: .97; transform: translate(-50%, 0); }
+/* 说话和"正在算"互斥：同一位置不能叠两层标签 */
+.ai-stage.is-speaking .ai-stage-think { opacity: 0; transform: translate(-50%, 4px); }
+.ai-stage.is-thinking .ai-stage-talk { opacity: 0; }
+/* 状态槽与常驻提示互斥：一旦进入 thinking / speaking，或被递了票，入口标签先退场。
+   原来只靠 body.ai-panel-open 顺手压掉 hint，语音在面板外播放时就会两层叠一起。 */
+.ai-stage.is-speaking .ai-stage-hint,
+.ai-stage.has-locate .ai-stage-hint { opacity: 0; transform: translate(-50%, -5px); }
+/* 面板打开时舞台整体缩放，标签反向放大抵消（与 ai-skins.css 的思考点同处理） */
+@media (min-width: 900px) {
+  body.ai-panel-open .ai-stage.is-speaking .ai-stage-talk {
+    transform: translate(-50%, 0) scale(1.66);
+    transform-origin: 50% 100%;
+  }
+}
+
+/* ── 2) 指路票：角色头顶递出来的那张小票 ───────────────────── */
+.ai-locate-ticket {
+  position: fixed; z-index: 151;
+  display: inline-flex; align-items: center; gap: 7px;
+  max-width: 236px;
+  padding: 7px 8px 8px 10px;
+  font-family: var(--font-sans, inherit); text-align: left;
+  color: var(--ink); background: var(--card);
+  border: 2px solid var(--ink);
+  box-shadow: 4px 4px 0 var(--orange);
+  cursor: pointer;
+  opacity: 0; transform: translateY(6px);
+  transition: opacity .22s ease, transform .22s ease, box-shadow .12s ease;
+  animation: aiTicketin .26s cubic-bezier(.2, .9, .3, 1.1) both;
+}
+@keyframes aiTicketin { from { transform: translateY(6px) rotate(-1.5deg); } to { transform: none; } }
+.ai-locate-ticket.is-on { opacity: 1; transform: none; }
+.ai-locate-ticket:hover { box-shadow: 5px 5px 0 var(--orange); }
+.ai-locate-ticket:focus-visible { outline: 3px solid var(--orange); outline-offset: 2px; }
+/* 小票指向角色的尾巴：默认朝右下（角色通常在小票脚下） */
+.ai-locate-ticket::after {
+  content: ''; position: absolute; right: 22px; bottom: -7px;
+  width: 10px; height: 10px; background: var(--card);
+  border-right: 2px solid var(--ink); border-bottom: 2px solid var(--ink);
+  transform: rotate(45deg);
+}
+.ai-locate-k {
+  flex: 0 0 auto;
+  font-family: var(--font-mono); font-size: 8.5px; font-weight: 700;
+  letter-spacing: .1em; line-height: 1;
+  color: var(--accent-text, var(--card)); background: var(--orange);
+  border: 1.5px solid var(--ink); padding: 3px 4px 4px;
+}
+.ai-locate-txt {
+  display: flex; flex-direction: column; gap: 2px; min-width: 0;
+  font-size: 11px; font-weight: 800; line-height: 1.25;
+}
+.ai-locate-txt small {
+  font-family: var(--font-mono); font-size: 8.5px; font-weight: 700;
+  letter-spacing: .04em; color: rgba(var(--ink-rgb), .52);
+}
+.ai-locate-x {
+  flex: 0 0 auto; width: 17px; height: 17px; padding: 0; margin-left: 2px;
+  font-family: var(--font-mono); font-size: 12px; font-weight: 700; line-height: 1;
+  color: var(--ink); background: var(--paper);
+  border: 1.5px solid var(--ink); cursor: pointer;
+}
+.ai-locate-x:hover { background: var(--ink); color: var(--card); }
+/* 票挂到角色脚下时（舞台靠顶），尾巴翻到上方 */
+.ai-locate-ticket.is-below::after {
+  top: -7px; bottom: auto;
+  border-right: 0; border-bottom: 0;
+  border-left: 2px solid var(--ink); border-top: 2px solid var(--ink);
+}
+
+/* ── 3) 落点高亮：独立浮层，不往 section 里塞伪元素 ─────────── */
+.cp-spot-frame {
+  position: fixed; z-index: 149; pointer-events: none;
+  border: 3px solid var(--orange);
+  box-shadow: 0 0 0 7px rgba(255, 90, 30, .18);
+  animation: cpSpotIn .3s ease-out both;
+  transition: opacity .35s ease;
+}
+@keyframes cpSpotIn {
+  from { opacity: 0; transform: scale(.994); }
+  to { opacity: 1; transform: none; }
+}
+.cp-spot-frame.is-out { opacity: 0; }
+
+/* ── 4) 小屏 / 减少动画 / 打印 ─────────────────────────────── */
+@media (max-width: 899px) {
+  /* 面板打开时角色本就收起，票也就不该出现在空白处 */
+  .ai-locate-ticket { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ai-stage-talk i { animation: none; }
+  .ai-locate-ticket, .cp-spot-frame { animation: none; transition: opacity .2s ease; }
+}
+@media print {
+  .ai-stage-talk, .ai-locate-ticket, .cp-spot-frame { display: none !important; }
+}
