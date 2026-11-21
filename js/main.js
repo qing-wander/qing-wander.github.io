@@ -31,6 +31,19 @@
 
   function $(id) { return document.getElementById(id); }
 
+  /* ── API 线路（问答 / 语音 / 留言墙 / JD 共用）──
+     注意：必须放在 IIFE 顶层。initInteractions() 与 initWall() 是同级函数，
+     若把它定义在 initInteractions 内部，留言墙初始化时会 ReferenceError，
+     进而被启动流程的 catch 误判成「数据未能加载」。
+     github.io 是纯静态托管，POST /api/chat 会回 405 HTML（不是 JSON），
+     所以一律直接打 Cloudflare Pages 的同名函数；本地预览只打本机。 */
+  var API_BASES = (function () {
+    var host = location.hostname || '';
+    if (/^(localhost|127\.0\.0\.1|0\.0\.0\.0|\[::1\])$/.test(host)) return [''];
+    if (/\.github\.io$/i.test(host)) return ['https://shenge-work.pages.dev'];
+    return ['', 'https://shenge-work.pages.dev'];
+  })();
+
   /* ── Toast（分享卡、留言墙等场景共用的轻提示） ──
      注意：必须放在 IIFE 顶层。留言墙 initWall() 与 initInteractions() 是同级函数，
      若把 showToast 定义在 initInteractions 内部，留言墙调用时会 ReferenceError。 */
@@ -695,15 +708,7 @@
        链路：静态页 → CloudBase HTTP 网关 /chat → 云函数 resume-ai-chat
              → char-bigram TF-IDF 检索 knowledge/ 切片 → hy3 生成（带 <context> 约束）
        源码：functions/tencent/（index.js 业务主体 / prompt.js 提示词与拦截） */
-    /* API 线路：github.io 是纯静态托管，POST /api/chat 会回 405 HTML（不是 JSON），
-       所以问答与 JD 必须直接打 Cloudflare Pages 的同名函数；语音共用该变量，失败时仍回退浏览器合成。
-       这段规则与后面留言墙 apiFetch 共用同一份 API_BASES，避免两处配置漂移。 */
-    var API_BASES = (function () {
-      var host = location.hostname || '';
-      if (/^(localhost|127\.0\.0\.1|0\.0\.0\.0|\[::1\])$/.test(host)) return [''];
-      if (/\.github\.io$/i.test(host)) return ['https://shenge-work.pages.dev'];
-      return ['', 'https://shenge-work.pages.dev'];
-    })();
+    /* API 线路 API_BASES 已在 IIFE 顶层统一定义（问答 / 语音 / 留言墙共用同一份）。 */
     var AI_ENDPOINT = API_BASES[0] + '/api/chat';
 
     var AI_CONFIG = {
