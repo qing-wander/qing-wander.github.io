@@ -265,17 +265,70 @@ if (totalChars > BUDGET.totalChars) {
   warn(`简历正文 ${totalChars} 字，已接近两页上限 ${BUDGET.totalChars} 字，再加内容前先确认页数`);
 }
 
-/* ── 5. 生成物漂移 ── */
+/* ── 5. 作品案例页（data/work-details.json） ── */
+const WORK_DETAILS_FILE = resolve(ROOT, 'data/work-details.json');
+let workCaseCount = 0;
+if (existsSync(WORK_DETAILS_FILE)) {
+  const wd = JSON.parse(readFileSync(WORK_DETAILS_FILE, 'utf8'));
+  const detailWorks = wd.works || {};
+  const declared = (data.works || []).map((w) => w.detailId).filter(Boolean);
+  workCaseCount = Object.keys(detailWorks).length;
+
+  for (const [id, w] of Object.entries(detailWorks)) {
+    const where = `work-details.works.${id}`;
+    if (declared.indexOf(id) < 0) fail(`${where}：site-data.json 没有 works 条目声明 detailId="${id}"`);
+    ['tagline', 'role', 'period', 'status'].forEach((k) => {
+      if (!w[k]) fail(`${where} 缺少 ${k}`);
+    });
+    const sm = w.summary || {};
+    ['problem', 'solution', 'result'].forEach((k) => {
+      if (!sm[k]) fail(`${where}.summary 缺少 ${k}`);
+    });
+    if (!(w.heroMetrics || []).length) fail(`${where}.heroMetrics 为空`);
+    (w.heroMetrics || []).forEach((m, i) => {
+      if (m.value == null || !m.label) fail(`${where}.heroMetrics[${i}] 缺少 value / label`);
+    });
+    if (!((w.architecture || {}).layers || []).length) fail(`${where}.architecture.layers 为空`);
+    if (!(w.stackChoices || []).length) fail(`${where}.stackChoices 为空`);
+    if (!(w.capabilities || []).length) fail(`${where}.capabilities 为空`);
+    if (!(w.issues || []).length) fail(`${where}.issues 为空`);
+    (w.issues || []).forEach((is, i) => {
+      ['id', 'title', 'symptom', 'diagnosis', 'fix', 'result'].forEach((k) => {
+        if (!is[k]) fail(`${where}.issues[${i}] 缺少 ${k}`);
+      });
+    });
+    if (!((w.outcomes || {}).metrics || []).length) fail(`${where}.outcomes.metrics 为空`);
+    if (!(w.highlights || []).length) fail(`${where}.highlights 为空`);
+    if (!((w.roadmap || {}).now || []).length) fail(`${where}.roadmap.now 为空`);
+    if (!((w.retro || {}).quote)) fail(`${where}.retro.quote 为空`);
+    if (!((w.seo || {}).description)) fail(`${where}.seo.description 为空`);
+    Object.entries(w.links || {}).forEach(([k, v]) => {
+      if (/^https?:/i.test(v) && v.indexOf('https://') !== 0) fail(`${where}.links.${k} 必须使用 https`);
+    });
+  }
+  declared.forEach((id) => {
+    if (!detailWorks[id]) fail(`site-data.json 声明了 detailId="${id}"，但 work-details.json 里没有对应内容`);
+  });
+}
+
+/* ── 6. 生成物漂移 ── */
 if (!process.argv.includes('--no-drift')) {
   try {
     execFileSync(process.execPath, [resolve(ROOT, 'scripts/render_resume.mjs'), '--check'], { stdio: 'pipe' });
   } catch (err) {
     fail('resume.html 与 data/site-data.json 不一致：手改了生成物，或改完数据忘了 render');
   }
+  if (existsSync(WORK_DETAILS_FILE)) {
+    try {
+      execFileSync(process.execPath, [resolve(ROOT, 'scripts/render_work_details.mjs'), '--check'], { stdio: 'pipe' });
+    } catch (err) {
+      fail('work/*.html 与 data/work-details.json 不一致：手改了案例页，或改完数据忘了 render');
+    }
+  }
 }
 
-/* ── 6. 输出 ── */
-console.log(`内容规模：正文 ${totalChars} 字 · 工作 ${expBullets} 条 · 项目 ${prjBullets} 条 · 技能 ${(r.skills || []).length} 组`);
+/* ── 7. 输出 ── */
+console.log(`内容规模：正文 ${totalChars} 字 · 工作 ${expBullets} 条 · 项目 ${prjBullets} 条 · 技能 ${(r.skills || []).length} 组 · 作品案例 ${workCaseCount} 篇`);
 warns.forEach((w) => console.log('⚠ ' + w));
 if (errors.length) {
   errors.forEach((m) => console.error('✗ ' + m));

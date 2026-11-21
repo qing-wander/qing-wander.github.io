@@ -2432,6 +2432,9 @@ a.cap-ref:hover, a.cap-ref:focus-visible {
 }
 .work-gh { background: var(--ink); color: var(--card); }
 .work-gh:hover { background: var(--orange); color: var(--card); }
+/* 项目案例入口：作品卡里唯一的主行动，用强调色压过源码/访问链接 */
+.work-case { background: var(--orange); color: var(--accent-text); border-color: var(--ink); }
+.work-case:hover { background: var(--ink); color: var(--card); }
 
 /* 预告卡（规划中项目） */
 .work-upcoming { padding-top: 56px; }

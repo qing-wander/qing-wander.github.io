@@ -209,6 +209,10 @@
     /* ── 个人作品（水平无缝自动滚动）── */
     var _worksCards = (d.works || []).map(function (w) {
       var up = w.status === 'upcoming';
+      /* 有 detailId 的作品有独立案例页（work/<id>.html），入口放在链接区第一位 */
+      var _caseLink = w.detailId
+        ? '<a class="work-link work-case" href="work/' + esc(w.detailId) + '.html" target="_blank" rel="noopener noreferrer" aria-label="查看 ' + esc(w.title) + ' 的项目案例">查看案例 →</a>'
+        : '';
       return '<article class="work-card' + (up ? ' work-upcoming' : '') + '">' +
         (up ? '<span class="work-badge">预告 · 规划中</span>' : '') +
         '<div class="work-head"><span class="work-no" aria-hidden="true">' + esc(w.no) + '</span>' +
@@ -217,7 +221,7 @@
         '<div class="work-tech">' + (w.tech || []).map(function (t) {
           return '<span>' + esc(t) + '</span>';
         }).join('') + '</div>' +
-        '<div class="work-links">' +
+        '<div class="work-links">' + _caseLink +
         (up
           ? '<span class="work-soon">规划中 · 敬请期待</span>'
           : ((w.github || w.live)
