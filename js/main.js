@@ -191,15 +191,17 @@
        profileId 关联 data/company-profiles.json：徽章与速览行由
        js/company-profile.js 读取快照填充并接管点击（抽屉）。 */
     $('expList').innerHTML = (d.experience || []).map(function (x) {
-      var badge = '';
+      /* 公司名即档案入口：href 用线上深链，屏幕点击由 company-profile.js 拦截开抽屉 */
+      var name = esc(x.company);
       var quick = '';
       if (x.profileId) {
-        badge = '<button class="cp-badge" type="button" data-cp="' + esc(x.profileId) +
-          '" aria-label="查看 ' + esc(x.company) + ' 公司档案" title="公司档案：背景 / 业务 / 融资 / 前景">档</button>';
+        name = '<a class="cp-name-link" data-cp="' + esc(x.profileId) +
+          '" href="https://shenge-work.github.io/#company=' + esc(x.profileId) +
+          '" title="公司档案：背景 / 业务 / 融资 / 前景">' + name + '</a>';
         quick = '<p class="cp-quick" data-cp-quick="' + esc(x.profileId) + '" hidden></p>';
       }
       return '<article class="exp-card reveal">' +
-        '<div class="exp-head"><div><h3 class="exp-company">' + badge + esc(x.company) + '</h3>' +
+        '<div class="exp-head"><div><h3 class="exp-company">' + name + '</h3>' +
         quick +
         '<p class="exp-role">' + esc(x.role) + '</p></div><span class="exp-time">' + esc(x.time) + '</span></div>' +
         '<ul class="exp-points">' + (x.points || []).map(function (p) {

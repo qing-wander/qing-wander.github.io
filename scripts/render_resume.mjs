@@ -92,13 +92,15 @@ function summarySection(r) {
 /* 公司档案徽章 / 速览行 / 打印链接：内容数据在 data/company-profiles.json，
    由 js/company-profile.js 运行时读取快照填充；这里只生成按钮与占位容器，
    不引入跨文件数据依赖，保证 functions/lib 边缘渲染切片可用。 */
+/* 公司名即档案入口：不渲染独立徽章，直接把公司名包成链接。
+   href 用线上绝对地址 —— 打印 PDF 里 Chrome 会把它转成可点击的链接注释，
+   屏幕上点击由 company-profile.js 委托拦截打开抽屉，中键/新标签同样可达。 */
 function profileBits(e) {
-  if (!e.profileId) return { badge: '', quick: '', print: '' };
+  if (!e.profileId) return { name: '', quick: '' };
   const id = esc(e.profileId);
   return {
-    badge: `<button class="cp-badge" type="button" data-cp="${id}" aria-label="查看 ${esc(e.company)} 公司档案" title="公司档案：背景 / 业务 / 融资 / 前景">档</button>`,
+    name: `<a class="cp-name-link" data-cp="${id}" href="https://shenge-work.github.io/resume.html#company=${e.profileId}" title="公司档案：背景 / 业务 / 融资 / 前景">${esc(e.company)}</a>`,
     quickLine: '        <p class="cp-quick" data-cp-quick="' + id + '"></p>',
-    printLine: '        <p class="cp-print-link">公司档案 → shenge-work.github.io/resume.html#company=' + e.profileId + '</p>',
   };
 }
 
@@ -106,14 +108,15 @@ function experienceSection(r) {
   const inner = [];
   r.experience.forEach((e) => {
     const pb = profileBits(e);
+    const companyName = pb.name || esc(e.company);
     inner.push(
       '    <div class="item">',
       '      <div class="item-head">',
-      `        <p class="item-title">${pb.badge}${esc(e.company)}<span> ${esc(e.companyNote)}</span><span>${esc(e.role)}</span></p>`,
+      `        <p class="item-title">${companyName}<span> ${esc(e.companyNote)}</span><span>${esc(e.role)}</span></p>`,
       `        <span class="item-time">${esc(e.period)}</span>`,
       '      </div>',
     );
-    if (e.profileId) inner.push(pb.quickLine, pb.printLine);
+    if (e.profileId) inner.push(pb.quickLine);
     inner.push(
       ...bullets(e.bullets),
       '    </div>',

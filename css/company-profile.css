@@ -124,6 +124,14 @@ body.cp-lock { overflow: hidden; }
   font-size: 17px; font-weight: 700; letter-spacing: .04em;
   transform: rotate(-3deg);
 }
+/* 有公司 logo 时沿用同一枚印章方框，只把中间的字母缩写换成图片 */
+.cp-stamp.has-logo { padding: 0; overflow: hidden; }
+.cp-stamp-logo {
+  display: block;
+  width: 100%; height: 100%;
+  object-fit: cover;
+  border-radius: 5px;
+}
 .cp-title {
   font-family: var(--font-display, sans-serif);
   font-size: clamp(18px, 2.6vw, 23px);
@@ -508,15 +516,24 @@ body.cp-lock { overflow: hidden; }
 }
 
 /* ══ 7. 打印：抽屉与徽章整体退场，只留档案链接 ═══════ */
+/* 公司名即档案入口：屏幕上 hover 变橙 + 虚线提示可点 */
+a.cp-name-link {
+  color: inherit;
+  text-decoration: none;
+  border-bottom: 2px dashed transparent;
+  transition: color .15s ease, border-color .15s ease;
+}
+a.cp-name-link:hover { color: var(--orange, #FF5A1E); border-bottom-color: currentColor; }
+a.cp-name-link:focus-visible { outline: 2px solid var(--orange, #FF5A1E); outline-offset: 2px; }
+
 @media print {
-  .cp-badge, .cp-quick, .cp-drawer, .cp-lightbox { display: none !important; }
-  .cp-print-link {
-    display: block;
-    margin: 2px 0 0;
-    font-family: var(--font-mono, monospace);
-    font-size: 9.5px;
-    letter-spacing: .03em;
-    color: var(--ink-soft);
+  /* 打印 / 存 PDF：公司名保留为真实超链接（Chrome 会写入 PDF），
+     用细虚线下划线提示可点，不再输出显式的档案链接行 */
+  .cp-quick, .cp-drawer, .cp-lightbox { display: none !important; }
+  a.cp-name-link {
+    color: inherit !important;
+    text-decoration: none;
+    border-bottom: 1px dotted rgba(0, 0, 0, .4);
   }
 }
 

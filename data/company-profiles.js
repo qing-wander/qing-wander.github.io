@@ -12,6 +12,9 @@ window.COMPANY_PROFILES = {
     "comein": {
       "id": "comein",
       "code": "INM",
+      "logo": "images/company/comein/logo.png",
+      "logoSource": 3,
+      "logoNote": "公司 logo 截自BOSS直聘进门公司主页顶部标识（招聘平台公开展示），仅用于本档案的公司识别。",
       "name": "深圳进门财经科技股份有限公司",
       "shortName": "进门财经",
       "industry": "金融科技 · 机构投研服务",
@@ -164,6 +167,21 @@ window.COMPANY_PROFILES = {
           "img": "images/company/comein/office-10-team-outing.png",
           "alt": "进门财经 2023 年惠州出游团队合影",
           "note": "2023 年深圳进门财经惠州出游团建合影（BOSS直聘公司相册）"
+        },
+        {
+          "img": "images/company/comein/office-11-team-trip-bamboo-raft.jpg",
+          "alt": "桂林阳朔遇龙河竹筏编队",
+          "note": "团队旅行 · 桂林阳朔｜遇龙河竹筏编队（远景纪实）"
+        },
+        {
+          "img": "images/company/comein/office-12-team-trip-lawn-huddle.jpg",
+          "alt": "桂林阳朔草坪团队活动",
+          "note": "团队旅行 · 桂林阳朔｜草坪团队活动（远景纪实）"
+        },
+        {
+          "img": "images/company/comein/office-13-team-trip-lawn-walk.jpg",
+          "alt": "桂林阳朔草坪集合与游览",
+          "note": "团队旅行 · 桂林阳朔｜草坪集合与游览（远景纪实）"
         }
       ],
       "sources": [
@@ -263,6 +281,9 @@ window.COMPANY_PROFILES = {
     "zhishu": {
       "id": "zhishu",
       "code": "LES",
+      "logo": "images/company/zhishu/logo.png",
+      "logoSource": 5,
+      "logoNote": "公司 logo 截自BOSS直聘超线性公司主页顶部标识（招聘平台公开展示），仅用于本档案的公司识别。",
       "name": "深圳指数引力科技有限公司",
       "shortName": "指数引力",
       "industry": "AI 应用 · 人脉搜索 / 海外红人营销 SaaS",
@@ -482,6 +503,9 @@ window.COMPANY_PROFILES = {
     "fanggeek": {
       "id": "fanggeek",
       "code": "FJK",
+      "logo": "images/company/fanggeek/logo.png",
+      "logoSource": 5,
+      "logoNote": "公司 logo 截自拉勾招聘房极客公司主页顶部标识（招聘平台公开展示），仅用于本档案的公司识别。",
       "name": "深圳市房极客网络科技有限公司",
       "shortName": "房极客",
       "industry": "房地产科技 · 经纪行业 SaaS",
@@ -492,7 +516,7 @@ window.COMPANY_PROFILES = {
       },
       "registry": {
         "founded": "2016-07-07",
-        "hq": "深圳 · 深圳湾后海总部基地",
+        "hq": "深圳 · 南山后海中心区海信南方大厦 18 层（深圳湾超级总部基地）",
         "legalRep": "陈美强",
         "capital": "1,034.4471 万元人民币",
         "source": 5
@@ -589,6 +613,16 @@ window.COMPANY_PROFILES = {
           "title": "平台评价",
           "detail": "拉勾招聘面试评分 4.2、累计 210 条面试评价、简历及时处理率 100%（拉勾公司主页）",
           "source": 5
+        },
+        {
+          "title": "盈利节点",
+          "detail": "2017 年顺利实现公司初步盈利，为业务进一步发展奠定基础；拉勾公司介绍称当时正值「爆发性增长期」，正加速布局全国重点城市（拉勾公司主页）",
+          "source": 5
+        },
+        {
+          "title": "APP 城市覆盖",
+          "detail": "看房日记 / 小鹿选房先后在广州、深圳、武汉、重庆、杭州、上海、苏州、长沙、厦门、福州等一二线城市上线，在当地房产经纪人圈引起较大反响（拉勾公司主页）",
+          "source": 5
         }
       ],
       "outlook": {
@@ -622,6 +656,26 @@ window.COMPANY_PROFILES = {
           "img": "images/company/fanggeek/team-04-office-environment.png",
           "alt": "房极客办公环境",
           "note": "办公环境 · 研发工位（房极客官网「团队日常」）"
+        },
+        {
+          "img": "images/company/fanggeek/team-05-shenzhen-bay-hq.png",
+          "alt": "深圳湾后海总部基地天际线",
+          "note": "总部所在地 · 深圳湾超级总部基地（华润大厦「春笋」）（拉勾公司主页相册）"
+        },
+        {
+          "img": "images/company/fanggeek/team-06-office-lobby.png",
+          "alt": "房极客公司前台",
+          "note": "公司前台 · FANG GEEK 标识与节日布置（拉勾公司主页相册）"
+        },
+        {
+          "img": "images/company/fanggeek/team-07-seaside-team-photo.png",
+          "alt": "房极客海边团队大合照",
+          "note": "海边团建团队大合照（拉勾公司主页相册）"
+        },
+        {
+          "img": "images/company/fanggeek/team-08-outdoor-expansion.png",
+          "alt": "房极客户外拓展团建合影",
+          "note": "迷彩服户外拓展团建（拉勾公司主页相册）"
         }
       ],
       "sources": [
@@ -682,6 +736,11 @@ window.COMPANY_PROFILES = {
           "小鹿选房",
           "小程序·旗舰店"
         ],
+        "productDetails": [
+          "看房日记（2016.12.08 发布）：房产经纪人移动办公 APP，经 SAAS 云平台提供日常工作考核、盘源管理、客源管理、交易跟进、团队协作等一站式移动信息化服务（拉勾公司主页「公司产品」）",
+          "小鹿选房（2017.10 发布）：房源信息搜索移动 APP，结合 AI 聚合房源信息，并用大数据分析经纪人的行为与数据做智能化评价，为用户推荐更可靠的经纪人（拉勾公司主页「公司产品」）",
+          "小鹿系统（2018.10 发布）：面向房产经纪公司的智能化管理系统，针对虚假房源、目标房源重复查找等痛点，内置覆盖全国的智能楼盘字典，让「人找房」变成「房找人」，助力减员增效与数字化转型（拉勾公司主页「公司产品」）"
+        ],
         "milestones": [
           "2016.01 公司创立；2016.07 核心团队组建完毕、获得天使轮融资",
           "2016.09 种子用户群建立，内部版本开始测试",
@@ -702,6 +761,7 @@ window.COMPANY_PROFILES = {
           "2022.04 福建市场团队成立，至此公司各地市场服务团队已覆盖广东、上海、江苏、安徽、浙江、福建、山东、湖北、四川"
         ],
         "offices": [
+          "深圳南山后海中心区海信南方大厦 18 层（拉勾公司主页登记地址）",
           "深圳湾超级总部基地海信南方大厦（总部，毗邻腾讯、阿里巴巴）",
           "华东培训中心（苏州）",
           "华东运营中心（上海）"
@@ -712,6 +772,9 @@ window.COMPANY_PROFILES = {
     "chowsang": {
       "id": "chowsang",
       "code": "CSS",
+      "logo": "images/company/chowsang/logo.png",
+      "logoSource": 7,
+      "logoNote": "公司 logo 截自BOSS直聘周生生公司主页顶部标识（招聘平台公开展示），仅用于本档案的公司识别。",
       "name": "周生生集团国际有限公司",
       "shortName": "周生生",
       "industry": "黄金珠宝零售",

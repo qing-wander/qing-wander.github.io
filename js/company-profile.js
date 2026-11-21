@@ -267,6 +267,7 @@
     if (b.products && b.products.length) {
       html += '<div class="cp-row"><p class="cp-row-label">产品矩阵</p>' + tagList(b.products) + '</div>';
     }
+    html += multi('产品与服务', b.productDetails);
     html += multi('发展历程', b.milestones, true);
     html += multi('平台荣誉', b.awards, true);
     if (b.foundingTeam && b.foundingTeam.length) {
@@ -333,10 +334,15 @@
       '" target="_blank" rel="noopener noreferrer">' + esc(c.website.text) + ' ↗</a>' : '';
     var founded = reg.founded ? '<span class="cp-founded">成立于 ' + esc(reg.founded) + '</span>' : '';
 
+    var stamp = c.logo
+      ? '<span class="cp-stamp has-logo" aria-hidden="true"><img class="cp-stamp-logo" src="' +
+        esc(c.logo) + '" alt=""></span>'
+      : '<span class="cp-stamp" aria-hidden="true">' + esc(c.code || '') + '</span>';
+
     var html =
       '<header class="cp-head">' +
       '  <div class="cp-head-top">' +
-      '    <span class="cp-stamp" aria-hidden="true">' + esc(c.code || '') + '</span>' +
+      '    ' + stamp +
       '    <div class="cp-head-main">' +
       '      <h3 class="cp-title" id="cpTitle">' + esc(c.name) + '</h3>' +
       '      <p class="cp-sub">' + esc(c.industry || '') + (site ? ' · ' + site : '') +
@@ -447,10 +453,13 @@
     fillQuick();
     /* resume.html / index.html 双页面：委托全文档捕获徽章点击（含 main.js 动态渲染的卡片） */
     document.addEventListener('click', function (ev) {
-      var b = ev.target.closest ? ev.target.closest('.cp-badge[data-cp]') : null;
+      /* 公司名链接（a.cp-name-link）与历史徽章都走这里；拦截 <a> 默认跳转，
+         由 open() 内的 replaceState 维护 #company= 深链 */
+      var b = ev.target.closest ? ev.target.closest('[data-cp]') : null;
       if (!b) return;
+      if (b.tagName === 'A') ev.preventDefault();
       if (drawer && !drawer.hidden && drawer.querySelector('.cp-panel').getAttribute('data-cp-open-id') === b.dataset.cp) {
-        close(); /* 再点同一枚徽章 = 收起 */
+        close(); /* 再点同一家公司 = 收起 */
         return;
       }
       lastFocus = b;
