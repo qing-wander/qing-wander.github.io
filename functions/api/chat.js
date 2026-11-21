@@ -190,7 +190,12 @@ export async function onRequestPost({ request, env }) {
   const cfg = await readChatConfig(env);
   const call = await callWorker(buildMessages(q, r.hits, cfg.prompt), env, cfg.model);
   const answer = call.ok ? call.text : '这条我暂时答不上来（模型服务不可用），你可以直接看页面上的原文。';
-  const citations = r.hits.map((h) => ({ id: h.id, title: h.title, section: h.section, source_path: h.source_path }));
+  /* citations 带上切片原文（截 400 字）：前端「依据」可展开核对，
+     这是「可验证」承诺的另一半 —— 只有 id 的来源用户没法自己查证 */
+  const citations = r.hits.map((h) => ({
+    id: h.id, title: h.title, section: h.section, source_path: h.source_path,
+    text: String(h.text || '').slice(0, 400),
+  }));
 
   await logQa(env, {
     ts: Date.now(), query: q, answer, hitIds: citations.map((c) => c.id).join(','),
@@ -202,7 +207,7 @@ export async function onRequestPost({ request, env }) {
   return json({
     ok: true, answer,
     citations,
-    sources: citations.map((c) => ({ title: c.title || c.id, id: c.id, path: c.source_path })),
+    sources: citations.map((c) => ({ title: c.title || c.id, id: c.id, path: c.source_path, excerpt: String(c.text || '').slice(0, 300) })),
     empty: false, semantic: r.semantic, ms: Date.now() - t0,
   }, 200, request, env);
 }

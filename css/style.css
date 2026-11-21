@@ -55,6 +55,19 @@ button { font-family: inherit; cursor: pointer; }
 
 ::selection { background: var(--orange); color: var(--accent-text); }
 
+
+/* ── 问答 / JD 分栏：只显示当前模式的对话与结果卡 ──
+   JD 结果不再追加在问答历史尾巴上，切换即看到该模式的全部内容 */
+.ai-panel.ai-mode-jd .ai-msg[data-mode="qa"] { display: none; }
+.ai-panel:not(.ai-mode-jd) .ai-msg[data-mode="jd"],
+.ai-panel:not(.ai-mode-jd) .ai-jd-card { display: none; }
+.ai-panel.ai-mode-jd .ai-msg[data-mode="jd"],
+.ai-panel.ai-mode-jd .ai-jd-card { display: block; }
+/* CP.AI 面板在窄屏接近全屏：锁背景滚动，防滚动穿透；桌面不锁（可边看边滚） */
+@media (max-width: 760px) {
+  body.ai-lock { overflow: hidden; }
+}
+
 /* ── 通用小组件 ──────────────────────────────── */
 .tag {
   display: inline-block;
@@ -2265,7 +2278,21 @@ a.cap-ref:hover, a.cap-ref:focus-visible {
 /* 答案依据来源（后端返回 sources[] 时渲染） */
 .ai-src-row { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; margin-top: 9px; padding-top: 7px; border-top: 2px dashed rgba(var(--ink-rgb), .28); }
 .ai-src-label { font-family: var(--font-mono); font-size: 9px; letter-spacing: .12em; color: var(--ink-soft); text-transform: uppercase; }
-.ai-src { font-size: 10.5px; line-height: 1.4; padding: 2px 6px; background: var(--card); border: 2px solid var(--ink); color: var(--ink-soft); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ai-src {
+  font-family: var(--font-cn); font-size: 10.5px; line-height: 1.4;
+  padding: 2px 6px; background: var(--card); border: 2px solid var(--ink);
+  color: var(--ink-soft); max-width: 100%; overflow: hidden;
+  text-overflow: ellipsis; white-space: nowrap; cursor: pointer;
+  transition: background .12s ease, color .12s ease, border-color .12s ease;
+}
+.ai-src:hover { background: var(--ink); color: var(--card); border-color: var(--ink); }
+.ai-src[aria-expanded="true"] { background: var(--blue); border-color: var(--blue); color: #fff; }
+.ai-src-body {
+  margin-top: 8px; padding: 10px 12px;
+  background: var(--card); border: 2px solid var(--ink);
+  font-size: 12px; line-height: 1.75; color: var(--ink-soft);
+  white-space: pre-wrap; word-break: break-word;
+}
 .ai-typing .ai-bubble { display: flex; align-items: center; gap: 5px; padding: 12px 14px; }
 .ai-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--ink); animation: aiBlinkDot 1s infinite; }
 .ai-dot:nth-child(2) { animation-delay: .18s; }
@@ -2389,9 +2416,12 @@ a.cap-ref:hover, a.cap-ref:focus-visible {
 .ai-jd-ev li span { display: block; font-family: var(--font-mono); font-size: 9px; opacity: .7; }
 .ai-jd-ev li.none { color: rgba(var(--ink-rgb), .4); }
 .ai-jd-probe {
-  display: block; margin: 6px 0 0 26px; padding: 4px 7px;
-  font-family: var(--font-cn); font-size: 10.5px; text-align: left; color: var(--ink);
-  background: var(--paper); border: 1.5px solid var(--ink); cursor: pointer;
+  display: block; margin: 6px 0 0 26px; max-width: calc(100% - 26px);
+  padding: 3px 8px;
+  font-family: var(--font-cn); font-size: 10.5px; text-align: left; color: var(--ink-soft);
+  background: transparent; border: 1.5px dashed var(--ink-soft); cursor: pointer;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  transition: background .12s ease, color .12s ease, border-color .12s ease;
 }
 .ai-jd-probe:hover { background: var(--orange); color: var(--accent-text); }
 .ai-jd-acts { display: flex; gap: 7px; padding: 9px 12px; border-top: 2px solid var(--ink); }

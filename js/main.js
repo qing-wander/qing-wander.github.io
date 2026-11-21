@@ -731,10 +731,10 @@
       });
     }
 
-    /* ── 11. CP.AI 简历问答助手（已接入后端：腾讯云 CloudBase 云函数 + 静态 RAG） ──
-       链路：静态页 → CloudBase HTTP 网关 /chat → 云函数 resume-ai-chat
-             → char-bigram TF-IDF 检索 knowledge/ 切片 → hy3 生成（带 <context> 约束）
-       源码：functions/tencent/（index.js 业务主体 / prompt.js 提示词与拦截） */
+    /* ── 11. CP.AI 简历问答助手（后端：Cloudflare Pages Function /api/chat） ──
+       链路：静态页 → POST /api/chat → D1 FTS5 BM25 + Vectorize 向量（RRF 融合）
+             → 受约束提示词 → 生成（答案带 citations，可回链切片原文）
+       源码：functions/api/chat.js（入口）/ kb.js（检索）/ jd.js（JD 匹配） */
     /* API 线路 API_BASES 已在 IIFE 顶层统一定义（问答 / 语音 / 留言墙共用同一份）。 */
     var AI_ENDPOINT = API_BASES[0] + '/api/chat';
 
@@ -749,7 +749,7 @@
       autoTipAhead: 8500,           // 距展开还剩多久就冒自我介绍气泡 → 进页面约 1.5s 即打招呼
       autoCooldown: 30 * 60 * 1000, // 同一台设备 30 分钟内不再自动弹
       autoTip: '👋 我是 AI 简历问答助手，点我直接问～',
-      autoLead: '我是 AI 档案问答助手。<br>这页塞了 6 套系统、几十条技术细节，翻页挺慢——<b>直接问我更快</b>，回答都带原文出处。<br>不想打字就先点一个：',
+      autoLead: '我是 AI 档案问答助手。<br>这页塞了 5 个企业项目、6 个个人作品和几十条技术细节，翻页挺慢——<b>直接问我更快</b>，回答都带原文出处。<br>不想打字就先点一个：',
       autoPrompts: [
         { q: '你主导过哪些 0→1 的系统？', label: '0→1 系统' },
         { q: 'Agent 架构这块你做到什么程度？', label: 'Agent 深度' },
@@ -790,9 +790,11 @@
     }
 
     function aiScroll() { aiBody.scrollTop = aiBody.scrollHeight; }
-    function aiAppendMsg(who, html) {
+    function aiAppendMsg(who, html, mode) {
       var wrap = document.createElement('div');
       wrap.className = 'ai-msg ai-msg-' + who;
+      /* 消息归属哪个模式：问答历史与 JD 结果分栏，切换时互不干扰 */
+      wrap.setAttribute('data-mode', mode || aiMode || 'qa');
       wrap.innerHTML = '<span class="ai-msg-name">' + (who === 'bot' ? 'CP.AI' : 'YOU') + '</span>' +
         '<div class="ai-bubble">' + html + '</div>';
       aiBody.appendChild(wrap);
@@ -829,6 +831,8 @@
       if (next === 'jd') {
         aiAppendMsg('bot', '已切到 <b>JD 匹配</b>：粘贴岗位描述，我会拆成需求逐条对照档案证据，列出覆盖 / 部分 / 缺口与面试追问点。<br>一次 30–1500 字，' + jdCfg().quota + '；也可以点下面的示例直接填入。');
       }
+      /* 分栏生效后，把视口带到当前模式的最后一条 */
+      aiScroll();
       if (aiInput && aiPanel && !aiPanel.hidden) aiInput.focus();
     }
 
@@ -849,7 +853,7 @@
       });
     }
 
-    function aiSubmitJD(raw) {
+    function aiSubmitJD(raw, isRetry) {
       var u = jdUI();
       var cfg = jdCfg();
       var jd = String(raw || '').trim();
@@ -885,7 +889,15 @@
         aiAppendJDCard(data, (Date.now() - started) / 1000);
       }).catch(function (err) {
         typing.remove();
-        aiAppendMsg('bot', '▍' + esc(u.errorText(err)));
+        var code = (err && err.code) || '';
+        /* 断连/超时先自动重试一次：pages.dev 偶发 ERR_CONNECTION_CLOSED，
+           用户手动点一次的成功率其实很高，别让人误以为功能坏了 */
+        if (!isRetry && (code === 'network' || code === 'timeout')) {
+          aiAppendMsg('bot', '▍通道闪断，正在自动重试一次…', 'jd');
+          setTimeout(function () { aiSubmitJD(raw, true); }, 900);
+          return;
+        }
+        aiAppendMsg('bot', '▍' + esc(u.errorText(err)), 'jd');
       }).then(function () {
         aiBusy = false;
         if (aiSend) aiSend.disabled = false;
@@ -903,6 +915,7 @@
       var CN = { covered: '覆盖', partial: '部分', gap: '缺口' };
       var card = document.createElement('div');
       card.className = 'ai-jd-card';
+      card.setAttribute('data-mode', 'jd');
       card._jdData = data;
       var html =
         '<div class="ai-jd-top">' +
@@ -932,18 +945,30 @@
               '<span class="ai-jd-badge">' + CN[st] + '</span><p>' + esc(r.req) + '</p></div>' +
             (r.gap && st !== 'covered' ? '<p class="ai-jd-gap">缺口：' + esc(r.gap) + '</p>' : '') +
             '<ul class="ai-jd-ev">' + evHtml + '</ul>' +
-            (r.probe ? '<button class="ai-jd-probe" type="button" data-ai-probe="' + i + '">追问：' + esc(r.probe) + ' →</button>' : '') +
+            (r.probe ? '<button class="ai-jd-probe" type="button" data-ai-probe="' + i + '" title="' + esc(r.probe) + '" aria-label="追问：' + esc(r.probe) + '">追问：' + esc(r.probe) + ' →</button>' : '') +
           '</div>';
       });
       html += '</div>' +
         '<div class="ai-jd-acts">' +
           '<button class="ai-jd-act" type="button" data-jd-copy="1">复制 Markdown ⧉</button>' +
-          '<a class="ai-jd-act ai-jd-act-ghost" href="#jd">打开完整对照 ↗</a>' +
+          '<button class="ai-jd-act ai-jd-act-ghost" type="button" data-jd-open="1">打开完整对照 ↓</button>' +
         '</div>' +
         '<p class="ai-jd-note">证据取自档案切片 · 缺口照实列出 · 点追问可直接问 CP.AI</p>';
       card.innerHTML = html;
       aiBody.appendChild(card);
       aiScroll();
+      var openBtn = card.querySelector('[data-jd-open]');
+      if (openBtn) {
+        openBtn.addEventListener('click', function () {
+          var target = document.getElementById('jd');
+          aiClosePanel();
+          if (target && target.scrollIntoView) {
+            target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          } else {
+            location.hash = 'jd';
+          }
+        });
+      }
       var copyBtn = card.querySelector('[data-jd-copy]');
       if (copyBtn) {
         copyBtn.addEventListener('click', function () {
@@ -972,6 +997,8 @@
 
     function aiOpenPanel(auto) {
       aiPanel.hidden = false;
+      /* 移动端面板接近全屏：锁住背景滚动，避免内层滚到底带动整页（滚动穿透） */
+      document.body.classList.add('ai-lock');
       aiPanel.classList.add('opening');
       setTimeout(function () { aiPanel.classList.remove('opening'); }, 320);
       aiFab.setAttribute('aria-expanded', 'true');
@@ -985,7 +1012,10 @@
     }
     function aiClosePanel() {
       aiPanel.hidden = true;
+      document.body.classList.remove('ai-lock');
       aiFab.setAttribute('aria-expanded', 'false');
+      /* 关闭即回到问答模式：重开的人多数是想继续问，而不是接着匹配 */
+      if (aiMode === 'jd') aiSetMode('qa');
     }
     function aiSubmit(text) {
       var q = (typeof text === 'string' ? text : aiInput.value).trim();
@@ -1006,7 +1036,7 @@
       var typing = aiShowTyping();
       askAI(q).then(function (data) {
         typing.remove();
-        aiAppendMsg('bot', aiRenderAnswer(data));
+        bindAiSources(aiAppendMsg('bot', aiRenderAnswer(data)));
       }).catch(function (err) {
         typing.remove();
         aiAppendMsg('bot', aiRenderError(err));
@@ -1045,18 +1075,50 @@
       });
     }
 
-    /* 答案文本：转义后把换行变 <br>，来源单独渲染成标签 */
+    /* 答案文本：转义后把换行变 <br>；「依据」是可点的，展开切片原文供核对 */
     function aiRenderAnswer(data) {
       var html = esc(String(data.answer || '')).replace(/\r?\n/g, '<br>');
       if (data.sources && data.sources.length) {
         var tags = data.sources.slice(0, 3).map(function (s) {
           var label = esc(String(s.title || ''));
           if (label.length > 26) label = label.slice(0, 26) + '…';
-          return '<span class="ai-src" title="' + esc(String(s.id || '')) + '">' + label + '</span>';
+          var excerpt = String(s.excerpt || s.text || '');
+          return '<button class="ai-src" type="button" data-src-id="' + esc(String(s.id || '')) + '"' +
+            (excerpt ? ' data-src-text="' + esc(excerpt) + '"' : '') +
+            ' aria-expanded="false" title="' + (excerpt ? '点击展开原文' : esc(String(s.id || ''))) + '">' + label + '</button>';
         }).join('');
         html += '<div class="ai-src-row"><span class="ai-src-label">依据</span>' + tags + '</div>';
       }
       return html;
+    }
+
+    /* 「依据」点击展开/收起切片原文 */
+    function bindAiSources(msgEl) {
+      if (!msgEl) return;
+      msgEl.querySelectorAll('.ai-src').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var text = btn.getAttribute('data-src-text') || '';
+          if (!text) return;
+          var open = btn.getAttribute('aria-expanded') === 'true';
+          var body = msgEl.querySelector('.ai-src-body[data-for="' + btn.getAttribute('data-src-id') + '"]');
+          if (open) {
+            if (body) body.remove();
+            btn.setAttribute('aria-expanded', 'false');
+            return;
+          }
+          /* 收起其它已展开的原文，面板里同时只开一个 */
+          msgEl.querySelectorAll('.ai-src-body').forEach(function (b) { b.remove(); });
+          msgEl.querySelectorAll('.ai-src[aria-expanded="true"]').forEach(function (b) { b.setAttribute('aria-expanded', 'false'); });
+          var div = document.createElement('div');
+          div.className = 'ai-src-body';
+          div.setAttribute('data-for', btn.getAttribute('data-src-id') || '');
+          div.textContent = text;
+          var row = btn.closest('.ai-src-row');
+          if (row && row.parentElement) row.parentElement.insertBefore(div, row.nextSibling);
+          btn.setAttribute('aria-expanded', 'true');
+          aiScroll();
+        });
+      });
     }
 
     function aiRenderError(err) {
