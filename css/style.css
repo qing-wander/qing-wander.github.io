@@ -1586,6 +1586,52 @@ a.cap-ref:hover, a.cap-ref:focus-visible {
   opacity: .8;
 }
 
+/* ── 页脚：推荐的人（名单为空时整节隐藏）── */
+.footer-people {
+  max-width: var(--wrap);
+  margin: 0 auto 38px;
+  padding-bottom: 30px;
+  border-bottom: 1px solid rgba(var(--paper-rgb), .18);
+}
+.fp-head {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: 12px; flex-wrap: wrap; margin-bottom: 16px;
+}
+.fp-title { display: flex; align-items: baseline; gap: 10px; font-size: 15px; font-weight: 900; }
+.fp-en { font-family: var(--font-mono); font-size: 10px; letter-spacing: .2em; color: var(--orange); }
+.fp-note { font-family: var(--font-mono); font-size: 10.5px; color: rgba(var(--paper-rgb), .55); }
+.fp-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.fp-card {
+  display: flex; align-items: flex-start; gap: 11px;
+  background: var(--paper); color: var(--ink);
+  border: 2px solid var(--ink); padding: 12px 13px;
+  text-decoration: none;
+  transition: transform .14s ease, box-shadow .14s ease;
+}
+.fp-card:hover { transform: translate(-2px, -2px); box-shadow: 4px 4px 0 var(--orange); }
+.fp-ava {
+  width: 34px; height: 34px; flex: 0 0 auto;
+  display: grid; place-items: center;
+  font-family: var(--font-tech); font-size: 17px; line-height: 1;
+  border: 2px solid var(--ink);
+}
+.fp-c0 { background: var(--orange); color: #fff; }
+.fp-c1 { background: var(--blue); color: #fff; }
+.fp-c2 { background: var(--green); color: #fff; }
+.fp-body { min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.fp-name { display: flex; align-items: center; gap: 5px; font-size: 13.5px; font-weight: 900; }
+.fp-arrow { font-style: normal; font-size: 11px; color: var(--orange); }
+.fp-role { font-size: 11px; color: var(--ink-soft); }
+.fp-reason {
+  font-size: 11px; color: var(--ink-soft);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+/* 右下角常驻 3D 角色（#aiStage 280px + 边距）会压住最后一列，桌面给它留出安全区 */
+@media (min-width: 1101px) { .footer-people { padding-right: 300px; } }
+@media (max-width: 980px) { .fp-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 560px) { .fp-grid { grid-template-columns: minmax(0, 1fr); } .fp-note { display: none; } }
+
+
 /* ══════════════ 模态框 ══════════════ */
 .modal { position: fixed; inset: 0; z-index: 200; display: flex; align-items: center; justify-content: center; padding: 24px; }
 .modal[hidden] { display: none; }

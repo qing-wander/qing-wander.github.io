@@ -28,6 +28,8 @@ on:
       - 'scripts/validate_content.mjs'
       - 'scripts/sync_site_data.py'
       - 'data/work-details.json'
+      - 'data/people.json'
+      - 'scripts/sync_people.py'
       - 'templates/work-detail.template.html'
       - 'scripts/render_work_details.mjs'
       - 'work/**'
@@ -44,6 +46,8 @@ on:
       - 'scripts/validate_content.mjs'
       - 'scripts/check_resume_pages.mjs'
       - 'data/work-details.json'
+      - 'data/people.json'
+      - 'scripts/sync_people.py'
       - 'templates/work-detail.template.html'
       - 'scripts/render_work_details.mjs'
       - 'work/**'
@@ -100,3 +104,4 @@ jobs:
         run: |
           python3 scripts/sync_site_data.py --check
           python3 scripts/sync_company_profiles.py --check
+          python3 scripts/sync_people.py --check

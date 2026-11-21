@@ -81,6 +81,29 @@
         $('footerCopyright').textContent = d.meta.footer.copyright || '';
         $('footerCoord').textContent = d.meta.footer.coord || '';
       }
+
+      /* ── 页脚推荐的人（data/people.js）：名单为空时整节保持隐藏 ── */
+      (function renderPeople() {
+        var box = $('footerPeople');
+        var grid = $('peopleGrid');
+        if (!box || !grid) return;
+        var P = window.PEOPLE || {};
+        var list = (P.people || []).filter(function (p) { return p && p.name && p.site; });
+        if (!list.length) { box.hidden = true; return; }
+        var max = (P.meta && P.meta.footerCount) || 4;
+        grid.innerHTML = list.slice(0, max).map(function (p, i) {
+          var initial = String(p.initial || p.name).slice(0, 1).toUpperCase();
+          return '<a class="fp-card" href="' + esc(p.site) + '" target="_blank" rel="noopener noreferrer"' +
+            ' aria-label="' + esc(p.name + '：' + (p.reason || '推荐的个人站')) + '">' +
+            '<span class="fp-ava fp-c' + (i % 3) + '" aria-hidden="true">' + esc(initial) + '</span>' +
+            '<span class="fp-body">' +
+              '<span class="fp-name">' + esc(p.name) + '<i class="fp-arrow" aria-hidden="true">↗</i></span>' +
+              '<span class="fp-role">' + esc(p.role || '') + '</span>' +
+              '<span class="fp-reason" title="' + esc(p.reason || '') + '">' + esc(p.reason || '') + '</span>' +
+            '</span></a>';
+        }).join('');
+        box.hidden = false;
+      })();
     }
 
     /* ── HERO ── */

@@ -311,6 +311,32 @@ if (existsSync(WORK_DETAILS_FILE)) {
   });
 }
 
+/* ── 5.1 页脚推荐的人（data/people.json）── */
+const PEOPLE_FILE = resolve(ROOT, 'data/people.json');
+let peopleCount = 0;
+if (existsSync(PEOPLE_FILE)) {
+  const ppl = JSON.parse(readFileSync(PEOPLE_FILE, 'utf8'));
+  if (!Array.isArray(ppl.people)) {
+    fail('data/people.json 缺少 people 数组（没有推荐人时给空数组）');
+  } else {
+    peopleCount = ppl.people.length;
+    const limit = Number((ppl.meta || {}).limit) || 24;
+    if (peopleCount > limit) fail(`推荐人数 ${peopleCount} 超过上限 ${limit}`);
+    ppl.people.forEach((p, i) => {
+      const where = `people[${i}]`;
+      ['name', 'role', 'site', 'reason'].forEach((k) => {
+        if (!p[k] || !String(p[k]).trim()) fail(`${where} 缺少 ${k}`);
+      });
+      if (p.site && p.site.indexOf('https://') !== 0) fail(`${where}.site 必须使用 https://`);
+      if (p.reason && chars(p.reason) < 8) fail(`${where}.reason 太短（至少 8 字），必须写具体推荐理由`);
+      if (chars(p.name) > 20) fail(`${where}.name 超过 20 字`);
+      if (p.role && chars(p.role) > 40) fail(`${where}.role 超过 40 字`);
+      if (p.reason && chars(p.reason) > 80) fail(`${where}.reason 超过 80 字`);
+      if (p.initial && Array.from(p.initial).length !== 1) fail(`${where}.initial 必须是单字符`);
+    });
+  }
+}
+
 /* ── 6. 生成物漂移 ── */
 if (!process.argv.includes('--no-drift')) {
   try {
@@ -328,7 +354,7 @@ if (!process.argv.includes('--no-drift')) {
 }
 
 /* ── 7. 输出 ── */
-console.log(`内容规模：正文 ${totalChars} 字 · 工作 ${expBullets} 条 · 项目 ${prjBullets} 条 · 技能 ${(r.skills || []).length} 组 · 作品案例 ${workCaseCount} 篇`);
+console.log(`内容规模：正文 ${totalChars} 字 · 工作 ${expBullets} 条 · 项目 ${prjBullets} 条 · 技能 ${(r.skills || []).length} 组 · 作品案例 ${workCaseCount} 篇 · 推荐人 ${peopleCount} 位`);
 warns.forEach((w) => console.log('⚠ ' + w));
 if (errors.length) {
   errors.forEach((m) => console.error('✗ ' + m));
