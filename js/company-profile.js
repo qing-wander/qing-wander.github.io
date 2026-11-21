@@ -215,6 +215,70 @@
     return html + '</ul></section>';
   }
 
+  function bossProfileBlock(c) {
+    var b = c.bossProfile;
+    if (!b) return '';
+    var src = b.source || '';
+    var html = '<section class="cp-sec"><h4 class="cp-sec-title">' +
+      esc(b.platformTitle || '招聘平台档案 · BOSS直聘') + '</h4>';
+    var quick = [
+      { label: '在招职位', value: b.openJobs ? (b.openJobs + ' 个') : '' },
+      { label: '招聘 Boss', value: b.recruiters ? (b.recruiters + ' 位') : '' },
+      { label: '行业标签', value: b.industryTag },
+      { label: '团队规模', value: b.scaleTag },
+      { label: '融资标签', value: b.financingTag },
+      { label: '工作时间', value: b.workTime }
+    ].filter(function (x) { return x.value; });
+    if (quick.length) {
+      html += '<div class="cp-kpis">';
+      quick.forEach(function (x) {
+        html += '<div class="cp-kpi"><strong>' + esc(x.value) + '</strong><span>' + esc(x.label) + '</span></div>';
+      });
+      html += '</div>';
+    }
+    function tagList(arr) {
+      return '<div class="cp-row"><p class="cp-row-text">' +
+        (arr || []).map(function (x) { return '<span class="cp-pill">' + esc(x) + '</span>'; }).join(' ') +
+        '</p></div>';
+    }
+    function line(label, text, withSource) {
+      if (!text) return '';
+      return '<div class="cp-row"><p class="cp-row-label">' + esc(label) + '</p><p class="cp-row-text">' +
+        esc(text) + (withSource ? sup(src) : '') + '</p></div>';
+    }
+    function multi(label, arr, withSource) {
+      if (!arr || !arr.length) return '';
+      return '<div class="cp-row"><p class="cp-row-label">' + esc(label) + '</p><p class="cp-row-text">' +
+        arr.map(function (m) { return esc(m); }).join('<br>') +
+        (withSource ? sup(src) : '') + '</p></div>';
+    }
+    html += line('名称沿革', b.rename);
+    html += line('平台简介', b.intro, true);
+    html += line('工商口径', b.registryNote);
+    html += line('口径说明', b.financingNote);
+    html += multi('企业文化', b.culture, true);
+    if (b.welfare && b.welfare.length) {
+      html += '<div class="cp-row"><p class="cp-row-label">' +
+        esc(b.welfareLabel || '福利标签') + '</p>' + tagList(b.welfare) + '</div>';
+    }
+    if (b.talentDevelopment && b.talentDevelopment.length) {
+      html += '<div class="cp-row"><p class="cp-row-label">人才发展</p>' + tagList(b.talentDevelopment) + '</div>';
+    }
+    if (b.products && b.products.length) {
+      html += '<div class="cp-row"><p class="cp-row-label">产品矩阵</p>' + tagList(b.products) + '</div>';
+    }
+    html += multi('发展历程', b.milestones, true);
+    html += multi('平台荣誉', b.awards, true);
+    if (b.foundingTeam && b.foundingTeam.length) {
+      b.foundingTeam.forEach(function (f) {
+        html += '<div class="cp-row"><p class="cp-row-label">' + esc(f.title) + '</p><p class="cp-row-text">' +
+          '<b>' + esc(f.name) + '</b> · ' + esc(f.bio) + sup(src) + '</p></div>';
+      });
+    }
+    html += multi('办公地点', b.offices, true);
+    return html + '</section>';
+  }
+
   function outlookBlock(c) {
     var o = c.outlook || {};
     if (!o.opportunities && !o.risks && !o.myTake) return '';
@@ -278,6 +342,8 @@
       '      <p class="cp-sub">' + esc(c.industry || '') + (site ? ' · ' + site : '') +
                 (founded ? ' · ' + founded : '') + '</p>' +
       '      <p class="cp-entity">' + esc(c.entity || c.name) + sup(reg.source || '') + '</p>' +
+      (c.renameNote ? '      <p class="cp-entity">' + esc(c.renameNote) +
+        sup((c.bossProfile || {}).source || '') + '</p>' : '') +
       '    </div>' +
       '  </div>' +
       '  <p class="cp-oneline">' + esc(c.oneLine || '') + '</p>' +
@@ -287,11 +353,13 @@
       sectionBlock('公司在做什么', [
         { label: '主营业务', text: (c.business || {}).main },
         { label: '商业模式', text: (c.business || {}).model },
-        { label: '行业位置', text: (c.business || {}).position }
+        { label: '行业位置', text: (c.business || {}).position },
+        { label: '平台自述', text: (c.business || {}).bossIntro, source: (c.bossProfile || {}).source }
       ]) +
       (c.chart ? renderChartBlock(c) : '') +
       (c.funding ? renderFundingBlock(c) : '') +
       recognitionBlock(c) +
+      bossProfileBlock(c) +
       outlookBlock(c) +
       officeBlock(c) +
       sourcesBlock(c);
