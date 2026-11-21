@@ -7,9 +7,12 @@
 const THEMES = ['archive', 'blueprint', 'newsprint', 'noir'];
 
 export async function onRequestGet({ env }) {
+  /* 公开只读配置：主站 github.io 与接口站 pages.dev 不同域，必须允许跨域读取，
+     否则后台设置的主题在主站永远拿不到（只能静默退回按日期轮换）。 */
   const headers = {
     'Content-Type': 'application/json; charset=utf-8',
     'Cache-Control': 'public, max-age=60',
+    'Access-Control-Allow-Origin': '*',
   };
   try {
     if (!env.DB) return new Response(JSON.stringify({ ok: false, theme: null }), { headers });
