@@ -200,9 +200,13 @@ if [ "$DO_POST" = "1" ]; then
         -H "Origin: $ORIGIN" -H "X-Admin-Token: $ADMIN_TOKEN" \
         -H 'Content-Type: application/json' -d "{\"id\":\"$NEW_ID\"}")
       check W16 "测试留言已用管理令牌删除" 200 "$CODE"
-      CODE=$(curl -sS -o /dev/null -w '%{http_code}' -m 10 -H "X-Admin-Token: $ADMIN_TOKEN" "$BASE/api/admin/wall/devices?limit=5")
-      # 旧后台接口已下线，日常管理走独立后台 shenge-work-admin.pages.dev
-      check W17 "旧后台接口已下线" 404 "$CODE"
+      # 旧后台接口已下线，日常管理走独立后台 shenge-work-admin.pages.dev。
+      # Pages 对未匹配的 /api/* 会回退到静态首页（200 text/html），所以不能只看
+      # 状态码，要看响应里还有没有设备数据。
+      CODE=$(curl -sS -o "$TMP" -w '%{http_code}' -m 15 -H "X-Admin-Token: $ADMIN_TOKEN" "$BASE/api/admin/wall/devices?limit=5")
+      DOWN=1
+      grep -q '"devices"' "$TMP" 2>/dev/null && DOWN=0
+      check W17 "旧后台接口已下线" 1 "$DOWN"
     else
       printf '%s%sWARN%s  测试留言仍在自检设备的留言本里；\n' "$c_dim" "$c_yellow" "$c_off"
       printf '%s      加 --admin-token=<WALL_ADMIN_TOKEN> 重跑可自动清理。%s\n' "$c_dim" "$c_off"
