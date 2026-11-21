@@ -11,7 +11,6 @@ import { createHmac } from 'node:crypto';
 import { onRequestGet as wallGet, onRequestPost as wallPost, onRequestDelete as wallDel, onRequestOptions as wallOpt } from '../functions/api/wall.js';
 import { onRequestGet as visitsGet, onRequestPost as visitsPost, onRequestOptions as visitsOpt } from '../functions/api/visits.js';
 import { onRequestPost as deliverPost, onRequestOptions as deliverOpt } from '../functions/api/deliver.js';
-import { onRequestGet as adminWallGet, onRequestPost as adminWallPost, onRequestOptions as adminWallOpt } from '../functions/api/admin/wall/[[path]].js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const PORT = Number(process.env.PORT || 8877);
@@ -141,12 +140,6 @@ http.createServer(async (req, res) => {
   const url = new URL(req.url, 'http://127.0.0.1:' + PORT);
   const p = url.pathname;
   try {
-    if (p === '/api/admin/wall' || p.startsWith('/api/admin/wall/')) {
-      const r = req.method === 'POST' ? await handler(adminWallPost, req)
-        : req.method === 'GET' ? await handler(adminWallGet, req)
-        : await handler(adminWallOpt, req);
-      return send(res, r);
-    }
     if (p === '/api/wall') {
       const r = req.method === 'GET' ? await handler(wallGet, req)
         : req.method === 'POST' ? await handler(wallPost, req)

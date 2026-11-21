@@ -120,12 +120,12 @@ CI（`.github/workflows/content-build.yml`）在 push / PR 上跑同样三件事
 | GET | `/api/wall?limit&offset` | 只返回本设备 `status='visible'` 的留言 |
 | GET | `/api/wall?peek=1` | 本设备总数 + 最新一条（轮询用） |
 | POST | `/api/wall` | 绑定当前设备写入；被拉黑设备返回 403 |
-| DELETE | `/api/wall` + `X-Admin-Token` | 站长应急删除 |
-| GET | `/api/admin/wall/devices` | 设备列表（留言数 / 最近活跃 / 状态） |
-| GET | `/api/admin/wall/messages` | 全部留言，可按 `device_hash` / `status` 过滤 |
-| GET | `/api/admin/wall/export` | 导出 CSV（留言 + 设备两段） |
-| POST | `/api/admin/wall/messages/<id>/status` | `{status:"hidden"｜"visible", note}` |
-| POST | `/api/admin/wall/devices/<hash>/block` | `{blocked:true｜false, note}` |
+| DELETE | `/api/wall` + `X-Admin-Token` | 站长应急删除（唯一保留的令牌接口） |
+
+> **2026-11-21 起旧后台接口 `/api/admin/wall/*` 已下线。** 设备台账、留言审核、CSV 导出
+> 全部走独立后台 `shenge-work-admin.pages.dev`（会话鉴权，见 `admin/`）：`/api/devices`、
+> `/api/messages`、`/api/messages/status`、`/api/devices/block`、`/api/export`。
+> 保留 `DELETE /api/wall` 只为应急删除单条，避免静态令牌长期持有全站读权限。
 
 无设备头时返回 `reason: "device_required"` 且**不带任何正文**，前端显示「本设备拿不到存储权限」。
 
@@ -331,3 +331,5 @@ HTML_PATH=variants/agent-2026.html node scripts/check_resume_pages.mjs --info  #
 
 合并：`render_variant` 自动读 `variants/<slug>.summary.json`，只接受纯文本（标签全转义）且 ≤220 字，
 超了或为空就沿用原文简介。实测变体仍 **2 页**，L0 校验通过。
+
+> AI生成

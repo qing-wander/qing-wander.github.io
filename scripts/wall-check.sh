@@ -107,7 +107,7 @@ db_guide() {
   可选/建议变量（Settings → Variables and Secrets）：
     ALLOWED_ORIGINS    跨域白名单，默认已含 github.io / pages.dev / 本地端口
     DEVICE_HASH_PEPPER 设备哈希盐（设备隔离必需；换了等于所有设备重新分区）
-    WALL_ADMIN_TOKEN   管理令牌；不配则 DELETE 与 /api/admin/wall/* 都不暴露
+    WALL_ADMIN_TOKEN   应急删除令牌；不配则 DELETE /api/wall 不暴露（日常管理走独立后台）
   详见 docs/cloudflare-rag-admin-plan.md 与 docs/resume-delivery.md
   ─────────────────────────────────────────────────────────────
 GUIDE
@@ -200,10 +200,9 @@ if [ "$DO_POST" = "1" ]; then
         -H "Origin: $ORIGIN" -H "X-Admin-Token: $ADMIN_TOKEN" \
         -H 'Content-Type: application/json' -d "{\"id\":\"$NEW_ID\"}")
       check W16 "测试留言已用管理令牌删除" 200 "$CODE"
-      CODE=$(curl -sS -o "$TMP" -w '%{http_code}' -m 15 -H "X-Admin-Token: $ADMIN_TOKEN" "$BASE/api/admin/wall/devices?limit=5")
-      check W17 "后台设备列表可用" 200 "$CODE"
-      CODE=$(curl -sS -o /dev/null -w '%{http_code}' -m 10 "$BASE/api/admin/wall/devices?limit=5")
-      check W18 "后台接口无令牌时拒绝" 403 "$CODE"
+      CODE=$(curl -sS -o /dev/null -w '%{http_code}' -m 10 -H "X-Admin-Token: $ADMIN_TOKEN" "$BASE/api/admin/wall/devices?limit=5")
+      # 旧后台接口已下线，日常管理走独立后台 shenge-work-admin.pages.dev
+      check W17 "旧后台接口已下线" 404 "$CODE"
     else
       printf '%s%sWARN%s  测试留言仍在自检设备的留言本里；\n' "$c_dim" "$c_yellow" "$c_off"
       printf '%s      加 --admin-token=<WALL_ADMIN_TOKEN> 重跑可自动清理。%s\n' "$c_dim" "$c_off"

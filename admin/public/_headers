@@ -1,0 +1,16 @@
+# 后台站安全响应头（Cloudflare Pages 会读取 public/_headers）
+#   · 后台是高价值目标：禁止被 iframe 嵌套，防点击劫持（诱导已登录站长点「拉黑 / 隐藏」）
+#   · CSP 的例外只有两处，都是 3D 渲染器必需的：
+#       - https://www.gstatic.com：model-viewer 的 Draco / Basis 解码器
+#       - blob: / 'wasm-unsafe-eval'：解码器以 blob worker + wasm 运行
+#       - connect-src 还必须含 blob:：GLB 内嵌贴图会被解成 blob URL 再 fetch
+#   · 这些头只作用于静态资源；/api/* 由 Functions 自己控制响应头
+
+/*
+  X-Frame-Options: DENY
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'wasm-unsafe-eval' https://www.gstatic.com; worker-src 'self' blob:; connect-src 'self' blob: https://www.gstatic.com; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  X-Robots-Tag: noindex, nofollow
+  Permissions-Policy: geolocation=(), camera=(), microphone=(), payment=()
+  Cross-Origin-Opener-Policy: same-origin

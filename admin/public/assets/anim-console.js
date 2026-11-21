@@ -111,6 +111,8 @@
     });
     mvEl.addEventListener('camera-change', readout);
     mvEl.addEventListener('progress', function (e) {
+      /* load 之后仍可能收到环境图等异步资源的 progress，别把盖层又推回「载入中」 */
+      if (mvEl.loaded) return;
       var p = (e.detail && e.detail.totalProgress) || 0;
       if (p > 0 && p < 1) setLoad('载入中 ' + Math.round(p * 100) + '%');
     });
@@ -188,7 +190,8 @@
       mvEl.animationName = clip.name;
       if (miniEl) miniEl.animationName = clip.name;
     }
-    mvEl.paused = false;
+    /* paused 在部分 model-viewer 版本是只读访问器，直接赋值会抛 TypeError 并
+       截断后面的 setLoad/applyFraming —— 只保留 play()，包在 try 里 */
     try { mvEl.play(); } catch (e) {}
     setLoad(false);
     applyFraming(c, clip, true);
