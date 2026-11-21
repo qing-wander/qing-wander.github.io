@@ -247,10 +247,10 @@ window.SITE_DATA = {
       "role": "Agent 工程师 · 创始团队成员（红杉投资 AI 初创）",
       "time": "2024.03 — 2025.11",
       "points": [
-        "主导 lessie.cn AI 人脉搜索引擎：Supervisor / Search / Review 多层级 ReAct Multi-Agent 架构 + RAG 策略注入，搜索精准度提升 <strong>30%</strong>、单次找人成本降低 <strong>80%</strong>、目标定位时间缩短 <strong>60%</strong>。",
-        "0→1 自建海外邮件群发系统，集成 AWS / SendGrid / 自建 SMTP，支撑月均 <strong>50 万+</strong> 有效触达，送达率稳定在 <strong>95%</strong> 以上。",
-        "设计 dataworks 数仓同步链路，完成 <strong>300+ 万</strong>网红画像与视频数据日更；借助 Dify 实现聊天上下文管理与 AI 智能议价。",
-        "研发群控 RPA 机器人，实现自动注册 / 养号、风险检测、群发私信等自动化流程。"
+        "<strong>AI 人脉搜索引擎</strong>：Supervisor / Search / Review 多层级 ReAct Multi-Agent 架构，搜索精准度提升 <strong>30%</strong>、找人成本降低 <strong>80%</strong>、定位耗时缩短 <strong>60%</strong>。",
+        "红人营销 SaaS 研发：<strong>FDE</strong> 式定制业务流程，Grok LLM + Agent 工作流串联「客户→合同→付款→结算」，实现客户到结算的全流程自动化闭环。",
+        "0→1 搭建海外触达体系：邮件群发系统（AWS / SendGrid / 自建 SMTP 统一驱动）+ 群控 RPA 自动注册 / 养号 / 私信群发，月均 <strong>50 万+</strong> 有效触达、替代人工规模化运营。",
+        "搭建达人数据库飞轮体系：dataworks 数仓同步第三方平台达人画像与粉丝数据，合作过程人工标注 + 自动化沉淀优质达人，自动淘汰留存高质量达人，沉淀 <strong>300+ 万</strong>网红画像与视频数据日更、以高质量达人库提升合作效率。"
       ],
       "tags": [
         {
@@ -300,10 +300,11 @@ window.SITE_DATA = {
       "role": "Java 开发工程师 · 获评「高级程序员」职称（港企 · 电商零售）",
       "time": "2021.09 — 2023.06",
       "points": [
-        "牵头多渠道潜客跟踪分析 <strong>CRM 平台</strong>研发：整合大陆、港澳台线上线下销售线索，日活用户 <strong>10W+</strong>，销售转化率提升 <strong>70%</strong>。",
-        "搭建各地区门店预约体验流程与预约限额体系，设计分地区业务逻辑分层与跨境敏感数据过滤、定期清除机制，保障多地区业务合规，预约到店率提升 <strong>40%</strong>。",
-        "基于 <strong>ShardingSphere</strong> 分库分表突破单库性能瓶颈，MQ + 适配器模式搭建离线任务中心支撑 <strong>300W+</strong> 级数据导入导出；基于 JBPM 编排财务差异审批流程，任务自动分配。",
-        "搭建供应商平台 API 网关鉴权、额度消费机制与监控看板，Redash BI 数据埋点输出多维度看板；参与香港帝舵官网研发（会员体系、订单支付、对账、库存同步），在职期间获评「高级程序员」职称。"
+        "负责多渠道潜客 <strong>CRM 平台</strong>研发：整合大陆、港澳台线上线下销售线索，日活 <strong>10W+</strong>，销售转化率提升 <strong>70%</strong>。",
+        "搭建门店预约体验流程与预约限额体系，设计分地区业务分层与跨境敏感数据过滤 / 定期清除机制，预约到店率提升 <strong>40%</strong>。",
+        "基于 <strong>JBPM</strong> 编排财务差异审批流程，任务自动分配并处理超时 / 驳回异常，保障财务审批全流程闭环、替代人工流转。",
+        "搭建供应商 <strong>API 网关</strong>（鉴权 / 额度 / 监控）与 <strong>Redash BI</strong> 多维看板，支撑供应商管理与经营可视化。",
+        "参与香港帝舵官网研发，负责会员体系、订单支付与对账、库存同步模块，打通品牌官网会员、交易、库存一体的线上销售链路。"
       ],
       "tags": [
         {
