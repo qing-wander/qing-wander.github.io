@@ -824,8 +824,8 @@ export default {
       },
       {
         "label": "BLOG / 博客",
-        "value": "shenge-blog.pages.dev",
-        "href": "https://shenge-blog.pages.dev"
+        "value": "blog.chenpeisheng.cn",
+        "href": "https://blog.chenpeisheng.cn"
       },
       {
         "label": "BASE / 常驻",

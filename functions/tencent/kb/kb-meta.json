@@ -1,11 +1,11 @@
 {
-  "generated_at": "2026-11-22T19:40:55Z",
+  "generated_at": "2026-11-22T19:46:24Z",
   "provider": "tfidf",
   "model": "char-bigram-tfidf",
   "dim": 1200,
   "count": 36,
   "source": "data/site-data.json",
-  "source_sha256": "3e6d01545a146698bd919bbf0af26d1abcedd83a037b95ec76a83a9288e6d7ca",
+  "source_sha256": "25fcbc29f0ac09df02401f56da4ef5ce5e2aac71351df96835be8b746e567a0a",
   "quant": {
     "type": "int8-symmetric",
     "scale": 218.434872,
@@ -577,7 +577,7 @@
     "#badcase",
     "#base",
     "#blog",
-    "#blog.pages.dev",
+    "#blog.chenpeisheng.cn",
     "#calling",
     "#career",
     "#careeragent",
@@ -638,7 +638,6 @@
     "#schema",
     "#seo",
     "#ses",
-    "#shenge",
     "#shot",
     "#site",
     "#skills",
@@ -1211,7 +1210,8 @@
     "对账",
     "导入",
     "封在",
-    "将传"
+    "将传",
+    "将历"
   ],
   "idf": [
     1.475424,
