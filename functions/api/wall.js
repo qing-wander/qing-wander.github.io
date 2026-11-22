@@ -34,7 +34,7 @@
    新留言通知（写入成功后旁路发信，失败不影响访客）：
      RESEND_API_KEY      与简历转发共用；未配置则跳过通知
      RESEND_FROM         与简历转发共用（默认 onboarding@resend.dev）
-     WALL_NOTIFY_TO      收件人，默认 shenge.work@gmail.com（Resend 未验证域名时只能发注册邮箱）
+     WALL_NOTIFY_TO      收件人，默认 hi@chenpeisheng.cn（Resend 未验证域名时只能发注册邮箱）
      WALL_NOTIFY_FROM    可选，单独指定留言通知的发件人
    ────────────────────────────────────────────────────────────────────── */
 
@@ -57,7 +57,7 @@ const IP_STRICT_LIMIT = 1;
 const DAY_STRICT_LIMIT = 10;
 const DUP_WINDOW_MS = 300000; // 5 分钟内同设备相同「称呼 + 内容」视为重复
 const DEFAULT_ORIGINS = [
-  'https://shenge-work.github.io',
+  'https://chenpeisheng.cn',
   'https://shenge-work.pages.dev',
   '*.shenge-work.pages.dev',
   'http://localhost:8000',

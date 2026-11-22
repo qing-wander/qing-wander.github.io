@@ -34,7 +34,7 @@ const VISITOR_TTL_MS = 180 * 24 * 60 * 60 * 1000; // 180 天不活跃即清掉
 const IP_WINDOW_MS = 60 * 60 * 1000;              // 每 IP 限流窗口 1 小时
 const IP_LIMIT = 60;                             // 每 IP 每小时最多 60 次计数写入
 const DEFAULT_ORIGINS = [
-  'https://shenge-work.github.io',
+  'https://chenpeisheng.cn',
   'https://shenge-work.pages.dev',
   '*.shenge-work.pages.dev',
   'http://localhost:8000',

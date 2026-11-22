@@ -60,7 +60,7 @@
 1. 打开 <https://cloud.umami.is> → **Sign in with GitHub**（用 GitHub 账号登录即可，不用单独注册）。
 2. 进入后点 **Add website**：
    - Name：`作品集`（随便写，只影响后台显示）
-   - Domain：`shenge-work.github.io`（**只填域名**，不要 `https://`、不要路径）
+   - Domain：`chenpeisheng.cn`（**只填域名**，不要 `https://`、不要路径）
 3. 建好后进 **Settings → Website ID**，复制那串 UUID（形如 `1f2e3d4c-...`）。
 4. 填到 `js/analytics.js`：
 
@@ -68,7 +68,7 @@
    umamiWebsiteId: '你的-uuid',
    ```
 
-5. 验证：本机浏览器打开 <https://shenge-work.github.io>，等 30 秒，Umami 后台
+5. 验证：本机浏览器打开 <https://chenpeisheng.cn>，等 30 秒，Umami 后台
    **Realtime** 面板应出现 1 位访客。
 
 免费额度：10 万事件/月、1 个站点、数据保留 6 个月。个人作品集远远用不完；
@@ -79,7 +79,7 @@
 用来回答「访客在哪个板块流失」「有没有人真的点项目卡片」，Umami 给数字，Clarity 给画面。
 
 1. 打开 <https://clarity.microsoft.com>，用微软账号登录。
-2. **New project**：名称随意，URL 填 `shenge-work.github.io`，类别选 Personal。
+2. **New project**：名称随意，URL 填 `chenpeisheng.cn`，类别选 Personal。
 3. **Settings → Overview** 复制 **Project ID**（10 位字母数字）。
 4. 填到 `js/analytics.js`：
 
@@ -96,9 +96,9 @@ Clarity 免费、不限流量，但录屏默认保留一段时间（以官网为
 1. 打开 <https://app.pagescms.org> → **Sign in with GitHub**。
 2. 首次登录会跳到 GitHub 的 **Install App** 页面，权限设置选：
    - **Only select repositories**（只授权指定仓库）
-   - 只勾 `shenge-work.github.io`
+   - 只勾 `chenpeisheng.cn`
    - 点 **Install**
-3. 回到 `app.pagescms.org`，选择仓库 `shenge-work.github.io`。
+3. 回到 `app.pagescms.org`，选择仓库 `chenpeisheng.cn`。
    左侧应出现一个入口：**作品集内容（全站文案）**（配置来自仓库根目录的 `.pages.yml`）。
 4. 点进去就是 `data/site-data.json` 的代码编辑器，改完 **Save** → 生成一次 commit →
    GitHub Actions 自动重建 `site-data.js` → Pages 约 1 分钟生效。

@@ -89,10 +89,10 @@ GitHub Pages 不吃这条构建命令、也无 25MiB 限制，所以没受影响
 
 - 平台环境变量 `ALLOWED_ORIGINS`（逗号分隔）**优先于代码默认值**。当前线上已配置为：
   ```
-  https://shenge-work.github.io,https://shenge-work.pages.dev,*.shenge-work.pages.dev
+  https://chenpeisheng.cn,https://shenge-work.pages.dev,*.shenge-work.pages.dev
   ```
   实测两个正式域名均回显自身 ACAO，外来域名返回 403。
-- 代码默认值同样包含 `https://shenge-work.github.io`、`https://shenge-work.pages.dev`，以及通配规则 `*.shenge-work.pages.dev`（覆盖每个 commit 的预览部署 `https://<commit>.shenge-work.pages.dev`）。
+- 代码默认值同样包含 `https://chenpeisheng.cn`、`https://shenge-work.pages.dev`，以及通配规则 `*.shenge-work.pages.dev`（覆盖每个 commit 的预览部署 `https://<commit>.shenge-work.pages.dev`）。
 - **通配规则需要「新代码 + 新配置」同时到位**：旧线上包只做精确匹配，而当时环境变量也是精确列表，所以预览子域曾一直 403。
   2026-11-18 已在控制台把 `*.shenge-work.pages.dev` 写进环境变量（保存即生效，无需重新部署代码）；
   若某次部署后预览域又变 403，先查环境变量是否被覆盖，再查函数包是否是旧版。

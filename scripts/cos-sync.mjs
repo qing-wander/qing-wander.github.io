@@ -2,7 +2,7 @@ import cos from 'cos-nodejs-sdk-v5';
 import fs from 'node:fs';
 import path from 'node:path';
 
-const ROOT = '/Users/shenge/Documents/shenge-work.github.io';
+const ROOT = '/Users/shenge/Documents/chenpeisheng.cn';
 const BUCKET = '7265-resume-ai-d9g7zghnxda2ee2cb-1307508155';
 const REGION = 'ap-shanghai';
 const PREFIX = 'shenge-work/';

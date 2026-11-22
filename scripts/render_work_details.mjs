@@ -20,7 +20,7 @@ const SITE_FILE = resolve(ROOT, 'data/site-data.json');
 const DETAILS_FILE = resolve(ROOT, 'data/work-details.json');
 const TEMPLATE_FILE = resolve(ROOT, 'templates/work-detail.template.html');
 const OUT_DIR = resolve(ROOT, 'work');
-const SITE_ORIGIN = 'https://shenge-work.github.io';
+const SITE_ORIGIN = 'https://chenpeisheng.cn';
 
 const BANNER = [
   '<!-- 由 scripts/render_work_details.mjs 生成，请勿手改 -->',

@@ -559,7 +559,7 @@ export default {
         "无框架纯静态"
       ],
       "github": "https://github.com/shenge-work/shenge-work.github.io",
-      "live": "https://shenge-work.github.io"
+      "live": "https://chenpeisheng.cn"
     },
     {
       "no": "W-02",
@@ -647,7 +647,7 @@ export default {
         "ref": "本站",
         "stack": "Claude Code · Codex · Cursor",
         "proof": "需求到部署交由 Coding Agent 驱动",
-        "refUrl": "https://shenge-work.github.io"
+        "refUrl": "https://chenpeisheng.cn"
       },
       {
         "name": "后端与网关",
@@ -813,8 +813,8 @@ export default {
     "cards": [
       {
         "label": "EMAIL / 邮箱",
-        "value": "shenge.work@gmail.com",
-        "href": "mailto:shenge.work@gmail.com"
+        "value": "hi@chenpeisheng.cn",
+        "href": "mailto:hi@chenpeisheng.cn"
       },
       {
         "label": "TEL / 电话·微信",
@@ -861,20 +861,10 @@ export default {
       "lines": [
         [
           {
-            "label": "工作经验",
-            "value": "5年"
+            "value": "男 29岁 21届软件工程 · 本科"
           },
           {
-            "label": "年龄",
-            "value": "29 岁"
-          },
-          {
-            "label": "学历",
-            "value": "软件工程 · 本科"
-          },
-          {
-            "label": "到岗",
-            "value": "随时 · 已离职"
+            "value": "随时到岗 · 已离职"
           }
         ],
         [
@@ -884,20 +874,19 @@ export default {
           },
           {
             "label": "邮箱",
-            "text": "shenge.work@gmail.com",
-            "href": "mailto:shenge.work@gmail.com",
+            "text": "hi@chenpeisheng.cn",
+            "href": "mailto:hi@chenpeisheng.cn",
             "external": false
-          }
-        ],
-        [
+          },
           {
             "label": "作品集",
-            "text": "shenge-work.github.io",
-            "href": "https://shenge-work.github.io",
+            "text": "chenpeisheng.cn",
+            "href": "https://chenpeisheng.cn",
             "external": true
           },
           {
             "label": "GitHub",
+            "icon": "github",
             "text": "github.com/shenge-work",
             "href": "https://github.com/shenge-work",
             "external": true

@@ -16,7 +16,7 @@
 
 | 项目 | 值 |
 |---|---|
-| 线上 | `https://shenge-work.pages.dev`、`https://shenge-work.github.io` |
+| 线上 | `https://shenge-work.pages.dev`、`https://chenpeisheng.cn` |
 | 模型 | `assets/skins/models/PetSelfRigged.glb`（2,782,672 B ≈ 2.8MB） |
 | 代码 | `js/ai-skins.js`（`SKINS` 数组 + `create3D()` + `seq` 状态机） |
 | 默认皮肤 | `self3d`（唯一） |

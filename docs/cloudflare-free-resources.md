@@ -153,7 +153,7 @@ git push origin main                            # 427a12d → 部署 427a12db su
 | `POST /api/visits` ×2（同 id） | `total 1→2`、`visitors 1→1` ✅ |
 | 非法 id / 非白名单 Origin | `400` / `403` |
 | `GET /api/wall`、`?peek=1` | `open:true, messages:[], total:0`（证明 D1 绑定生效） |
-| 主站静态文件 | `shenge-work.github.io/js/visitor-count.js` 已含 `provider: 'pages'` |
+| 主站静态文件 | `chenpeisheng.cn/js/visitor-count.js` 已含 `provider: 'pages'` |
 | 测试数据清理 | `visitors` / `rate_limits` 删除、`counters` 归零；复查 `total:0, visitors:0` |
 
 > 留言墙**未在生产做 POST 验收**：线上未配置 `WALL_ADMIN_TOKEN`（见 TODO T6），
@@ -233,7 +233,7 @@ git push origin main                            # 427a12d → 部署 427a12db su
 | sitekey | `0x4AAAAAAGHnx0m992aGGpUJ`（公开值，写在前端无害） |
 | secret | 只存 Pages 环境变量 `TURNSTILE_SECRET`（`secret_text` 类型） |
 | mode | `managed`（大多数真人无感通过） |
-| hostname | `shenge-work.github.io` / `shenge-work.pages.dev` / `localhost` |
+| hostname | `chenpeisheng.cn` / `shenge-work.pages.dev` / `localhost` |
 
 免费版**不支持"任意 hostname"**，必须预先登记域名。预览部署（`<commit>.shenge-work.pages.dev`）
 因此不在白名单里——但预览环境本来就没绑 D1（留言墙 `open:false`），不影响。
@@ -371,11 +371,11 @@ POST /accounts/<id>/rum/site_info       → 10000 Authentication error
 "Account Analytics:Edit" 的 API Token —— 后者反而更绕。
 
 **已在控制台建好（2026-11-19）**：`Analytics → Web Analytics → 添加站点` →
-填 `shenge-work.github.io` → 进「管理站点」取 snippet 里的 token。
+填 `chenpeisheng.cn` → 进「管理站点」取 snippet 里的 token。
 
 | 项 | 值 |
 |---|---|
-| 站点 | `shenge-work.github.io` |
+| 站点 | `chenpeisheng.cn` |
 | token | `e8d13ee29814404299a92efbdea4b73e`（公开值，写在页面里无害） |
 | 官方形态 | `<script type="module" src=".../beacon.min.js" data-cf-beacon='{"token":"..."}'>` |
 
@@ -404,7 +404,7 @@ POST /accounts/<id>/rum/site_info       → 10000 Authentication error
   这是有意接受的损失（原数字本身来自第三方、无法验证）。
 - `shenge-blog.pages.dev`、`career-agent` 两个 Pages 项目与本文无关，未做任何改动。
 - **R2 方案已废弃（2026-11-21）**：原计划把 `assets/character-views/` 归档到 Cloudflare R2 bucket
-  `shenge-assets`，但当前账号（`ead07d9f…`，`shenge.work@gmail.com`）**无可绑定支付方式，R2 无法启用**，
+  `shenge-assets`，但当前账号（`ead07d9f…`，`hi@chenpeisheng.cn`）**无可绑定支付方式，R2 无法启用**，
   `wrangler r2 bucket list/create` 报 `10042 Please enable R2 through the Cloudflare Dashboard`，且无自助启用 API。
   `scripts/r2-sync.sh` / `scripts/r2-cors.json` 保留作历史参考，**当前不再使用**。视频
   `videos/lessie-demo.mp4`（9.8MB）仍在仓库、地址未改（低于 25MiB 上限，不受影响）。
@@ -456,7 +456,7 @@ POST /accounts/<id>/rum/site_info       → 10000 Authentication error
   不把内容 JSON 迁进 D1。
 - 后续若确有图床/大文件分发需求，优先评估**带支付方式的 Cloudflare R2**（出站免费、可绑自有域名），
   而非用体验版资源点扛公开流量。
-- 执行凭据现状：本机有 Cloudflare wrangler 登录态（`shenge.work@gmail.com`），
+- 执行凭据现状：本机有 Cloudflare wrangler 登录态（`hi@chenpeisheng.cn`），
   无腾讯云 CLI / SecretId/SecretKey——若将来真要传，需先连接腾讯云 CloudBase 连接器或配置 CLI 凭据。
 
 ---

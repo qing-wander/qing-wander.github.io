@@ -900,7 +900,7 @@ body.bar-tight .nav.open a { font-size: 17px; padding: 12px 10px; border-bottom:
   box-shadow: var(--shadow-lg);
   padding: 34px 36px;
   position: relative;
-  transition: transform .18s ease, box-shadow .18s ease;
+  transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
 }
 @media (hover: hover) {
   .exp-card:hover { transform: translate(-3px, -3px); box-shadow: 13px 13px 0 var(--ink); }
@@ -942,11 +942,20 @@ body.bar-tight .nav.open a { font-size: 17px; padding: 12px 10px; border-bottom:
   cursor: pointer;
 }
 .exp-card:nth-child(2) .exp-badge { background: var(--blue); }
+/* logo 图自带深色圆角与透明角，底色会从四角透出非常突兀：有 logo 时透明底 */
+.exp-badge.has-logo,
+.exp-card:nth-child(2) .exp-badge.has-logo { background: transparent; }
 .exp-badge img { display: block; width: 100%; height: 100%; object-fit: cover; }
 /* 有 logo 时隐藏 ::before 底色方块与 "WORK" 字样，避免叠色透出 */
 .exp-card.has-logo-badge::before,
 .exp-card.has-logo-badge::after { display: none; }
 .exp-badge:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+/* 整卡即档案入口：公司名链接太小不易发现，扩大为整个经历卡可点（company-profile.js 统一委托） */
+.exp-card[data-cp] { cursor: pointer; }
+@media (hover: hover) {
+  .exp-card[data-cp]:hover { border-color: var(--orange); }
+  .exp-card[data-cp]:hover .cp-name-link { color: var(--orange); border-bottom-color: currentColor; }
+}
 .exp-head {
   display: flex;
   justify-content: space-between;

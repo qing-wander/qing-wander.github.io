@@ -3,8 +3,8 @@
 AI Agent 工程师求职个人网站：基于纯原生 HTML / CSS / JavaScript 构建，无任何第三方依赖，通过 **GitHub Pages** 免费托管。包含作品集主页与在线简历页，全面展示个人优势、工作经历、项目作品、专业技能与联系方式。
 
 **在线访问**
-- 作品集主页：https://shenge-work.github.io/
-- 在线简历：https://shenge-work.github.io/resume.html
+- 作品集主页：https://chenpeisheng.cn/
+- 在线简历：https://chenpeisheng.cn/resume.html
 
 **备用线路（Cloudflare Pages，同一套静态文件）**
 - 作品集主页：https://shenge-work.pages.dev/
@@ -168,7 +168,7 @@ python3 -m http.server 8000
 - **数据备份**：`./scripts/backup-d1.sh` 把线上库导出成 SQL 快照到 `~/.local/share/shenge-work/d1-backups/`（不进 Git，保留最近 10 份）。
 - **本地联调**：`node scripts/dev-api-server.mjs` → `http://127.0.0.1:8877/index.html`；`本地预览.command` 的 8765 是纯静态服务，没有 `/api`。想验严格档就加 `TURNSTILE_SECRET=test` 起服务。
 - **交互**：每页 20 条 + 加载更早、手动刷新、60 秒新留言提示、相对时间、`⌘/Ctrl + Enter` 提交、加载/错误状态；站长排障可加 `?wallDebug=1`。
-- **新留言通知**：写入成功后通过 Resend 发邮件给站长（默认 `shenge.work@gmail.com`，可用 Pages 变量 `WALL_NOTIFY_TO` 覆盖）；复用 `RESEND_API_KEY`/`RESEND_FROM`，发信失败不影响留言。详见 [docs/resume-delivery.md](docs/resume-delivery.md)。
+- **新留言通知**：写入成功后通过 Resend 发邮件给站长（默认 `hi@chenpeisheng.cn`，可用 Pages 变量 `WALL_NOTIFY_TO` 覆盖）；复用 `RESEND_API_KEY`/`RESEND_FROM`，发信失败不影响留言。详见 [docs/resume-delivery.md](docs/resume-delivery.md)。
 
 ## 可观测统计与内容管理
 
@@ -205,7 +205,7 @@ python3 -m http.server 8000
 **陈培胜** · AI Agent 工程师 · 广东深圳
 
 - GitHub：https://github.com/shenge-work
-- 作品集：https://shenge-work.github.io
-- 邮箱：shenge.work@gmail.com
+- 作品集：https://chenpeisheng.cn
+- 邮箱：hi@chenpeisheng.cn
 
 > AI生成

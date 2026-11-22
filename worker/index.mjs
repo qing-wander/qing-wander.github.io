@@ -40,7 +40,7 @@ function json(body, cors, status) {
 }
 
 function allowedOrigins(env) {
-  return (env.ALLOWED_ORIGINS || 'https://shenge-work.github.io')
+  return (env.ALLOWED_ORIGINS || 'https://chenpeisheng.cn')
     .split(',')
     .map(function (s) { return s.trim(); })
     .filter(Boolean);

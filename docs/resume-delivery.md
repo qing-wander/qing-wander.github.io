@@ -19,7 +19,7 @@
 
 | 页面打开位置 | API 请求地址 | 说明 |
 |---|---|---|
-| `shenge-work.github.io`（主站） | 直接打 `https://shenge-work.pages.dev/api/*` | GitHub Pages 只有静态文件，没有 Functions；已把 github.io 列入 CORS 白名单 |
+| `chenpeisheng.cn`（主站） | 直接打 `https://shenge-work.pages.dev/api/*` | GitHub Pages 只有静态文件，没有 Functions；已把 github.io 列入 CORS 白名单 |
 | `shenge-work.pages.dev`（备份站） | 同源 `/api/*` | 正常路径，少一次跨域 |
 | `localhost` / `127.0.0.1`（本地预览） | 只打本机，不回落线上 | 避免本地测试真的写进线上留言/发信 |
 
@@ -48,7 +48,7 @@
 |---|---|
 | 触发点 | `functions/api/wall.js` 的 `onRequestPost`，在 `INSERT` + `upsertDevice` + `trim` 之后 |
 | 发信模块 | `functions/lib/wall-notify.js`（纯函数构造邮件 + 单一 `fetch` 出口） |
-| 收件人 | 默认 `shenge.work@gmail.com`，可用 `WALL_NOTIFY_TO` 覆盖；当前 Resend 未验证域名，`onboarding@resend.dev` 只能发给注册邮箱 |
+| 收件人 | 默认 `hi@chenpeisheng.cn`，可用 `WALL_NOTIFY_TO` 覆盖；当前 Resend 未验证域名，`onboarding@resend.dev` 只能发给注册邮箱 |
 | 发件人 | 复用 `RESEND_FROM`；想单独设置可用 `WALL_NOTIFY_FROM` |
 | 邮件内容 | 称呼、北京时间、来源域名、设备哈希、留言 ID、完整正文（保留换行）、后台入口；访客输入全部 HTML 转义 |
 | 不阻塞访客 | 线上走 `ctx.waitUntil` 挂后台任务，响应立即返回；本地 dev server 没有 ctx 时直接 await |
@@ -72,18 +72,18 @@
 > 并保留 `SITE_KV` 绑定；变量修改后用 Cloudflare 的 **Retry deployment** 重新部署生效。
 > API Key 用的是 Resend onboarding 自动生成的「仅发信」受限 key（最小权限，不能读邮件 / 管域名）。
 >
-> 实测：`POST /api/deliver` → 账号邮箱 `shenge.work@gmail.com` 返回 `201 {"ok":true,"id":"01a1e59e-…"}`；
+> 实测：`POST /api/deliver` → 账号邮箱 `hi@chenpeisheng.cn` 返回 `201 {"ok":true,"id":"01a1e59e-…"}`；
 > 发给其他邮箱被 Resend 以 403 拒绝，接口返回 `recipient_not_verified`，前端按设计切到 mailto 兜底。
 > **结论**：自动发信链路已通，但要让访客填任意邮箱都能收信，必须完成 ①b 并把 `RESEND_FROM`
 > 改成 `陈培胜简历 <resume@已验证域名>`（改完需再次重新部署）。
 >
-> **2026-11-17 站长决定：暂不配置域名**。当前保持「自动发信仅支持 `shenge.work@gmail.com`、
+> **2026-11-17 站长决定：暂不配置域名**。当前保持「自动发信仅支持 `hi@chenpeisheng.cn`、
 > 其他邮箱走 mailto 兜底」的模式；以后要开放任意收件人，只需做 ①b + 改 `RESEND_FROM` + 重新部署，
 > 无需改动任何代码。
 
 ### ① 注册 Resend（2 分钟）· ✅ 已完成
 
-1. 打开 https://resend.com/signup ，用 Google 账号（建议直接用 shenge.work@gmail.com）注册；
+1. 打开 https://resend.com/signup ，用 Google 账号（建议直接用 hi@chenpeisheng.cn）注册；
 2. 进入 Dashboard → **API Keys** → `Create API Key`，名字随意（如 `portfolio-deliver`），权限选默认的 `Full access`；
 3. 复制 `re_` 开头的 key（**只显示一次**），先存到本地记事本。
 
@@ -119,10 +119,10 @@
 |---|---|---|---|
 | Secret | `RESEND_API_KEY` | `re_...`（①里拿到的） | 发信；不配置则前端自动走 mailto 兜底；留言通知也复用它 |
 | Variable | `RESEND_FROM` | `陈培胜简历 <resume@你的已验证域名>` | 发件人；不配则用 `onboarding@resend.dev`（只能发注册邮箱）；留言通知也复用它 |
-| Variable | `WALL_NOTIFY_TO` | 如 `shenge.work@gmail.com`（可选） | 留言通知收件人；不配默认就是 Resend 注册邮箱，当前只能发这一个地址 |
+| Variable | `WALL_NOTIFY_TO` | 如 `hi@chenpeisheng.cn`（可选） | 留言通知收件人；不配默认就是 Resend 注册邮箱，当前只能发这一个地址 |
 | Variable | `WALL_NOTIFY_FROM` | 如 `Portfolio Wall <onboarding@resend.dev>`（可选） | 留言通知单独指定发件人；不配复用 `RESEND_FROM` |
-| Variable | `DELIVER_BCC` | 如 `shenge.work@gmail.com`（可选） | 站长收一份转发备案，不配则完全不经手 |
-| Variable | `ALLOWED_ORIGINS` | `https://shenge-work.github.io,https://shenge-work.pages.dev` | 跨域白名单 |
+| Variable | `DELIVER_BCC` | 如 `hi@chenpeisheng.cn`（可选） | 站长收一份转发备案，不配则完全不经手 |
+| Variable | `ALLOWED_ORIGINS` | `https://chenpeisheng.cn,https://shenge-work.pages.dev` | 跨域白名单 |
 | Variable | `WALL_ADMIN_TOKEN` | 自拟一串随机字符（如 32 位） | 留言管理删除令牌（可选） |
 | Secret | `TURNSTILE_SECRET` | Cloudflare Turnstile widget「shenge-work-portfolio」的私钥 | 留言人机校验（可选；未配则完全跳过校验） |
 
@@ -154,7 +154,7 @@
 
 ### ⑤ 线上自检小贴士
 
-- `curl -s -X POST https://shenge-work.pages.dev/api/deliver -H 'Content-Type: application/json' -H 'Origin: https://shenge-work.github.io' -d '{"to":"你的另一个邮箱"}'`
+- `curl -s -X POST https://shenge-work.pages.dev/api/deliver -H 'Content-Type: application/json' -H 'Origin: https://chenpeisheng.cn' -d '{"to":"你的另一个邮箱"}'`
   返回 `{"ok":true,...}` 说明发信链路通了；返回 `recipient_not_verified` 说明域名还没验证；
 - 返回 200 但内容是 HTML，说明 `functions/api` 还没部署（重新跑部署脚本）；
 - 留言墙专项自检：`./scripts/wall-check.sh`，只读、不写数据；

@@ -33,7 +33,7 @@ const MODEL_LABEL = '@cf/meta/llama-3.3-70b-instruct-fp8-fast';   // 推理型�
    没有 ACAO 时浏览器会先被 OPTIONS 预检拦掉，表现为前端「通道暂时不可用」；
    这里与 wall.js / deliver.js 用同一套来源白名单口径。 */
 const DEFAULT_ORIGINS = [
-  'https://shenge-work.github.io',
+  'https://chenpeisheng.cn',
   'https://shenge-work.pages.dev',
   '*.shenge-work.pages.dev',
   'http://localhost:8000',

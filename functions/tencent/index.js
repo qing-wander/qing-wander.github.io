@@ -20,7 +20,7 @@
  *   AI_API_KEY       必填，CloudBase「服务端 API Key」（只放平台环境变量，不进代码）
  *   AI_BASE_URL      可选，默认本环境 AI 网关
  *   AI_MODEL         可选，默认 hy3（体验版唯一可套餐抵扣的模型）
- *   ALLOWED_ORIGINS  可选，逗号分隔，默认 shenge-work.github.io 与 shenge-work.pages.dev（含 *.shenge-work.pages.dev 预览子域）；支持 "*." 前缀通配后缀
+ *   ALLOWED_ORIGINS  可选，逗号分隔，默认 chenpeisheng.cn 与 shenge-work.pages.dev（含 *.shenge-work.pages.dev 预览子域）；支持 "*." 前缀通配后缀
  *   LOG_ENABLED      可选，默认 true；置 false 则既不打日志也不落库
  *   LOG_SALT         可选，IP 盐化用
  *   LOG_RETENTION_DAYS 可选，默认 30（懒清理：写库时按 5% 概率触发删除过期行）
@@ -63,7 +63,7 @@ var LOG_PURGE_GAP_MS = 60 * 60 * 1000;   // 每个实例每小时最多清理一
 var lastPurgeAt = 0;
 
 var DEFAULT_ORIGINS = [
-  'https://shenge-work.github.io',
+  'https://chenpeisheng.cn',
   'https://shenge-work.pages.dev',
   '*.shenge-work.pages.dev',   // Cloudflare Pages 预览部署：https://<commit>.shenge-work.pages.dev
   'http://localhost:8000',
@@ -825,7 +825,7 @@ async function handleJD(body, origin, iph, started) {
     logLine({ ts: started, origin: origin, ip_hash: iph, q: '', a: '', channel: 'tencent', tag: 'jd', blocked: 'jd_quota:' + quota.reason, count: quota.count });
     return reply(429, origin, {
       ok: false, error: 'jd_quota',
-      message: 'JD 匹配每人 10 分钟内 4 次。急的话直接邮件：shenge.work@gmail.com'
+      message: 'JD 匹配每人 10 分钟内 4 次。急的话直接邮件：hi@chenpeisheng.cn'
     });
   }
 

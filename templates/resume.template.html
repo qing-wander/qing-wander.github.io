@@ -12,18 +12,18 @@
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&display=swap"></noscript>
 <link rel="stylesheet" href="css/fonts.css?v=20261111a">
 <!-- 公司档案（徽章 / 速览行 / 抽屉）：数据源 data/company-profiles.js，打印时自动隐藏 -->
-<link rel="stylesheet" href="css/company-profile.css?v=20261122e">
+<link rel="stylesheet" href="css/company-profile.css?v=20261123c">
 <meta name="description" content="{{RESUME_DESCRIPTION}}">
 <meta name="theme-color" content="#F3EEE2">
-<link rel="canonical" href="https://shenge-work.github.io/resume.html">
+<link rel="canonical" href="https://chenpeisheng.cn/resume.html">
 <meta property="og:type" content="profile">
 <meta property="og:locale" content="zh_CN">
 <meta property="og:title" content="{{RESUME_OG_TITLE}}">
 <meta property="og:description" content="{{RESUME_OG_DESCRIPTION}}">
-<meta property="og:url" content="https://shenge-work.github.io/resume.html">
-<meta property="og:image" content="https://shenge-work.github.io/images/%E9%99%88%E5%9F%B9%E8%83%9C-%E4%BD%9C%E5%93%81%E9%9B%86-%E5%88%86%E4%BA%AB%E5%8D%A1-%E6%96%B9%E5%BD%A2.png">
+<meta property="og:url" content="https://chenpeisheng.cn/resume.html">
+<meta property="og:image" content="https://chenpeisheng.cn/images/%E9%99%88%E5%9F%B9%E8%83%9C-%E4%BD%9C%E5%93%81%E9%9B%86-%E5%88%86%E4%BA%AB%E5%8D%A1-%E6%96%B9%E5%BD%A2.png">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="https://shenge-work.github.io/images/%E9%99%88%E5%9F%B9%E8%83%9C-%E4%BD%9C%E5%93%81%E9%9B%86-%E5%88%86%E4%BA%AB%E5%8D%A1-%E6%96%B9%E5%BD%A2.png">
+<meta name="twitter:image" content="https://chenpeisheng.cn/images/%E9%99%88%E5%9F%B9%E8%83%9C-%E4%BD%9C%E5%93%81%E9%9B%86-%E5%88%86%E4%BA%AB%E5%8D%A1-%E6%96%B9%E5%BD%A2.png">
 <style>
 /* ── 主题（与首页同一套配色，后台可设站点默认；访客手动切换优先）── */
 html[data-theme="blueprint"] {
@@ -106,6 +106,13 @@ body {
   margin-top: 5px;            /* 与「姓名/岗位」行的间距，对齐 meta 内部行距 */
 }
 .head-meta b { color: var(--ink); }
+/* 头部图标（如 GitHub）：按字号缩放、垂直居中，颜色跟随文字 */
+.head-meta .meta-icon {
+  display: inline-block;
+  width: 12px; height: 12px;
+  vertical-align: -1px;
+  color: var(--ink);
+}
 /* 头部链接：悬停高亮 + 点击跳转（打印时呈现纯文本样式） */
 .head-meta .link {
   color: inherit;
@@ -709,11 +716,11 @@ function buildMailto() {
   var lines = [
     '这是一份在线简历，点开即可查看完整内容（无需下载附件）：',
     '',
-    '简历地址：https://shenge-work.github.io/resume.html',
+    '简历地址：https://chenpeisheng.cn/resume.html',
     '备用地址：https://shenge-work.pages.dev/resume.html',
     '',
     '陈培胜 · AI Agent 工程师 · 5 年研发 · Agent 开发 / AI 工程化 / 企业 AI 基建',
-    '联系邮箱：shenge.work@gmail.com'
+    '联系邮箱：hi@chenpeisheng.cn'
   ];
   if (note) lines = lines.concat(['', '—— 转发人附言 ——', note]);
   if (name || email) lines = lines.concat(['', '转发人：' + [name, email].filter(Boolean).join(' / ')]);
@@ -984,8 +991,8 @@ function exportLongImage(btn) {
 
 <script src="js/analytics.js?v=20261119b" defer></script>
 <!-- 公司档案数据快照 + 抽屉组件（resume.html 与 index.html 共用） -->
-<script src="data/company-profiles.js?v=20261122e"></script>
-<script src="js/cp-panorama.js?v=20261122e" defer></script>
-<script src="js/company-profile.js?v=20261122e" defer></script>
+<script src="data/company-profiles.js?v=20261123c"></script>
+<script src="js/cp-panorama.js?v=20261123c" defer></script>
+<script src="js/company-profile.js?v=20261123c" defer></script>
 </body>
 </html>

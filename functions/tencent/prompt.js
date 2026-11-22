@@ -9,7 +9,7 @@
 // 敏感问题统一话术：不给模型发挥空间（决策 D5）；数字分身以第一人称作答，但不替本人承诺
 var SENSITIVE_REPLY =
   '这类问题（薪资 / 离职原因 / 外包 / 到岗时间）建议直接和我本人沟通确认，这里不做承诺。' +
-  '可以直接邮件：shenge.work@gmail.com';
+  '可以直接邮件：hi@chenpeisheng.cn';
 
 var SENSITIVE_WORDS = [
   '薪资', '薪水', '工资', '待遇', '月薪', '年薪', '多少钱', '报酬', 'package', 'offer',
@@ -35,7 +35,7 @@ var INJECTION_WORDS = [
 
 var OFFTOPIC_REPLY = '我只回答关于我自己的问题。';
 var NO_MATCH_REPLY =
-  '这块我的简历里没写，建议直接邮件联系我：shenge.work@gmail.com';
+  '这块我的简历里没写，建议直接邮件联系我：hi@chenpeisheng.cn';
 
 function hit(words, text) {
   for (var i = 0; i < words.length; i++) {
@@ -78,7 +78,7 @@ function buildSystem(contextChunks) {
     '教育背景、工作经历、项目、技能、求职意向、联系方式的问题。\n\n' +
     '规则：\n' +
     '1. 只依据 <context> 中的简历资料回答，始终用「我」自称。context 没有的信息，直接说' +
-    '「这块我的简历里没写，建议直接邮件联系我：shenge.work@gmail.com」，不要推测。\n' +
+    '「这块我的简历里没写，建议直接邮件联系我：hi@chenpeisheng.cn」，不要推测。\n' +
     '2. 不允许编造项目名称、公司、量化数字、时间。引用数字时必须与 context 完全一致。\n' +
     '3. 涉及薪资、离职原因、是否接受外包、能否立刻到岗等敏感问题：' +
     '一律回复「这类问题建议直接和我本人沟通确认」，不代替本人承诺。\n' +

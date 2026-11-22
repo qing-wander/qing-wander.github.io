@@ -135,7 +135,7 @@ POST /chat  { mode: "jd", jd: "..." }        ← 与问答同一个端点，靠 
 ```http
 POST /chat
 Content-Type: application/json
-Origin: https://shenge-work.github.io
+Origin: https://chenpeisheng.cn
 
 { "mode": "jd", "jd": "岗位：AI Agent 工程师……" }
 ```
@@ -304,7 +304,7 @@ Origin: https://shenge-work.github.io
 静态与后端均已上线后，用生产域名与合法 Origin 直探线上 `/chat`：
 
 ```bash
-curl -s -X POST https://resume-ai-d9g7zghnxda2ee2cb-1307508155.ap-shanghai.app.tcloudbase.com/chat -H 'Content-Type: application/json' -H 'Origin: https://shenge-work.github.io' -d '{"mode":"jd","jd":"岗位职责：负责企业级 AI Agent 平台架构设计…"}'
+curl -s -X POST https://resume-ai-d9g7zghnxda2ee2cb-1307508155.ap-shanghai.app.tcloudbase.com/chat -H 'Content-Type: application/json' -H 'Origin: https://chenpeisheng.cn' -d '{"mode":"jd","jd":"岗位职责：负责企业级 AI Agent 平台架构设计…"}'
 ```
 
 - 返回 `{"ok":true,"mode":"jd",...}`，**真实 hy3 遵循 JSON schema**，无 `parse_failed`；
@@ -363,7 +363,7 @@ curl -s -X POST https://resume-ai-d9g7zghnxda2ee2cb-1307508155.ap-shanghai.app.t
 
 **① 预览子域 CORS（T5，已修复）**：代码侧 `DEFAULT_ORIGINS` 早就支持 `*.` 通配，但线上环境变量 `ALLOWED_ORIGINS` 只有两个精确域名、覆盖了默认值，才导致预览子域 403。在 CloudBase 新版开发平台 → 云函数 `resume-ai-chat` → 函数配置 → 环境变量中追加
 `*.shenge-work.pages.dev`，最终值为
-`https://shenge-work.github.io,https://shenge-work.pages.dev,*.shenge-work.pages.dev`；其余 5 个变量（`AI_API_KEY` / `TTS_REGION` / `TTS_SECRET_ID` / `TTS_SECRET_KEY` / `TTS_VOICE_TYPE`）原样保留。**保存即生效，未重传代码、未重打包**。复验：预览子域 Origin 由 403 变为 400 `bad_request`（越过 CORS 层）；`OPTIONS` 预检 204 且 ACAO 正确回显；主站 / 备站正常；外来域名仍 403；问答 `{"question":...}` 与 `{"mode":"tts"}` 均 200，证明服务端密钥没丢。详见 [TODO.md](TODO.md) §3.5。
+`https://chenpeisheng.cn,https://shenge-work.pages.dev,*.shenge-work.pages.dev`；其余 5 个变量（`AI_API_KEY` / `TTS_REGION` / `TTS_SECRET_ID` / `TTS_SECRET_KEY` / `TTS_VOICE_TYPE`）原样保留。**保存即生效，未重传代码、未重打包**。复验：预览子域 Origin 由 403 变为 400 `bad_request`（越过 CORS 层）；`OPTIONS` 预检 204 且 ACAO 正确回显；主站 / 备站正常；外来域名仍 403；问答 `{"question":...}` 与 `{"mode":"tts"}` 均 200，证明服务端密钥没丢。详见 [TODO.md](TODO.md) §3.5。
 
 **② `chat_logs` 查库（已验证）**：新版开发平台 PostgreSQL → SQL 编辑器直查，全表 **126 行**，其中 `payload->>'tag' = 'jd'` **11 行**，时间窗 2026-11-17 23:46:37 → 11-18 00:07:49（+08）。`q` 长度 min 2 / max **300** / avg 102，命中「300 字截断」上限；手机号正则 `1[3-9][0-9]{9}` 命中 **0**，脱敏生效；最新一条 `q` 开头为「岗位：AI Agent 工程师（企业智能体平台） 团队方向：把…」，是单行摘要而非完整 JD 原文，符合 §3 的「JD 只存脱敏摘要」约定。
 
@@ -429,7 +429,7 @@ curl -s -X POST https://resume-ai-d9g7zghnxda2ee2cb-1307508155.ap-shanghai.app.t
 # 1) JD 分支生效（线上，直接探测）
 curl -s -X POST https://resume-ai-d9g7zghnxda2ee2cb-1307508155.ap-shanghai.app.tcloudbase.com/chat \
   -H 'Content-Type: application/json' \
-  -H 'Origin: https://shenge-work.github.io' \
+  -H 'Origin: https://chenpeisheng.cn' \
   -d '{"mode":"jd","jd":"岗位职责：负责企业级 AI Agent 平台架构设计，含任务规划、工具调用与多智能体编排；建设 RAG 检索链路并做召回评测。要求：3 年以上后端研发经验，熟悉向量数据库。"}'
 # 期望 {"ok":true,"mode":"jd","match":{...}}；返回「缺少 question」说明还是旧函数
 ```

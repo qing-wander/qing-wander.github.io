@@ -83,9 +83,10 @@ if (!Array.isArray(b.lines) || b.lines.length === 0) fail('resume.basics.lines �
 (b.lines || []).forEach((line, i) => {
   if (!Array.isArray(line) || line.length === 0) fail(`resume.basics.lines[${i}] 是空行`);
   (line || []).forEach((t) => {
-    if (!t.label) fail(`resume.basics.lines[${i}] 有缺少 label 的条目`);
+    /* label 可省略（纯文本 token，如「男 29岁 · 本科」）；至少要有一个 label 或 value */
+    if (!t.label && !t.value) fail(`resume.basics.lines[${i}] 有既无 label 也无 value 的空条目`);
     if (t.href && !t.text) fail(`resume.basics.lines[${i}] 的链接条目缺少 text`);
-    if (!t.href && !t.value) fail(`resume.basics.lines[${i}]「${t.label}」缺少 value`);
+    if (!t.href && !t.value) fail(`resume.basics.lines[${i}]「${t.label || ''}」缺少 value`);
     if (t.href && /^\s*(javascript:|data:)/i.test(t.href)) fail(`resume.basics 出现不安全的链接 ${t.href}`);
   });
 });

@@ -191,16 +191,20 @@
        profileId 关联 data/company-profiles.json：徽章与速览行由
        js/company-profile.js 读取快照填充并接管点击（抽屉）。 */
     $('expList').innerHTML = (d.experience || []).map(function (x) {
-      /* 公司名即档案入口：href 用线上深链，屏幕点击由 company-profile.js 拦截开抽屉 */
+      /* 公司名即档案入口：href 用线上深链，屏幕点击由 company-profile.js 拦截开抽屉；
+         整卡同时挂 data-cp——公司名点击区域太小，扩大到整张经历卡（键盘用户仍用公司名链接 / 徽章） */
+      var cardAttr = x.profileId
+        ? ' data-cp="' + esc(x.profileId) + '" title="点击查看公司档案"'
+        : '';
       var name = esc(x.company);
       var quick = '';
       if (x.profileId) {
         name = '<a class="cp-name-link" data-cp="' + esc(x.profileId) +
-          '" href="https://shenge-work.github.io/company.html?c=' + esc(x.profileId) +
+          '" href="https://chenpeisheng.cn/company.html?c=' + esc(x.profileId) +
           '" title="公司档案：背景 / 业务 / 融资 / 前景">' + name + '</a>';
         quick = '<p class="cp-quick" data-cp-quick="' + esc(x.profileId) + '" hidden></p>';
       }
-      return '<article class="exp-card reveal">' +
+      return '<article class="exp-card reveal"' + cardAttr + '>' +
         /* 左上角方块：由 company-profile.js 用公司 logo 填充（点击开档案抽屉） */
         (x.profileId
           ? '<span class="exp-badge" data-cp="' + esc(x.profileId) +
@@ -1202,9 +1206,9 @@
       if (code === 'rate_limited') return '▍问得有点急，隔一分钟再问我吧。';
       if (code === 'AbortError') return '▍响应超时了，稍等再试一次。';
       if (code === 'origin_denied' || code === 'bad_request') {
-        return '▍通道拒绝了这次请求。可以直接邮件联系：shenge.work@gmail.com';
+        return '▍通道拒绝了这次请求。可以直接邮件联系：hi@chenpeisheng.cn';
       }
-      return '▍通道暂时不可用，请稍后再试，或邮件联系：shenge.work@gmail.com';
+      return '▍通道暂时不可用，请稍后再试，或邮件联系：hi@chenpeisheng.cn';
     }
     /* ── 主动性：已停用自动弹出 ──
        面板不再自动弹出 / 自动冒招呼气泡：唯一入口是用户点击 3D 角色（见 js/ai-skins.js

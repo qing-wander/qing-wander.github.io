@@ -4,7 +4,7 @@
 import worker from './index.mjs';
 
 const BASE = 'https://portfolio-visits.example.workers.dev';
-const ORIGIN = 'https://shenge-work.github.io';
+const ORIGIN = 'https://chenpeisheng.cn';
 
 function makeKV(seed = {}) {
   const map = new Map(Object.entries(seed));

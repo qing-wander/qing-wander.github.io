@@ -1,6 +1,6 @@
 # CP.AI 语音播报（TTS）· 免费资源调研与落地设计
 
-> 文档定位：本文件是 `shenge-work.github.io` 右下角 AI 助手**语音层**的单一设计依据。调研结论、免费额度核实、自动播放对策、接口契约、验收清单都在这里；代码与本文冲突时先改文档再改代码。
+> 文档定位：本文件是 `chenpeisheng.cn` 右下角 AI 助手**语音层**的单一设计依据。调研结论、免费额度核实、自动播放对策、接口契约、验收清单都在这里；代码与本文冲突时先改文档再改代码。
 >
 > 版本：v2（2026-11-17）· 状态：Phase 1 + Phase 2 均已上线 · 作者：陈培胜
 >
@@ -250,7 +250,7 @@ Provider 接口预留后，Phase 2 只要写一个云端 provider（返回可播
 - [x] `POST /chat { question }` 回归 **HTTP 200**，问答能力未被云函数更新破坏；非法 Origin 返回 **403**，超长/非法请求体返回 **400**。
 - [x] 密钥只存云函数环境变量，前端代码与仓库均无明文；本地临时凭据文件在部署后删除。
 - [x] 未配密钥 / 云端异常时，`/tts` 返回 503/502 且前端自动回落到浏览器 `SpeechSynthesis`，问答与皮肤不受影响。
-- [x] GitHub Pages 上线后**生产域名真机验收**（Edge headless 打开 `https://shenge-work.github.io/`）：`window.AIVoice` / `window.AIVoiceCloud` 均挂载、`provider=cloud`、面板开关与底栏 AI 标识齐全、0 个 JS `pageerror`；欢迎语与主动 `AIVoice.speak()` 真实发起 `/tts` 请求，返回 HTTP 200 + 合法 base64 MP3（实测 5184 / 67776 / 18624 字节，音色 `101001`），重复文本命中前端缓存不再请求。
+- [x] GitHub Pages 上线后**生产域名真机验收**（Edge headless 打开 `https://chenpeisheng.cn/`）：`window.AIVoice` / `window.AIVoiceCloud` 均挂载、`provider=cloud`、面板开关与底栏 AI 标识齐全、0 个 JS `pageerror`；欢迎语与主动 `AIVoice.speak()` 真实发起 `/tts` 请求，返回 HTTP 200 + 合法 base64 MP3（实测 5184 / 67776 / 18624 字节，音色 `101001`），重复文本命中前端缓存不再请求。
 - [x] CORS 预检：`OPTIONS` 带生产 Origin 返回 204 与正确的 `Access-Control-Allow-Origin`，`POST` 响应头同样匹配，浏览器可直连云函数、无需代理。
 - [x] `?tts=browser` 强制降级：provider 变 `browser`、`AIVoiceCloud.state=off`、**零次**云端请求。
 - [x] 关闭语音后刷新仍为关闭，重新开启立即恢复；云端合成失败时单句自动回落本地语音且不中断后续队列。
@@ -275,7 +275,7 @@ Phase 2 已于 2026-11-17 因「需要跨浏览器一致的固定音色」提前
 
 ```
 请求：POST https://resume-ai-d9g7zghnxda2ee2cb-1307508155.ap-shanghai.app.tcloudbase.com/chat
-      Origin: https://shenge-work.github.io
+      Origin: https://chenpeisheng.cn
       { "mode": "tts", "text": "≤150 中文字符", "kind": "greet|answer|error" }
 响应：200 { ok:true, audio:"<base64 mp3>", mime:"audio/mpeg", cached:false, chars:8, voice:101001 }
       400 缺少 text / 文本超长 / 请求体非法

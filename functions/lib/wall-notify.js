@@ -6,7 +6,7 @@
      · 纯函数（buildNotice / formatBeijing）+ 单一副作用口（notifyWallMessage），
        测试时不需要真发邮件，也不依赖 Cloudflare 运行时。
 
-   收件人：默认站长本人 shenge.work@gmail.com —— Resend 未验证自有域名时，
+   收件人：默认站长本人 hi@chenpeisheng.cn —— Resend 未验证自有域名时，
    onboarding@resend.dev 只能发给注册邮箱；可用 WALL_NOTIFY_TO 覆盖。
    发件人：复用简历转发那套 RESEND_FROM，缺省 onboarding@resend.dev。
    失败策略：任何异常都只记日志并返回 {ok:false}，留言接口照常 201，
@@ -14,7 +14,7 @@
    ────────────────────────────────────────────────────────────────────── */
 
 const RESEND_URL = 'https://api.resend.com/emails';
-const DEFAULT_TO = 'shenge.work@gmail.com';
+const DEFAULT_TO = 'hi@chenpeisheng.cn';
 const DEFAULT_FROM = 'Portfolio Wall <onboarding@resend.dev>';
 const ADMIN_URL = 'https://shenge-work-admin.pages.dev';
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;

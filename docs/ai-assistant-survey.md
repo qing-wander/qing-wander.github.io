@@ -1,6 +1,6 @@
 # 静态简历站 AI 问答助手 · 方案调研与实施设计（路线 B）
 
-> 文档定位：本文件是 `shenge-work.github.io` 接入 AI 问答助手的**单一设计依据**。调研结论、实测数据、架构决策、接口契约、验收清单都在这里；后续所有代码实现必须与本文对齐，冲突时先改文档再改代码。
+> 文档定位：本文件是 `chenpeisheng.cn` 接入 AI 问答助手的**单一设计依据**。调研结论、实测数据、架构决策、接口契约、验收清单都在这里；后续所有代码实现必须与本文对齐，冲突时先改文档再改代码。
 >
 > 版本：v1（2026-11-07）· 状态：待实施 · 作者：陈培胜
 
@@ -71,7 +71,7 @@ dig +short "$domain" | head -2
 
 | 端点 | HTTP | 耗时 | 判定 | 说明 |
 |---|---|---|---|---|
-| `shenge-work.github.io` | 200 | 1.11s | ✅ 可达 | 站点本体没问题，继续用 Pages |
+| `chenpeisheng.cn` | 200 | 1.11s | ✅ 可达 | 站点本体没问题，继续用 Pages |
 | `api.deepseek.com` | 401 | 0.30s | ✅ 可达 | 401=未带 Key 的正常响应，接口本身通 |
 | `open.bigmodel.cn`（智谱） | 200 | 0.28s | ✅ 可达 | 首选免费模型提供方 |
 | `dashscope.aliyuncs.com`（阿里） | 404 | 0.29s | ✅ 可达 | 404 是根路径无路由，接口通 |
@@ -249,7 +249,7 @@ dig +short "$domain" | head -2
 ```
 POST https://<provider-domain>/chat
 Content-Type: application/json
-Origin: https://shenge-work.github.io
+Origin: https://chenpeisheng.cn
 
 {
   "question": "讲讲你在 Lessie 做的 Agent 工程化",
@@ -271,7 +271,7 @@ Origin: https://shenge-work.github.io
 | `bad_request` | 400 | 参数非法 / 超长 | 提示修正 |
 
 **函数内部流程**：
-1. `OPTIONS` 预检返回允许的 `Origin`（仅 `https://shenge-work.github.io`，本地调试可显式加 `http://localhost:8000`）；
+1. `OPTIONS` 预检返回允许的 `Origin`（仅 `https://chenpeisheng.cn`，本地调试可显式加 `http://localhost:8000`）；
 2. Origin 白名单校验 → 不通过 403，**不使用通配 `*`**；
 3. 限流：内存计数器（同一实例内）+ 超阈值后查 PG 统计跨实例真实次数（见 13.10）；阈值 **20 次/分钟/IP、200 次/日/IP**；
 4. 问题向量化（与知识库同模型、同维度，校验 `kb-meta.json`）；
@@ -312,7 +312,7 @@ Origin: https://shenge-work.github.io
 
 规则：
 1. 只依据 <context> 中的简历资料回答。context 没有的信息，直接说
-   「简历里没写这块，建议直接邮件问他：shenge.work@gmail.com」，不要推测。
+   「简历里没写这块，建议直接邮件问他：hi@chenpeisheng.cn」，不要推测。
 2. 不允许编造项目名称、公司、量化数字、时间。引用数字时必须与 context 完全一致。
 3. 涉及薪资、离职原因、是否接受外包、能否立刻到岗等敏感问题：
    一律回复「这类问题建议直接沟通」，不代替本人承诺。
@@ -448,7 +448,7 @@ Origin: https://shenge-work.github.io
 
 - [ ] **V1 境内可达**：在**蜂窝网络**下打开中转域名返回 200（不是只看控制台 "Deployed"）
 - [ ] **V2 无 Key**：`git grep -inE "sk-|Bearer |api[_-]?key\s*="` 全仓 0 命中（Secrets 除外）
-- [ ] **V3 白名单**：非 `shenge-work.github.io` 的 Origin POST 返回 `origin_denied` / 403
+- [ ] **V3 白名单**：非 `chenpeisheng.cn` 的 Origin POST 返回 `origin_denied` / 403
 - [ ] **V4 限流**：连续 21 次请求，第 21 次返回 429
 - [ ] **V5 不编造**：构造 5 条简历中不存在的问题（如"你在字节跳动做过什么"），全部拒答且不编造
 - [ ] **V6 降级**：手动把函数 provider 置为不可用，前端不白屏、不报红，能出纯检索结果或友好提示
@@ -475,7 +475,7 @@ Origin: https://shenge-work.github.io
 
 ## 11. 可直接写进简历的项目描述
 
-> **个人站点 AI 简历助手（静态站 · 无服务 RAG）** `shenge-work.github.io`
+> **个人站点 AI 简历助手（静态站 · 无服务 RAG）** `chenpeisheng.cn`
 > - 面向纯静态 GitHub Pages 场景，设计并落地一套**无常驻后端**的 RAG 问答：知识库从站点唯一数据源 `site-data.json` 结构化切片（约 60 块），向量以 int8 量化后**作为静态资源随页面发布**（~31 KB），运行时零向量库依赖。
 > - 检索下沉至边缘/云函数，前端**不持有任何 API Key**；实现 Origin 白名单、IP 双阈值限流、提示词注入拦截与"未知即拒答"约束，回答附带知识块来源锚点。
 > - 设计 **provider 可切换 + 三级降级**（云函数 → 备用 provider → 纯关键词检索原文直出），并基于实测发现境外 Serverless 默认域名在境内不可达，据此改用境内可达载体，保证"部署成功≠可用"的问题在上线前暴露。
@@ -542,7 +542,7 @@ python3 -m http.server 8000
 # 3) 冒烟测中转可达性（换域名后先跑这条，再动前端）
 curl -s -o /dev/null --max-time 8 \
   -w "http=%{http_code} t=%{time_total}s\n" \
-  -H "Origin: https://shenge-work.github.io" \
+  -H "Origin: https://chenpeisheng.cn" \
   -H "Content-Type: application/json" \
   -d '{"question":"你好"}' \
   https://<provider-domain>/chat
@@ -551,7 +551,7 @@ curl -s -o /dev/null --max-time 8 \
 curl -s -o /dev/null -w "%{http_code}\n" -H "Origin: https://evil.example" \
   -d '{"question":"test"}' https://<provider-domain>/chat    # 期望 403
 for i in $(seq 1 21); do curl -s -o /dev/null -w "%{http_code} " \
-  -H "Origin: https://shenge-work.github.io" -d '{"question":"t"}' \
+  -H "Origin: https://chenpeisheng.cn" -d '{"question":"t"}' \
   https://<provider-domain>/chat; done                        # 期望最后一个 429
 ```
 
@@ -593,7 +593,7 @@ step-5-preview`），**只有 `hy3` 返回 200**，其余统一 `AI_MODEL_NOT_SU
 路由上开「跨域设置」后，网关会把 CORS 头**和函数自己返回的头拼在一起**：
 
 ```
-access-control-allow-origin: https://shenge-work.github.io,https://shenge-work.github.io
+access-control-allow-origin: https://chenpeisheng.cn,https://chenpeisheng.cn
 access-control-max-age: -1,86400
 ```
 

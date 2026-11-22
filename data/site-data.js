@@ -561,7 +561,7 @@ window.SITE_DATA = {
         "无框架纯静态"
       ],
       "github": "https://github.com/shenge-work/shenge-work.github.io",
-      "live": "https://shenge-work.github.io"
+      "live": "https://chenpeisheng.cn"
     },
     {
       "no": "W-02",
@@ -649,7 +649,7 @@ window.SITE_DATA = {
         "ref": "本站",
         "stack": "Claude Code · Codex · Cursor",
         "proof": "需求到部署交由 Coding Agent 驱动",
-        "refUrl": "https://shenge-work.github.io"
+        "refUrl": "https://chenpeisheng.cn"
       },
       {
         "name": "后端与网关",
@@ -815,8 +815,8 @@ window.SITE_DATA = {
     "cards": [
       {
         "label": "EMAIL / 邮箱",
-        "value": "shenge.work@gmail.com",
-        "href": "mailto:shenge.work@gmail.com"
+        "value": "hi@chenpeisheng.cn",
+        "href": "mailto:hi@chenpeisheng.cn"
       },
       {
         "label": "TEL / 电话·微信",

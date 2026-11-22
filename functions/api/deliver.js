@@ -26,7 +26,7 @@
                       ⚠️ Resend 未验证域名时，onboarding@resend.dev 只能发给
                       Resend 账号注册邮箱；要发给任意收件人，必须先在 Resend
                       验证自有域名，再把这里改成 '陈培胜简历 <resume@你的域名>'
-     DELIVER_BCC      可选，站长收一份备案（如 shenge.work@gmail.com），留空则不发
+     DELIVER_BCC      可选，站长收一份备案（如 hi@chenpeisheng.cn），留空则不发
      ALLOWED_ORIGINS  可选，逗号分隔（默认 github.io / pages.dev / localhost）
 
    绑定：SITE_KV（与留言墙共用；未绑定时跳过限额，不阻塞发信）
@@ -51,7 +51,7 @@ const DAY_LIMIT = 30;
 const DAY_TTL = 172800;
 
 const DEFAULT_ORIGINS = [
-  'https://shenge-work.github.io',
+  'https://chenpeisheng.cn',
   'https://shenge-work.pages.dev',
   '*.shenge-work.pages.dev',
   'http://localhost:8000',
@@ -63,7 +63,7 @@ const DEFAULT_ORIGINS = [
   'http://127.0.0.1:8877',
 ];
 
-const RESUME_PRIMARY = 'https://shenge-work.github.io/resume.html';
+const RESUME_PRIMARY = 'https://chenpeisheng.cn/resume.html';
 const RESUME_BACKUP = 'https://shenge-work.pages.dev/resume.html';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
@@ -207,12 +207,12 @@ function buildEmail(d) {
 '<tr><td style="border:4px solid #141311;border-top:none;background:#FFFCF4;padding:12px 22px;">' +
 (d.email
   ? '<span style="font:bold 12px/1.6 \'PingFang SC\',\'Microsoft YaHei\',sans-serif;color:#141311;">↩&nbsp;直接「回复」本邮件即可联系转发人</span>'
-  : '<span style="font:bold 12px/1.6 \'PingFang SC\',\'Microsoft YaHei\',sans-serif;color:#141311;">简历作者邮箱：shenge.work@gmail.com</span>') +
+  : '<span style="font:bold 12px/1.6 \'PingFang SC\',\'Microsoft YaHei\',sans-serif;color:#141311;">简历作者邮箱：hi@chenpeisheng.cn</span>') +
 '</td></tr>' +
 
 /* 脚注 */
 '<tr><td style="padding:16px 4px 0;text-align:center;">' +
-'<span style="font:11px/1.6 \'Courier New\',monospace;color:#4A463F;">来自 shenge-work.github.io 在线简历 · ' + time + '</span>' +
+'<span style="font:11px/1.6 \'Courier New\',monospace;color:#4A463F;">来自 chenpeisheng.cn 在线简历 · ' + time + '</span>' +
 '</td></tr>' +
 
 '</table></td></tr></table></body></html>';

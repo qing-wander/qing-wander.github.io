@@ -247,8 +247,8 @@
 {
   "schema_version": "2.0",
   "person": { "nameCn": "陈培胜", "nameEn": "CHEN PEISHENG", "role": "AI Agent 工程师",
-              "email": "shenge.work@gmail.com", "github": "shenge-work",
-              "portfolio": "shenge-work.github.io", "location": "深圳",
+              "email": "hi@chenpeisheng.cn", "github": "shenge-work",
+              "portfolio": "chenpeisheng.cn", "location": "深圳",
               "years": 5, "age": 29, "availability": "随时到岗" },
 
   "resume": {
@@ -788,7 +788,7 @@ JD 原文（≤1500 字，前端截断）
 > **状态：已采用（2026-11-19）**。后续实施按本节执行，不再回退到同站 `/admin` 方案。
 
 ```
-公开站：shenge-work.github.io / shenge-work.pages.dev
+公开站：chenpeisheng.cn / shenge-work.pages.dev
 后台：  shenge-work-admin.pages.dev
 共享：  D1 portfolio-db、GitHub 仓库、构建脚本、设计 token
 ```

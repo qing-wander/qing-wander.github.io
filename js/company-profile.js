@@ -412,11 +412,11 @@
     return html + '</section>';
   }
 
-  /* 竞品分析：竞争格局概述 + 竞品卡片 + 主观判断（求职者视角） */
+  /* 竞品分析：竞争格局概述 + 竞品卡片 */
   function competitorBlock(c) {
     var cmp = c.competitors || {};
     var list = cmp.players || [];
-    if (!list.length && !cmp.landscape && !cmp.myTake) return '';
+    if (!list.length && !cmp.landscape) return '';
     var html = '<section class="cp-sec"><h4 class="cp-sec-title">竞品分析</h4>';
     if (cmp.landscape) {
       html += '<p class="cp-cmp-landscape">' + esc(cmp.landscape) + '</p>';
@@ -455,16 +455,12 @@
       });
       html += '</div>';
     }
-    if (cmp.myTake) {
-      html += '<div class="cp-mytake"><p class="cp-mytake-tag">我的判断（主观 · 站在求职者角度，非公司披露）</p><p>' +
-        esc(cmp.myTake) + '</p></div>';
-    }
     return html + '</section>';
   }
 
   function outlookBlock(c) {
     var o = c.outlook || {};
-    if (!o.opportunities && !o.risks && !o.myTake) return '';
+    if (!o.opportunities && !o.risks) return '';
     function lis(arr) {
       return '<ul class="cp-outlook-list">' + (arr || []).map(function (x) {
         return '<li>' + esc(x) + '</li>';
@@ -474,8 +470,7 @@
       '<div class="cp-outlook"><div class="cp-outlook-col"><p class="cp-outlook-h is-op">▚ 机会</p>' +
       lis(o.opportunities) + '</div>' +
       '<div class="cp-outlook-col"><p class="cp-outlook-h is-risk">▞ 风险</p>' + lis(o.risks) + '</div></div>' +
-      (o.myTake ? '<div class="cp-mytake"><p class="cp-mytake-tag">我的判断（主观 · 站在求职者角度，非公司披露）</p><p>' +
-        esc(o.myTake) + '</p></div>' : '') + '</section>';
+      '</section>';
   }
 
   /* 办公图相册：超过 3 张默认折叠（第 4 张起加 is-extra），

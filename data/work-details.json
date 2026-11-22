@@ -11,7 +11,7 @@
       "status": "线上运行 · 持续迭代",
       "liveLabel": "在线访问",
       "links": {
-        "live": "https://shenge-work.github.io",
+        "live": "https://chenpeisheng.cn",
         "repo": "https://github.com/shenge-work/shenge-work.github.io",
         "resume": "resume.html"
       },
@@ -194,7 +194,7 @@
           { "value": "0", "unit": "依赖", "label": "运行时前端库" }
         ],
         "evidence": [
-          { "label": "线上站点", "href": "https://shenge-work.github.io" },
+          { "label": "线上站点", "href": "https://chenpeisheng.cn" },
           { "label": "网页简历", "href": "resume.html" },
           { "label": "源码仓库", "href": "https://github.com/shenge-work/shenge-work.github.io" }
         ]

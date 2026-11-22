@@ -33,7 +33,7 @@
 详见 §3.18 / §3.19。旧的 R2 方案（T23）因账号无支付方式已废弃，改为飞书归档。
 
 **既有功能的缺口仍是「访客填任意邮箱都能自动收到简历」**。Resend 尚未验证自有发信域名，
-`onboarding@resend.dev` 只能发给账号邮箱 `shenge.work@gmail.com`；其他邮箱会被 Resend 以
+`onboarding@resend.dev` 只能发给账号邮箱 `hi@chenpeisheng.cn`；其他邮箱会被 Resend 以
 403 `recipient_not_verified` 拒绝，前端按设计自动切到「用邮箱客户端发送」的 mailto 兜底
 （收件人已填好），功能不中断，但不会自动收到邮件。
 
@@ -99,7 +99,7 @@ Workers KV 迁到 D1（`portfolio-db`，4 张表），免费写额度从 1,000 �
 
 | 收件人 | 结果 |
 |---|---|
-| `shenge.work@gmail.com`（Resend 注册邮箱） | 自动发信成功，`POST /api/deliver` → `201 {"ok":true,...}`，Resend 邮件 id `01a1e59e-…` |
+| `hi@chenpeisheng.cn`（Resend 注册邮箱） | 自动发信成功，`POST /api/deliver` → `201 {"ok":true,...}`，Resend 邮件 id `01a1e59e-…` |
 | 其他任意邮箱（含测试邮箱 `1549735463@qq.com`） | Resend 403 `recipient_not_verified` → 接口返回该错误 → 前端显示 mailto 兜底 |
 
 代码侧全部就绪：`functions/api/deliver.js`、前端弹窗、CORS、限流、邮件模板、Tests 均已上线并实测通过。
@@ -131,7 +131,7 @@ Workers KV 迁到 D1（`portfolio-db`，4 张表），免费写额度从 1,000 �
 ```bash
 curl -s -X POST https://shenge-work.pages.dev/api/deliver \
   -H 'Content-Type: application/json' \
-  -H 'Origin: https://shenge-work.github.io' \
+  -H 'Origin: https://chenpeisheng.cn' \
   -d '{"to":"1549735463@qq.com"}'
 # 期望 {"ok":true,...}；返回 recipient_not_verified 说明域名验证或 RESEND_FROM 未生效
 ```
@@ -243,14 +243,14 @@ CORS 段也一并更新：`*.shenge-work.pages.dev` 已写入线上 `ALLOWED_ORI
 
 **问题**：函数代码本身支持 `*.` 通配（`DEFAULT_ORIGINS` 含 `*.shenge-work.pages.dev`），
 但线上环境变量 `ALLOWED_ORIGINS` 是精确列表
-`https://shenge-work.github.io,https://shenge-work.pages.dev`，覆盖了代码默认值，
+`https://chenpeisheng.cn,https://shenge-work.pages.dev`，覆盖了代码默认值，
 因此 `Origin: https://abc123.shenge-work.pages.dev` 一直 403 `origin_denied`。
 **不是代码 bug，是线上配置没跟上**；`docs/jd-match.md` §4.3 里「随函数重部署自动生效」的推测不成立。
 
 **处置（2026-11-18 02:14，Chrome 登录 CloudBase 新版开发平台）**：
 环境 `resume-ai` → 云函数 `resume-ai-chat` → 函数配置 → 编辑 → 环境配置 → 环境变量，
 把 `ALLOWED_ORIGINS` 改为
-`https://shenge-work.github.io,https://shenge-work.pages.dev,*.shenge-work.pages.dev`；
+`https://chenpeisheng.cn,https://shenge-work.pages.dev,*.shenge-work.pages.dev`；
 其余 5 个变量（`AI_API_KEY` / `TTS_REGION` / `TTS_SECRET_ID` / `TTS_SECRET_KEY` /
 `TTS_VOICE_TYPE`）**一个没动**。**保存即生效**，无需重传代码、无需重新打包。
 
@@ -292,7 +292,7 @@ CORS 段也一并更新：`*.shenge-work.pages.dev` 已写入线上 `ALLOWED_ORI
 
 **确认方式**：登录 <https://app.pagescms.org> → 能看到「作品集内容（全站文案）」入口即已授权；
 再改一处文案点 Save，观察是否生成 commit → Actions 重建 `site-data.js` → 约 1 分钟线上生效。
-若未授权，按教程 §一.3 完成（只勾 `shenge-work.github.io` 一个仓库）。
+若未授权，按教程 §一.3 完成（只勾 `chenpeisheng.cn` 一个仓库）。
 
 ---
 
@@ -343,7 +343,7 @@ CORS 段也一并更新：`*.shenge-work.pages.dev` 已写入线上 `ALLOWED_ORI
 ```bash
 curl -s -X POST https://resume-ai-d9g7zghnxda2ee2cb-1307508155.ap-shanghai.app.tcloudbase.com/chat \
   -H 'Content-Type: application/json' \
-  -H 'Origin: https://shenge-work.github.io' \
+  -H 'Origin: https://chenpeisheng.cn' \
   -d '{"mode":"jd","jd":"岗位职责：负责企业级 AI Agent 平台架构设计，含任务规划与多智能体编排；建设 RAG 检索链路并做召回评测。"}'
 ```
 
@@ -509,7 +509,7 @@ token 留空完全不发请求；加载失败静默，不牵连 Umami/Clarity。
 **绕不开的一步**：wrangler 的 OAuth 登录态没有 RUM 权限，`/rum/site_info` 的 list 与 create
 都返回 `10000 Authentication error`，scope 里也确认没有 analytics 项（有 `challenge-widgets.write`，
 所以 Turnstile 能自动建站点、Web Analytics 不能）。最终在控制台建了站点
-`shenge-work.github.io`，token `e8d13ee29814404299a92efbdea4b73e` 填入 `cfBeaconToken`。
+`chenpeisheng.cn`，token `e8d13ee29814404299a92efbdea4b73e` 填入 `cfBeaconToken`。
 
 **pages.dev 建不了独立站点**：给 `shenge-work.pages.dev` 单独 Add site 时，「完成」始终置灰、
 主机名一失焦就被清空 —— 该表单只接受账号下的 zone 域名。两个 host 因此共用一个 token，
@@ -562,7 +562,7 @@ beacon 从 `pages.dev` 上报同样 200，数据归到同一站点。
 
 ① **立即让 pages.dev 追平**（不依赖 R2、不依赖支付方式，已备好）：
 ```bash
-cd /Users/shenge/Documents/shenge-work.github.io
+cd /Users/shenge/Documents/chenpeisheng.cn
 ./scripts/deploy-pages.sh --dry-run   # 已验证：79 文件 / 33MB，无 character-views，无 >25MB 文件
 ./scripts/deploy-pages.sh             # 走 wrangler 直传，绕过会失败的 GitHub 集成构建
 ```
@@ -604,7 +604,7 @@ WRANGLER_BIN=~/.npm/_npx/3ab751a803c3c994/node_modules/wrangler/bin/wrangler.js 
 它一方面把工作区撑大，另一方面直接导致 T22 的 Pages 构建失败。
 
 **方案变更（R2 → 飞书云盘）**
-- 原方案 Cloudflare R2 废弃：账号（`ead07d9f…`，`shenge.work@gmail.com`）**无可绑定支付方式，R2 无法启用**，
+- 原方案 Cloudflare R2 废弃：账号（`ead07d9f…`，`hi@chenpeisheng.cn`）**无可绑定支付方式，R2 无法启用**，
   `r2 bucket list/create` 报 `10042 Please enable R2 through the Cloudflare Dashboard`，无自助启用 API。
   `scripts/r2-sync.sh` / `r2-cors.json` 保留作历史参考，但当前不再使用。
 - 新方案：**飞书云盘整目录归档**（用户 2026-11-21 选定）。飞书 connector 已登录（用户 `sheng`），
@@ -623,7 +623,7 @@ WRANGLER_BIN=~/.npm/_npx/3ab751a803c3c994/node_modules/wrangler/bin/wrangler.js 
 
 **拉回方式（需要重做模型时）**
 ```bash
-cd /Users/shenge/Documents/shenge-work.github.io
+cd /Users/shenge/Documents/chenpeisheng.cn
 lark-cli drive +pull --as user --folder-token BnalfpLM8lzNYLdkYu3cqH71nAc \
   --local-dir assets/character-views
 ```
