@@ -874,6 +874,7 @@ export default {
           },
           {
             "label": "邮箱",
+            "icon": "email",
             "text": "hi@chenpeisheng.cn",
             "href": "mailto:hi@chenpeisheng.cn",
             "external": false
