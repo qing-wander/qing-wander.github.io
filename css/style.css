@@ -1416,6 +1416,14 @@ a.cap-ref:hover, a.cap-ref:focus-visible {
 .gh-legend { display: flex; align-items: center; gap: 4px; margin-top: 12px; font-family: var(--font-mono); font-size: 11px; color: var(--ink-soft); }
 .gh-legend .gh-cell { width: 10px; height: 10px; }
 
+/* 真蛇动效图（Actions 生成的 snk SVG，明/暗两张按皮肤切换） */
+.gh-snake { margin: 6px 0 2px; }
+.gh-snake img { width: 100%; height: auto; display: block; }
+.gh-snake-dark { display: none; }
+[data-theme="noir"] .gh-snake-light { display: none; }
+[data-theme="noir"] .gh-snake-dark { display: block; }
+.gh-snake.gone, .gh-snake img.gone { display: none; }
+
 .resume-cta {
   border: var(--border-thick);
   background: var(--orange);

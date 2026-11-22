@@ -40,15 +40,26 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: python3 scripts/fetch_contributions.py
 
+      # 完整 Platane/snk（非 svg-only）：生成带游走蛇身的贡献图，
+      # 明/暗两张落到 data/，由前端 <picture> 按皮肤切换。
+      - name: 生成真蛇动效 SVG
+        uses: Platane/snk@v3
+        with:
+          github_user_name: shenge-work
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          outputs: |
+            data/snake.svg?palette=github&color_snake=%231FA658
+            data/snake-dark.svg?palette=github-dark&color_snake=%239EE86B
+
       - name: 提交变更
         run: |
-          if git diff --quiet -- data/contributions.json; then
-            echo "贡献数据无变化，无需提交"
+          if git diff --quiet -- data/contributions.json data/snake.svg data/snake-dark.svg; then
+            echo "贡献数据与蛇图均无变化，无需提交"
             exit 0
           fi
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/contributions.json
+          git add data/contributions.json data/snake.svg data/snake-dark.svg
           git commit -m "chore(data): 更新 GitHub 贡献热力图数据"
           for i in 1 2 3; do
             if ! git fetch origin main --quiet; then

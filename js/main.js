@@ -367,16 +367,6 @@
   }
 
   function renderGhActivity(box, data) {
-    var weeks = data.weeks || [];
-    var cols = weeks.map(function (week) {
-      var cells = week.map(function (c) {
-        var lv = ghLevel(c.count);
-        var tip = c.date + ' · ' + c.count + ' 次贡献';
-        return '<div class="gh-cell gh-lv' + lv + '" title="' + esc(tip) + '"></div>';
-      }).join('');
-      return '<div class="gh-col">' + cells + '</div>';
-    }).join('');
-
     var range = data.range || {};
     box.innerHTML =
       '<div class="gh-head">' +
@@ -390,13 +380,25 @@
         '<span>最长连续 <strong>' + (data.longestStreak || 0) + '</strong> 天</span>' +
         (range.from && range.to ? '<span class="gh-range">' + esc(range.from) + ' — ' + esc(range.to) + '</span>' : '') +
       '</div>' +
-      '<div class="gh-scroll"><div class="gh-grid">' + cols + '</div></div>' +
-      '<div class="gh-legend"><span>Less</span>' +
-        '<span class="gh-cell gh-lv0"></span><span class="gh-cell gh-lv1"></span>' +
-        '<span class="gh-cell gh-lv2"></span><span class="gh-cell gh-lv3"></span>' +
-        '<span class="gh-cell gh-lv4"></span><span>More</span>' +
+      '<div class="gh-snake">' +
+        '<img class="gh-snake-light" src="data/snake.svg?v=20261122" alt="GitHub 贡献蛇形动画" loading="lazy" decoding="async">' +
+        '<img class="gh-snake-dark" src="data/snake-dark.svg?v=20261122" alt="GitHub 贡献蛇形动画（深色）" loading="lazy" decoding="async">' +
       '</div>';
     box.hidden = false;
+
+    /* 蛇图由 Actions 生成；任一未就绪（404）则隐藏对应图，两张都失败则整块收起 */
+    var snakeBox = box.querySelector('.gh-snake');
+    if (snakeBox) {
+      var imgs = snakeBox.querySelectorAll('img');
+      var failed = 0;
+      Array.prototype.forEach.call(imgs, function (img) {
+        img.addEventListener('error', function () {
+          img.classList.add('gone');
+          failed++;
+          if (failed >= imgs.length) snakeBox.classList.add('gone');
+        });
+      });
+    }
   }
 
   function initContributions() {
