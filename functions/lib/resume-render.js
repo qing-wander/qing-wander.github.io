@@ -26,9 +26,9 @@ const ICONS = {
 
 function metaToken(t) {
   /* label 可省略：无 label 时只输出值（纯文本 token），兼容原有的 <b>标签</b> 值 形式 */
-  /* icon 可传字符串或数组，数组时输出多个图标（如电话 + 微信） */
+  /* icon 可传字符串或数组，数组时输出多个图标（如电话 + 微信），图标间用 / 分隔 */
   const icons = t.icon ? (Array.isArray(t.icon) ? t.icon : [t.icon]) : [];
-  const iconMarkup = icons.map((n) => ICONS[n]).filter(Boolean).join(' ');
+  const iconMarkup = icons.map((n) => ICONS[n]).filter(Boolean).join(' / ');
   const label = iconMarkup || (t.label ? `<b>${esc(t.label)}</b>` : '');
   if (t.href) {
     const target = t.external ? ' target="_blank" rel="noopener noreferrer"' : '';
