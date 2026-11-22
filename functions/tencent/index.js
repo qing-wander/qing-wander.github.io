@@ -1,7 +1,7 @@
 'use strict';
 
 /**
- * 简历 AI 助手 —— 云函数入口（腾讯云 CloudBase，Node.js 运行时）
+ * 数字分身问答 —— 云函数入口（腾讯云 CloudBase，Node.js 运行时）
  *
  * 职责：CORS 白名单 → 限流 → 意图拦截 → TF-IDF 检索（与 knowledge/ 产物同源）
  *      → 组装提示词 → 调 CloudBase 内置大模型网关 → 返回 JSON + 结构化日志。

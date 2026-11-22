@@ -1,11 +1,11 @@
 {
-  "generated_at": "2026-11-22T10:08:12Z",
+  "generated_at": "2026-11-22T10:49:44Z",
   "provider": "tfidf",
   "model": "char-bigram-tfidf",
   "dim": 1200,
   "count": 36,
   "source": "data/site-data.json",
-  "source_sha256": "624d897d5a3e549e05b2c079b1ad94cd1b10ec570d7834c4ba4389fd2f569c5c",
+  "source_sha256": "68ea6d8d340c07df408281c0e5e69248171d6c36a734267d3e65315aa20eccf0",
   "quant": {
     "type": "int8-symmetric",
     "scale": 218.016476,
@@ -638,7 +638,6 @@
     "#claude",
     "#code",
     "#codex",
-    "#cp.ai",
     "#css",
     "#cursor",
     "#data.json",
@@ -967,6 +966,7 @@
     "分片",
     "分级",
     "分表",
+    "分身",
     "划与",
     "划转",
     "列分",
@@ -1210,8 +1210,8 @@
     "好即",
     "如需",
     "子任",
-    "字输",
-    "存一"
+    "字分",
+    "字输"
   ],
   "idf": [
     1.475424,

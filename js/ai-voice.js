@@ -1,5 +1,5 @@
 /* ════════════════════════════════════════════════════════════
-   CP.AI 语音播报 · 零侵入语音层（设计依据：docs/ai-voice-survey.md）
+   数字分身语音播报 · 零侵入语音层（设计依据：docs/ai-voice-survey.md）
    --------------------------------------------------------------
    1) js/main.js 问答逻辑零改动：靠 MutationObserver 观察 aiBody 新增的
       .ai-msg-bot 与首次打招呼气泡 .ai-fab-tip 触发播报。
@@ -16,7 +16,7 @@
   /* ─────────────── 常量与配置 ─────────────── */
 
   var STORE = 'cpai_voice_v1';
-  var GREET_TEXT = '你好呀，我是 AI 档案问答助手。这页内容挺多，翻起来费时间，直接问我就好。答案都会标出依据，声音随时可以关掉。';
+  var GREET_TEXT = '你好呀，我是陈培胜的数字分身。这页内容挺多，翻起来费时间，直接问我就好。答案都会标出依据，声音随时可以关掉。';
   var ON_TEXT = '语音已打开，有什么想问的？';
   var VOICE_TEST = '你好，这是当前的音色，听起来怎么样？';
   var MAX_TOTAL = 600;          // 单次播报最长字符
@@ -529,7 +529,7 @@
   }
 
   var CTA_HTML =
-    '<p class="ai-voice-cta-txt">浏览器拦住了自动播放，点一下让 CP.AI 开口打招呼</p>' +
+    '<p class="ai-voice-cta-txt">浏览器拦住了自动播放，点一下让数字分身开口打招呼</p>' +
     '<div class="ai-voice-cta-acts">' +
       '<button type="button" class="ai-voice-cta-yes">🔊 听它说</button>' +
       '<button type="button" class="ai-voice-cta-no">先不用</button>' +

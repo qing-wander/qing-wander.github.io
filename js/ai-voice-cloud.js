@@ -1,5 +1,5 @@
 /* ════════════════════════════════════════════════════════════
-   CP.AI 语音播报 · Phase 2 云端 Provider（设计依据：docs/ai-voice-survey.md 第 7 节）
+   数字分身语音播报 · Phase 2 云端 Provider（设计依据：docs/ai-voice-survey.md 第 7 节）
    --------------------------------------------------------------
    1) 只做一件事：实现 AIVoice.setProvider() 需要的 { synth(text, opts), prefetch(texts, opts) }，
       队列、去重、开关、口型联动、首次打招呼、降级全部复用 js/ai-voice.js。

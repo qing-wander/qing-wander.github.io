@@ -1,5 +1,5 @@
 /* ════════════════════════════════════════════════════════════
-   CP.AI 角色舞台 · 皮肤切换系统
+   数字分身角色舞台 · 皮肤切换系统
    --------------------------------------------------------------
    设计原则：
    1) 不碰 js/main.js 的问答逻辑 —— 单击角色等价于点原有 #aiFab，
@@ -40,7 +40,7 @@
       '<path d="M50 69Q60 75 70 69" style="fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round"/>' +
       '<rect x="34" y="88" width="52" height="42" rx="4" class="sk-card sk-line"/>' +
       '<rect x="42" y="96" width="36" height="17" class="sk-paper sk-line-thin"/>' +
-      '<text x="60" y="108" text-anchor="middle" class="sk-ink" style="font:700 9px monospace;letter-spacing:.06em">CP.AI</text>' +
+      '<text x="60" y="108" text-anchor="middle" class="sk-ink" style="font:700 9px monospace;letter-spacing:.06em">CP.ME</text>' +
       '<circle cx="76" cy="121" r="4" class="sk-green sk-cpbot-lamp"/>' +
       '<path class="sk-line" d="M45 130v10M75 130v10"/>' +
     '</g></svg>';
@@ -202,7 +202,11 @@
         if (disposed) return;
         mv = document.createElement('model-viewer');
         mv.className = 'ai-mv' + (cfg.bob ? ' ai-mv-bob' : '');
-        mv.setAttribute('src', BASE + 'models/' + cfg.file);
+        /* 3D 模型走 CDN 重写器（可一键回退本地）：仅在 AssetURL 就绪时替换 GLB */
+        var modelSrc = (window.AssetURL && window.AssetURL.model)
+          ? window.AssetURL.model(cfg.file)
+          : (BASE + 'models/' + cfg.file);
+        mv.setAttribute('src', modelSrc);
         mv.setAttribute('alt', cfg.name + ' 3D 模型');
         if (!reduceMotion) mv.setAttribute('autoplay', '');
         mv.setAttribute('animation-name', cfg.clips.idle);
@@ -571,7 +575,7 @@
     host.innerHTML = SVG_MASCOT;
     var img = document.createElement('img');
     img.className = 'sk-gen-img';
-    img.alt = 'CP.AI 专属形象';
+    img.alt = '陈培胜的数字分身形象';
     img.src = BASE + 'generated.png';
     img.onload = function () { host.innerHTML = ''; host.appendChild(img); };
     var t = null;
@@ -647,12 +651,12 @@
   stage.id = 'aiStage';
   stage.setAttribute('role', 'button');
   stage.setAttribute('tabindex', '0');
-  stage.setAttribute('aria-label', 'CP.AI 简历问答助手角色，点击打开问答');
+  stage.setAttribute('aria-label', '陈培胜的数字分身，点击开始对话');
   stage.innerHTML =
     '<div class="ai-stage-actor" id="aiActor"></div>' +
     '<div class="ai-stage-ground" aria-hidden="true"></div>' +
     '<div class="ai-stage-name" id="aiSkinName"></div>' +
-    '<div class="ai-stage-hint" id="aiStageHint"><i class="ai-stage-hint-dot" aria-hidden="true"></i>点我问 <b>CP.AI</b></div>' +
+    '<div class="ai-stage-hint" id="aiStageHint"><i class="ai-stage-hint-dot" aria-hidden="true"></i>点我问 <b>数字分身</b></div>' +
     '<div class="ai-stage-think" id="aiStageThink" aria-hidden="true"><i></i><i></i><i></i></div>' +
     '<button class="ai-stage-menu-btn" id="aiSkinBtn" type="button" aria-label="打开皮肤菜单">&#9672;</button>';
   aiFab.parentNode.insertBefore(stage, aiFab);
@@ -823,7 +827,7 @@
     mo.observe(aiPanel, { childList: true, subtree: true, attributes: true, attributeFilter: ['hidden'] });
     if (aiBody) mo.observe(aiBody, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] });
 
-    /* 主动打招呼气泡出现时让角色挥手（"我是 AI 简历问答助手"自我介绍） */
+    /* 招呼气泡出现时让角色挥手（数字分身打招呼；自动弹出已停用，此观察保留兼容） */
     var tipMo = new MutationObserver(function () {
       var tip = document.querySelector('.ai-fab-tip');
       var now = !!tip;

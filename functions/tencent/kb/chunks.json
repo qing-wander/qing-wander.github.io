@@ -192,7 +192,7 @@
     "id": "work-w01-01",
     "section": "works",
     "title": "求职作品集 · 本站｜PORTFOLIO SITE",
-    "text": "【求职作品集 · 本站｜PORTFOLIO SITE】你正在浏览的本站——档案风求职作品集：数据驱动渲染（site-data.json 单一数据源）、网页简历（彩色 / 正式黑白双模式、2 页 PDF）、分享宣传卡、CP.AI 问答终端（RAG 接入中）。 GitHub Pages 部署。 技术栈：HTML / CSS / JS； GitHub Pages； 无框架纯静态。 在线地址：https://shenge-work.github.io。",
+    "text": "【求职作品集 · 本站｜PORTFOLIO SITE】你正在浏览的本站——档案风求职作品集：数据驱动渲染（site-data.json 单一数据源）、网页简历（彩色 / 正式黑白双模式、2 页 PDF）、分享宣传卡、数字分身问答终端（RAG 接入中）。 GitHub Pages 部署。 技术栈：HTML / CSS / JS； GitHub Pages； 无框架纯静态。 在线地址：https://shenge-work.github.io。",
     "url": "index.html#works"
   },
   {

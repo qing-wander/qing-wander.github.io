@@ -803,7 +803,7 @@
       });
     }
 
-    /* ── 11. CP.AI 简历问答助手（后端：Cloudflare Pages Function /api/chat） ──
+    /* ── 11. 陈培胜的数字分身（后端：Cloudflare Pages Function /api/chat） ──
        链路：静态页 → POST /api/chat → D1 FTS5 BM25 + Vectorize 向量（RRF 融合）
              → 受约束提示词 → 生成（答案带 citations，可回链切片原文）
        源码：functions/api/chat.js（入口）/ kb.js（检索）/ jd.js（JD 匹配） */
@@ -814,14 +814,14 @@
       endpoint: AI_ENDPOINT,   // Cloudflare Pages Function：混合检索 → 受约束生成；github.io 下自动跨站
       timeout: 20000,       // 云函数执行超时 30s，前端留余量
       maxChars: 200,        // 与后端 MAX_QUESTION_CHARS 对齐
-      welcome: '我是 AI 档案问答助手。<br>后端跑在 <b>Cloudflare</b> 上：先用混合检索（词面 BM25 + 向量）在简历切片里召回相关段落，再交给大模型受约束生成答案，每次回答都会标注依据来源。<br>可以问我项目细节、技术栈、工作经历。',
-      quickQuestions: ['主导过哪些 0→1 系统？', 'Agent 架构经验？', '技术栈与方向？', '联系方式？'],
-      /* ── 主动性：停留 10 秒仍未开口，就主动把问题递到手边 ── */
-      autoDelay: 10000,             // 展开面板的时刻（毫秒）
-      autoTipAhead: 8500,           // 距展开还剩多久就冒自我介绍气泡 → 进页面约 1.5s 即打招呼
-      autoCooldown: 30 * 60 * 1000, // 同一台设备 30 分钟内不再自动弹
-      autoTip: '👋 我是 AI 简历问答助手，点我直接问～',
-      autoLead: '我是 AI 档案问答助手。<br>这页塞了 5 个企业项目、6 个个人作品和几十条技术细节，翻页挺慢——<b>直接问我更快</b>，回答都带原文出处。<br>不想打字就先点一个：',
+      welcome: '你好，我是陈培胜的数字分身。<br>你可以把我当成「在线的他」：关于他的项目、技术栈和工作经历，都能直接问我。我会依据他的真实简历资料作答，并标注出处。<br>想了解什么，尽管开口。',
+      quickQuestions: ['你主导过哪些 0→1 系统？', '你的 Agent 架构经验？', '技术栈与方向？', '怎么联系你？'],
+      /* ── 主动性：为兼容保留配置，但面板不再自动弹出（仅点击 3D 角色打开） ── */
+      autoDelay: 10000,             // 保留字段（自动弹出已停用）
+      autoTipAhead: 8500,           // 保留字段（自动弹出已停用）
+      autoCooldown: 30 * 60 * 1000, // 保留字段（自动弹出已停用）
+      autoTip: '👋 我是陈培胜的数字分身，点我聊聊～',
+      autoLead: '你好，我是陈培胜的数字分身。<br>这页有 5 个企业项目、6 个个人作品和几十条技术细节，翻起来慢——<b>直接问我更快</b>，回答都带原文出处。<br>不想打字就先点一个：',
       autoPrompts: [
         { q: '你主导过哪些 0→1 的系统？', label: '0→1 系统' },
         { q: 'Agent 架构这块你做到什么程度？', label: 'Agent 深度' },
@@ -868,7 +868,7 @@
       wrap.className = 'ai-msg ai-msg-' + who;
       /* 消息归属哪个模式：问答历史与 JD 结果分栏，切换时互不干扰 */
       wrap.setAttribute('data-mode', mode || aiMode || 'qa');
-      wrap.innerHTML = '<span class="ai-msg-name">' + (who === 'bot' ? 'CP.AI' : 'YOU') + '</span>' +
+      wrap.innerHTML = '<span class="ai-msg-name">' + (who === 'bot' ? '陈培胜 · 数字分身' : 'YOU') + '</span>' +
         '<div class="ai-bubble">' + html + '</div>';
       aiBody.appendChild(wrap);
       aiScroll();
@@ -896,7 +896,7 @@
       if (aiInput) {
         aiInput.placeholder = next === 'jd'
           ? '粘贴岗位 JD（30–1500 字），逐条对照档案…'
-          : '问问 CP.AI：他的 Agent 架构经验？';
+          : '问我：我做过哪些 Agent 项目？';
         aiInput.setAttribute('aria-label', next === 'jd' ? '输入岗位 JD' : '输入你的问题');
       }
       if (aiSend) aiSend.setAttribute('aria-label', next === 'jd' ? '开始匹配 JD' : '发送问题');
@@ -1027,7 +1027,7 @@
           '<button class="ai-jd-act" type="button" data-jd-copy="1">复制 Markdown ⧉</button>' +
           '<button class="ai-jd-act ai-jd-act-ghost" type="button" data-jd-open="1">打开完整对照 ↗</button>' +
         '</div>' +
-        '<p class="ai-jd-note">证据取自档案切片 · 缺口照实列出 · 点追问可直接问 CP.AI</p>';
+        '<p class="ai-jd-note">证据取自档案切片 · 缺口照实列出 · 点追问可直接问数字分身</p>';
       card.innerHTML = html;
       aiBody.appendChild(card);
       aiScroll();
@@ -1201,9 +1201,10 @@
       }
       return '▍通道暂时不可用，请稍后再试，或邮件联系：shenge.work@gmail.com';
     }
-    /* ── 主动性：停留 10 秒自动打招呼（每会话一次，同设备 30 分钟冷却） ──
-       思路：先 4 秒后冒一个小气泡做预告，到 10 秒仍没被搭理才展开面板并递上三个入口；
-       用户任何主动动作（点浮标 / 关面板 / 提问题 / 按 Esc）都视作"已接管"，立刻撤销自动行为。 */
+    /* ── 主动性：已停用自动弹出 ──
+       面板不再自动弹出 / 自动冒招呼气泡：唯一入口是用户点击 3D 角色（见 js/ai-skins.js
+       stage.click → aiFab.click）。下方自动相关函数保留仅为兼容，aiScheduleAuto 直接短路，
+       不会设置任何定时器；aiCancelAuto 仍被手动事件调用，用于清理（此时通常无定时器）。 */
     var aiAutoTimer = null;
     var aiTipTimer = null;
     var aiTipEl = null;
@@ -1264,14 +1265,10 @@
       aiAutoOpen();
     }
     function aiScheduleAuto() {
-      if (!aiFab || !aiPanel) return;
-      try {
-        if (sessionStorage.getItem('cpai_auto') === '1') return;
-        var ts = parseInt(localStorage.getItem('cpai_auto_ts') || '0', 10);
-        if (ts && (Date.now() - ts) < AI_CONFIG.autoCooldown) return;
-      } catch (e) {}
-      aiTipTimer = setTimeout(aiShowTip, Math.max(1200, AI_CONFIG.autoDelay - AI_CONFIG.autoTipAhead));
-      aiAutoTimer = setTimeout(aiTryAutoOpen, AI_CONFIG.autoDelay);
+      /* 自动弹出已停用：不再冒招呼气泡、不再定时展开面板。
+         面板只由用户点击 3D 角色（或未加载皮肤时的浮标）手动打开。 */
+      aiCancelAuto();
+      return;
     }
 
     window.addEventListener('scroll', function () { aiLastScroll = Date.now(); }, false);

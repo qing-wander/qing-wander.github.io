@@ -146,7 +146,7 @@
 </main>
 
 <footer class="jd-page-foot">
-  <span>与本站 CP.AI 共用同一份档案切片 · 结果可复制 Markdown</span>
+  <span>与本站数字分身共用同一份档案切片 · 结果可复制 Markdown</span>
   <span><a href="resume.html">网页简历</a> · <a href="index.html">作品集主页</a></span>
 </footer>
 
@@ -159,9 +159,11 @@
   else window.CP_AI_ENDPOINT = '/api/chat';
 })();
 </script>
+<script src="data/asset-map.js"></script>
+<script src="js/asset-cdn.js"></script>
 <script src="js/jd-match.js?v=20261122c"></script>
 <script>
-/* 从 CP.AI 面板「打开完整对照」跳转过来时：预填刚才的 JD，用户点一下开始匹配即可 */
+/* 从数字分身面板「打开完整对照」跳转过来时：预填刚才的 JD，用户点一下开始匹配即可 */
 (function () {
   var prefill = '';
   try { prefill = sessionStorage.getItem('cp_jd_prefill') || ''; } catch (e) {}
@@ -172,7 +174,7 @@
   ta.value = prefill;
   ta.dispatchEvent(new Event('input', { bubbles: true }));   /* 让字数统计同步 */
   var tip = document.getElementById('jdTip');
-  if (tip) { tip.textContent = '已带入 CP.AI 面板里的 JD，直接点「开始匹配」'; tip.classList.add('is-ok'); }
+  if (tip) { tip.textContent = '已带入数字分身面板里的 JD，直接点「开始匹配」'; tip.classList.add('is-ok'); }
 })();
 </script>
 <script>
