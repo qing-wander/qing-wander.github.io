@@ -48,13 +48,28 @@ trap 'rm -rf "$STAGE"' EXIT
 node scripts/embed_assets.mjs
 
 echo "=== ① 收集静态资源 + Pages Functions"
-for item in index.html resume.html css js data images videos favicon-64.png favicon.png functions; do
+# 根目录所有 .html 自动纳入：jd.html / company.html 这类后来新增的独立页，
+# 不必再改白名单。曾因这里只列 index.html + resume.html，导致 pages.dev 上
+# 点 hero「JD 匹配」跳到 /jd.html 后被 SPA fallback 回首页，看起来像「点了没反应」。
+# 排除 _ 开头的本地探针 HTML（_glprobe.html 等，均为未跟踪的临时调试页，不能上线）
+HTML_FILES=()
+for f in *.html; do
+  [ -f "$f" ] || continue
+  case "$f" in _*) continue ;; esac
+  HTML_FILES+=("$f")
+done
+if [ "${#HTML_FILES[@]}" -eq 0 ]; then
+  echo "✗ 根目录没有可部署的 .html 文件，先检查仓库是否完整"
+  exit 1
+fi
+for item in "${HTML_FILES[@]}" css js data images videos favicon-64.png favicon.png functions; do
   if [ ! -e "$item" ]; then
     echo "✗ 缺少 $item，先检查仓库是否完整"
     exit 1
   fi
   rsync -a "$item" "$STAGE/"
 done
+echo "   已纳入 HTML：${HTML_FILES[*]}"
 # assets：排除未上线的大体积原始素材，只带 skins/vendor 等线上在用的文件
 if [ ! -d assets ]; then
   echo "✗ 缺少 assets/，先检查仓库是否完整"
@@ -109,9 +124,17 @@ echo "=== ③ 部署到 Cloudflare Pages（项目 ${PROJECT} / 分支 ${BRANCH}�
 
 echo "=== ④ 验证线上"
 PROD="https://$PROJECT.pages.dev/"
-for path in "" resume.html data/site-data.json css/style.css js/main.js; do
+for path in "" resume.html company.html jd.html data/site-data.json css/style.css js/main.js css/jd-match.css js/jd-match.js; do
   code=$(curl -sL --ipv4 -o /dev/null -w '%{http_code}' -A "Mozilla/5.0" "${PROD}${path}")
   echo "   ${code}  ${PROD}${path}"
+done
+# 独立页不能只是 200：SPA fallback 也会 200 但返回首页，用 title 兜底核对
+for path in jd.html company.html; do
+  title=$(curl -sL --ipv4 -A "Mozilla/5.0" "${PROD}${path}" | grep -o '<title>[^<]*</title>' | head -1)
+  case "$title" in
+    *"求职作品集 2026"*) echo "   ⚠ ${path} 疑似回退到首页（title=${title}）" ;;
+    *) echo "   ${path} title=${title}" ;;
+  esac
 done
 echo "本地首页 md5: $(md5 -q index.html)"
 echo "线上首页 md5: $(curl -sL --ipv4 -A "Mozilla/5.0" "$PROD" | md5 -q)"
