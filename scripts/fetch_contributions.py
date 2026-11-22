@@ -33,11 +33,10 @@ DST = ROOT / "data" / "contributions.json"
 GRAPHQL = "https://api.github.com/graphql"
 
 QUERY = """
-query($from: DateTime!, $to: DateTime!) {
-  viewer {
+query($login: String!, $from: DateTime!, $to: DateTime!) {
+  user(login: $login) {
     login
     contributionsCollection(from: $from, to: $to) {
-      totalCommitContributions
       contributionCalendar {
         totalContributions
         weeks {
@@ -108,10 +107,11 @@ def main() -> int:
     now = datetime.now(timezone.utc)
     to = now.replace(hour=0, minute=0, second=0, microsecond=0)
     fr = to - timedelta(days=365)
+    login = os.environ.get("GH_LOGIN", "shenge-work")
 
-    data = gql(token, {"from": fr.isoformat(), "to": to.isoformat()})
-    viewer = data["viewer"]
-    coll = viewer["contributionsCollection"]
+    data = gql(token, {"login": login, "from": fr.isoformat(), "to": to.isoformat()})
+    user = data["user"]
+    coll = user["contributionsCollection"]
     cal = coll["contributionCalendar"]
 
     days = []
@@ -126,7 +126,7 @@ def main() -> int:
 
     current, longest = calc_streaks(days)
     out = {
-        "username": viewer["login"],
+        "username": user["login"],
         "updatedAt": now.isoformat(timespec="seconds"),
         "range": {"from": fr.date().isoformat(), "to": to.date().isoformat()},
         "total": cal["totalContributions"],
