@@ -54,7 +54,7 @@
 
   var root = null, canvas = null, gl = null, prog = null, tex = null;
   var locRes = null, locYaw = null, locPitch = null, locFov = null;
-  var scenes = [], index = 0, open = false, raf = 0, fallback = false;
+  var scenes = [], index = 0, open = false, raf = 0, fallback = false, posterOverride = '';
   var yaw = 0, pitch = 0, fov = 75 * DEG;
   var velY = 0, velP = 0, autoSpin = false, lastInput = 0;
   var dragging = false, pointerId = null, lastX = 0, lastY = 0;
@@ -70,12 +70,20 @@
 
   function assetPath(p) {
     /* WebGL 纹理要求同源或带 CORS 头；CDN 映射可能指向未配置 CORS 的
-       对象存储，所以这里只接受相对路径，跨域映射一律回退本地。 */
+       对象存储，所以这里只接受相对路径，跨域映射一律还原为站内路径。 */
     if (!p) return '';
     var u = p;
     try {
       if (window.AssetURL && typeof window.AssetURL.of === 'function') u = window.AssetURL.of(p);
     } catch (e) { u = p; }
+    if (/^(https?:)?\/\//i.test(u)) {
+      try {
+        var abs = new URL(u, location.href);
+        if (abs.origin === location.origin) return u;
+        var i = abs.pathname.indexOf('/shenge-work/');
+        if (i >= 0) return abs.pathname.slice(i + '/shenge-work/'.length);
+      } catch (e) {}
+    }
     return /^(https?:)?\/\//i.test(u) ? p : u;
   }
 
@@ -87,6 +95,7 @@
     root.setAttribute('aria-label', '360 度全景查看器');
     root.innerHTML =
       '<canvas class="cp-pano-canvas"></canvas>' +
+      '<img class="cp-pano-poster" alt="">' +
       '<div class="cp-pano-fallback" hidden><img alt=""></div>' +
       '<div class="cp-pano-head">' +
       '  <div class="cp-pano-meta"><strong class="cp-pano-title"></strong>' +
@@ -94,7 +103,7 @@
       '  <button type="button" class="cp-pano-close" data-act="close" aria-label="关闭全景">✕</button>' +
       '</div>' +
       '<div class="cp-pano-hint">拖拽环视 · 滚轮缩放 · 方向键微调</div>' +
-      '<div class="cp-pano-loading">全景加载中…</div>' +
+      '<div class="cp-pano-loading"><span>全景加载中…</span></div>' +
       '<div class="cp-pano-foot">' +
       '  <div class="cp-pano-scenes"></div>' +
       '  <div class="cp-pano-ctl">' +
@@ -108,6 +117,7 @@
     document.body.appendChild(root);
 
     canvas = root.querySelector('.cp-pano-canvas');
+    els.poster = root.querySelector('.cp-pano-poster');
     els.fallback = root.querySelector('.cp-pano-fallback');
     els.fallbackImg = els.fallback.querySelector('img');
     els.title = root.querySelector('.cp-pano-title');
@@ -216,6 +226,7 @@
     fallback = true;
     gl = null;
     canvas.hidden = true;
+    els.poster.hidden = true;
     els.fallback.hidden = false;
     var s = scenes[index] || {};
     els.fallbackImg.src = assetPath(s.img);
@@ -386,7 +397,12 @@
     var sub = [s.address, s.source].filter(Boolean).join(' · ');
     els.sub.textContent = sub;
     els.loading.hidden = false;
-    els.loading.textContent = '全景加载中…';
+    els.loading.querySelector('span').textContent = '全景加载中…';
+    /* 首屏立刻显示封面，避免全景大图加载期间黑屏。
+       优先复用图片库卡片已经加载完的那张（浏览器缓存命中，零额外请求）。 */
+    els.poster.src = (index === 0 && posterOverride)
+      ? posterOverride : assetPath(s.cover || s.img);
+    els.poster.hidden = false;
     renderScenes();
     reset();
 
@@ -401,6 +417,7 @@
         canvas.hidden = false; els.fallback.hidden = true;
       }
       if (!fallback && !upload(img)) { useFallback(); return; }
+      els.poster.hidden = true;
       els.loading.hidden = true;
       resize();
       /* 首屏轻微自动环视，提示这是可拖拽的 360° 画面；
@@ -411,7 +428,7 @@
     };
     img.onerror = function () {
       if (!open) return;
-      els.loading.textContent = '全景图加载失败，请检查网络后重试';
+      els.loading.querySelector('span').textContent = '全景图加载失败，请检查网络后重试';
     };
     img.src = url;
     /* 降级容器同步一张，WebGL 失败时立刻有画面 */
@@ -421,12 +438,14 @@
   function switchScene(i) { if (i !== index) loadScene(i); }
 
   /* ── 对外 ─────────────────────────────────────────────── */
-  function openPano(list, i) {
+  function openPano(list, i, posterUrl) {
     if (!Array.isArray(list) || !list.length) return;
     if (!root) build();
     scenes = list;
+    posterOverride = posterUrl || '';
     open = true; fallback = false;
     canvas.hidden = false; els.fallback.hidden = true;
+    els.poster.hidden = false;
     root.hidden = false;
     document.body.classList.add('cp-pano-open');
     loadScene(i || 0);
@@ -445,6 +464,7 @@
   window.CPPanorama = {
     open: openPano,
     close: close,
+    resolve: assetPath,
     isOpen: function () { return open; }
   };
 })();

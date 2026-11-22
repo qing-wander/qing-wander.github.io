@@ -557,12 +557,28 @@
         var c = company(fig.getAttribute('data-cp-company'));
         if (c && c.panoramas && c.panoramas.length) {
           ev.preventDefault();
-          window.CPPanorama.open(c.panoramas, parseInt(panoIdx, 10) || 0);
+          window.CPPanorama.open(c.panoramas, parseInt(panoIdx, 10) || 0,
+            img.currentSrc || img.src);
           return;
         }
       }
       openLightbox(img);
     });
+    /* 全景主图 ~580KB：hover / 键盘聚焦时静默预取，点开后几乎零等待。
+       用查看器同一套路径解析，保证预取与正式加载命中同一份浏览器缓存。 */
+    var prefetched = Object.create(null);
+    document.addEventListener('pointerover', prefetchPano, true);
+    document.addEventListener('focusin', prefetchPano, true);
+    function prefetchPano(ev) {
+      var fig = ev.target.closest ? ev.target.closest('.cp-office-img.is-pano') : null;
+      if (!fig || !window.CPPanorama) return;
+      var c = company(fig.getAttribute('data-cp-company'));
+      var p = c && c.panoramas && c.panoramas[parseInt(fig.getAttribute('data-cp-pano'), 10) || 0];
+      if (!p || !p.img || prefetched[p.img]) return;
+      prefetched[p.img] = 1;
+      var pre = new Image();
+      pre.src = window.CPPanorama.resolve(p.img);
+    }
     /* 相册展开 / 收起：不绑定具体节点，抽屉与独立页复用 */
     document.addEventListener('click', function (ev) {
       var t = ev.target.closest ? ev.target.closest('[data-cp-album-toggle]') : null;

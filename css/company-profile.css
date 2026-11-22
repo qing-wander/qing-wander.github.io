@@ -617,10 +617,22 @@ body.cp-pano-open { overflow: hidden; }
   animation: cp-pano-hint-fade .5s ease 4s both;
 }
 @keyframes cp-pano-hint-fade { to { opacity: 0; visibility: hidden; } }
+/* 大图加载期间先用模糊封面占位，避免纯黑屏 */
+.cp-pano-poster {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  object-fit: cover; filter: blur(4px) brightness(.58);
+  transform: scale(1.05); pointer-events: none;
+}
+.cp-pano-poster[hidden] { display: none; }
 .cp-pano-loading {
   position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
-  background: rgba(16, 14, 26, .62); color: #fff; font-size: 13px;
+  background: transparent; color: #fff; font-size: 13px;
   font-family: var(--font-mono, monospace); pointer-events: none;
+}
+.cp-pano-loading span {
+  padding: 9px 18px; background: rgba(16, 14, 26, .78);
+  border: 1px solid rgba(255, 255, 255, .35); letter-spacing: .04em;
 }
 .cp-pano-loading[hidden] { display: none; }
 .cp-pano-foot {
