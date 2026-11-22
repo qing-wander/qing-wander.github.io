@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JD 岗位匹配 · 陈培胜求职作品集</title>
+<meta name="description" content="把在招岗位的 JD 贴进来，一分钟后拿到一张对照表：每条要求落在哪段经历、缺口在哪、面试能顺着问什么。由本站 RAG Agent 生成，证据带出处。">
+<meta name="theme-color" content="#F3EEE2">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-64.png">
+<link rel="apple-touch-icon" href="favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&display=swap" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&display=swap"></noscript>
+<link rel="stylesheet" href="css/fonts.css?v=20261111a">
+<!-- 整站变量与通用组件 + JD 匹配专属样式（缓存共享：访客多从主页来） -->
+<link rel="stylesheet" href="css/style.css?v=20261122b">
+<link rel="stylesheet" href="css/jd-match.css?v=20261122a">
+<style>
+/* ── 主题：与首页 / 简历同一套配色（后台默认 > 访客锁定 > 日期轮换）── */
+[data-theme="blueprint"] {
+  --paper: #E9F1F8; --card: #F5FAFE; --ink: #123A5C; --ink-soft: #48678A;
+  --orange: #E03E36; --blue: #1D6FB8; --green: #2E8B57;
+}
+[data-theme="newsprint"] {
+  --paper: #F4EDDA; --card: #FAF5E6; --ink: #1C1812; --ink-soft: #59503E;
+  --orange: #C4112C; --blue: #1E3A5F; --green: #2F7D46;
+}
+[data-theme="noir"] {
+  --paper: #100E1A; --card: #1A1729; --ink: #ECE7FF; --ink-soft: #8F87AD;
+  --orange: #FF3D8F; --blue: #22D3EE; --green: #9EE86B;
+}
+
+/* 本页不加载整站 JS：入场动画直接放行，避免 .reveal 初始态把内容藏住 */
+.reveal { opacity: 1 !important; transform: none !important; }
+
+/* 页头 / 页脚 */
+.topbar { position: sticky; top: 0; z-index: 60; background: var(--ink); color: var(--paper); border-bottom: var(--border); }
+.topbar-inner { max-width: 1160px; margin: 0 auto; padding: 10px 20px; display: flex; align-items: center; justify-content: space-between; gap: 14px; }
+.tb-left { display: flex; align-items: center; gap: 14px; min-width: 0; }
+.tb-left a { font-family: var(--font-mono, monospace); font-size: 12px; letter-spacing: .05em; white-space: nowrap; }
+.tb-left a:hover { color: var(--orange); }
+.tb-brand { font-weight: 900; font-size: 12px; letter-spacing: .14em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tb-right a { font-family: var(--font-mono, monospace); font-size: 11px; opacity: .8; white-space: nowrap; }
+.tb-right a:hover { opacity: 1; color: var(--orange); }
+.jd-page { max-width: 1160px; margin: 0 auto; padding: 30px 20px 70px; }
+.jd-page-foot { max-width: 1160px; margin: 0 auto; padding: 0 20px 34px; font-family: var(--font-mono, monospace); font-size: 11px; color: var(--ink-soft); display: flex; flex-wrap: wrap; gap: 10px; justify-content: space-between; }
+.jd-page-foot a { color: var(--ink); text-decoration: underline; }
+@media (max-width: 640px) { .jd-page { padding: 18px 14px 50px; } .tb-right { display: none; } }
+@media print {
+  html[data-theme] { --paper: #fff; --card: #fff; --ink: #000; --ink-soft: #333; }
+  body { background: #fff; color: #000; }
+  .topbar, .jd-page-foot { display: none !important; }
+  .jd-page { padding: 0; }
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="tb-left">
+      <a href="index.html">← 作品集</a>
+      <span class="tb-brand">JD MATCH · 岗位匹配</span>
+    </div>
+    <div class="tb-right">
+      <a href="resume.html">网页简历 ↗</a>
+    </div>
+  </div>
+</header>
+
+<main class="jd-page">
+<!-- ══════════════ 岗位匹配 / JD MATCH（与主页同源数据 · 独立功能页） ══════════════ -->
+<section class="section" id="jd">
+  <div class="section-head">
+    <span class="section-no">SEC.JD</span>
+    <h2 class="section-title">岗位匹配 <span class="title-en">JD MATCH</span></h2>
+    <span class="section-line" aria-hidden="true"></span>
+    <span class="section-coord" aria-hidden="true">AGENT//SELF-PROOF</span>
+  </div>
+
+  <p class="jd-lead">
+    把在招岗位的 JD 贴进来，一分钟后拿到一张对照表：<b>每条要求落在哪段经历、缺口在哪、面试能顺着问什么</b>。
+    这张表由本站自己的 RAG Agent 生成 —— JD 先拆成需求条目，逐条在简历档案切片里召回，模型只允许引用召回原文作答。
+  </p>
+
+  <div class="jd-wrap">
+    <form class="jd-form" id="jdForm" novalidate>
+      <div class="jd-form-head">
+        <span class="jd-form-no">INPUT//JD</span>
+        <span class="jd-form-hint">建议保留「岗位职责 + 任职要求」</span>
+      </div>
+      <textarea class="jd-textarea" id="jdText" rows="10" maxlength="1500" spellcheck="false"
+        aria-label="粘贴岗位 JD" placeholder="粘贴 JD，例如：&#10;1. 负责企业级 AI Agent 平台的架构设计，含任务规划、工具调用与多智能体编排；&#10;2. 建设 RAG 检索链路，熟悉向量检索与召回评测；&#10;3. 3 年以上后端研发经验，熟悉 Java 或 Go……"></textarea>
+      <div class="jd-form-foot">
+        <span class="jd-count" id="jdCount">0 / 1500</span>
+        <button class="jd-submit" id="jdSubmit" type="submit">开始匹配 <span aria-hidden="true">▶</span></button>
+      </div>
+      <div class="jd-samples">
+        <span class="jd-samples-label">没有现成 JD？点一个示例：</span>
+        <div class="jd-chips" id="jdChips">
+          <button class="jd-chip" type="button" data-jd-sample="agent">AI Agent 工程师</button>
+          <button class="jd-chip" type="button" data-jd-sample="backend">Java 后端（金融）</button>
+          <button class="jd-chip" type="button" data-jd-sample="solution">AI 解决方案</button>
+        </div>
+      </div>
+      <p class="jd-form-tip" id="jdTip">⌘ / Ctrl + Enter 提交 · 单次 1500 字 · 每人 10 分钟 4 次 · JD 正文不入库，只留哈希留痕</p>
+    </form>
+
+    <div class="jd-stage" id="jdStage" role="region" aria-label="岗位匹配结果">
+      <div class="jd-empty" id="jdEmpty">
+        <div class="jd-empty-head">
+          <span class="jd-empty-no">HOW IT WORKS</span>
+          <span class="jd-empty-lamp"><i class="lamp lamp-green"></i>AGENT READY</span>
+        </div>
+        <ol class="jd-steps">
+          <li><span class="jd-step-no">01</span><div><b>拆需求</b><p>按行与分号把 JD 切成条目，去掉序号和套话，最多 14 条。</p></div></li>
+          <li><span class="jd-step-no">02</span><div><b>召回档案</b><p>每条需求在简历档案切片上做 TF-IDF 检索，项目与工作经历优先，取 6 段进上下文。</p></div></li>
+          <li><span class="jd-step-no">03</span><div><b>约束输出</b><p>模型只能引用召回原文，按固定结构输出覆盖 / 部分 / 缺口与追问点，证据带出处。</p></div></li>
+        </ol>
+        <p class="jd-empty-note">左侧贴 JD 或点一个示例，结果会显示在这里。</p>
+        <ul class="jd-limits" aria-label="使用限制">
+          <li>单次 ≤ 1500 字</li>
+          <li>10 分钟 4 次</li>
+          <li>证据带出处</li>
+          <li>JD 正文不入库</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer class="jd-page-foot">
+  <span>与本站 CP.AI 共用同一份档案切片 · 结果可复制 Markdown</span>
+  <span><a href="resume.html">网页简历</a> · <a href="index.html">作品集主页</a></span>
+</footer>
+
+<script>
+/* API 线路：本页无整站 JS，独立给出 —— github.io 是纯静态，接口在 pages.dev */
+(function () {
+  var host = location.hostname || '';
+  if (/^(localhost|127\.0\.0\.1|0\.0\.0\.0|\[::1\])$/.test(host)) window.CP_AI_ENDPOINT = '/api/chat';
+  else if (/\.github\.io$/i.test(host)) window.CP_AI_ENDPOINT = 'https://shenge-work.pages.dev/api/chat';
+  else window.CP_AI_ENDPOINT = '/api/chat';
+})();
+</script>
+<script src="js/jd-match.js?v=20261118a"></script>
+<script>
+/* 从 CP.AI 面板「打开完整对照」跳转过来时：预填刚才的 JD，用户点一下开始匹配即可 */
+(function () {
+  var prefill = '';
+  try { prefill = sessionStorage.getItem('cp_jd_prefill') || ''; } catch (e) {}
+  if (!prefill) return;
+  try { sessionStorage.removeItem('cp_jd_prefill'); } catch (e) {}
+  var ta = document.getElementById('jdText');
+  if (!ta || ta.value) return;
+  ta.value = prefill;
+  ta.dispatchEvent(new Event('input', { bubbles: true }));   /* 让字数统计同步 */
+  var tip = document.getElementById('jdTip');
+  if (tip) { tip.textContent = '已带入 CP.AI 面板里的 JD，直接点「开始匹配」'; tip.classList.add('is-ok'); }
+})();
+</script>
+<script>
+/* 主题引导：与首页 / 简历同一套线路规则 */
+(function () {
+  var T = ['archive', 'blueprint', 'newsprint', 'noir'];
+  var qs = new URLSearchParams(location.search).get('theme');
+  var manual = null;
+  try { if (localStorage.getItem('portfolio_theme_mode') === 'manual') manual = localStorage.getItem('portfolio_theme_manual'); } catch (e) {}
+  var t = T.indexOf(qs) >= 0 ? qs : (T.indexOf(manual) >= 0 ? manual : null);
+  if (!t) {
+    var n = new Date();
+    var day = Math.floor((n - new Date(n.getFullYear(), 0, 0)) / 864e5);
+    t = T[day % T.length];
+    if (T.indexOf(qs) < 0 && !manual) {
+      var bases = (function () {
+        var host = location.hostname || '';
+        if (/^(localhost|127\.0\.0\.1|0\.0\.0\.0|\[::1\])$/.test(host)) return [''];
+        if (/\.github\.io$/i.test(host)) return ['https://shenge-work.pages.dev'];
+        return ['', 'https://shenge-work.pages.dev'];
+      })();
+      (function next(i) {
+        if (i >= bases.length) return;
+        fetch(new URL(bases[i] + '/api/theme', location.href).href, { credentials: 'omit' }).then(function (r) {
+          var ct = r.headers.get('content-type') || '';
+          if (!r.ok || ct.indexOf('application/json') < 0) return next(i + 1);
+          return r.json().then(function (d) {
+            if (d && d.ok && T.indexOf(d.theme) >= 0) document.documentElement.setAttribute('data-theme', d.theme);
+            else next(i + 1);
+          }, function () { next(i + 1); });
+        }, function () { next(i + 1); });
+      })(0);
+    }
+  }
+  if (t) document.documentElement.setAttribute('data-theme', t);
+})();
+</script>
+</body>
+</html>

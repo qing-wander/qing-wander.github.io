@@ -124,7 +124,7 @@
     $('heroBio').textContent = h.bio || '';
     $('heroCta').innerHTML =
       '<a class="btn btn-solid" href="#projects">' + esc(h.ctaProjects || '查看作品') + ' <span class="btn-arrow" aria-hidden="true">▶▶</span></a>' +
-      '<a class="btn btn-ghost" href="#jd">' + esc(h.ctaJd || 'JD 匹配') + ' <span class="btn-arrow" aria-hidden="true">▶</span></a>' +
+      '<a class="btn btn-ghost" href="jd.html">' + esc(h.ctaJd || 'JD 匹配') + ' <span class="btn-arrow" aria-hidden="true">▶</span></a>' +
       '<a class="btn btn-ghost" href="' + esc(h.resumeFile || 'resume.html') + '">' + esc(h.ctaResume || '查看简历') + ' <span class="btn-arrow" aria-hidden="true">▶</span></a>';
     $('heroStatus').textContent = h.statusMeta || '';
     var ic = h.idcard || {};
@@ -781,6 +781,7 @@
     var aiReady = false;
     var aiBusy = false;
     var aiMode = 'qa';   /* 'qa' | 'jd'：同一端点两种问法 */
+    var aiLastJD = '';   /* 最近一次成功发起匹配的 JD 原文，供「打开完整对照」带到 jd.html 预填 */
 
     function jdUI() { return window.CP_JD_UI || null; }
     function jdCfg() {
@@ -873,6 +874,7 @@
       }
       aiBusy = true;
       if (aiSend) aiSend.disabled = true;
+      aiLastJD = jd;
       var flat = jd.replace(/\s+/g, ' ');
       var preview = flat.slice(0, 52) + (flat.length > 52 ? '…' : '');
       aiAppendMsg('user', esc(preview));
@@ -953,7 +955,7 @@
       html += '</div>' +
         '<div class="ai-jd-acts">' +
           '<button class="ai-jd-act" type="button" data-jd-copy="1">复制 Markdown ⧉</button>' +
-          '<button class="ai-jd-act ai-jd-act-ghost" type="button" data-jd-open="1">打开完整对照 ↓</button>' +
+          '<button class="ai-jd-act ai-jd-act-ghost" type="button" data-jd-open="1">打开完整对照 ↗</button>' +
         '</div>' +
         '<p class="ai-jd-note">证据取自档案切片 · 缺口照实列出 · 点追问可直接问 CP.AI</p>';
       card.innerHTML = html;
@@ -962,13 +964,10 @@
       var openBtn = card.querySelector('[data-jd-open]');
       if (openBtn) {
         openBtn.addEventListener('click', function () {
-          var target = document.getElementById('jd');
+          /* JD 匹配已迁独立页：把刚发过的 JD 带过去预填，用户不用重贴 */
+          try { if (aiLastJD) sessionStorage.setItem('cp_jd_prefill', aiLastJD); } catch (e) { /* 隐身模式等场景忽略 */ }
           aiClosePanel();
-          if (target && target.scrollIntoView) {
-            target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          } else {
-            location.hash = 'jd';
-          }
+          location.href = 'jd.html';
         });
       }
       var copyBtn = card.querySelector('[data-jd-copy]');
