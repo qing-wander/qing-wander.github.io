@@ -1382,6 +1382,40 @@ a.cap-ref:hover, a.cap-ref:focus-visible {
 .contact-card-plain .contact-mini { color: var(--orange); }
 .contact-card-wide { grid-column: 1 / -1; }
 
+/* ── GitHub 贡献热力图（data/contributions.json 驱动，失败整块隐藏） ── */
+.gh-activity {
+  border: var(--border-thick);
+  background: var(--card);
+  box-shadow: var(--shadow);
+  padding: 22px 24px;
+  margin-bottom: 48px;
+}
+.gh-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+.gh-label { font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: 0.1em; color: var(--ink-soft); }
+.gh-link { font-family: var(--font-mono); font-size: 12px; font-weight: 700; color: var(--blue); text-decoration: none; }
+.gh-link:hover { text-decoration: underline; }
+.gh-stats { display: flex; gap: 22px; flex-wrap: wrap; align-items: baseline; font-size: 13px; color: var(--ink-soft); margin-bottom: 14px; }
+.gh-stats strong { color: var(--ink); font-family: var(--font-display); font-size: 19px; font-weight: 900; margin-right: 2px; }
+.gh-range { margin-left: auto; font-family: var(--font-mono); font-size: 11px; color: var(--ink-soft); }
+.gh-scroll { overflow-x: auto; padding-bottom: 6px; }
+.gh-grid { display: flex; gap: 3px; min-width: max-content; }
+.gh-col { display: flex; flex-direction: column; gap: 3px; }
+.gh-cell { width: 12px; height: 12px; border-radius: 2px; border: 1px solid color-mix(in srgb, var(--ink) 10%, transparent); }
+.gh-lv0 { background: color-mix(in srgb, var(--ink) 7%, var(--card)); }
+.gh-lv1 { background: color-mix(in srgb, var(--green) 26%, var(--card)); }
+.gh-lv2 { background: color-mix(in srgb, var(--green) 48%, var(--card)); }
+.gh-lv3 { background: color-mix(in srgb, var(--green) 74%, var(--card)); }
+.gh-lv4 { background: var(--green); }
+.gh-legend { display: flex; align-items: center; gap: 4px; margin-top: 12px; font-family: var(--font-mono); font-size: 11px; color: var(--ink-soft); }
+.gh-legend .gh-cell { width: 10px; height: 10px; }
+
 .resume-cta {
   border: var(--border-thick);
   background: var(--orange);
@@ -2003,6 +2037,12 @@ a.cap-ref:hover, a.cap-ref:focus-visible {
   .contact-value { font-size: 16px; }
   .contact-arrow { display: none; }
   .contact-card-plain .contact-value { font-size: 15px; }
+
+  /* ── GitHub 贡献热力图（移动端压缩格子、允许横滑） ── */
+  .gh-activity { padding: 18px 16px; margin-bottom: 36px; }
+  .gh-stats { gap: 14px; }
+  .gh-range { margin-left: 0; flex-basis: 100%; }
+  .gh-cell { width: 10px; height: 10px; }
 
   /* ── 简历下载 CTA ── */
   .resume-cta { padding: 24px 20px; gap: 18px; }

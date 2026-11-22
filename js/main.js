@@ -354,6 +354,67 @@
     window.__WALL_TEXT = Object.assign({ empty: wl.emptyText || '', closed: wl.closedText || '' }, wl);
   }
 
+  /* ══════════════ GitHub 贡献热力图 ══════════════
+     数据：data/contributions.json（由 .github/workflows/contributions.yml 每日用
+     GraphQL 拉取并提交，前端不碰 token）。加载失败 / 数据未发布时整块保持隐藏，
+     不影响联系方式卡片。 */
+  function ghLevel(count) {
+    if (!count) return 0;
+    if (count <= 2) return 1;
+    if (count <= 5) return 2;
+    if (count <= 9) return 3;
+    return 4;
+  }
+
+  function renderGhActivity(box, data) {
+    var weeks = data.weeks || [];
+    var cols = weeks.map(function (week) {
+      var cells = week.map(function (c) {
+        var lv = ghLevel(c.count);
+        var tip = c.date + ' · ' + c.count + ' 次贡献';
+        return '<div class="gh-cell gh-lv' + lv + '" title="' + esc(tip) + '"></div>';
+      }).join('');
+      return '<div class="gh-col">' + cells + '</div>';
+    }).join('');
+
+    var range = data.range || {};
+    box.innerHTML =
+      '<div class="gh-head">' +
+        '<span class="gh-label">GITHUB ACTIVITY · 近一年提交</span>' +
+        '<a class="gh-link" href="https://github.com/' + esc(data.username || 'shenge-work') + '"' +
+        ' target="_blank" rel="noopener noreferrer">github.com/' + esc(data.username || 'shenge-work') + ' ↗</a>' +
+      '</div>' +
+      '<div class="gh-stats">' +
+        '<span><strong>' + (data.total || 0) + '</strong> 次贡献</span>' +
+        '<span>当前连续 <strong>' + (data.currentStreak || 0) + '</strong> 天</span>' +
+        '<span>最长连续 <strong>' + (data.longestStreak || 0) + '</strong> 天</span>' +
+        (range.from && range.to ? '<span class="gh-range">' + esc(range.from) + ' — ' + esc(range.to) + '</span>' : '') +
+      '</div>' +
+      '<div class="gh-scroll"><div class="gh-grid">' + cols + '</div></div>' +
+      '<div class="gh-legend"><span>Less</span>' +
+        '<span class="gh-cell gh-lv0"></span><span class="gh-cell gh-lv1"></span>' +
+        '<span class="gh-cell gh-lv2"></span><span class="gh-cell gh-lv3"></span>' +
+        '<span class="gh-cell gh-lv4"></span><span>More</span>' +
+      '</div>';
+    box.hidden = false;
+  }
+
+  function initContributions() {
+    var box = $('ghActivity');
+    if (!box) return;
+    fetch('data/contributions.json?v=' + Date.now(), { cache: 'no-cache' })
+      .then(function (res) {
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        return res.json();
+      })
+      .then(function (data) {
+        if (data && Array.isArray(data.weeks) && data.weeks.length) renderGhActivity(box, data);
+      })
+      .catch(function () {
+        /* 静默失败：file:// 预览或数据尚未发布时保持隐藏 */
+      });
+  }
+
   /* ══════════════ 交互层（渲染完成后初始化） ══════════════ */
 
   function initInteractions() {
@@ -1841,6 +1902,7 @@
       renderSite(data);
       initInteractions();
       initWall();
+      initContributions();
       syncResponsiveGuard(); /* 计数器数字位等动态内容渲染后再校一次 */
     } catch (err) {
       try { console.error('[site-data] 渲染失败：', err); } catch (e) {}

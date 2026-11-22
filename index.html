@@ -15,7 +15,7 @@
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&display=swap"></noscript>
 <!-- 等宽英文字体本地自托管，不依赖境外 CDN -->
 <link rel="stylesheet" href="css/fonts.css?v=20261111a">
-<link rel="stylesheet" href="css/style.css?v=20261122b">
+<link rel="stylesheet" href="css/style.css?v=20261122d">
 <link rel="stylesheet" href="css/ai-skins.css?v=20261121v">
 <link rel="stylesheet" href="css/ai-voice.css?v=20261118b">
 <!-- 面板窗口层：放大 / 还原 / 一步关闭，样式放最后以便覆盖基础面板规则 -->
@@ -366,6 +366,8 @@
   </div>
   <h3 class="contact-big reveal" id="contactBig"></h3>
   <div class="contact-grid" id="contactGrid"></div>
+  <!-- GitHub 贡献热力图：数据来自 data/contributions.json（Actions 每日刷新），加载失败整块隐藏 -->
+  <div class="gh-activity" id="ghActivity" hidden></div>
   <div class="resume-cta reveal" id="resumeCta"></div>
 </section>
 
@@ -528,7 +530,7 @@
 </aside>
 
 <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
-<script src="js/main.js?v=20261122c"></script>
+<script src="js/main.js?v=20261122d"></script>
 <script src="js/jd-match.js?v=20261122c"></script>
 <script src="js/ai-skins.js?v=20261121u"></script>
 <script src="js/gender-switch.js?v=20261120K"></script>

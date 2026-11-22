@@ -1,0 +1,68 @@
+# 每日拉取 GitHub 贡献数据 → data/contributions.json，供首页联系区块热力图读取
+#
+# 背景：站点是纯静态 Pages，前端拿不到认证后的 GraphQL；这里用 Actions 内置
+# GITHUB_TOKEN 调 viewer.contributionsCollection（无需额外配置 secret），
+# 落成静态 JSON 后由前端自绘热力图。token 不出 Actions，不进前端。
+#
+# 只在 JSON 实际变化时提交，避免无意义空提交。
+
+name: Refresh GitHub contributions
+
+on:
+  schedule:
+    # 每天 UTC 22:20（北京 06:20）错峰执行
+    - cron: '20 22 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: site-data-sync      # 与 sync-site-data / build-kb 同组串行，避免改同一仓库撞车
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出仓库
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: 准备 Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 拉取贡献数据
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python3 scripts/fetch_contributions.py
+
+      - name: 提交变更
+        run: |
+          if git diff --quiet -- data/contributions.json; then
+            echo "贡献数据无变化，无需提交"
+            exit 0
+          fi
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/contributions.json
+          git commit -m "chore(data): 更新 GitHub 贡献热力图数据"
+          for i in 1 2 3; do
+            if ! git fetch origin main --quiet; then
+              echo "::warning::fetch 失败，重试"; sleep 5; continue
+            fi
+            if git rebase origin/main --quiet; then
+              if git push --quiet; then
+                echo "推送成功（第 $i 次尝试）"
+                exit 0
+              fi
+            else
+              echo "::warning::rebase 冲突，放弃本轮"; git rebase --abort || true
+            fi
+            sleep 5
+          done
+          echo "::error::三次重试后仍无法推送 data/contributions.json"
+          exit 1
