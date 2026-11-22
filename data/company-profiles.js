@@ -169,19 +169,24 @@ window.COMPANY_PROFILES = {
           "note": "2023 年深圳进门财经惠州出游团建合影（BOSS直聘公司相册）"
         },
         {
-          "img": "images/company/comein/office-11-team-trip-bamboo-raft.jpg",
-          "alt": "桂林阳朔遇龙河竹筏编队",
-          "note": "团队旅行 · 桂林阳朔｜遇龙河竹筏编队（远景纪实）"
+          "img": "images/company/comein/office-11-team-trip-group-photo-cartoon.jpg",
+          "alt": "桂林阳朔团队旅行全员合影（面部卡通化）",
+          "note": "团队旅行 · 桂林阳朔｜全员合影（人脸卡通化、横幅信息模糊处理）"
         },
         {
-          "img": "images/company/comein/office-12-team-trip-lawn-huddle.jpg",
-          "alt": "桂林阳朔草坪团队活动",
-          "note": "团队旅行 · 桂林阳朔｜草坪团队活动（远景纪实）"
+          "img": "images/company/comein/office-12-team-trip-toast-cartoon.jpg",
+          "alt": "桂林阳朔团队旅行聚餐举杯（面部卡通化）",
+          "note": "团队旅行 · 桂林阳朔｜聚餐举杯（人脸卡通化、桌牌信息模糊处理）"
         },
         {
-          "img": "images/company/comein/office-13-team-trip-lawn-walk.jpg",
-          "alt": "桂林阳朔草坪集合与游览",
-          "note": "团队旅行 · 桂林阳朔｜草坪集合与游览（远景纪实）"
+          "img": "images/company/comein/office-13-team-trip-lawn-game-cartoon.jpg",
+          "alt": "桂林阳朔草坪团队桌游互动（面部卡通化）",
+          "note": "团队旅行 · 桂林阳朔｜草坪桌游（人脸卡通化、广告牌模糊处理）"
+        },
+        {
+          "img": "images/company/comein/office-14-team-trip-riverside-portrait-cartoon.jpg",
+          "alt": "桂林阳朔江边团队合影（面部卡通化）",
+          "note": "团队旅行 · 桂林阳朔｜江边合影（人脸卡通化处理）"
         }
       ],
       "showcase": [
