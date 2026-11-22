@@ -184,6 +184,27 @@ window.COMPANY_PROFILES = {
           "note": "团队旅行 · 桂林阳朔｜草坪集合与游览（远景纪实）"
         }
       ],
+      "showcase": [
+        {
+          "name": "进门",
+          "mark": "进",
+          "tone": "amber",
+          "domain": "comein.cn",
+          "url": "https://www.comein.cn",
+          "kind": "进门财经 · 投研平台",
+          "tagline": "AI 金融投研工作台，机构路演、IRM 与研报一体化。",
+          "mine": true,
+          "source": 5,
+          "sourceLabel": "进门财经官网 / 作品集项目",
+          "subProducts": [
+            "进门（企业版）",
+            "进门路演会议系统",
+            "AI进宝",
+            "进门IRM",
+            "SRS"
+          ]
+        }
+      ],
       "sources": [
         {
           "n": 1,
@@ -412,6 +433,34 @@ window.COMPANY_PROFILES = {
           "img": "images/company/zhishu/office-03-entrance-christmas.png",
           "alt": "超线性公司入口（圣诞树与新年装饰）",
           "note": "公司入口 · 节庆布置（BOSS直聘公司相册）"
+        }
+      ],
+      "showcase": [
+        {
+          "name": "Lessie AI",
+          "mark": "L",
+          "tone": "blue",
+          "domain": "lessie.cn",
+          "url": "https://lessie.cn",
+          "kind": "指数引力 · AI 搜索",
+          "tagline": "AI 人脉搜索引擎，多 Agent 把「找人」流程标准化、自动化。",
+          "mine": true,
+          "source": 4,
+          "sourceLabel": "产品官网 / 作品集项目",
+          "img": "images/company/zhishu/product-01-lessie.jpg"
+        },
+        {
+          "name": "HiCreator",
+          "mark": "H",
+          "tone": "purple",
+          "domain": "hicreator.ai",
+          "url": "https://hicreator.ai",
+          "kind": "海外营销 · SaaS",
+          "tagline": "一站式海外红人营销自动化平台，覆盖达人触达到履约。",
+          "mine": true,
+          "source": 4,
+          "sourceLabel": "产品官网 / 作品集项目",
+          "img": "images/company/zhishu/product-02-hicreator.jpg"
         }
       ],
       "sources": [
@@ -678,6 +727,60 @@ window.COMPANY_PROFILES = {
           "note": "迷彩服户外拓展团建（拉勾公司主页相册）"
         }
       ],
+      "showcase": [
+        {
+          "name": "看房日记",
+          "mark": "看",
+          "tone": "blue",
+          "domain": "kanfangjilu.com",
+          "url": "https://www.kanfangjilu.com/",
+          "kind": "经纪人版 · App",
+          "tagline": "房产经纪人的移动开单工具，盘源、客源与交易跟进一体化。",
+          "mine": true,
+          "source": 6,
+          "sourceLabel": "房极客官网 · 产品矩阵",
+          "img": "images/company/fanggeek/product-04-kanfangjilu.jpg"
+        },
+        {
+          "name": "小鹿系统",
+          "mark": "鹿",
+          "tone": "amber",
+          "domain": "xiaoluxt.com",
+          "url": "https://www.xiaoluxt.com/",
+          "kind": "经纪公司 · SaaS",
+          "tagline": "获客、转化、管理一体化房产中介系统，内置全国楼盘字典。",
+          "mine": false,
+          "source": 6,
+          "sourceLabel": "房极客官网 · 产品矩阵",
+          "img": "images/company/fanggeek/product-03-xiaoluxt.jpg"
+        },
+        {
+          "name": "小鹿选房",
+          "mark": "选",
+          "tone": "teal",
+          "domain": "xiaoluxuanfang.com",
+          "url": "https://www.xiaoluxuanfang.com",
+          "kind": "C 端 · 找房 App",
+          "tagline": "查成交、看攻略、选好房的买房租房平台。",
+          "mine": true,
+          "source": 6,
+          "sourceLabel": "房极客官网 · 产品矩阵",
+          "img": "images/company/fanggeek/product-02-xiaoluxuanfang.jpg"
+        },
+        {
+          "name": "小程序 · 旗舰店",
+          "mark": "店",
+          "tone": "green",
+          "domain": "fanggeek.com/#apps",
+          "url": "https://www.fanggeek.com/#apps",
+          "kind": "小程序 · 线上门店",
+          "tagline": "帮经纪公司推广获客的线上门店。",
+          "mine": false,
+          "source": 6,
+          "sourceLabel": "房极客官网 · 产品矩阵",
+          "img": "images/company/fanggeek/product-05-apps.jpg"
+        }
+      ],
       "sources": [
         {
           "n": 1,
@@ -703,6 +806,11 @@ window.COMPANY_PROFILES = {
           "n": 5,
           "name": "拉勾招聘 · 房极客公司主页（工商信息/团队规模/公司标签）",
           "url": "https://www.lagou.com/gongsi/v1/13c0b5286e781d55f765efd26698ff30e13c8d519cc171a1.html"
+        },
+        {
+          "n": 6,
+          "name": "房极客官网 · 产品矩阵（#dayly / #apps）",
+          "url": "https://www.fanggeek.com/#dayly"
         }
       ],
       "bossProfile": {
@@ -951,6 +1059,34 @@ window.COMPANY_PROFILES = {
           "note": "直营门店内景 · 入口与展示区（BOSS直聘公司相册）"
         }
       ],
+      "showcase": [
+        {
+          "name": "周生生官网",
+          "mark": "周",
+          "tone": "coral",
+          "domain": "chowsangsang.com",
+          "url": "https://www.chowsangsang.com",
+          "kind": "官方商城 · 会员服务",
+          "tagline": "珠宝零售官方商城与会员服务站点。",
+          "mine": false,
+          "source": 1,
+          "sourceLabel": "周生生集团官网",
+          "img": "images/company/chowsang/product-01-website.jpg"
+        },
+        {
+          "name": "帝舵表官网",
+          "mark": "T",
+          "tone": "gray",
+          "domain": "tudorwatch.com",
+          "url": "https://www.tudorwatch.com/zh-hant",
+          "kind": "中国香港站 · 品牌电商",
+          "tagline": "参与研发的品牌官网电商，会员、订单支付与对账、库存同步一体。",
+          "mine": true,
+          "source": 8,
+          "sourceLabel": "作品集项目经历",
+          "img": "images/company/chowsang/product-02-tudor.jpg"
+        }
+      ],
       "sources": [
         {
           "n": 1,
@@ -986,6 +1122,11 @@ window.COMPANY_PROFILES = {
           "n": 7,
           "name": "Boss直聘 · 周生生公司主页（内地主体工商/门店相册/雇主荣誉）",
           "url": "https://www.zhipin.com/gongsi/ab29083f047a04151HF709y7E1M~.html"
+        },
+        {
+          "n": 8,
+          "name": "帝舵表官网 · 中国香港站（作品集项目经历）",
+          "url": "https://www.tudorwatch.com/zh-hk/"
         }
       ],
       "bossProfile": {

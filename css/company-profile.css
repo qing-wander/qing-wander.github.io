@@ -386,6 +386,66 @@ body.cp-lock { overflow: hidden; }
 }
 .cp-mytake p:last-child { margin: 0; font-size: 12.5px; line-height: 1.7; }
 
+/* 产品橱窗：封面（真实截图或字标色块） + 一句话提炼 + 官网外链 */
+.cp-showcase { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 2px 0 6px; }
+.cp-showcase-note {
+  font-family: var(--font-mono, monospace); font-size: 10.5px;
+  color: var(--ink-soft); letter-spacing: .04em; margin: 0 0 11px;
+}
+.cp-product {
+  display: block; color: inherit; text-decoration: none;
+  border: 2px solid var(--ink); background: var(--paper);
+  transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+}
+.cp-product:hover { transform: translate(-2px, -2px); box-shadow: 4px 4px 0 var(--orange); border-color: var(--orange); }
+.cp-product:focus-visible { outline: 3px solid var(--orange); outline-offset: 2px; }
+.cp-product-cover {
+  height: auto; aspect-ratio: 16 / 7; padding: 10px 13px;
+  display: flex; align-items: flex-end; justify-content: space-between; gap: 8px;
+  border-bottom: 2px solid var(--ink); background: #E6F1FB;
+}
+/* 截图封面：真实官网首屏，顶部对齐裁剪；域名/徽章叠图展示加浅底保证可读 */
+.cp-product-cover.has-img { position: relative; padding: 0; background: rgba(26, 22, 12, .05); }
+.cp-product-cover.has-img img {
+  width: 100%; height: 100%; object-fit: cover; object-position: top center; display: block;
+}
+.cp-product-cover.has-img .cp-product-cover-meta {
+  position: absolute; right: 7px; bottom: 7px;
+  flex-direction: row; align-items: center; gap: 6px;
+  padding: 3px 8px; background: rgba(255, 255, 255, .92);
+  border: 1px solid rgba(26, 22, 12, .18);
+}
+.cp-product-mark { font-size: 30px; font-weight: 700; line-height: 1; letter-spacing: .02em; }
+.cp-product-cover-meta { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; min-width: 0; }
+.cp-product-domain {
+  font-family: var(--font-mono, monospace); font-size: 10px;
+  overflow-wrap: anywhere; text-align: right;
+}
+.cp-product-mine {
+  font-size: 10px; padding: 2px 8px; border: 1.5px solid var(--ink);
+  border-radius: 99px; background: var(--paper); color: var(--ink); white-space: nowrap;
+}
+.cp-product-body { padding: 11px 13px 12px; }
+.cp-product-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.cp-product-name { font-size: 14.5px; font-weight: 700; }
+.cp-product-kind { font-size: 10.5px; color: var(--ink-soft); }
+.cp-product-tagline { margin: 6px 0 9px; font-size: 12.5px; line-height: 1.65; }
+.cp-product-subs { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 9px; }
+.cp-product-sub { font-size: 10.5px; padding: 2px 8px; border: 1px solid var(--ink-soft); border-radius: 99px; color: var(--ink-soft); }
+.cp-product-foot {
+  display: flex; justify-content: space-between; align-items: center; gap: 8px;
+  padding-top: 8px; border-top: 1px dashed var(--ink-soft);
+  font-family: var(--font-mono, monospace); font-size: 10px; color: var(--ink-soft);
+}
+.cp-product-go { color: var(--orange); white-space: nowrap; }
+.tone-blue   { background: #E6F1FB; } .tone-blue   .cp-product-mark, .tone-blue   .cp-product-domain { color: #0C447C; }
+.tone-amber  { background: #FAEEDA; } .tone-amber  .cp-product-mark, .tone-amber  .cp-product-domain { color: #633806; }
+.tone-teal   { background: #E1F5EE; } .tone-teal   .cp-product-mark, .tone-teal   .cp-product-domain { color: #085041; }
+.tone-green  { background: #EAF3DE; } .tone-green  .cp-product-mark, .tone-green  .cp-product-domain { color: #27500A; }
+.tone-purple { background: #EEEDFE; } .tone-purple .cp-product-mark, .tone-purple .cp-product-domain { color: #3C3489; }
+.tone-coral  { background: #FAECE7; } .tone-coral  .cp-product-mark, .tone-coral  .cp-product-domain { color: #712B13; }
+.tone-gray   { background: #F1EFE8; } .tone-gray   .cp-product-mark, .tone-gray   .cp-product-domain { color: #444441; }
+
 /* 办公环境 */
 .cp-office { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
 .cp-office-img { margin: 0; border: 2px solid var(--ink); background: var(--paper); }
@@ -504,6 +564,7 @@ body.cp-lock { overflow: hidden; }
   .cp-kpis { grid-template-columns: 1fr 1fr; }
   .cp-row { flex-direction: column; gap: 2px; }
   .cp-office { grid-template-columns: 1fr 1fr; }
+  .cp-showcase { grid-template-columns: 1fr; }
   .cp-outlook { grid-template-columns: 1fr; }
   .cp-sources { padding: 16px 16px 22px; }
   .cp-quick { font-size: 10px; }
@@ -542,6 +603,18 @@ a.cp-name-link:focus-visible { outline: 2px solid var(--orange, #FF5A1E); outlin
   /* 打印 / 存 PDF：公司名保留为真实超链接（Chrome 会写入 PDF），
      用细虚线下划线提示可点，不再输出显式的档案链接行 */
   .cp-quick, .cp-drawer, .cp-lightbox { display: none !important; }
+  /* 独立档案页存 PDF：橱窗退成「产品名 + 域名 + 一句话」，整卡仍是可点链接 */
+  .cp-showcase { display: block; }
+  .cp-product { border-width: 1px; margin-bottom: 6px; break-inside: avoid; box-shadow: none; }
+  .cp-product:hover { transform: none; box-shadow: none; }
+  .cp-product-cover { height: auto; aspect-ratio: auto; padding: 3px 8px; border-bottom: 1px solid #000; background: #fff !important; }
+  .cp-product-mark, .cp-product-mine, .cp-product-subs, .cp-product-foot { display: none; }
+  /* 截图封面卡在打印时同样退化：隐藏截图与叠层徽章，只留域名行 */
+  .cp-product-cover.has-img img { display: none; }
+  .cp-product-cover.has-img .cp-product-cover-meta { position: static; flex-direction: row; padding: 0; background: none; border: 0; }
+  .cp-product-domain { color: #000 !important; text-align: left; }
+  .cp-product-body { padding: 4px 8px 6px; }
+  .cp-product-tagline { margin: 2px 0 0; font-size: 11px; }
   a.cp-name-link {
     color: inherit !important;
     text-decoration: none;

@@ -215,6 +215,43 @@
     return html + '</ul></section>';
   }
 
+  /* 产品橱窗：封面 + 一句话提炼 + 官网外链，整卡可点。
+     有 img 用真实官网首屏截图封面，无 img 退化为字标色块卡；两态共用同一卡片结构。 */
+  function showcaseBlock(c) {
+    var list = c.showcase || [];
+    if (!list.length) return '';
+    var html = '<section class="cp-sec"><h4 class="cp-sec-title">产品橱窗</h4>' +
+      '<p class="cp-showcase-note">' + list.length + ' 款产品 · 点击卡片访问官网</p>' +
+      '<div class="cp-showcase">';
+    list.forEach(function (p) {
+      var meta = '<div class="cp-product-cover-meta">' +
+        (p.mine ? '<span class="cp-product-mine">本人参与</span>' : '') +
+        '<span class="cp-product-domain">' + esc(p.domain || '') + '</span></div>';
+      var cover = p.img
+        ? '<div class="cp-product-cover has-img">' +
+          '<img src="' + esc(p.img) + '" alt="' + esc(p.name + ' 产品页封面') + '" loading="lazy">' + meta + '</div>'
+        : '<div class="cp-product-cover tone-' + esc(p.tone || 'blue') + '">' +
+          '<span class="cp-product-mark" aria-hidden="true">' + esc(p.mark || '') + '</span>' + meta + '</div>';
+      var subs = (p.subProducts || []).length
+        ? '<div class="cp-product-subs">' + p.subProducts.map(function (x) {
+            return '<span class="cp-product-sub">' + esc(x) + '</span>';
+          }).join('') + '</div>'
+        : '';
+      html += '<a class="cp-product" href="' + esc(p.url || '') + '"' +
+        ' target="_blank" rel="noopener noreferrer"' +
+        ' aria-label="访问 ' + esc(p.name || '') + ' 官网（新窗口）">' + cover +
+        '<div class="cp-product-body">' +
+        '<div class="cp-product-head"><span class="cp-product-name">' + esc(p.name || '') + '</span>' +
+        '<span class="cp-product-kind">' + esc(p.kind || '') + '</span></div>' +
+        '<p class="cp-product-tagline">' + esc(p.tagline || '') + sup(p.source || '') + '</p>' +
+        subs +
+        '<div class="cp-product-foot"><span>来源 · ' + esc(p.sourceLabel || '产品官网') + '</span>' +
+        '<span class="cp-product-go">访问官网 ↗</span></div>' +
+        '</div></a>';
+    });
+    return html + '</div></section>';
+  }
+
   function bossProfileBlock(c) {
     var b = c.bossProfile;
     if (!b) return '';
@@ -264,7 +301,8 @@
     if (b.talentDevelopment && b.talentDevelopment.length) {
       html += '<div class="cp-row"><p class="cp-row-label">人才发展</p>' + tagList(b.talentDevelopment) + '</div>';
     }
-    if (b.products && b.products.length) {
+    /* 有产品橱窗时收编这行 pill，避免同一批产品名重复出现 */
+    if (b.products && b.products.length && !(c.showcase && c.showcase.length)) {
       html += '<div class="cp-row"><p class="cp-row-label">产品矩阵</p>' + tagList(b.products) + '</div>';
     }
     html += multi('产品与服务', b.productDetails);
@@ -374,6 +412,7 @@
         { label: '行业位置', text: (c.business || {}).position },
         { label: '平台自述', text: (c.business || {}).bossIntro, source: (c.bossProfile || {}).source }
       ]) +
+      showcaseBlock(c) +
       (c.chart ? renderChartBlock(c) : '') +
       (c.funding ? renderFundingBlock(c) : '') +
       recognitionBlock(c) +
