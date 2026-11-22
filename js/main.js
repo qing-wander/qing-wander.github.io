@@ -366,54 +366,61 @@
     return 4;
   }
 
-  function renderGhActivity(box, data) {
-    var range = data.range || {};
+  /* 骨架：头部 + 蛇图容器，先渲染；统计行由 JSON 单独填充，二者解耦，
+     避免 GraphQL 偶发失败把整卡连同蛇图一起隐藏。 */
+  function renderGhSkeleton(box) {
     box.innerHTML =
       '<div class="gh-head">' +
         '<span class="gh-label">GITHUB ACTIVITY · 近一年提交</span>' +
-        '<a class="gh-link" href="https://github.com/' + esc(data.username || 'shenge-work') + '"' +
-        ' target="_blank" rel="noopener noreferrer">github.com/' + esc(data.username || 'shenge-work') + ' ↗</a>' +
+        '<a class="gh-link" href="https://github.com/shenge-work"' +
+        ' target="_blank" rel="noopener noreferrer">github.com/shenge-work ↗</a>' +
       '</div>' +
-      '<div class="gh-stats">' +
-        '<span><strong>' + (data.total || 0) + '</strong> 次贡献</span>' +
-        '<span>当前连续 <strong>' + (data.currentStreak || 0) + '</strong> 天</span>' +
-        '<span>最长连续 <strong>' + (data.longestStreak || 0) + '</strong> 天</span>' +
-        (range.from && range.to ? '<span class="gh-range">' + esc(range.from) + ' — ' + esc(range.to) + '</span>' : '') +
-      '</div>' +
+      '<div class="gh-stats" hidden></div>' +
       '<div class="gh-snake">' +
         '<img class="gh-snake-light" src="data/snake.svg?v=20261122" alt="GitHub 贡献蛇形动画" loading="lazy" decoding="async">' +
         '<img class="gh-snake-dark" src="data/snake-dark.svg?v=20261122" alt="GitHub 贡献蛇形动画（深色）" loading="lazy" decoding="async">' +
       '</div>';
     box.hidden = false;
 
-    /* 蛇图由 Actions 生成；任一未就绪（404）则隐藏对应图，两张都失败则整块收起 */
+    /* 明/暗蛇图都未就绪（404）时整块隐藏，避免空卡片 */
     var snakeBox = box.querySelector('.gh-snake');
-    if (snakeBox) {
-      var imgs = snakeBox.querySelectorAll('img');
-      var failed = 0;
-      Array.prototype.forEach.call(imgs, function (img) {
-        img.addEventListener('error', function () {
-          img.classList.add('gone');
-          failed++;
-          if (failed >= imgs.length) snakeBox.classList.add('gone');
-        });
+    var imgs = snakeBox ? snakeBox.querySelectorAll('img') : [];
+    var failed = 0;
+    Array.prototype.forEach.call(imgs, function (img) {
+      img.addEventListener('error', function () {
+        failed++;
+        if (failed >= imgs.length) box.hidden = true;
       });
-    }
+    });
+  }
+
+  /* 统计行：仅 JSON 成功时填充，失败保持隐藏 */
+  function renderGhStats(box, data) {
+    var range = data.range || {};
+    var stats = box.querySelector('.gh-stats');
+    if (!stats) return;
+    stats.innerHTML =
+      '<span><strong>' + (data.total || 0) + '</strong> 次贡献</span>' +
+      '<span>当前连续 <strong>' + (data.currentStreak || 0) + '</strong> 天</span>' +
+      '<span>最长连续 <strong>' + (data.longestStreak || 0) + '</strong> 天</span>' +
+      (range.from && range.to ? '<span class="gh-range">' + esc(range.from) + ' — ' + esc(range.to) + '</span>' : '');
+    stats.hidden = false;
   }
 
   function initContributions() {
     var box = $('ghActivity');
     if (!box) return;
+    renderGhSkeleton(box);
     fetch('data/contributions.json?v=' + Date.now(), { cache: 'no-cache' })
       .then(function (res) {
         if (!res.ok) throw new Error('HTTP ' + res.status);
         return res.json();
       })
       .then(function (data) {
-        if (data && Array.isArray(data.weeks) && data.weeks.length) renderGhActivity(box, data);
+        if (data) renderGhStats(box, data);
       })
       .catch(function () {
-        /* 静默失败：file:// 预览或数据尚未发布时保持隐藏 */
+        /* 统计 JSON 偶发失败不影响蛇图，统计行保持隐藏 */
       });
   }
 
