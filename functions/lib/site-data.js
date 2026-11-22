@@ -869,7 +869,7 @@ export default {
         ],
         [
           {
-            "label": "电话/微信",
+            "icon": ["phone", "wechat"],
             "value": "180 2283 4605"
           },
           {
