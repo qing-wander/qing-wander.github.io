@@ -516,6 +516,18 @@ body.cp-lock { overflow: hidden; }
 }
 
 /* ══ 7. 打印：抽屉与徽章整体退场，只留档案链接 ═══════ */
+/* 办公图相册：多于 3 张默认折叠，「展开全部 / 收起相册」按钮切换 */
+.cp-office.is-folded .cp-office-img.is-extra { display: none; }
+.cp-album-toggle {
+  margin-top: 10px; padding: 4px 12px;
+  font-family: var(--font-cn, sans-serif); font-size: 11px; font-weight: 500;
+  color: var(--ink-soft, #4A463F); background: transparent;
+  border: 1.5px dashed var(--ink-soft, #4A463F); cursor: pointer;
+  transition: color .15s ease, border-color .15s ease, background .15s ease;
+}
+.cp-album-toggle:hover { color: var(--orange, #FF5A1E); border-color: currentColor; }
+.cp-album-toggle:focus-visible { outline: 2px solid var(--orange, #FF5A1E); outline-offset: 2px; }
+
 /* 公司名即档案入口：屏幕上 hover 变橙 + 虚线提示可点 */
 a.cp-name-link {
   color: inherit;

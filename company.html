@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>公司档案 | 陈培胜 · 求职作品集</title>
+<meta name="description" content="公司档案：主营业务、团队规模、融资时间线、行业位置与前景判断。与网页简历的档案抽屉同一份数据源。">
+<meta name="robots" content="noindex, follow">
+<meta name="theme-color" content="#F3EEE2">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-64.png">
+<link rel="apple-touch-icon" href="favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&display=swap" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&display=swap"></noscript>
+<link rel="stylesheet" href="css/fonts.css?v=20261111a">
+<!-- 档案内容组件样式：与简历页档案抽屉同一份 -->
+<link rel="stylesheet" href="css/company-profile.css?v=20261122a">
+<style>
+/* ── 主题：与首页 / 简历同一套配色 ── */
+[data-theme="blueprint"] {
+  --paper: #E9F1F8; --card: #F5FAFE; --ink: #123A5C; --ink-soft: #48678A;
+  --orange: #E03E36; --blue: #1D6FB8; --green: #2E8B57;
+}
+[data-theme="newsprint"] {
+  --paper: #F4EDDA; --card: #FAF5E6; --ink: #1C1812; --ink-soft: #59503E;
+  --orange: #C4112C; --blue: #1E3A5F; --green: #2F7D46;
+}
+[data-theme="noir"] {
+  --paper: #100E1A; --card: #1A1729; --ink: #ECE7FF; --ink-soft: #8F87AD;
+  --orange: #FF3D8F; --blue: #22D3EE; --green: #9EE86B;
+}
+
+:root {
+  --paper: #F3EEE2; --card: #FFFCF4; --ink: #141311; --ink-soft: #4A463F;
+  --orange: #FF5A1E; --blue: #2B4BE0; --green: #1FA658;
+  --border: 3px solid var(--ink);
+  --font-cn: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --font-mono: 'Space Mono', 'SF Mono', Consolas, monospace;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; overflow-x: clip; }
+body {
+  background: var(--paper); color: var(--ink);
+  font-family: var(--font-cn); font-size: 15px; line-height: 1.75;
+  -webkit-font-smoothing: antialiased; overflow-x: clip;
+}
+a { color: inherit; }
+::selection { background: var(--orange); color: #fff; }
+
+/* ── 页头 ── */
+.topbar {
+  position: sticky; top: 0; z-index: 60;
+  background: var(--ink); color: var(--paper);
+  border-bottom: var(--border);
+}
+.topbar-inner {
+  max-width: 960px; margin: 0 auto; padding: 10px 20px;
+  display: flex; align-items: center; justify-content: space-between; gap: 14px;
+}
+.tb-left { display: flex; align-items: center; gap: 14px; min-width: 0; }
+.tb-left a { font-family: var(--font-mono); font-size: 12px; letter-spacing: .05em; white-space: nowrap; }
+.tb-left a:hover { color: var(--orange); }
+.tb-brand { font-weight: 900; font-size: 12px; letter-spacing: .14em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tb-right a { font-family: var(--font-mono); font-size: 11px; opacity: .8; white-space: nowrap; }
+.tb-right a:hover { opacity: 1; color: var(--orange); }
+
+/* ── 主体：档案渲染区 ── */
+.cp-page { max-width: 960px; margin: 0 auto; padding: 30px 20px 80px; }
+/* 抽屉组件的内部块在此作为普通文档流渲染：只需要给容器一个纸质卡底 */
+.cp-page-body {
+  background: var(--card); border: var(--border); box-shadow: 6px 6px 0 var(--ink);
+  padding: 26px 26px 22px;
+}
+
+/* 未知 / 未选：公司列表 */
+.cp-list-note { font-family: var(--font-mono); font-size: 11px; letter-spacing: .1em; color: var(--ink-soft); margin-bottom: 14px; }
+.cp-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.cp-list-card {
+  display: block; background: var(--card); border: 2px solid var(--ink);
+  padding: 14px 15px; text-decoration: none;
+  transition: transform .14s ease, box-shadow .14s ease;
+}
+.cp-list-card:hover { transform: translate(-2px, -2px); box-shadow: 4px 4px 0 var(--orange); }
+.cp-list-name { display: flex; align-items: center; gap: 9px; font-size: 15px; font-weight: 900; }
+.cp-list-ind { font-size: 11.5px; color: var(--ink-soft); margin-top: 3px; }
+.cp-list-oneline {
+  font-size: 12px; color: var(--ink-soft); margin-top: 7px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.cp-list-go { margin-top: 9px; font-family: var(--font-mono); font-size: 10px; color: var(--orange); }
+.cp-page-empty { font-size: 13px; color: var(--ink-soft); }
+
+@media (max-width: 640px) {
+  .cp-page { padding: 18px 14px 60px; }
+  .cp-page-body { padding: 18px 16px 16px; }
+  .cp-list { grid-template-columns: minmax(0, 1fr); }
+  .tb-right { display: none; }
+}
+
+/* ── 打印：HR 可直接存 PDF ── */
+@media print {
+  html[data-theme] { --paper: #fff; --card: #fff; --ink: #000; --ink-soft: #333; --orange: #000; --blue: #000; --green: #000; }
+  body { background: #fff; color: #000; }
+  .topbar { display: none !important; }
+  .cp-page { padding: 0; max-width: none; }
+  .cp-page-body { box-shadow: none; border-color: #000; padding: 0; }
+  .cp-album-toggle { display: none !important; }
+  .cp-office.is-folded .cp-office-img.is-extra { display: block; }
+  .cp-src a { text-decoration: none; color: #000; }
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="tb-left">
+      <a href="resume.html">← 网页简历</a>
+      <span class="tb-brand">COMPANY PROFILE · 公司档案</span>
+    </div>
+    <div class="tb-right">
+      <a href="index.html">作品集 ↗</a>
+    </div>
+  </div>
+</header>
+
+<main class="cp-page">
+  <div class="cp-page-body" id="cpPageBody">
+    <noscript><p class="cp-page-empty">本页需要启用 JavaScript 渲染档案内容；也可以在网页简历里点公司名称查看同一份档案。</p></noscript>
+  </div>
+</main>
+
+<script src="data/company-profiles.js?v=20261122a"></script>
+<script src="js/company-profile.js?v=20261122a"></script>
+<script>
+/* 独立档案页：与简历页档案抽屉共用 window.CompanyProfile.render —— 同一份数据、同一个渲染函数 */
+(function () {
+  var CP = window.CompanyProfile;
+  var box = document.getElementById('cpPageBody');
+  if (!CP) { box.innerHTML = '<p class="cp-page-empty">档案组件未加载，请刷新重试。</p>'; return; }
+
+  function esc(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+
+  var id = new URLSearchParams(location.search).get('c') || '';
+  var c = id ? CP.get(id) : null;
+
+  if (c) {
+    box.innerHTML = CP.render(id);
+    document.title = (c.name || '公司档案') + ' · 公司档案 | 陈培胜';
+    var d = CP.meta().disclaimer || '';
+    if (d) box.insertAdjacentHTML('beforeend', '<p class="cp-disclaimer" style="margin-top:14px">' + esc(d) + '</p>');
+    return;
+  }
+
+  /* 没有 / 未知 id：列出全部档案，让人自己选 */
+  var all = CP.list();
+  var note = id ? '没有找到「' + esc(id) + '」的档案，以下是全部档案：' : '选择一家公司查看完整档案：';
+  var cards = all.map(function (x) {
+    return '<a class="cp-list-card" href="?c=' + esc(x.id || '') + '">' +
+      '<span class="cp-list-name">' + esc(x.name) + '</span>' +
+      '<span class="cp-list-ind">' + esc(x.industry || '') + '</span>' +
+      '<span class="cp-list-oneline">' + esc(x.oneLine || '') + '</span>' +
+      '<span class="cp-list-go">查看档案 →</span></a>';
+  }).join('');
+  box.innerHTML = '<p class="cp-list-note">' + note + '</p><div class="cp-list">' + cards + '</div>';
+})();
+
+/* 主题引导：与首页 / 简历同一套线路规则（github.io → pages.dev） */
+(function () {
+  var T = ['archive', 'blueprint', 'newsprint', 'noir'];
+  var qs = new URLSearchParams(location.search).get('theme');
+  var manual = null;
+  try { if (localStorage.getItem('portfolio_theme_mode') === 'manual') manual = localStorage.getItem('portfolio_theme_manual'); } catch (e) {}
+  var t = T.indexOf(qs) >= 0 ? qs : (T.indexOf(manual) >= 0 ? manual : null);
+  if (!t) {
+    var n = new Date();
+    var day = Math.floor((n - new Date(n.getFullYear(), 0, 0)) / 864e5);
+    t = T[day % T.length];
+    if (T.indexOf(qs) < 0 && !manual) {
+      var bases = (function () {
+        var host = location.hostname || '';
+        if (/^(localhost|127\.0\.0\.1|0\.0\.0\.0|\[::1\])$/.test(host)) return [''];
+        if (/\.github\.io$/i.test(host)) return ['https://shenge-work.pages.dev'];
+        return ['', 'https://shenge-work.pages.dev'];
+      })();
+      (function next(i) {
+        if (i >= bases.length) return;
+        fetch(new URL(bases[i] + '/api/theme', location.href).href, { credentials: 'omit' }).then(function (r) {
+          var ct = r.headers.get('content-type') || '';
+          if (!r.ok || ct.indexOf('application/json') < 0) return next(i + 1);
+          return r.json().then(function (d) {
+            if (d && d.ok && T.indexOf(d.theme) >= 0) document.documentElement.setAttribute('data-theme', d.theme);
+            else next(i + 1);
+          }, function () { next(i + 1); });
+        }, function () { next(i + 1); });
+      })(0);
+    }
+  }
+  if (t) document.documentElement.setAttribute('data-theme', t);
+})();
+</script>
+</body>
+</html>

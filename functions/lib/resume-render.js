@@ -75,7 +75,7 @@ function profileBits(e) {
   if (!e.profileId) return { name: '', quick: '' };
   const id = esc(e.profileId);
   return {
-    name: `<a class="cp-name-link" data-cp="${id}" href="https://shenge-work.github.io/resume.html#company=${e.profileId}" title="公司档案：背景 / 业务 / 融资 / 前景">${esc(e.company)}</a>`,
+    name: `<a class="cp-name-link" data-cp="${id}" href="https://shenge-work.github.io/company.html?c=${e.profileId}" title="公司档案：背景 / 业务 / 融资 / 前景">${esc(e.company)}</a>`,
     quickLine: '        <p class="cp-quick" data-cp-quick="' + id + '"></p>',
   };
 }

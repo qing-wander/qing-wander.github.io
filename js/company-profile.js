@@ -292,24 +292,36 @@
       '<div class="cp-outlook"><div class="cp-outlook-col"><p class="cp-outlook-h is-op">▚ 机会</p>' +
       lis(o.opportunities) + '</div>' +
       '<div class="cp-outlook-col"><p class="cp-outlook-h is-risk">▞ 风险</p>' + lis(o.risks) + '</div></div>' +
-      (o.myTake ? '<div class="cp-mytake"><p class="cp-mytake-tag">候选人观点（主观）</p><p>' +
+      (o.myTake ? '<div class="cp-mytake"><p class="cp-mytake-tag">我的判断（主观 · 站在求职者角度，非公司披露）</p><p>' +
         esc(o.myTake) + '</p></div>' : '') + '</section>';
   }
 
+  /* 办公图相册：超过 3 张默认折叠（第 4 张起加 is-extra），
+     按钮委托在 document 上 —— 抽屉与独立档案页共用同一份行为 */
+  var OFFICE_FOLD = 3;
+
   function officeBlock(c) {
     if (!c.office || !c.office.length) return '';
-    var html = '<section class="cp-sec"><h4 class="cp-sec-title">办公与环境</h4><div class="cp-office">';
-    c.office.forEach(function (o) {
+    var many = c.office.length > OFFICE_FOLD;
+    var html = '<section class="cp-sec"><h4 class="cp-sec-title">办公与环境</h4><div class="cp-office' +
+      (many ? ' is-folded' : '') + '" data-cp-album>';
+    c.office.forEach(function (o, i) {
+      var extra = many && i >= OFFICE_FOLD ? ' is-extra' : '';
       if (o.img) {
-        html += '<figure class="cp-office-img"><img src="' + esc(o.img) + '" alt="' + esc(o.alt || o.note || '') +
+        html += '<figure class="cp-office-img' + extra + '"><img src="' + esc(o.img) + '" alt="' + esc(o.alt || o.note || '') +
           '" loading="lazy"><figcaption>' + esc(o.note || '') + '</figcaption></figure>';
       } else {
-        html += '<figure class="cp-office-img is-ph"><div class="cp-ph"><span class="cp-ph-code">' +
+        html += '<figure class="cp-office-img is-ph' + extra + '"><div class="cp-ph"><span class="cp-ph-code">' +
           esc(c.code || '') + '</span><span class="cp-ph-tag">照片待补充</span></div>' +
           '<figcaption>' + esc(o.note || '') + '</figcaption></figure>';
       }
     });
-    return html + '</div></section>';
+    html += '</div>';
+    if (many) {
+      html += '<button class="cp-album-toggle" type="button" data-cp-album-toggle aria-expanded="false">' +
+        '展开全部 ' + c.office.length + ' 张 ↓</button>';
+    }
+    return html + '</section>';
   }
 
   function sourcesBlock(c) {
@@ -465,6 +477,18 @@
       lastFocus = b;
       open(b.getAttribute('data-cp'));
     }, true);
+    /* 相册展开 / 收起：不绑定具体节点，抽屉与独立页复用 */
+    document.addEventListener('click', function (ev) {
+      var t = ev.target.closest ? ev.target.closest('[data-cp-album-toggle]') : null;
+      if (!t) return;
+      var grid = t.closest('.cp-sec').querySelector('[data-cp-album]');
+      if (!grid) return;
+      var folded = grid.classList.toggle('is-folded');
+      t.setAttribute('aria-expanded', folded ? 'false' : 'true');
+      t.textContent = folded
+        ? '展开全部 ' + grid.children.length + ' 张 ↓'
+        : '收起相册 ↑';
+    }, true);
     window.addEventListener('hashchange', handleHash);
     handleHash();
   }
@@ -475,6 +499,15 @@
     start();
   }
 
-  /* 暴露给外部（首页 main.js / 测试用） */
-  window.CompanyProfile = { open: open, close: close };
+  /* 对外暴露：独立档案页（company.html）复用同一渲染函数，
+     抽屉与独立页的数据、结构天然一致，改 JSON 一次两边同步。
+     open / close 给首页 main.js 的既有调用方沿用。 */
+  window.CompanyProfile = {
+    render: renderPanel,
+    get: company,
+    list: function () { return Object.keys(companies).map(function (k) { return companies[k]; }); },
+    meta: function () { return meta; },
+    open: open,
+    close: close
+  };
 })();

@@ -196,7 +196,7 @@
       var quick = '';
       if (x.profileId) {
         name = '<a class="cp-name-link" data-cp="' + esc(x.profileId) +
-          '" href="https://shenge-work.github.io/#company=' + esc(x.profileId) +
+          '" href="https://shenge-work.github.io/company.html?c=' + esc(x.profileId) +
           '" title="公司档案：背景 / 业务 / 融资 / 前景">' + name + '</a>';
         quick = '<p class="cp-quick" data-cp-quick="' + esc(x.profileId) + '" hidden></p>';
       }
