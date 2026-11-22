@@ -18,13 +18,12 @@
 <link rel="stylesheet" href="css/style.css?v=20261122b">
 <link rel="stylesheet" href="css/ai-skins.css?v=20261121v">
 <link rel="stylesheet" href="css/ai-voice.css?v=20261118b">
-<link rel="stylesheet" href="css/jd-match.css?v=20261122a">
 <!-- 面板窗口层：放大 / 还原 / 一步关闭，样式放最后以便覆盖基础面板规则 -->
 <link rel="stylesheet" href="css/ai-panel-ux.css?v=20261118a">
 <!-- 角色 ↔ 面板语义联动：说话音波 / 指路小票 / 落点描边 -->
 <link rel="stylesheet" href="css/ai-stage-link.css?v=20261121b">
-<!-- 公司档案（SEC.04 徽章 + 抽屉）：与 resume.html 共用，数据源 data/company-profiles.js -->
-<link rel="stylesheet" href="css/company-profile.css?v=20261122b">
+<!-- 公司档案（SEC.03 徽章 + 抽屉）：与 resume.html 共用，数据源 data/company-profiles.js -->
+<link rel="stylesheet" href="css/company-profile.css?v=20261122c">
 <meta name="theme-color" content="#F3EEE2">
 <link rel="canonical" href="https://shenge-work.github.io/">
 <link rel="manifest" href="manifest.json">
@@ -133,16 +132,15 @@
     <nav class="nav" id="nav">
       <a href="#about" data-sec="about"><span class="nav-no">01</span>关于我</a>
       <a href="#objective" data-sec="objective"><span class="nav-no">02</span>求职意向</a>
-      <a href="jd.html" data-sec="jd"><span class="nav-no">03</span>JD 匹配</a>
-      <a href="#experience" data-sec="experience"><span class="nav-no">04</span>工作经历</a>
-      <a href="#projects" data-sec="projects"><span class="nav-no">05</span>项目作品</a>
-      <a href="#works" data-sec="works"><span class="nav-no">06</span>个人作品</a>
-      <a href="#skills" data-sec="skills"><span class="nav-no">07</span>专业技能</a>
-      <a href="#education" data-sec="education"><span class="nav-no">08</span>教育经历</a>
-      <a href="#awards" data-sec="awards"><span class="nav-no">09</span>获奖证书</a>
-      <a href="#contact" data-sec="contact"><span class="nav-no">10</span>联系方式</a>
-      <a href="#wall" data-sec="wall"><span class="nav-no">11</span>留言墙</a>
-      <a href="https://shenge-blog.pages.dev" class="nav-blog" target="_blank" rel="noopener noreferrer" title="个人博客"><span class="nav-no">12</span>博客</a>
+      <a href="#experience" data-sec="experience"><span class="nav-no">03</span>工作经历</a>
+      <a href="#projects" data-sec="projects"><span class="nav-no">04</span>项目作品</a>
+      <a href="#works" data-sec="works"><span class="nav-no">05</span>个人作品</a>
+      <a href="#skills" data-sec="skills"><span class="nav-no">06</span>专业技能</a>
+      <a href="#education" data-sec="education"><span class="nav-no">07</span>教育经历</a>
+      <a href="#awards" data-sec="awards"><span class="nav-no">08</span>获奖证书</a>
+      <a href="#contact" data-sec="contact"><span class="nav-no">09</span>联系方式</a>
+      <a href="#wall" data-sec="wall"><span class="nav-no">10</span>留言墙</a>
+      <a href="https://shenge-blog.pages.dev" class="nav-blog" target="_blank" rel="noopener noreferrer" title="个人博客"><span class="nav-no">11</span>博客</a>
     </nav>
     <div class="topbar-right">
       <button class="share-btn" id="shareBtn" title="查看/下载作品集分享卡" aria-label="查看/下载作品集分享卡">分享 ⤴</button>
@@ -261,32 +259,12 @@
   <div class="obj-grid" id="objGrid"></div>
 </section>
 
-<!-- ══════════════ SEC.03 岗位匹配 / JD MATCH（轻量入口 → 独立页 jd.html） ══════════════ -->
-<section class="section" id="jd">
-  <div class="section-head">
-    <span class="section-no">SEC.03</span>
-    <h2 class="section-title">岗位匹配 <span class="title-en">JD MATCH</span></h2>
-    <span class="section-line" aria-hidden="true"></span>
-    <span class="section-coord" aria-hidden="true">AGENT//SELF-PROOF</span>
-  </div>
+<!-- SEC.03 岗位匹配入口已移除：主页 JD 入口收敛为 hero「JD 匹配」按钮 → 独立页 jd.html -->
 
-  <a class="jd-entry reveal" href="jd.html">
-    <div class="jd-entry-main">
-      <p class="jd-entry-eyebrow"><i class="lamp lamp-green"></i>AGENT READY · 独立功能页</p>
-      <h3 class="jd-entry-title">把在招岗位的 JD 贴进来，一分钟后拿到一张对照表</h3>
-      <p class="jd-entry-desc">每条要求落在哪段经历、缺口在哪、面试能顺着问什么 —— 由本站 RAG Agent 生成：JD 拆条 → 召回档案 → 只引用原文作答，证据带出处。</p>
-    </div>
-    <div class="jd-entry-cta">
-      <span class="jd-entry-go">进入 JD 匹配 <span aria-hidden="true">▶</span></span>
-      <span class="jd-entry-meta">单次 ≤ 1500 字 · 10 分钟 4 次 · 可复制 Markdown</span>
-    </div>
-  </a>
-</section>
-
-<!-- ══════════════ SEC.04 工作经历 ══════════════ -->
+<!-- ══════════════ SEC.03 工作经历 ══════════════ -->
 <section class="section" id="experience">
   <div class="section-head">
-    <span class="section-no">SEC.04</span>
+    <span class="section-no">SEC.03</span>
     <h2 class="section-title">工作经历 <span class="title-en">EXPERIENCE</span></h2>
     <span class="section-line" aria-hidden="true"></span>
     <span class="section-coord" aria-hidden="true">LOG//CAREER-TRACE</span>
@@ -294,10 +272,10 @@
   <div class="exp-list" id="expList"></div>
 </section>
 
-<!-- ══════════════ SEC.05 项目作品 ══════════════ -->
+<!-- ══════════════ SEC.04 项目作品 ══════════════ -->
 <section class="section section-tint" id="projects">
   <div class="section-head">
-    <span class="section-no">SEC.05</span>
+    <span class="section-no">SEC.04</span>
     <h2 class="section-title">项目作品 <span class="title-en">WORKS</span></h2>
     <span class="section-line" aria-hidden="true"></span>
     <span class="section-coord" aria-hidden="true">SHOWCASE//P-01→P-05</span>
@@ -306,10 +284,10 @@
   <p class="proj-hint"><span class="pixel-arrow" aria-hidden="true">▶▶</span> 点击任意卡片，调出完整项目档案</p>
 </section>
 
-<!-- ══════════════ SEC.06 个人作品 ══════════════ -->
+<!-- ══════════════ SEC.05 个人作品 ══════════════ -->
 <section class="section" id="works">
   <div class="section-head">
-    <span class="section-no">SEC.06</span>
+    <span class="section-no">SEC.05</span>
     <h2 class="section-title">个人作品 <span class="title-en">PERSONAL WORKS</span></h2>
     <span class="section-line" aria-hidden="true"></span>
     <span class="section-coord" aria-hidden="true">SOURCE//GITHUB-REPO</span>
@@ -320,10 +298,10 @@
   <p class="proj-hint"><span class="pixel-arrow" aria-hidden="true">▶▶</span> 已上线作品点击「GitHub 源码」直达仓库；带「预告」角标为规划中的项目，敬请期待</p>
 </section>
 
-<!-- ══════════════ SEC.07 专业技能 ══════════════ -->
+<!-- ══════════════ SEC.06 专业技能 ══════════════ -->
 <section class="section section-tint" id="skills">
   <div class="section-head">
-    <span class="section-no">SEC.07</span>
+    <span class="section-no">SEC.06</span>
     <h2 class="section-title">专业技能 <span class="title-en">SKILLS</span></h2>
     <span class="section-line" aria-hidden="true"></span>
     <span class="section-coord" aria-hidden="true">MATRIX//CAPABILITY-LEDGER</span>
@@ -341,10 +319,10 @@
   </div>
 </section>
 
-<!-- ══════════════ SEC.08 教育经历 ══════════════ -->
+<!-- ══════════════ SEC.07 教育经历 ══════════════ -->
 <section class="section" id="education">
   <div class="section-head">
-    <span class="section-no">SEC.08</span>
+    <span class="section-no">SEC.07</span>
     <h2 class="section-title">教育经历 <span class="title-en">EDUCATION</span></h2>
     <span class="section-line" aria-hidden="true"></span>
     <span class="section-coord" aria-hidden="true">RECORD//SCHOOL-FILE</span>
@@ -352,10 +330,10 @@
   <div class="edu-grid" id="eduGrid"></div>
 </section>
 
-<!-- ══════════════ SEC.09 获奖证书 ══════════════ -->
+<!-- ══════════════ SEC.08 获奖证书 ══════════════ -->
 <section class="section section-tint" id="awards">
   <div class="section-head">
-    <span class="section-no">SEC.09</span>
+    <span class="section-no">SEC.08</span>
     <h2 class="section-title">获奖证书 <span class="title-en">AWARDS</span></h2>
     <span class="section-line" aria-hidden="true"></span>
     <span class="section-coord" aria-hidden="true">PROOF//HONOR-RECORD</span>
@@ -364,10 +342,10 @@
   <ol class="award-list" id="awardList"></ol>
 </section>
 
-<!-- ══════════════ SEC.10 联系方式 + 简历下载 ══════════════ -->
+<!-- ══════════════ SEC.09 联系方式 + 简历下载 ══════════════ -->
 <section class="section section-contact" id="contact">
   <div class="section-head">
-    <span class="section-no">SEC.10</span>
+    <span class="section-no">SEC.09</span>
     <h2 class="section-title">联系方式 <span class="title-en">CONTACT</span></h2>
     <span class="section-line" aria-hidden="true"></span>
     <span class="section-coord" aria-hidden="true">SIGNAL//SEND-MESSAGE</span>
@@ -377,10 +355,10 @@
   <div class="resume-cta reveal" id="resumeCta"></div>
 </section>
 
-<!-- ══════════════ SEC.11 留言墙 / GUEST WALL ══════════════ -->
+<!-- ══════════════ SEC.10 留言墙 / GUEST WALL ══════════════ -->
 <section class="section section-tint" id="wall">
   <div class="section-head">
-    <span class="section-no">SEC.11</span>
+    <span class="section-no">SEC.10</span>
     <h2 class="section-title">留言墙 <span class="title-en">GUEST WALL</span></h2>
     <span class="section-line" aria-hidden="true"></span>
     <span class="section-coord" aria-hidden="true">SIGNAL//PRIVATE-NOTE</span>
@@ -536,7 +514,7 @@
 </aside>
 
 <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
-<script src="js/main.js?v=20261122b"></script>
+<script src="js/main.js?v=20261122c"></script>
 <script src="js/jd-match.js?v=20261118a"></script>
 <script src="js/ai-skins.js?v=20261121u"></script>
 <script src="js/gender-switch.js?v=20261120K"></script>
@@ -544,8 +522,8 @@
 <script src="js/ai-voice-cloud.js?v=20261119a"></script>
 <script src="js/ai-panel-ux.js?v=20261118a"></script>
 <script src="js/ai-stage-link.js?v=20261121b"></script>
-<script src="data/company-profiles.js?v=20261122b"></script>
-<script src="js/company-profile.js?v=20261122b" defer></script>
+<script src="data/company-profiles.js?v=20261122c"></script>
+<script src="js/company-profile.js?v=20261122c" defer></script>
 <script src="js/analytics.js?v=20261119b" defer></script>
 <script src="js/visitor-count.js" defer></script>
 </body>

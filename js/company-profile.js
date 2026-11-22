@@ -224,8 +224,12 @@
       '<p class="cp-showcase-note">' + list.length + ' 款产品 · 点击卡片访问官网</p>' +
       '<div class="cp-showcase">';
     list.forEach(function (p) {
+      /* 截图卡：「本人参与」徽章放标题行，避免叠在封面上挡内容；字标卡封面是色块，徽章留在封面右上 */
+      var mineInHead = p.img && p.mine
+        ? '<span class="cp-product-mine">本人参与</span>'
+        : '';
       var meta = '<div class="cp-product-cover-meta">' +
-        (p.mine ? '<span class="cp-product-mine">本人参与</span>' : '') +
+        (!p.img && p.mine ? '<span class="cp-product-mine">本人参与</span>' : '') +
         '<span class="cp-product-domain">' + esc(p.domain || '') + '</span></div>';
       var cover = p.img
         ? '<div class="cp-product-cover has-img">' +
@@ -242,6 +246,7 @@
         ' aria-label="访问 ' + esc(p.name || '') + ' 官网（新窗口）">' + cover +
         '<div class="cp-product-body">' +
         '<div class="cp-product-head"><span class="cp-product-name">' + esc(p.name || '') + '</span>' +
+        mineInHead +
         '<span class="cp-product-kind">' + esc(p.kind || '') + '</span></div>' +
         '<p class="cp-product-tagline">' + esc(p.tagline || '') + sup(p.source || '') + '</p>' +
         subs +

@@ -202,7 +202,8 @@ window.COMPANY_PROFILES = {
             "AI进宝",
             "进门IRM",
             "SRS"
-          ]
+          ],
+          "img": "images/company/comein/product-01-comein.jpg"
         }
       ],
       "sources": [
