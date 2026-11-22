@@ -837,14 +837,13 @@ window.SITE_DATA = {
         "value": "广东省深圳市",
         "mini": "N22.54° · E114.06°",
         "plain": true
-      },
-      {
-        "label": "BLOG / 博客",
-        "value": "shenge-blog.pages.dev",
-        "href": "https://shenge-blog.pages.dev",
-        "span": true
       }
     ],
+    "blog": {
+      "label": "BLOG / 博客",
+      "value": "shenge-blog.pages.dev",
+      "href": "https://shenge-blog.pages.dev"
+    },
     "cta": {
       "title": "简历同步开放下载",
       "desc": "网页版简历 · 与本档案数据一致 · 可直接打印为 PDF",
