@@ -861,14 +861,6 @@ export default {
       "lines": [
         [
           {
-            "value": "男 29岁 21届软件工程 · 本科"
-          },
-          {
-            "value": "随时到岗 · 已离职"
-          }
-        ],
-        [
-          {
             "icon": ["phone", "wechat"],
             "value": "180 2283 4605"
           },
@@ -881,6 +873,7 @@ export default {
           },
           {
             "label": "作品集",
+            "icon": "globe",
             "text": "chenpeisheng.cn",
             "href": "https://chenpeisheng.cn",
             "external": true
