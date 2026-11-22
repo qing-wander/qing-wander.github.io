@@ -161,8 +161,7 @@
       if (t) { ev.preventDefault(); close(); return; }
       var tab = ev.target.closest ? ev.target.closest('.cp-tab') : null;
       if (tab) { switchTab(tab); return; }
-      var img = ev.target.closest ? ev.target.closest('.cp-office-img img') : null;
-      if (img) { openLightbox(img); }
+      /* 相册图片点击统一由 start() 里的全文档委托处理（抽屉 / 独立页共用） */
     });
     drawer.addEventListener('keydown', function (ev) {
       if (ev.key === 'Escape') close();
@@ -343,13 +342,35 @@
      按钮委托在 document 上 —— 抽屉与独立档案页共用同一份行为 */
   var OFFICE_FOLD = 3;
 
-  function officeBlock(c) {
-    if (!c.office || !c.office.length) return '';
-    var many = c.office.length > OFFICE_FOLD;
+  /* 360° 全景：图片库第一张卡带圆形旋转标记，点开走 WebGL 查看器 */
+  var PANO_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ' +
+    'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+    '<path d="M20.4 12a8.4 8.4 0 1 1-2.5-6"/><path d="M20.4 3.6V8h-4.4"/>' +
+    '<path d="M12 8.6l3.4 3.4-3.4 3.4L8.6 12z"/></svg>';
+
+  function officeBlock(c, cid) {
+    var panos = c.panoramas || [];
+    var photos = c.office || [];
+    var total = panos.length + photos.length;
+    if (!total) return '';
+    var many = total > OFFICE_FOLD;
     var html = '<section class="cp-sec"><h4 class="cp-sec-title">办公与环境</h4><div class="cp-office' +
       (many ? ' is-folded' : '') + '" data-cp-album>';
-    c.office.forEach(function (o, i) {
-      var extra = many && i >= OFFICE_FOLD ? ' is-extra' : '';
+    var n = 0;
+
+    panos.forEach(function (p, pi) {
+      var extra = many && n >= OFFICE_FOLD ? ' is-extra' : '';
+      html += '<figure class="cp-office-img is-pano' + extra + '" data-cp-pano="' + pi +
+        '" data-cp-company="' + esc(cid || c.id || '') + '">' +
+        '<img src="' + esc(p.cover || p.img) + '" alt="' + esc(p.alt || p.title || '360° 全景') +
+        '" loading="lazy">' +
+        '<span class="cp-pano-badge" aria-hidden="true">' + PANO_ICON + '360° 全景</span>' +
+        '<figcaption>' + esc(p.note || '') + '</figcaption></figure>';
+      n++;
+    });
+
+    photos.forEach(function (o) {
+      var extra = many && n >= OFFICE_FOLD ? ' is-extra' : '';
       if (o.img) {
         html += '<figure class="cp-office-img' + extra + '"><img src="' + esc(o.img) + '" alt="' + esc(o.alt || o.note || '') +
           '" loading="lazy"><figcaption>' + esc(o.note || '') + '</figcaption></figure>';
@@ -358,11 +379,12 @@
           esc(c.code || '') + '</span><span class="cp-ph-tag">照片待补充</span></div>' +
           '<figcaption>' + esc(o.note || '') + '</figcaption></figure>';
       }
+      n++;
     });
     html += '</div>';
     if (many) {
       html += '<button class="cp-album-toggle" type="button" data-cp-album-toggle aria-expanded="false">' +
-        '展开全部 ' + c.office.length + ' 张 ↓</button>';
+        '展开全部 ' + total + ' 张 ↓</button>';
     }
     return html + '</section>';
   }
@@ -423,7 +445,7 @@
       recognitionBlock(c) +
       bossProfileBlock(c) +
       outlookBlock(c) +
-      officeBlock(c) +
+      officeBlock(c, id) +
       sourcesBlock(c);
     return html;
   }
@@ -500,6 +522,9 @@
 
   window.addEventListener('keydown', function (ev) {
     if (ev.key !== 'Escape') return;
+    if (window.CPPanorama && window.CPPanorama.isOpen && window.CPPanorama.isOpen()) {
+      window.CPPanorama.close(); return;
+    }
     if (lightbox && !lightbox.hidden) closeLightbox();
     else close();
   });
@@ -521,6 +546,23 @@
       lastFocus = b;
       open(b.getAttribute('data-cp'));
     }, true);
+    /* 相册图片：全景卡 → 360° 查看器；普通图 → 灯箱。
+       全文档委托，抽屉（动态插入）与独立档案页共用一份行为。 */
+    document.addEventListener('click', function (ev) {
+      var img = ev.target.closest ? ev.target.closest('.cp-office-img img') : null;
+      if (!img) return;
+      var fig = img.closest('.cp-office-img');
+      var panoIdx = fig ? fig.getAttribute('data-cp-pano') : null;
+      if (panoIdx != null && window.CPPanorama) {
+        var c = company(fig.getAttribute('data-cp-company'));
+        if (c && c.panoramas && c.panoramas.length) {
+          ev.preventDefault();
+          window.CPPanorama.open(c.panoramas, parseInt(panoIdx, 10) || 0);
+          return;
+        }
+      }
+      openLightbox(img);
+    });
     /* 相册展开 / 收起：不绑定具体节点，抽屉与独立页复用 */
     document.addEventListener('click', function (ev) {
       var t = ev.target.closest ? ev.target.closest('[data-cp-album-toggle]') : null;

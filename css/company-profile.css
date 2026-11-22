@@ -543,6 +543,121 @@ body.cp-lock { overflow: hidden; }
 }
 .cp-lightbox-close:hover { background: #fff; color: #111; }
 
+/* ══ 5.5 360° 全景：图片库卡片标记 + 查看器 ═════════════
+   全景图是 2.1:1 等距柱状投影，卡片用 4:3 封面 + 圆形 360 徽章，
+   点开后由 js/cp-panorama.js 用 WebGL 贴到球面，拖拽环视。 */
+.cp-office-img.is-pano { position: relative; }
+.cp-office-img.is-pano img { cursor: grab; }
+.cp-office-img.is-pano img:active { cursor: grabbing; }
+.cp-pano-badge {
+  position: absolute; top: 8px; left: 8px;
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 4px 9px 4px 7px;
+  border: 2px solid #fff; border-radius: 999px;
+  background: rgba(16, 14, 26, .78); color: #fff;
+  font-family: var(--font-mono, monospace);
+  font-size: 10px; font-weight: 700; letter-spacing: .06em;
+  line-height: 1; white-space: nowrap; pointer-events: none;
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, .4);
+}
+.cp-pano-badge svg { width: 14px; height: 14px; display: block; }
+
+body.cp-pano-open { overflow: hidden; }
+.cp-pano {
+  position: fixed; inset: 0; z-index: 380;
+  background: #100e1a; color: #fff; overflow: hidden;
+  font-family: var(--font-cn, sans-serif);
+}
+.cp-pano[hidden] { display: none; }
+.cp-pano-canvas {
+  display: block; width: 100%; height: 100%;
+  cursor: grab; touch-action: none; outline: none;
+}
+.cp-pano-canvas:active { cursor: grabbing; }
+.cp-pano-canvas[hidden] { display: none; }
+.cp-pano-fallback {
+  position: absolute; inset: 0; overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  cursor: grab; touch-action: none;
+}
+.cp-pano-fallback[hidden] { display: none; }
+.cp-pano-fallback img {
+  height: 100%; width: auto; max-width: none;
+  user-select: none; -webkit-user-drag: none;
+  transform-origin: center center;
+}
+.cp-pano-head {
+  position: absolute; top: 0; left: 0; right: 0;
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 16px;
+  padding: 16px 18px 34px;
+  background: linear-gradient(rgba(12, 10, 20, .72), transparent);
+  pointer-events: none;
+}
+.cp-pano-head > * { pointer-events: auto; }
+.cp-pano-meta { display: flex; flex-direction: column; gap: 4px; max-width: 78%; }
+.cp-pano-title { font-size: 16px; font-weight: 800; letter-spacing: .02em; }
+.cp-pano-sub {
+  font-family: var(--font-mono, monospace);
+  font-size: 10.5px; color: rgba(255, 255, 255, .78); line-height: 1.5;
+}
+.cp-pano-close {
+  flex: none; width: 38px; height: 38px;
+  border: 2px solid #fff; border-radius: 0;
+  background: rgba(16, 14, 26, .45); color: #fff;
+  font-size: 17px; line-height: 1; cursor: pointer;
+  transition: background .12s ease, color .12s ease;
+}
+.cp-pano-close:hover, .cp-pano-close:focus-visible { background: #fff; color: #111; outline: none; }
+.cp-pano-hint {
+  position: absolute; top: 74px; left: 50%; transform: translateX(-50%);
+  padding: 5px 12px; border: 1px solid rgba(255, 255, 255, .4);
+  background: rgba(16, 14, 26, .5); color: rgba(255, 255, 255, .9);
+  font-family: var(--font-mono, monospace); font-size: 10px;
+  letter-spacing: .04em; white-space: nowrap; pointer-events: none;
+  animation: cp-pano-hint-fade .5s ease 4s both;
+}
+@keyframes cp-pano-hint-fade { to { opacity: 0; visibility: hidden; } }
+.cp-pano-loading {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  background: rgba(16, 14, 26, .62); color: #fff; font-size: 13px;
+  font-family: var(--font-mono, monospace); pointer-events: none;
+}
+.cp-pano-loading[hidden] { display: none; }
+.cp-pano-foot {
+  position: absolute; left: 0; right: 0; bottom: 0;
+  display: flex; align-items: flex-end; justify-content: space-between; gap: 14px;
+  padding: 40px 18px 18px;
+  background: linear-gradient(transparent, rgba(12, 10, 20, .76));
+  pointer-events: none;
+}
+.cp-pano-foot > * { pointer-events: auto; }
+.cp-pano-scenes { display: flex; flex-wrap: wrap; gap: 6px; }
+.cp-pano-ctl { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; }
+.cp-pano-ctl button, .cp-pano-scenes button {
+  min-width: 34px; padding: 6px 11px;
+  border: 1.5px solid rgba(255, 255, 255, .65); border-radius: 0;
+  background: rgba(16, 14, 26, .55); color: #fff;
+  font-family: var(--font-mono, monospace); font-size: 11px; line-height: 1.2;
+  cursor: pointer; white-space: nowrap;
+  transition: background .12s ease, color .12s ease, border-color .12s ease;
+}
+.cp-pano-ctl button:hover, .cp-pano-ctl button:focus-visible,
+.cp-pano-scenes button:hover, .cp-pano-scenes button:focus-visible {
+  background: #fff; color: #111; border-color: #fff; outline: none;
+}
+.cp-pano-ctl button.is-on, .cp-pano-scenes button.is-active {
+  background: var(--orange, #FF5A1E); border-color: var(--orange, #FF5A1E); color: #fff;
+}
+@media (max-width: 720px) {
+  .cp-pano-head { padding: 12px 12px 28px; }
+  .cp-pano-title { font-size: 14px; }
+  .cp-pano-sub { font-size: 9.5px; }
+  .cp-pano-hint { top: 66px; font-size: 9px; }
+  .cp-pano-foot { flex-direction: column; align-items: stretch; padding: 36px 12px 12px; }
+  .cp-pano-ctl { justify-content: center; }
+  .cp-pano-ctl button, .cp-pano-scenes button { padding: 7px 9px; font-size: 10px; }
+}
+
 .cp-empty { padding: 60px 30px; text-align: center; color: var(--ink-soft); }
 
 /* ══ 6. 移动端 ═══════════════════════════════════════ */
@@ -604,7 +719,9 @@ a.cp-name-link:focus-visible { outline: 2px solid var(--orange, #FF5A1E); outlin
 @media print {
   /* 打印 / 存 PDF：公司名保留为真实超链接（Chrome 会写入 PDF），
      用细虚线下划线提示可点，不再输出显式的档案链接行 */
-  .cp-quick, .cp-drawer, .cp-lightbox { display: none !important; }
+  .cp-quick, .cp-drawer, .cp-lightbox, .cp-pano { display: none !important; }
+  /* 全景卡在纸面上退化为普通封面图，去掉 360 徽章 */
+  .cp-pano-badge { display: none; }
   /* 独立档案页存 PDF：橱窗退成「产品名 + 域名 + 一句话」，整卡仍是可点链接 */
   .cp-showcase { display: block; }
   .cp-product { border-width: 1px; margin-bottom: 6px; break-inside: avoid; box-shadow: none; }
@@ -628,6 +745,7 @@ a.cp-name-link:focus-visible { outline: 2px solid var(--orange, #FF5A1E); outlin
 @media (prefers-reduced-motion: reduce) {
   .cp-backdrop, .cp-panel, .cp-lightbox { animation: none; }
   .cp-latest-dot { animation: none; }
+  .cp-pano-hint { animation: none; opacity: 0; visibility: hidden; }
 }
 
 /* ══ 9. 暗色主题（noir）下的微调 ════════════════════ */

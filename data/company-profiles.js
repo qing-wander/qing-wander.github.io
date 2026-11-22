@@ -122,6 +122,20 @@ window.COMPANY_PROFILES = {
         ],
         "myTake": "在职期间正值公司把传统路演优势向 AI 投研工作台迁移的关键窗口，Agent 基建（云沙箱 / Skill 生态 / 计费）是明确的投入重心，也是我负责的核心方向。"
       },
+      "panoramas": [
+        {
+          "img": "images/company/comein/panorama-01-front.jpg",
+          "cover": "images/company/comein/panorama-01-front-cover.jpg",
+          "alt": "进门财经深圳总部前台 360° 全景（可拖拽环视）",
+          "title": "前台 · 360° 全景",
+          "address": "深圳南山区深圳国际创新谷 1 栋 A 座 21 层",
+          "source": "BOSS直聘公司相册 · 360° 全景",
+          "note": "总部前台 · 360° 全景（点击进入，拖拽环视；屏幕内部信息已虚化）",
+          "yaw": 0,
+          "pitch": 0,
+          "fov": 75
+        }
+      ],
       "office": [
         {
           "img": "images/company/comein/office-03-reception.png",
