@@ -509,6 +509,18 @@ body {
 /* ── 打印样式：与屏幕显示保持一致（米白底 + 粗边框 + 偏移阴影） ── */
 @page { size: A4; margin: 0; }
 @media print {
+  /* 打印时一律用浅色配色：无论当前是 noir/blueprint/newsprint 哪个屏幕主题。
+     深色主题的浅色文字在「背景图形」未勾选时会变成白底白字（泛白蒙版 bug），
+     这里把前景/背景变量重置成高对比的深色字 + 白底，保证任意打印路径都清晰。 */
+  html, html[data-theme] {
+    --paper: #ffffff;
+    --card: #ffffff;
+    --ink: #141311;
+    --ink-soft: #4A463F;
+    --orange: #C4112C;
+    --blue: #1E3A5F;
+    --green: #1FA658;
+  }
   /* 强制输出背景色 / 边框 / 阴影 / 文字阴影（浏览器打印时无需勾选「背景图形」） */
   * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
 
@@ -628,7 +640,7 @@ body {
       </div>
       <div class="head-meta">
         <p>男 29岁 21届软件工程 · 本科　随时到岗 · 已离职</p>
-        <p><b>电话/微信</b> +86 180 2283 4605　<svg class="meta-icon" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M1.25 2.5A1.25 1.25 0 0 0 0 3.75v8.5A1.25 1.25 0 0 0 1.25 13.5h13.5A1.25 1.25 0 0 0 16 12.25v-8.5a1.25 1.25 0 0 0-1.25-1.25H1.25zM1.5 5.06l5.9 4.03a1 1 0 0 0 1.2 0l5.9-4.03v7.19a.25.25 0 0 1-.25.25H1.75a.25.25 0 0 1-.25-.25V5.06zm.4-1.06h12.2L8 7.88 1.9 4z"/></svg> <a class="link" href="mailto:hi@chenpeisheng.cn">hi@chenpeisheng.cn</a>　<b>作品集</b> <a class="link" href="https://chenpeisheng.cn" target="_blank" rel="noopener noreferrer">chenpeisheng.cn</a>　<svg class="meta-icon" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.6 7.6 0 0 1 2-.27c.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.012 8.012 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg> <a class="link" href="https://github.com/shenge-work" target="_blank" rel="noopener noreferrer">github.com/shenge-work</a></p>
+        <p><b>电话/微信</b> 180 2283 4605　<svg class="meta-icon" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M1.25 2.5A1.25 1.25 0 0 0 0 3.75v8.5A1.25 1.25 0 0 0 1.25 13.5h13.5A1.25 1.25 0 0 0 16 12.25v-8.5a1.25 1.25 0 0 0-1.25-1.25H1.25zM1.5 5.06l5.9 4.03a1 1 0 0 0 1.2 0l5.9-4.03v7.19a.25.25 0 0 1-.25.25H1.75a.25.25 0 0 1-.25-.25V5.06zm.4-1.06h12.2L8 7.88 1.9 4z"/></svg> <a class="link" href="mailto:hi@chenpeisheng.cn">hi@chenpeisheng.cn</a>　<b>作品集</b> <a class="link" href="https://chenpeisheng.cn" target="_blank" rel="noopener noreferrer">chenpeisheng.cn</a>　<svg class="meta-icon" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.6 7.6 0 0 1 2-.27c.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.012 8.012 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg> <a class="link" href="https://github.com/shenge-work" target="_blank" rel="noopener noreferrer">github.com/shenge-work</a></p>
       </div>
     </div>
   </header>

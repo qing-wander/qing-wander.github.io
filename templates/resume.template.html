@@ -506,6 +506,18 @@ body {
 /* ── 打印样式：与屏幕显示保持一致（米白底 + 粗边框 + 偏移阴影） ── */
 @page { size: A4; margin: 0; }
 @media print {
+  /* 打印时一律用浅色配色：无论当前是 noir/blueprint/newsprint 哪个屏幕主题。
+     深色主题的浅色文字在「背景图形」未勾选时会变成白底白字（泛白蒙版 bug），
+     这里把前景/背景变量重置成高对比的深色字 + 白底，保证任意打印路径都清晰。 */
+  html, html[data-theme] {
+    --paper: #ffffff;
+    --card: #ffffff;
+    --ink: #141311;
+    --ink-soft: #4A463F;
+    --orange: #C4112C;
+    --blue: #1E3A5F;
+    --green: #1FA658;
+  }
   /* 强制输出背景色 / 边框 / 阴影 / 文字阴影（浏览器打印时无需勾选「背景图形」） */
   * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
 
