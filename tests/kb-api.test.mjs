@@ -67,7 +67,9 @@ test('buildMessages：提示词锁死公司名/学历/数字，且片段带 id �
   ]);
   assert.equal(msgs[0].role, 'system');
   assert.ok(msgs[0].content.includes(LOCKED_FIELDS), '锁定字段要明写进系统提示');
-  assert.ok(msgs[0].content.includes('简历里没写这块'), '要有拒答话术');
+  // 拒答话术随助手身份改过第一人称（「这块我的简历里没写」），
+  // 这里只校验「明确拒答 / 不编造」的语义，不锁死具体措辞。
+  assert.ok(/简历里没写|没写这块|不做承诺/.test(msgs[0].content), '要有拒答话术');
   assert.ok(msgs[1].content.includes('[exp-inmen-01]'), '片段 id 必须带进上下文，答案才能挂引用');
 });
 
