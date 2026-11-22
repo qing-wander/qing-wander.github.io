@@ -341,8 +341,6 @@
         : '<a class="contact-card' + wide + ' reveal" href="' + esc(c.href) + '"' +
           (/^https?:/.test(c.href) ? ' target="_blank" rel="noopener noreferrer"' : '') + '>' + inner + '</a>';
     }).join('');
-    /* 博客不再单独占卡片：地址交给 GitHub 贡献卡片头部渲染 */
-    window.__GH_BLOG = ct.blog || null;
     var cta = ct.cta || {};
     $('resumeCta').innerHTML =
       '<div class="resume-cta-text"><strong>' + esc(cta.title) + '</strong><p>' + esc(cta.desc) + '</p></div>' +
@@ -380,19 +378,11 @@
     }).join('');
 
     var range = data.range || {};
-    var blog = window.__GH_BLOG || {};
-    var blogLink = blog.href
-      ? '<a class="gh-link gh-link-blog" href="' + esc(blog.href) + '"' +
-        ' target="_blank" rel="noopener noreferrer">' + esc(blog.label) + ' ↗</a>'
-      : '';
     box.innerHTML =
       '<div class="gh-head">' +
         '<span class="gh-label">GITHUB ACTIVITY · 近一年提交</span>' +
-        '<span class="gh-links">' +
-          '<a class="gh-link" href="https://github.com/' + esc(data.username || 'shenge-work') + '"' +
-          ' target="_blank" rel="noopener noreferrer">github.com/' + esc(data.username || 'shenge-work') + ' ↗</a>' +
-          blogLink +
-        '</span>' +
+        '<a class="gh-link" href="https://github.com/' + esc(data.username || 'shenge-work') + '"' +
+        ' target="_blank" rel="noopener noreferrer">github.com/' + esc(data.username || 'shenge-work') + ' ↗</a>' +
       '</div>' +
       '<div class="gh-stats">' +
         '<span><strong>' + (data.total || 0) + '</strong> 次贡献</span>' +

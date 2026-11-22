@@ -828,9 +828,9 @@ window.SITE_DATA = {
         "href": "tel:+8618022834605"
       },
       {
-        "label": "GITHUB / 代码仓库",
-        "value": "github.com/shenge-work",
-        "href": "https://github.com/shenge-work"
+        "label": "BLOG / 博客",
+        "value": "shenge-blog.pages.dev",
+        "href": "https://shenge-blog.pages.dev"
       },
       {
         "label": "BASE / 常驻",
@@ -839,11 +839,6 @@ window.SITE_DATA = {
         "plain": true
       }
     ],
-    "blog": {
-      "label": "BLOG / 博客",
-      "value": "shenge-blog.pages.dev",
-      "href": "https://shenge-blog.pages.dev"
-    },
     "cta": {
       "title": "简历同步开放下载",
       "desc": "网页版简历 · 与本档案数据一致 · 可直接打印为 PDF",
