@@ -43,6 +43,38 @@ const files = [
 
 console.log(`待上传 ${files.length} 个文件`);
 
+// ── 前置：确保桶公有读 + CORS 放行 ─────────────────────────────────
+// 3D 模型（model-viewer）用 fetch 加载 GLB，必须有 CORS 头，否则浏览器拦截 → 模型不显示。
+// <img>/<video> 不受 CORS 限制，所以只有 GLB 会挂。每次同步都兜底配置，避免漏配。
+const ensure = async () => {
+  await new Promise((resolve, reject) => {
+    client.putBucketAcl({ Bucket: BUCKET, Region: REGION, ACL: 'public-read' },
+      (err) => err ? reject(err) : resolve());
+  });
+  console.log('桶 ACL: public-read ✓');
+  await new Promise((resolve, reject) => {
+    client.putBucketCors({
+      Bucket: BUCKET, Region: REGION,
+      CORSConfiguration: {
+        CORSRules: [{
+          AllowedOrigins: ['*'],
+          AllowedMethods: ['GET', 'HEAD'],
+          AllowedHeaders: ['*'],
+          ExposeHeaders: ['Content-Length', 'Content-Type', 'ETag', 'Last-Modified'],
+          MaxAgeSeconds: 86400,
+        }],
+      },
+    }, (err) => err ? reject(err) : resolve());
+  });
+  console.log('桶 CORS: GET/HEAD 放行 ✓');
+};
+try {
+  await ensure();
+} catch (e) {
+  console.error(`桶配置失败（需 cos:* 权限的临时密钥）: ${e.code || ''} ${e.message || ''}`);
+  console.error('如果无法配置，请确认临时密钥 Policy 含 cos:PutBucketAcl 与 cos:PutBucketCors。');
+}
+
 const manifest = {};
 let ok = 0, fail = 0;
 

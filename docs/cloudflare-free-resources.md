@@ -521,6 +521,11 @@ POST /accounts/<id>/rum/site_info       → 10000 Authentication error
 - 单测：`tests/asset-cdn.test.mjs`（7/7 通过）；构建产物含三个新文件（`bash scripts/pages-build.sh` 实测）。
 - 浏览器实测：探针页确认 `AssetURL.isEnabled()=true`、`img.src` 已被重写为 COS 直链、图片正常显示。
 - 抽样匿名访问：图片/视频/GLB 均 HTTP 200、MIME 正确、`Cache-Control: public, max-age=31536000`。
+- **⚠️ CORS 必配（11-22 线上事故）**：迁到 COS 后 3D 模型一度不显示，图片/视频却正常。
+  根因：COS 桶默认无 CORS 规则，`<img>/<video>` 不受 CORS 限制，但 `model-viewer` 用 **fetch** 加载 GLB，
+  跨域被浏览器拦截。修复：`putBucketCors` 放行 `GET/HEAD`、`AllowedOrigins: ['*']`、
+  `ExposeHeaders: Content-Length/Content-Type/ETag/Last-Modified`，响应头出现 `Access-Control-Allow-Origin: *` 后
+  线上 3D 分身恢复正常（浏览器实测截图确认）。`scripts/cos-sync.mjs` 已内置该配置，每次同步自动兜底。
 - **成本提醒**：体验版 3,000 资源点/月共享池，CDN 流量 210 点/GB；公开访问会持续扣点，
   用完即停服（连带 AI 云函数）。需定期看 §11.2 的用量口径；根治方案是绑卡后迁 Cloudflare R2（出站免费）。
 - 重传脚本：`scripts/cos-sync.mjs`（从环境变量读临时密钥，运行前需 `callCloudApi(sts:GetFederationToken)` 刷新）。
