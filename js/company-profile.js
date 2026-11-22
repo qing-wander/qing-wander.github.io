@@ -42,6 +42,24 @@
     }
   }
 
+  /* ══════════════ 工作经历左上角方块：填入公司 logo ══════════════
+     main.js 渲染出 .exp-badge[data-cp] 占位，这里按 profileId 取档案 logo；
+     logo 路径经 AssetURL 重写到 COS，点击徽章仍走统一的 [data-cp] 委托开抽屉。 */
+  function fillExpBadges() {
+    var nodes = document.querySelectorAll('.exp-badge[data-cp]');
+    for (var i = 0; i < nodes.length; i++) {
+      var el = nodes[i];
+      var c = company(el.getAttribute('data-cp'));
+      if (!c || !c.logo) continue;
+      var src = c.logo;
+      if (window.AssetURL && window.AssetURL.of) src = window.AssetURL.of(src);
+      el.innerHTML = '<img src="' + esc(src) + '" alt="' + esc(c.shortName || c.name || '') + ' logo">';
+      el.classList.add('has-logo');
+      var card = el.closest ? el.closest('.exp-card') : null;
+      if (card) card.classList.add('has-logo-badge');
+    }
+  }
+
   /* ══════════════ SVG 柱状图 ══════════════ */
   function niceCeil(v) {
     if (v <= 0) return 1;
@@ -262,9 +280,9 @@
     var src = b.source || '';
     var html = '<section class="cp-sec"><h4 class="cp-sec-title">' +
       esc(b.platformTitle || '招聘平台档案 · BOSS直聘') + '</h4>';
+    /* 档案只沉淀稳定事实：在招职位数 / 招聘 Boss 数属每日变动的动态信息，
+       用户明确不展示——数据层与展示层均已移除（见 data/company-profiles.json）。 */
     var quick = [
-      { label: '在招职位', value: b.openJobs ? (b.openJobs + ' 个') : '' },
-      { label: '招聘 Boss', value: b.recruiters ? (b.recruiters + ' 位') : '' },
       { label: '行业标签', value: b.industryTag },
       { label: '团队规模', value: b.scaleTag },
       { label: '融资标签', value: b.financingTag },
@@ -319,6 +337,128 @@
       });
     }
     html += multi('办公地点', b.offices, true);
+    return html + '</section>';
+  }
+
+  /* 前身 / 历史沿革：沉淀公司不变的历史事实（非招聘动态信息） */
+  function predecessorBlock(c) {
+    var p = c.predecessor;
+    if (!p) return '';
+    var src = (p.sources || []).map(function (n) { return sup(n); }).join('');
+    function kv(label, text) {
+      if (!text) return '';
+      return '<div class="cp-row"><p class="cp-row-label">' + esc(label) +
+        '</p><p class="cp-row-text">' + esc(text) + '</p></div>';
+    }
+    var html = '<section class="cp-sec"><h4 class="cp-sec-title">前身与沿革</h4>' +
+      '<div class="cp-predecessor"><div class="cp-pred-head">' +
+      '<span class="cp-pred-tag">前身</span>' +
+      '<span class="cp-pred-name">' + esc(p.shortName || p.name || '') + '</span>' +
+      (p.founded ? '<span class="cp-pred-founded">' + esc(p.founded) + ' 成立</span>' : '') +
+      '</div>' +
+      kv('全称', p.name) +
+      kv('成立时间', p.founded) +
+      (p.formerName ? kv('曾用名', p.formerName) : '') +
+      kv('法定代表人', p.legalRep) +
+      kv('注册资本', p.capital) +
+      kv('团队规模', p.scale) +
+      kv('主营业务', p.business) +
+      (p.link ? '<div class="cp-row"><p class="cp-row-label">与本公司关系</p>' +
+        '<p class="cp-row-text">' + esc(p.link) + src + '</p></div>' : '') +
+      '</div></section>';
+    return html;
+  }
+
+  /* 访谈 / 视频：本地归档 + 对象存储直链，防原链接失效 */
+  function interviewBlock(c) {
+    var list = c.interviews || [];
+    if (!list.length) return '';
+    var html = '<section class="cp-sec"><h4 class="cp-sec-title">访谈 / 视频</h4>';
+    list.forEach(function (v) {
+      var videoSrc = v.video || '';
+      var poster = v.poster || '';
+      var player = '';
+      if (videoSrc) {
+        if (typeof window.AssetURL && window.AssetURL.of) videoSrc = window.AssetURL.of(videoSrc);
+        if (poster && typeof window.AssetURL && window.AssetURL.of) poster = window.AssetURL.of(poster);
+        player = '<div class="cp-video-wrap"><video class="cp-video" controls preload="metadata"' +
+          (poster ? ' poster="' + esc(poster) + '"' : '') +
+          ' src="' + esc(videoSrc) + '">您的浏览器不支持 HTML5 视频。</video></div>';
+      }
+      var meta = [
+        v.host ? '主持 / 出品：' + v.host : '',
+        v.guest ? '受访者：' + v.guest : '',
+        v.date ? '发布：' + v.date : '',
+        v.duration ? '时长：' + v.duration : '',
+        v.platform ? '平台：' + v.platform : ''
+      ].filter(Boolean).join(' · ');
+      var chapters = (v.chapters || []).length
+        ? '<div class="cp-video-chapters">' + v.chapters.map(function (ch) {
+            return '<span class="cp-pill">' + esc(ch) + '</span>';
+          }).join('') + '</div>'
+        : '';
+      html += '<article class="cp-interview">' + player +
+        '<div class="cp-interview-body">' +
+        '<h5 class="cp-interview-title">' + esc(v.title || '') + sup(v.source || '') + '</h5>' +
+        (meta ? '<p class="cp-interview-meta">' + esc(meta) + '</p>' : '') +
+        (v.desc ? '<p class="cp-interview-desc">' + esc(v.desc) + '</p>' : '') +
+        chapters +
+        '<div class="cp-interview-links">' +
+        (v.originalUrl ? '<a class="cp-video-link" href="' + esc(v.originalUrl) +
+          '" target="_blank" rel="noopener noreferrer">查看原视频 ↗</a>' : '') +
+        (v.archiveNote ? '<span class="cp-video-archive">' + esc(v.archiveNote) + '</span>' : '') +
+        '</div></div></article>';
+    });
+    return html + '</section>';
+  }
+
+  /* 竞品分析：竞争格局概述 + 竞品卡片 + 主观判断（求职者视角） */
+  function competitorBlock(c) {
+    var cmp = c.competitors || {};
+    var list = cmp.players || [];
+    if (!list.length && !cmp.landscape && !cmp.myTake) return '';
+    var html = '<section class="cp-sec"><h4 class="cp-sec-title">竞品分析</h4>';
+    if (cmp.landscape) {
+      html += '<p class="cp-cmp-landscape">' + esc(cmp.landscape) + '</p>';
+    }
+    if (list.length) {
+      html += '<div class="cp-cmp-grid">';
+      list.forEach(function (p) {
+        var kindClass = 'cp-cmp-kind is-' + ({
+          '直接竞品': 'direct', '相邻赛道': 'adjacent', '间接竞品': 'indirect',
+          '错位竞品': 'offset', '单点竞品': 'point', '新兴竞品': 'emerging',
+          '平台型竞品': 'platform', '差异化竞品': 'diff', 'adjacent': 'adjacent'
+        }[p.kind] || 'other');
+        var rows = '';
+        function row(label, val, withSup) {
+          if (!val) return '';
+          return '<div class="cp-cmp-row"><span class="cp-cmp-k">' + esc(label) +
+            '</span><span class="cp-cmp-v">' + esc(val) +
+            (withSup && p.source ? sup(p.source) : '') + '</span></div>';
+        }
+        rows += row('定位', p.position);
+        rows += row('体量', p.scale);
+        rows += row('与本公司', p.vs, true);
+        var head = '<div class="cp-cmp-card-head">' +
+          '<span class="cp-cmp-mark tone-' + esc(p.tone || 'blue') + '">' +
+          esc(p.mark || '') + '</span>' +
+          '<div class="cp-cmp-ident"><span class="cp-cmp-name">' + esc(p.name || '') + '</span>' +
+          (p.vendor ? '<span class="cp-cmp-vendor">' + esc(p.vendor) + '</span>' : '') +
+          '</div><span class="' + kindClass + '">' + esc(p.kind || '') + '</span></div>';
+        var foot = (p.url
+          ? '<a class="cp-cmp-link" href="' + esc(p.url) +
+            '" target="_blank" rel="noopener noreferrer">访问官网 ↗</a>'
+          : '<span class="cp-cmp-src">竞品信息来源见 ' + sup(p.source || '') + '</span>');
+        html += '<article class="cp-cmp-card">' + head +
+          '<div class="cp-cmp-rows">' + rows + '</div>' +
+          '<div class="cp-cmp-foot">' + foot + '</div></article>';
+      });
+      html += '</div>';
+    }
+    if (cmp.myTake) {
+      html += '<div class="cp-mytake"><p class="cp-mytake-tag">我的判断（主观 · 站在求职者角度，非公司披露）</p><p>' +
+        esc(cmp.myTake) + '</p></div>';
+    }
     return html + '</section>';
   }
 
@@ -433,6 +573,7 @@
       '  <div class="cp-pills">' + pills + '</div>' +
       '</header>' +
       '<div class="cp-sec cp-sec-first">' + kpiBlock(c) + '</div>' +
+      predecessorBlock(c) +
       sectionBlock('公司在做什么', [
         { label: '主营业务', text: (c.business || {}).main },
         { label: '商业模式', text: (c.business || {}).model },
@@ -440,10 +581,12 @@
         { label: '平台自述', text: (c.business || {}).bossIntro, source: (c.bossProfile || {}).source }
       ]) +
       showcaseBlock(c) +
+      interviewBlock(c) +
       (c.chart ? renderChartBlock(c) : '') +
       (c.funding ? renderFundingBlock(c) : '') +
       recognitionBlock(c) +
       bossProfileBlock(c) +
+      competitorBlock(c) +
       outlookBlock(c) +
       officeBlock(c, id) +
       sourcesBlock(c);
@@ -532,6 +675,7 @@
   /* ══════════════ 启动 ══════════════ */
   function start() {
     fillQuick();
+    fillExpBadges();
     /* resume.html / index.html 双页面：委托全文档捕获徽章点击（含 main.js 动态渲染的卡片） */
     document.addEventListener('click', function (ev) {
       /* 公司名链接（a.cp-name-link）与历史徽章都走这里；拦截 <a> 默认跳转，

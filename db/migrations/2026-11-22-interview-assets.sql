@@ -1,0 +1,3 @@
+INSERT OR REPLACE INTO asset_links (file_key, url, source, bucket, content_type, size_bytes, uploaded_at, updated_at) VALUES
+('videos/interview-zhishu-lessie.mp4','https://7265-resume-ai-d9g7zghnxda2ee2cb-1307508155.cos.ap-shanghai.myqcloud.com/shenge-work/videos/interview-zhishu-lessie.mp4','cloudbase-cos','7265-resume-ai-d9g7zghnxda2ee2cb-1307508155','video/mp4',35593803,1795355905,1795355905),
+('images/company/zhishu/interview-poster.jpg','https://7265-resume-ai-d9g7zghnxda2ee2cb-1307508155.cos.ap-shanghai.myqcloud.com/shenge-work/images/company/zhishu/interview-poster.jpg','cloudbase-cos','7265-resume-ai-d9g7zghnxda2ee2cb-1307508155','image/jpeg',121813,1795355905,1795355905);

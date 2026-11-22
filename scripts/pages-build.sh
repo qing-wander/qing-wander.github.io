@@ -46,6 +46,13 @@ for item in css js data images videos favicon-64.png favicon.png; do
   fi
   cp -R "$item" "$OUT/"
 done
+# 访谈视频 34MB > Cloudflare Pages 单文件 25MiB 上限：媒体已上传到腾讯云 COS，
+# asset-manifest/asset-map 会把相对路径改写成 COS 直链；仓库 videos/ 仍保留原件便于重传。
+# 这里从产物中剔除，避免构建失败（本地 file:// 预览仍能读仓库根目录 videos/）。
+if [ -f "$OUT/videos/interview-zhishu-lessie.mp4" ]; then
+  rm -f "$OUT/videos/interview-zhishu-lessie.mp4"
+  echo "   · 已排除 videos/interview-zhishu-lessie.mp4（34MB，走 COS 直链）"
+fi
 
 echo "=== ③ assets（排除 character-views 原始素材）"
 if [ ! -d assets ]; then

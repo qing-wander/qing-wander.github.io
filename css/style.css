@@ -927,6 +927,26 @@ body.bar-tight .nav.open a { font-size: 17px; padding: 12px 10px; border-bottom:
   letter-spacing: 0.08em;
 }
 .exp-card:nth-child(2)::before { background: var(--blue); }
+/* 左上角方块：填充公司 logo（main.js 渲染占位 → company-profile.js 注入图片） */
+.exp-badge {
+  position: absolute;
+  top: -3px; left: -3px;
+  width: 46px; height: 46px;
+  box-sizing: border-box;
+  border-right: var(--border);
+  border-bottom: var(--border);
+  background: var(--orange);
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden;
+  z-index: 2;
+  cursor: pointer;
+}
+.exp-card:nth-child(2) .exp-badge { background: var(--blue); }
+.exp-badge img { display: block; width: 100%; height: 100%; object-fit: cover; }
+/* 有 logo 时隐藏 ::before 底色方块与 "WORK" 字样，避免叠色透出 */
+.exp-card.has-logo-badge::before,
+.exp-card.has-logo-badge::after { display: none; }
+.exp-badge:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
 .exp-head {
   display: flex;
   justify-content: space-between;

@@ -201,6 +201,11 @@
         quick = '<p class="cp-quick" data-cp-quick="' + esc(x.profileId) + '" hidden></p>';
       }
       return '<article class="exp-card reveal">' +
+        /* 左上角方块：由 company-profile.js 用公司 logo 填充（点击开档案抽屉） */
+        (x.profileId
+          ? '<span class="exp-badge" data-cp="' + esc(x.profileId) +
+            '" role="button" tabindex="0" aria-label="查看公司档案"></span>'
+          : '') +
         '<div class="exp-head"><div><h3 class="exp-company">' + name + '</h3>' +
         quick +
         '<p class="exp-role">' + esc(x.role) + '</p></div><span class="exp-time">' + esc(x.time) + '</span></div>' +

@@ -1,10 +1,20 @@
 {
-  "_generated": "2026-11-22T10:44:58.799Z",
+  "_generated": "2026-11-22T13:58:00.000Z",
   "_source": "tencent-cloudbase-cos",
   "_bucket": "7265-resume-ai-d9g7zghnxda2ee2cb-1307508155",
   "_prefix": "shenge-work/",
   "_baseUrl": "https://7265-resume-ai-d9g7zghnxda2ee2cb-1307508155.cos.ap-shanghai.myqcloud.com/shenge-work/",
   "files": {
+    "assets/skins/models/FemaleRigged.glb": "https://7265-resume-ai-d9g7zghnxda2ee2cb-1307508155.cos.ap-shanghai.myqcloud.com/shenge-work/assets/skins/models/FemaleRigged.glb",
+    "assets/skins/models/Fox.glb": "https://7265-resume-ai-d9g7zghnxda2ee2cb-1307508155.cos.ap-shanghai.myqcloud.com/shenge-work/assets/skins/models/Fox.glb",
+    "assets/skins/models/MaleRigged.glb": "https://7265-resume-ai-d9g7zghnxda2ee2cb-1307508155.cos.ap-shanghai.myqcloud.com/shenge-work/assets/skins/models/MaleRigged.glb",
+    "assets/skins/models/Michelle.glb": "https://7265-resume-ai-d9g7zghnxda2ee2cb-1307508155.cos.ap-shanghai.myqcloud.com/shenge-work/assets/skins/models/Michelle.glb",
+    "assets/skins/models/RobotExpressive.glb": "https://7265-resume-ai-d9g7zghnxda2ee2cb-1307508155.cos.ap-shanghai.myqcloud.com/shenge-work/assets/skins/models/RobotExpressive.glb",
+    "assets/skins/models/Soldier.glb": "https://7265-resume-ai-d9g7zghnxda2ee2cb-1307508155.cos.ap-shanghai.myqcloud.com/shenge-work/assets/skins/models/Soldier.glb",
+    "assets/skins/models/Xbot-ivory.glb": "https://7265-resume-ai-d9g7zghnxda2ee2cb-1307508155.cos.ap-shanghai.myqcloud.com/shenge-work/assets/skins/models/Xbot-ivory.glb",
+    "assets/skins/models/Xbot.glb": "https://7265-resume-ai-d9g7zghnxda2ee2cb-1307508155.cos.ap-shanghai.myqcloud.com/shenge-work/assets/skins/models/Xbot.glb",
+    "favicon-64.png": "https://7265-resume-ai-d9g7zghnxda2ee2cb-1307508155.cos.ap-shanghai.myqcloud.com/shenge-work/favicon-64.png",
+    "favicon.png": "https://7265-resume-ai-d9g7zghnxda2ee2cb-1307508155.cos.ap-shanghai.myqcloud.com/shenge-work/favicon.png",
     "images/avatar-female.png": "https://7265-resume-ai-d9g7zghnxda2ee2cb-1307508155.cos.ap-shanghai.myqcloud.com/shenge-work/images/avatar-female.png",
     "images/avatar-male.png": "https://7265-resume-ai-d9g7zghnxda2ee2cb-1307508155.cos.ap-shanghai.myqcloud.com/shenge-work/images/avatar-male.png",
     "images/cert-1.jpg": "https://7265-resume-ai-d9g7zghnxda2ee2cb-1307508155.cos.ap-shanghai.myqcloud.com/shenge-work/images/cert-1.jpg",
@@ -47,6 +57,7 @@
     "images/company/fanggeek/team-06-office-lobby.png": "https://7265-resume-ai-d9g7zghnxda2ee2cb-1307508155.cos.ap-shanghai.myqcloud.com/shenge-work/images/company/fanggeek/team-06-office-lobby.png",
     "images/company/fanggeek/team-07-seaside-team-photo.png": "https://7265-resume-ai-d9g7zghnxda2ee2cb-1307508155.cos.ap-shanghai.myqcloud.com/shenge-work/images/company/fanggeek/team-07-seaside-team-photo.png",
     "images/company/fanggeek/team-08-outdoor-expansion.png": "https://7265-resume-ai-d9g7zghnxda2ee2cb-1307508155.cos.ap-shanghai.myqcloud.com/shenge-work/images/company/fanggeek/team-08-outdoor-expansion.png",
+    "images/company/zhishu/interview-poster.jpg": "https://7265-resume-ai-d9g7zghnxda2ee2cb-1307508155.cos.ap-shanghai.myqcloud.com/shenge-work/images/company/zhishu/interview-poster.jpg",
     "images/company/zhishu/logo.png": "https://7265-resume-ai-d9g7zghnxda2ee2cb-1307508155.cos.ap-shanghai.myqcloud.com/shenge-work/images/company/zhishu/logo.png",
     "images/company/zhishu/office-01-open-workspace.png": "https://7265-resume-ai-d9g7zghnxda2ee2cb-1307508155.cos.ap-shanghai.myqcloud.com/shenge-work/images/company/zhishu/office-01-open-workspace.png",
     "images/company/zhishu/office-02-superlinear-brand-wall.png": "https://7265-resume-ai-d9g7zghnxda2ee2cb-1307508155.cos.ap-shanghai.myqcloud.com/shenge-work/images/company/zhishu/office-02-superlinear-brand-wall.png",
@@ -69,16 +80,7 @@
     "images/陈培胜-作品集-分享卡-竖版-预览.png": "https://7265-resume-ai-d9g7zghnxda2ee2cb-1307508155.cos.ap-shanghai.myqcloud.com/shenge-work/images/陈培胜-作品集-分享卡-竖版-预览.png",
     "images/陈培胜-作品集-分享卡-竖版-预览.webp": "https://7265-resume-ai-d9g7zghnxda2ee2cb-1307508155.cos.ap-shanghai.myqcloud.com/shenge-work/images/陈培胜-作品集-分享卡-竖版-预览.webp",
     "images/陈培胜-作品集-分享卡-竖版.png": "https://7265-resume-ai-d9g7zghnxda2ee2cb-1307508155.cos.ap-shanghai.myqcloud.com/shenge-work/images/陈培胜-作品集-分享卡-竖版.png",
-    "videos/lessie-demo.mp4": "https://7265-resume-ai-d9g7zghnxda2ee2cb-1307508155.cos.ap-shanghai.myqcloud.com/shenge-work/videos/lessie-demo.mp4",
-    "assets/skins/models/FemaleRigged.glb": "https://7265-resume-ai-d9g7zghnxda2ee2cb-1307508155.cos.ap-shanghai.myqcloud.com/shenge-work/assets/skins/models/FemaleRigged.glb",
-    "assets/skins/models/Fox.glb": "https://7265-resume-ai-d9g7zghnxda2ee2cb-1307508155.cos.ap-shanghai.myqcloud.com/shenge-work/assets/skins/models/Fox.glb",
-    "assets/skins/models/MaleRigged.glb": "https://7265-resume-ai-d9g7zghnxda2ee2cb-1307508155.cos.ap-shanghai.myqcloud.com/shenge-work/assets/skins/models/MaleRigged.glb",
-    "assets/skins/models/Michelle.glb": "https://7265-resume-ai-d9g7zghnxda2ee2cb-1307508155.cos.ap-shanghai.myqcloud.com/shenge-work/assets/skins/models/Michelle.glb",
-    "assets/skins/models/RobotExpressive.glb": "https://7265-resume-ai-d9g7zghnxda2ee2cb-1307508155.cos.ap-shanghai.myqcloud.com/shenge-work/assets/skins/models/RobotExpressive.glb",
-    "assets/skins/models/Soldier.glb": "https://7265-resume-ai-d9g7zghnxda2ee2cb-1307508155.cos.ap-shanghai.myqcloud.com/shenge-work/assets/skins/models/Soldier.glb",
-    "assets/skins/models/Xbot-ivory.glb": "https://7265-resume-ai-d9g7zghnxda2ee2cb-1307508155.cos.ap-shanghai.myqcloud.com/shenge-work/assets/skins/models/Xbot-ivory.glb",
-    "assets/skins/models/Xbot.glb": "https://7265-resume-ai-d9g7zghnxda2ee2cb-1307508155.cos.ap-shanghai.myqcloud.com/shenge-work/assets/skins/models/Xbot.glb",
-    "favicon.png": "https://7265-resume-ai-d9g7zghnxda2ee2cb-1307508155.cos.ap-shanghai.myqcloud.com/shenge-work/favicon.png",
-    "favicon-64.png": "https://7265-resume-ai-d9g7zghnxda2ee2cb-1307508155.cos.ap-shanghai.myqcloud.com/shenge-work/favicon-64.png"
+    "videos/interview-zhishu-lessie.mp4": "https://7265-resume-ai-d9g7zghnxda2ee2cb-1307508155.cos.ap-shanghai.myqcloud.com/shenge-work/videos/interview-zhishu-lessie.mp4",
+    "videos/lessie-demo.mp4": "https://7265-resume-ai-d9g7zghnxda2ee2cb-1307508155.cos.ap-shanghai.myqcloud.com/shenge-work/videos/lessie-demo.mp4"
   }
 }
