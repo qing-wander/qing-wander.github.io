@@ -12,9 +12,13 @@
 #   预览环境  https://<commit>.shenge-work.pages.dev
 #
 # 说明：
-#   · 上传静态资源（HTML / CSS / JS / data / images / videos / assets(3D 皮肤，排除 character-views 原始素材) / favicon）
-#     及 functions/api（Cloudflare Pages Functions：留言墙 /api/wall、简历投递 /api/deliver）；
-#     不上传 functions/tencent（腾讯云函数源码）、worker/、.git、docs、assets/character-views；
+#   · 上传静态资源（根目录全部 .html / CSS / JS / data / images / videos /
+#     assets(3D 皮肤，排除 character-views 原始素材) / favicon）及 functions/api
+#     （Cloudflare Pages Functions：留言墙 /api/wall、简历投递 /api/deliver）；
+#     产物统一由 scripts/pages-build.sh 生成，GitHub 自动构建的控制台命令为：
+#       Build command = bash scripts/pages-build.sh ／ Output dir = dist
+#     不上传 functions/tencent（腾讯云函数源码）、worker/、.git、docs、
+#     assets/character-views；
 #   · assets/character-views 为混元/Mixamo 原始素材（约 573MB，含 28–49MB 单文件），
 #     不参与线上部署；已从 git 移除（.gitignore 排除），整目录归档到飞书云盘：
 #     https://my.feishu.cn/drive/folder/BnalfpLM8lzNYLdkYu3cqH71nAc
@@ -47,37 +51,14 @@ trap 'rm -rf "$STAGE"' EXIT
 # Functions 侧要渲染简历变体，模板/数据必须先嵌入（生成物，勿手改）
 node scripts/embed_assets.mjs
 
-echo "=== ① 收集静态资源 + Pages Functions"
-# 根目录所有 .html 自动纳入：jd.html / company.html 这类后来新增的独立页，
-# 不必再改白名单。曾因这里只列 index.html + resume.html，导致 pages.dev 上
-# 点 hero「JD 匹配」跳到 /jd.html 后被 SPA fallback 回首页，看起来像「点了没反应」。
-# 排除 _ 开头的本地探针 HTML（_glprobe.html 等，均为未跟踪的临时调试页，不能上线）
-HTML_FILES=()
-for f in *.html; do
-  [ -f "$f" ] || continue
-  case "$f" in _*) continue ;; esac
-  HTML_FILES+=("$f")
-done
-if [ "${#HTML_FILES[@]}" -eq 0 ]; then
-  echo "✗ 根目录没有可部署的 .html 文件，先检查仓库是否完整"
-  exit 1
-fi
-for item in "${HTML_FILES[@]}" css js data images videos favicon-64.png favicon.png functions; do
-  if [ ! -e "$item" ]; then
-    echo "✗ 缺少 $item，先检查仓库是否完整"
-    exit 1
-  fi
-  rsync -a "$item" "$STAGE/"
-done
-echo "   已纳入 HTML：${HTML_FILES[*]}"
-# assets：排除未上线的大体积原始素材，只带 skins/vendor 等线上在用的文件
-if [ ! -d assets ]; then
-  echo "✗ 缺少 assets/，先检查仓库是否完整"
-  exit 1
-fi
-rsync -a --exclude='character-views' assets "$STAGE/"
-# 只带 functions/api（留言墙 / 投递），不带 functions/tencent（腾讯云函数源码）
-rm -rf "$STAGE/functions/tencent"
+echo "=== ① 构建 Pages 产物（与 GitHub 自动构建共用 scripts/pages-build.sh）"
+# 以前这里维护了一份静态资源白名单，Cloudflare 控制台里还有另一份更旧的白名单，
+# 两边都漏掉 jd.html / company.html / 404.html 与 functions/，导致 pages.dev 上
+# 点 hero「JD 匹配」跳到 /jd.html 后被 SPA fallback 吞回首页（github.io 一直正常）。
+# 现在自动构建与手动部署共用同一个脚本：根目录 HTML 自动收集，新增独立页无需改白名单。
+bash scripts/pages-build.sh
+rsync -a "$ROOT/dist/" "$STAGE/"
+echo "   已纳入 HTML：$(cd "$STAGE" && ls -1 *.html | tr '\n' ' ')"
 if [ ! -d "$STAGE/functions/api" ]; then
   echo "✗ 缺少 functions/api（留言墙 / 投递函数）"
   exit 1

@@ -1,8 +1,8 @@
 {
-  "kb_version": "kb-5f9004b7",
+  "kb_version": "kb-66b2a390",
   "generated_from": "data/site-data.json",
   "count": 42,
-  "total_chars": 7252,
+  "total_chars": 7215,
   "chunks": [
     {
       "id": "me-01",
@@ -19,7 +19,7 @@
       "visibility": "public",
       "lang": "zh",
       "source_path": "data/site-data.json#/hero",
-      "kb_version": "kb-5f9004b7"
+      "kb_version": "kb-66b2a390"
     },
     {
       "id": "me-02",
@@ -38,7 +38,7 @@
       "visibility": "public",
       "lang": "zh",
       "source_path": "data/site-data.json#/objective/cards",
-      "kb_version": "kb-5f9004b7"
+      "kb_version": "kb-66b2a390"
     },
     {
       "id": "me-03",
@@ -56,7 +56,7 @@
       "visibility": "public",
       "lang": "zh",
       "source_path": "data/site-data.json#/resume/experience",
-      "kb_version": "kb-5f9004b7"
+      "kb_version": "kb-66b2a390"
     },
     {
       "id": "edu-main",
@@ -76,7 +76,7 @@
       "visibility": "public",
       "lang": "zh",
       "source_path": "data/site-data.json#/resume/education",
-      "kb_version": "kb-5f9004b7"
+      "kb_version": "kb-66b2a390"
     },
     {
       "id": "edu-verify",
@@ -91,7 +91,7 @@
       "visibility": "public",
       "lang": "zh",
       "source_path": "data/site-data.json#/resume/education/verify",
-      "kb_version": "kb-5f9004b7"
+      "kb_version": "kb-66b2a390"
     },
     {
       "id": "exp-inmen-01",
@@ -112,7 +112,7 @@
       "visibility": "public",
       "lang": "zh",
       "source_path": "data/site-data.json#/resume/experience/0/bullets/0",
-      "kb_version": "kb-5f9004b7"
+      "kb_version": "kb-66b2a390"
     },
     {
       "id": "exp-lessie-01",
@@ -130,7 +130,7 @@
       "visibility": "public",
       "lang": "zh",
       "source_path": "data/site-data.json#/resume/experience/1/bullets/0",
-      "kb_version": "kb-5f9004b7"
+      "kb_version": "kb-66b2a390"
     },
     {
       "id": "exp-lessie-02",
@@ -145,7 +145,7 @@
       "visibility": "public",
       "lang": "zh",
       "source_path": "data/site-data.json#/resume/experience/1/bullets/1",
-      "kb_version": "kb-5f9004b7"
+      "kb_version": "kb-66b2a390"
     },
     {
       "id": "exp-lessie-03",
@@ -162,7 +162,7 @@
       "visibility": "public",
       "lang": "zh",
       "source_path": "data/site-data.json#/resume/experience/1/bullets/2",
-      "kb_version": "kb-5f9004b7"
+      "kb_version": "kb-66b2a390"
     },
     {
       "id": "exp-lessie-04",
@@ -179,7 +179,7 @@
       "visibility": "public",
       "lang": "zh",
       "source_path": "data/site-data.json#/resume/experience/1/bullets/3",
-      "kb_version": "kb-5f9004b7"
+      "kb_version": "kb-66b2a390"
     },
     {
       "id": "exp-fangjike-01",
@@ -196,7 +196,7 @@
       "visibility": "public",
       "lang": "zh",
       "source_path": "data/site-data.json#/resume/experience/2/bullets/0",
-      "kb_version": "kb-5f9004b7"
+      "kb_version": "kb-66b2a390"
     },
     {
       "id": "exp-chowsang-01",
@@ -213,7 +213,7 @@
       "visibility": "public",
       "lang": "zh",
       "source_path": "data/site-data.json#/resume/experience/3/bullets/0",
-      "kb_version": "kb-5f9004b7"
+      "kb_version": "kb-66b2a390"
     },
     {
       "id": "exp-chowsang-02",
@@ -231,7 +231,7 @@
       "visibility": "public",
       "lang": "zh",
       "source_path": "data/site-data.json#/resume/experience/3/bullets/1",
-      "kb_version": "kb-5f9004b7"
+      "kb_version": "kb-66b2a390"
     },
     {
       "id": "proj-comein-lead",
@@ -250,7 +250,7 @@
       "visibility": "public",
       "lang": "zh",
       "source_path": "data/site-data.json#/resume/projects/0",
-      "kb_version": "kb-5f9004b7"
+      "kb_version": "kb-66b2a390"
     },
     {
       "id": "proj-comein-01",
@@ -269,7 +269,7 @@
       "visibility": "public",
       "lang": "zh",
       "source_path": "data/site-data.json#/resume/projects/0/bullets/0",
-      "kb_version": "kb-5f9004b7"
+      "kb_version": "kb-66b2a390"
     },
     {
       "id": "proj-comein-02",
@@ -289,7 +289,7 @@
       "visibility": "public",
       "lang": "zh",
       "source_path": "data/site-data.json#/resume/projects/0/bullets/1",
-      "kb_version": "kb-5f9004b7"
+      "kb_version": "kb-66b2a390"
     },
     {
       "id": "proj-comein-03",
@@ -308,7 +308,7 @@
       "visibility": "public",
       "lang": "zh",
       "source_path": "data/site-data.json#/resume/projects/0/bullets/2",
-      "kb_version": "kb-5f9004b7"
+      "kb_version": "kb-66b2a390"
     },
     {
       "id": "proj-comein-04",
@@ -329,7 +329,7 @@
       "visibility": "public",
       "lang": "zh",
       "source_path": "data/site-data.json#/resume/projects/0/bullets/3",
-      "kb_version": "kb-5f9004b7"
+      "kb_version": "kb-66b2a390"
     },
     {
       "id": "proj-comein-05",
@@ -349,7 +349,7 @@
       "visibility": "public",
       "lang": "zh",
       "source_path": "data/site-data.json#/resume/projects/0/bullets/4",
-      "kb_version": "kb-5f9004b7"
+      "kb_version": "kb-66b2a390"
     },
     {
       "id": "proj-lessie-lead",
@@ -367,7 +367,7 @@
       "visibility": "public",
       "lang": "zh",
       "source_path": "data/site-data.json#/resume/projects/1",
-      "kb_version": "kb-5f9004b7"
+      "kb_version": "kb-66b2a390"
     },
     {
       "id": "proj-lessie-01",
@@ -386,7 +386,7 @@
       "visibility": "public",
       "lang": "zh",
       "source_path": "data/site-data.json#/resume/projects/1/bullets/0",
-      "kb_version": "kb-5f9004b7"
+      "kb_version": "kb-66b2a390"
     },
     {
       "id": "proj-lessie-02",
@@ -404,7 +404,7 @@
       "visibility": "public",
       "lang": "zh",
       "source_path": "data/site-data.json#/resume/projects/1/bullets/1",
-      "kb_version": "kb-5f9004b7"
+      "kb_version": "kb-66b2a390"
     },
     {
       "id": "proj-lessie-03",
@@ -425,7 +425,7 @@
       "visibility": "public",
       "lang": "zh",
       "source_path": "data/site-data.json#/resume/projects/1/bullets/2",
-      "kb_version": "kb-5f9004b7"
+      "kb_version": "kb-66b2a390"
     },
     {
       "id": "proj-lessie-04",
@@ -446,7 +446,7 @@
       "visibility": "public",
       "lang": "zh",
       "source_path": "data/site-data.json#/resume/projects/1/bullets/3",
-      "kb_version": "kb-5f9004b7"
+      "kb_version": "kb-66b2a390"
     },
     {
       "id": "proj-lessie-05",
@@ -465,7 +465,7 @@
       "visibility": "public",
       "lang": "zh",
       "source_path": "data/site-data.json#/resume/projects/1/bullets/4",
-      "kb_version": "kb-5f9004b7"
+      "kb_version": "kb-66b2a390"
     },
     {
       "id": "proj-hicreator-lead",
@@ -480,7 +480,7 @@
       "visibility": "public",
       "lang": "zh",
       "source_path": "data/site-data.json#/resume/projects/2",
-      "kb_version": "kb-5f9004b7"
+      "kb_version": "kb-66b2a390"
     },
     {
       "id": "proj-hicreator-01",
@@ -495,7 +495,7 @@
       "visibility": "public",
       "lang": "zh",
       "source_path": "data/site-data.json#/resume/projects/2/bullets/0",
-      "kb_version": "kb-5f9004b7"
+      "kb_version": "kb-66b2a390"
     },
     {
       "id": "proj-hicreator-02",
@@ -513,7 +513,7 @@
       "visibility": "public",
       "lang": "zh",
       "source_path": "data/site-data.json#/resume/projects/2/bullets/1",
-      "kb_version": "kb-5f9004b7"
+      "kb_version": "kb-66b2a390"
     },
     {
       "id": "proj-hicreator-03",
@@ -531,7 +531,7 @@
       "visibility": "public",
       "lang": "zh",
       "source_path": "data/site-data.json#/resume/projects/2/bullets/2",
-      "kb_version": "kb-5f9004b7"
+      "kb_version": "kb-66b2a390"
     },
     {
       "id": "proj-hicreator-04",
@@ -548,7 +548,7 @@
       "visibility": "public",
       "lang": "zh",
       "source_path": "data/site-data.json#/resume/projects/2/bullets/3",
-      "kb_version": "kb-5f9004b7"
+      "kb_version": "kb-66b2a390"
     },
     {
       "id": "skill-01",
@@ -570,7 +570,7 @@
       "visibility": "public",
       "lang": "zh",
       "source_path": "data/site-data.json#/resume/skills/0",
-      "kb_version": "kb-5f9004b7"
+      "kb_version": "kb-66b2a390"
     },
     {
       "id": "skill-02",
@@ -592,7 +592,7 @@
       "visibility": "public",
       "lang": "zh",
       "source_path": "data/site-data.json#/resume/skills/1",
-      "kb_version": "kb-5f9004b7"
+      "kb_version": "kb-66b2a390"
     },
     {
       "id": "skill-03",
@@ -607,7 +607,7 @@
       "visibility": "public",
       "lang": "zh",
       "source_path": "data/site-data.json#/resume/skills/2",
-      "kb_version": "kb-5f9004b7"
+      "kb_version": "kb-66b2a390"
     },
     {
       "id": "skill-04",
@@ -629,7 +629,7 @@
       "visibility": "public",
       "lang": "zh",
       "source_path": "data/site-data.json#/resume/skills/3",
-      "kb_version": "kb-5f9004b7"
+      "kb_version": "kb-66b2a390"
     },
     {
       "id": "skill-05",
@@ -650,7 +650,7 @@
       "visibility": "public",
       "lang": "zh",
       "source_path": "data/site-data.json#/resume/skills/4",
-      "kb_version": "kb-5f9004b7"
+      "kb_version": "kb-66b2a390"
     },
     {
       "id": "work-w01",
@@ -667,7 +667,7 @@
       "visibility": "public",
       "lang": "zh",
       "source_path": "data/site-data.json#/works/0",
-      "kb_version": "kb-5f9004b7"
+      "kb_version": "kb-66b2a390"
     },
     {
       "id": "work-w02",
@@ -684,7 +684,7 @@
       "visibility": "public",
       "lang": "zh",
       "source_path": "data/site-data.json#/works/1",
-      "kb_version": "kb-5f9004b7"
+      "kb_version": "kb-66b2a390"
     },
     {
       "id": "work-w03",
@@ -702,7 +702,7 @@
       "visibility": "public",
       "lang": "zh",
       "source_path": "data/site-data.json#/works/2",
-      "kb_version": "kb-5f9004b7"
+      "kb_version": "kb-66b2a390"
     },
     {
       "id": "work-w04",
@@ -717,7 +717,7 @@
       "visibility": "public",
       "lang": "zh",
       "source_path": "data/site-data.json#/works/3",
-      "kb_version": "kb-5f9004b7"
+      "kb_version": "kb-66b2a390"
     },
     {
       "id": "work-w05",
@@ -732,7 +732,7 @@
       "visibility": "public",
       "lang": "zh",
       "source_path": "data/site-data.json#/works/4",
-      "kb_version": "kb-5f9004b7"
+      "kb_version": "kb-66b2a390"
     },
     {
       "id": "work-w06",
@@ -747,7 +747,7 @@
       "visibility": "public",
       "lang": "zh",
       "source_path": "data/site-data.json#/works/5",
-      "kb_version": "kb-5f9004b7"
+      "kb_version": "kb-66b2a390"
     },
     {
       "id": "contact-01",
@@ -756,13 +756,13 @@
       "entity_id": "contact",
       "entity_type": "contact",
       "title": "陈培胜 · 公开联系方式",
-      "text": "【陈培胜 · 联系方式】EMAIL / 邮箱：shenge.work@gmail.com；GITHUB / 代码仓库：github.com/shenge-work；BASE / 常驻：广东省深圳市；BLOG / 博客：shenge-blog.pages.dev。",
+      "text": "【陈培胜 · 联系方式】EMAIL / 邮箱：shenge.work@gmail.com；BLOG / 博客：shenge-blog.pages.dev；BASE / 常驻：广东省深圳市。",
       "url": "index.html#contact",
       "tags": [],
       "visibility": "public",
       "lang": "zh",
       "source_path": "data/site-data.json#/contact/cards",
-      "kb_version": "kb-5f9004b7"
+      "kb_version": "kb-66b2a390"
     }
   ]
 }

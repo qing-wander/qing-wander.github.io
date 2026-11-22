@@ -3,6 +3,9 @@ worker/.deploy-url
 worker/.wrangler/
 node_modules/
 
+# Cloudflare Pages 构建产物（scripts/pages-build.sh 生成，勿入库）
+dist/
+
 # 本地 wrangler 缓存（wrangler d1 execute --local / pages dev 产生）
 .wrangler/
 
