@@ -40,6 +40,23 @@
 
 > **线上当前状态（2026-11-16 已开放）**：`GET https://shenge-work.pages.dev/api/wall` 返回 `open:true`，KV namespace `site-kv`（ID `f5253a16b4d84a20a32c0cd497b1f269`）已以变量名 `SITE_KV` 绑定到 `shenge-work` 的 **Production** 环境，新版前后端也已随部署上线。`./scripts/wall-check.sh` 11/11 全过。
 
+### 新留言邮件通知（2026-11-22 · Resend）
+
+留言一旦**真正写库成功**，就给站长发一封通知邮件；校验失败 / 重复提交 / 限流 / 填写不完整一律不发。
+
+| 项目 | 实现 |
+|---|---|
+| 触发点 | `functions/api/wall.js` 的 `onRequestPost`，在 `INSERT` + `upsertDevice` + `trim` 之后 |
+| 发信模块 | `functions/lib/wall-notify.js`（纯函数构造邮件 + 单一 `fetch` 出口） |
+| 收件人 | 默认 `shenge.work@gmail.com`，可用 `WALL_NOTIFY_TO` 覆盖；当前 Resend 未验证域名，`onboarding@resend.dev` 只能发给注册邮箱 |
+| 发件人 | 复用 `RESEND_FROM`；想单独设置可用 `WALL_NOTIFY_FROM` |
+| 邮件内容 | 称呼、北京时间、来源域名、设备哈希、留言 ID、完整正文（保留换行）、后台入口；访客输入全部 HTML 转义 |
+| 不阻塞访客 | 线上走 `ctx.waitUntil` 挂后台任务，响应立即返回；本地 dev server 没有 ctx 时直接 await |
+| 失败策略 | 无 key / 收件人非法 / Resend 报错 / 网络异常 → 只写日志，留言接口照常 `201`，不做重试（避免重复通知） |
+
+> 留言墙本身已有每 IP 与全站日额度限制，通知复用同一道门，不再额外限流；Resend 免费额度 100 封/天，远高于留言墙的 30 条/天上限。
+> 测试：`node --test tests/wall-notify.test.mjs`（mock Resend，不真发信），覆盖转义、收件人覆盖、无 key、Resend 报错、成功写入才发信、重复提交不重复发、`waitUntil` 后台执行。
+
 **架构为什么这样选**：
 - GitHub Pages 只出静态文件，没有后端——两个 API 都部署在 **Cloudflare Pages（shenge-work.pages.dev）**，国内可达、免费额度足够；
 - 发信走 Resend：调用发生在 Cloudflare 节点（无墙），API key 只放 Cloudflare 环境变量，前端代码永不接触；
@@ -100,8 +117,10 @@
 
 | 类型 | 变量名 | 值 | 用途 |
 |---|---|---|---|
-| Secret | `RESEND_API_KEY` | `re_...`（①里拿到的） | 发信；不配置则前端自动走 mailto 兜底 |
-| Variable | `RESEND_FROM` | `陈培胜简历 <resume@你的已验证域名>` | 发件人；不配则用 `onboarding@resend.dev`（只能发注册邮箱） |
+| Secret | `RESEND_API_KEY` | `re_...`（①里拿到的） | 发信；不配置则前端自动走 mailto 兜底；留言通知也复用它 |
+| Variable | `RESEND_FROM` | `陈培胜简历 <resume@你的已验证域名>` | 发件人；不配则用 `onboarding@resend.dev`（只能发注册邮箱）；留言通知也复用它 |
+| Variable | `WALL_NOTIFY_TO` | 如 `shenge.work@gmail.com`（可选） | 留言通知收件人；不配默认就是 Resend 注册邮箱，当前只能发这一个地址 |
+| Variable | `WALL_NOTIFY_FROM` | 如 `Portfolio Wall <onboarding@resend.dev>`（可选） | 留言通知单独指定发件人；不配复用 `RESEND_FROM` |
 | Variable | `DELIVER_BCC` | 如 `shenge.work@gmail.com`（可选） | 站长收一份转发备案，不配则完全不经手 |
 | Variable | `ALLOWED_ORIGINS` | `https://shenge-work.github.io,https://shenge-work.pages.dev` | 跨域白名单 |
 | Variable | `WALL_ADMIN_TOKEN` | 自拟一串随机字符（如 32 位） | 留言管理删除令牌（可选） |
@@ -127,6 +146,7 @@
 | 一键自检 | `./scripts/wall-check.sh` | 只读检查 open / 分页 / peek / CORS；失败时打印 KV 绑定指引 |
 | 留言墙读取 | `https://shenge-work.pages.dev/api/wall` | `{"ok":true,"open":true,"messages":[...],"total":N,"hasMore":...}` |
 | 留言提交 | 主页滚到 SEC.10 留言墙 → 填写提交 | 列表立即出现新留言并高亮；`⌘/Ctrl + Enter` 也可提交 |
+| 留言通知 | 提交一条真实留言 | 站长邮箱约几秒内收到「【留言墙】…」邮件；同一条重复提交不会重复发 |
 | 加载更早 | 墙上超过 20 条时点「加载更早的留言」 | 每次追加 20 条，读到 100 条上限 |
 | 转发发信 | `resume.html` → 「发简历到邮箱」→ 填你自己的另一个邮箱提交 | 该邮箱收到「陈培胜 · AI Agent 工程师 · 在线简历」，含两个简历入口按钮 |
 | 多收件人 | 收件人填 `a@x.com, b@y.com` | 一封邮件同时到达两人（最多 3 个） |
@@ -153,7 +173,7 @@ PORT=8878 WALL_NO_KV=1 node scripts/dev-api-server.mjs  # 模拟「线上忘了�
 # 打开 http://127.0.0.1:8877/index.html?wallDebug=1 与 /resume.html 手动点一遍
 ```
 
-联调服务器默认带一个本地管理令牌 `local-admin-token`（可用 `WALL_ADMIN_TOKEN` 覆盖），并用 `node:sqlite` 内存库模拟 D1，所以固定窗口限流到期解锁也能测；想验「Turnstile 未通过→严格档」就加 `TURNSTILE_SECRET=test` 起服务。注意 `本地预览.command` 起的是 8765 纯静态服务，**没有 `/api`**；页面会提示改用 8877 联调服务器。
+联调服务器默认带一个本地管理令牌 `local-admin-token`（可用 `WALL_ADMIN_TOKEN` 覆盖），并用 `node:sqlite` 内存库模拟 D1，所以固定窗口限流到期解锁也能测；想验「Turnstile 未通过→严格档」就加 `TURNSTILE_SECRET=test` 起服务。Resend 发信在本地被拦截成日志：提交留言后终端会打印 `[mock resend]`，其中 `subject` 以「【留言墙】」开头的就是新留言通知（`MOCK_RESEND=unverified` 可模拟被拒，留言仍会成功）。注意 `本地预览.command` 起的是 8765 纯静态服务，**没有 `/api`**；页面会提示改用 8877 联调服务器。
 
 已回归的点：留言 GET/分页/peek/POST/重复提交/固定窗口限流/换行与 emoji 截断/来源校验/管理员删除；转发接口的收件人解析（多收件人、去重、格式校验、最多 3 个）、Reply-To、主题与正文、每收件人/每 IP/全站限额；未配置与域名未验证两种情况的 mailto 兜底；移动端 320–390px 布局。
 

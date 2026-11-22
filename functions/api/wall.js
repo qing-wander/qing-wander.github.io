@@ -30,7 +30,15 @@
      ALLOWED_ORIGINS     可选，逗号分隔来源白名单
      WALL_ADMIN_TOKEN    应急删除令牌
      TURNSTILE_SECRET    Turnstile 服务端密钥
+
+   新留言通知（写入成功后旁路发信，失败不影响访客）：
+     RESEND_API_KEY      与简历转发共用；未配置则跳过通知
+     RESEND_FROM         与简历转发共用（默认 onboarding@resend.dev）
+     WALL_NOTIFY_TO      收件人，默认 shenge.work@gmail.com（Resend 未验证域名时只能发注册邮箱）
+     WALL_NOTIFY_FROM    可选，单独指定留言通知的发件人
    ────────────────────────────────────────────────────────────────────── */
+
+import { notifyWallMessage } from '../lib/wall-notify.js';
 
 const JSON_HEADERS = { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' };
 
@@ -319,7 +327,7 @@ export async function onRequestGet({ request, env }) {
   }
 }
 
-export async function onRequestPost({ request, env }) {
+export async function onRequestPost({ request, env, ctx }) {
   const origin = request.headers.get('Origin') || '';
   const allow = allowedOrigins(env);
   if (!isAllowedOrigin(origin, allow)) {
@@ -412,6 +420,18 @@ export async function onRequestPost({ request, env }) {
 
     await upsertDevice(db, dh, now, clean(request.headers.get('User-Agent'), 120));
     await trim(db, dh);
+
+    /* 新留言通知：只在真正写库成功后触发（重复提交 / 限流 / 校验失败都不会走到这里）。
+       线上用 ctx.waitUntil 挂在请求后执行，访客不用等 Resend 响应；
+       本地 dev server / 单测没有 ctx，就直接 await，方便断言发信结果。
+       notifyWallMessage 内部吞掉所有异常，失败只留日志。 */
+    const notice = notifyWallMessage(env, item, {
+      origin: request.headers.get('Origin') || '',
+      deviceHash: dh,
+    });
+    if (ctx && typeof ctx.waitUntil === 'function') ctx.waitUntil(notice);
+    else await notice;
+
     return json(await listPage(db, dh, DEFAULT_LIMIT, 0), cors, 201);
   } catch (e) {
     return json({ ok: false, error: 'db_error' }, cors, 500);
