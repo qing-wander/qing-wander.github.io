@@ -424,6 +424,24 @@
   border-bottom: 1px dotted rgba(var(--ink-rgb), .4);
   cursor: help;
 }
+/* 可点开的证据来源（button 形态）：虚线提示可点，hover 变橙，caret 指示开合 */
+button.jd-ev-src {
+  cursor: pointer;
+  background: none; border: none; border-bottom: 1px dotted rgba(var(--ink-rgb), .45);
+  padding: 0; font: inherit; font-family: var(--font-mono); font-size: 10.5px;
+  color: var(--ink-soft); text-align: left;
+  transition: color .12s ease, border-color .12s ease;
+}
+button.jd-ev-src:hover { color: var(--orange); border-bottom-color: var(--orange); }
+button.jd-ev-src:focus-visible { outline: 2px solid var(--orange); outline-offset: 2px; }
+.jd-ev-caret { display: inline-block; font-size: 9px; transform: translateY(-1px); }
+.jd-ev-excerpt {
+  margin: 4px 0 2px; padding: 8px 10px;
+  font-family: var(--font-mono); font-size: 10.5px; line-height: 1.75;
+  color: var(--ink-soft); white-space: pre-wrap; word-break: break-word;
+  background: rgba(var(--ink-rgb), .045);
+  border-left: 2px solid var(--orange);
+}
 .jd-gap { font-size: 12.5px; line-height: 1.7; color: var(--ink-soft); }
 .jd-row[data-status="gap"] .jd-gap { color: var(--ink); }
 .jd-quote { display: block; font-size: 12.5px; line-height: 1.72; padding-left: 10px; border-left: 2px solid var(--orange); }

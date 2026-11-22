@@ -264,11 +264,16 @@ export async function matchJD(jd, env) {
       return { point: pointOf(h.text), title: h.title || h.id, id: h.id, ratio: c.ratio };
     });
     const status = statusOfMatch(union.rare, union.ratio);   // 兜底判定
+    /* 证据永远给前 2，哪怕单片覆盖率不高——对照表要让人能点开原文自己判断；
+       excerpt 带回切片原文（截 400 字），供 jd-match.js 的「点开核对」交互 */
+    const evWithText = ev.slice(0, 2).map((e) => {
+      const h = hits.find((x) => x.id === e.id);
+      return { ...e, excerpt: String(h?.text || '').slice(0, 400) };
+    });
     return {
       req,
       status,
-      /* 证据永远给前 2，哪怕单片覆盖率不高——对照表要让人能点开原文自己判断 */
-      evidence: status === 'gap' ? [] : ev.slice(0, 2),
+      evidence: status === 'gap' ? [] : evWithText,
       gap: status === 'gap' ? gapOf(req) : '',
       probe: status === 'covered' ? '' : `他在「${req.slice(0, 16)}」上的具体做法？`,
     };

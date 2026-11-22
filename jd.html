@@ -15,7 +15,7 @@
 <link rel="stylesheet" href="css/fonts.css?v=20261111a">
 <!-- 整站变量与通用组件 + JD 匹配专属样式（缓存共享：访客多从主页来） -->
 <link rel="stylesheet" href="css/style.css?v=20261122b">
-<link rel="stylesheet" href="css/jd-match.css?v=20261122c">
+<link rel="stylesheet" href="css/jd-match.css?v=20261122d">
 <style>
 /* ── 主题：与首页 / 简历同一套配色（后台默认 > 访客锁定 > 日期轮换）── */
 [data-theme="blueprint"] {
@@ -52,6 +52,20 @@
   body { background: #fff; color: #000; }
   .topbar, .jd-page-foot { display: none !important; }
   .jd-page { padding: 0; }
+  /* 打印 / 存 PDF：对照表场景——只输出标题、结论与逐条对照，隐藏交互件 */
+  .jd-lead { margin-bottom: 10px; font-size: 11.5px; }
+  .jd-wrap { display: block; }
+  .jd-form, .jd-empty, .jd-loading, .jd-error { display: none !important; }
+  .jd-actions { display: none !important; }
+  .jd-result { box-shadow: none; }
+  .jd-row { break-inside: avoid; }
+  /* 展开的切片原文不进纸面，纸面只留「要求 + 证据出处 + 缺口 + 追问点」 */
+  .jd-ev-excerpt { display: none !important; }
+  .jd-ev-src { color: #000 !important; border-bottom-color: rgba(0,0,0,.35); }
+  .jd-ev-caret { display: none; }
+  .jd-thead { display: none; }
+  /* 纸面页脚：来源与生成时间（jd-match.js 在渲染结果时填充） */
+  .jd-print-meta { display: block !important; margin-top: 14px; font-family: var(--font-mono, monospace); font-size: 9.5px; color: #444; }
 }
 </style>
 </head>
@@ -145,7 +159,7 @@
   else window.CP_AI_ENDPOINT = '/api/chat';
 })();
 </script>
-<script src="js/jd-match.js?v=20261118a"></script>
+<script src="js/jd-match.js?v=20261122c"></script>
 <script>
 /* 从 CP.AI 面板「打开完整对照」跳转过来时：预填刚才的 JD，用户点一下开始匹配即可 */
 (function () {

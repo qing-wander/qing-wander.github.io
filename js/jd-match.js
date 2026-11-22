@@ -247,11 +247,19 @@
     var status = STATUS_CN[r.status] ? r.status : 'partial';
     var ev = Array.isArray(r.evidence) ? r.evidence : [];
     var evHtml = ev.length
-      ? ev.map(function (e) {
-          var title = '原始切片：' + String(e.title || '') + ' · 与原文重合 ' + Math.round((Number(e.ground) || 0) * 100) + '%';
+      ? ev.map(function (e, k) {
+          /* 后端 evidence.ratio 是切片与该条要求的覆盖率；兼容旧字段 ground */
+          var ratio = Number(e.ratio != null ? e.ratio : e.ground) || 0;
+          var title = '原始切片：' + String(e.title || '') + ' · 与原文重合 ' + Math.round(ratio * 100) + '%';
+          var src = e.excerpt
+            ? '<button class="jd-ev-src" type="button" data-ev-toggle="' + i + '-' + k + '"' +
+              ' aria-expanded="false" title="' + esc(title) + ' · 点击展开原文">' +
+              esc(shortTitle(e.title)) + ' <span class="jd-ev-caret" aria-hidden="true">▾</span></button>' +
+              '<pre class="jd-ev-excerpt" id="jdEv-' + i + '-' + k + '" hidden>' + esc(e.excerpt) + '</pre>'
+            : '<span class="jd-ev-src" title="' + esc(title) + '">' + esc(shortTitle(e.title)) + '</span>';
           return '<div class="jd-ev-item">' +
             '<p class="jd-ev-point">' + esc(e.point) + '</p>' +
-            '<span class="jd-ev-src" title="' + esc(title) + '">' + esc(shortTitle(e.title)) + '</span>' +
+            src +
           '</div>';
         }).join('')
       : '<span class="jd-none">无匹配证据</span>';
@@ -327,8 +335,10 @@
         '<div class="jd-actions">' +
           '<button class="jd-act" type="button" id="jdCopy">复制成 Markdown ⧉</button>' +
           '<button class="jd-act jd-act-ghost" type="button" id="jdAgain">换一份 JD ↺</button>' +
-          '<span class="jd-foot-note">证据均取自本页档案切片 · 缺口照实列出，不做粉饰</span>' +
+          '<span class="jd-foot-note">证据均取自本页档案切片 · 缺口照实列出，不做粉饰 · 点证据来源可展开原文核对</span>' +
         '</div>' +
+        '<p class="jd-print-meta" hidden>来源：陈培胜求职作品集 · 岗位匹配（RAG 检索 + 约束生成）· 生成于 ' +
+          new Date().toLocaleString('zh-CN', { hour12: false }) + ' · shenge-work.github.io/jd.html</p>' +
       '</div>';
 
     var copyBtn = document.getElementById('jdCopy');
@@ -382,7 +392,7 @@
       out.push('| ' + (i + 1) + ' | ' + mdCell(r.req) + ' | ' + (STATUS_CN[r.status] || '部分') + ' | ' +
         mdCell(ev || '—') + ' | ' + mdCell(r.gap || '—') + ' | ' + mdCell(r.probe || '—') + ' |');
     });
-    out.push('', '---', '来源：陈培胜求职作品集 · 岗位匹配（RAG 检索 + 约束生成）https://shenge-work.github.io/#jd');
+    out.push('', '---', '来源：陈培胜求职作品集 · 岗位匹配（RAG 检索 + 约束生成）https://shenge-work.github.io/jd.html');
     return out.join('\n');
   }
 
@@ -405,8 +415,8 @@
     });
   }
 
-  /* ── 提交流程 ── */
-  function submit() {
+  /* ── 提交流程：断连 / 超时自动重试一次（与 AI 面板同策略），其余错误给手动重试 ── */
+  function submit(isRetry) {
     if (state.busy) return;
     var jd = String(textEl.value || '').trim();
     if (jd.length < CFG.minChars) {
@@ -420,19 +430,32 @@
     }
 
     setBusy(true);
-    setTip('正在解析 JD 并逐条对照档案…', 'busy');
+    setTip(isRetry ? '通道闪断，正在自动重试一次…' : '正在解析 JD 并逐条对照档案…', 'busy');
     renderLoading();
 
     var started = Date.now();
     request(jd).then(function (data) {
       renderResult(data, Date.now() - started);
       var n = data.match && data.match.rows ? data.match.rows.length : 0;
-      setTip('匹配完成：' + n + ' 条需求已对照，证据均可回溯到档案切片。', 'ok');
+      setTip(isRetry
+        ? '自动重试成功：' + n + ' 条需求已对照，证据均可回溯到档案切片。'
+        : '匹配完成：' + n + ' 条需求已对照，证据均可回溯到档案切片。', 'ok');
     }).catch(function (err) {
+      var code = (err && err.code) || '';
+      /* 网络闪断 / 网关超时先自动重试一次，别让用户误以为功能坏了 */
+      if (!isRetry && (code === 'network' || code === 'timeout')) {
+        state.busy = false;
+        if (submitEl) submitEl.disabled = false;
+        setTimeout(function () { submit(true); }, 900);
+        return;
+      }
       renderError(err);
       setTip(errorText(err), 'err');
     }).then(function () {
-      setBusy(false);
+      state.busy = false;
+      if (submitEl) submitEl.disabled = false;
+      form.removeAttribute('aria-busy');
+      if (submitEl) submitEl.innerHTML = '开始匹配 <span aria-hidden="true">▶</span>';
     });
   }
 
@@ -468,6 +491,27 @@
       try { textEl.setSelectionRange(0, 0); textEl.scrollTop = 0; } catch (err) {}
     });
   }
+
+  /* 证据「点开核对」：点击切片来源展开 / 收起原文（互斥展开，避免滚来滚去） */
+  stage.addEventListener('click', function (e) {
+    var btn = e.target && e.target.closest ? e.target.closest('[data-ev-toggle]') : null;
+    if (!btn) return;
+    var pre = document.getElementById('jdEv-' + btn.getAttribute('data-ev-toggle'));
+    if (!pre) return;
+    var open = pre.hidden;
+    /* 先收起同一张结果卡里已展开的，再开当前这条 */
+    stage.querySelectorAll('.jd-ev-excerpt:not([hidden])').forEach(function (p) {
+      if (p !== pre) {
+        p.hidden = true;
+        var b = stage.querySelector('[data-ev-toggle="' + p.id.replace('jdEv-', '') + '"]');
+        if (b) { b.setAttribute('aria-expanded', 'false'); var c = b.querySelector('.jd-ev-caret'); if (c) c.textContent = '▾'; }
+      }
+    });
+    pre.hidden = !open;
+    btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    var caret = btn.querySelector('.jd-ev-caret');
+    if (caret) caret.textContent = open ? '▴' : '▾';
+  });
 
   updateCount();
   resetTip();
