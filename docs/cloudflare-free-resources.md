@@ -416,3 +416,111 @@ POST /accounts/<id>/rum/site_info       → 10000 Authentication error
   `pages.dev` 自动构建从连续 `Failure` 恢复为 `Success`，两站内容一致（11-20 曾先用
   `deploy-pages.sh` 直传止血）。详见 [cloudflare-pages-deploy.md 故障节](cloudflare-pages-deploy.md)
   与 [TODO.md §3.18](TODO.md)。
+
+---
+
+## 11. 腾讯云 CloudBase「免费对象存储」核实与决策（2026-11-22）
+
+站长问：CloudBase 是否提供免费对象存储，若提供是否把全站静态资源迁过去、链接与数据存 Cloudflare D1。
+结论：**确实提供，但本轮决定不迁移，维持现状**。核实与决策依据留档如下，避免重复评估。
+
+### 11.1 浏览器实测（Google Chrome，已登录）
+
+- 环境 `resume-ai` 为**体验版**，上海地域 `ap-shanghai`；云存储页显示可创建存储桶，
+  默认桶 `7265-resume-ad9g7zghnxda2ee2cb-1307508155`，当前 **0 个存储桶**（未用过）。
+- 套餐周期：2026-11-07 ~ 2026-12-07。
+- 权限页明确：当前环境用 **PostgreSQL RLS 权限模型**，「未配置时所有请求默认拒绝」，
+  要公开读需建 Policy 放行 anon/authenticated；临时链接对「全部文件」显示为「未开启」。
+- 默认域名形态 `*.tcb.qcloud.la` / `*.tcloudbaseapp.com`，官方定位仅开发测试用。
+
+### 11.2 免费政策的真相（2026-01-16 起口径已变）
+
+旧「云存储 5GB 固定配额」已失效，现为**资源点共享池**：体验版 0 元/月、每月 **3,000 点**（1,000 点≈1 元），
+数据库/云函数/云存储/CDN/大模型共扣一个池子；**用完即停服**，体验版不支持按量付费与加购资源包；
+每账号限 1 个免费环境、单次 6 个月需手动续期。折算：存储约 1,200 点/GB/月、**CDN 流量 210 点/GB**、
+数据库调用 200 点/万次。公开图床的持续流量会稳定扣点，是最真实的成本点。
+
+### 11.3 为什么决定不迁
+
+1. **负收益**：真正撑爆 Pages 的 573MB `character-views/` 已归档飞书（T23），
+   现存 `images/` 16MB / `videos/lessie-demo.mp4` 9.8MB 均在 Pages 单文件 25MiB 限制内，托管正常。
+2. **成本与稳定性**：公开访客流量扣资源点、用完连带 AI 云函数停服；免费版无自定义域名、
+   默认域名仅测试用，境内访问体验不如现有 Pages。
+3. **架构冲突**：`p0-single-source.md` 约定 Git `data/*.json` 为唯一真相源、D1 存运行时状态；
+   静态资源若改从 D1 读链接，等于引入一个运行时强依赖，D1/桶不可用时整站图片视频全挂。
+
+### 11.4 本轮决策
+
+- 静态资源**维持 GitHub Pages + Cloudflare Pages 托管**，不引入 CloudBase 云存储。
+- 数据侧维持既有分层：**Git 为内容真相源，D1 `portfolio-db` 存运行时状态**（留言/计数/限流/RAG），
+  不把内容 JSON 迁进 D1。
+- 后续若确有图床/大文件分发需求，优先评估**带支付方式的 Cloudflare R2**（出站免费、可绑自有域名），
+  而非用体验版资源点扛公开流量。
+- 执行凭据现状：本机有 Cloudflare wrangler 登录态（`shenge.work@gmail.com`），
+  无腾讯云 CLI / SecretId/SecretKey——若将来真要传，需先连接腾讯云 CloudBase 连接器或配置 CLI 凭据。
+
+---
+
+## 12. 静态资源实际迁到 CloudBase COS（2026-11-22，决策修订）
+
+> §11 的「不迁移」决策在当天被站长**修订**：因为后续会解决 Cloudflare 绑卡问题、改用 R2，
+> 现阶段先用 CloudBase 免费对象存储顶上加速静态资源访问。故本轮完成迁移，
+> 但架构设计为**可一键切换 / 可回退**，为将来迁 R2 留好通路。
+
+### 12.1 落地形态
+
+| 项 | 值 |
+|---|---|
+| 环境 | `resume-ai-d9g7zghnxda2ee2cb`（体验版，到期 2027-05-07） |
+| 存储桶 | `7265-resume-ai-d9g7zghnxda2ee2cb-1307508155`（ap-shanghai） |
+| ACL | **public-read**（桶内只有本站静态资源，无敏感数据） |
+| 访问域名 | `https://7265-…cos.ap-shanghai.myqcloud.com/shenge-work/<相对路径>` |
+| 上传文件 | **75 个**（images 66 + videos 1 + GLB 8 + favicon 2），合计约 40.6MB |
+| 缓存头 | `public, max-age=31536000, immutable`（按路径区分，换文件换名即可刷新） |
+
+注意：`tcb.qcloud.la` / `tcloudbaseapp.com` 两个网关域名实测仍 403/当附件下载，
+**只有 `cos.ap-shanghai.myqcloud.com` 直链可匿名内联访问**，故统一用 COS 直链。
+静态托管路径（`manageHosting`）返回 `content-disposition: attachment`，不适合当图床，未采用。
+
+### 12.2 为什么能安全迁移（PG 环境的坑）
+
+- 该环境是 **PostgreSQL 模式**（`RuntimeMode=postgresql`），云存储 MCP 的 `manageStorage`
+  上传被平台拒绝（`SDK_UPGRADE_REQUIRED`）。实际走的是：
+  腾讯云 `sts:GetFederationToken` 拿带 `cos:*` 的临时密钥（1–2 小时有效）→
+  `cos-nodejs-sdk-v5` 直传桶 → `putBucketAcl(public-read)`。凭据只走环境变量，不落盘。
+- 静态托管（`manageHosting`）虽能上传但响应是附件下载，弃用。
+
+### 12.3 前端接入：零侵入 + 可切换 + 可回退
+
+新增三个文件，不改任何业务数据真相源：
+
+| 文件 | 作用 |
+|---|---|
+| `data/asset-manifest.json` | 全量 file_key → URL 映射（含 `_baseUrl` / `_source`），供脚本与将来 R2 切换参考 |
+| `data/asset-map.js` | 同步版映射（避免首屏闪烁），`window.__ASSET_BASE__` + `__ASSET_MAP__` |
+| `js/asset-cdn.js` | 重写器：`AssetURL.of()` / `.model()` / `.rewriteData()` / `.rewriteDOM()` / `.setEnabled()` |
+
+- 原理：在数据对象被消费前原地重写 `window.SITE_DATA` / `window.COMPANY_PROFILES` 的图片字段，
+  并改写已渲染 DOM 的 `img/video/source/link[icon]`；3D 模型由 `ai-skins.js` 调 `AssetURL.model()`。
+- 注入顺序：index.html 在头部 `site-data.js` 之后、`main.js` 之前加载（保证不闪烁）；
+  resume/company/jd 三页在数据脚本之后加载。
+- **一键回退**：URL 加 `?assetcdn=0` 或 `localStorage.cp_asset_cdn='0'` → 全部回到本地相对路径；
+  `AssetURL.setEnabled(false)` 也可运行时关闭。
+- **切换 R2**：只需重新生成 `asset-map.js` 的 `__ASSET_BASE__`（指向 R2 域名）与 manifest，业务代码零改动。
+
+### 12.4 链接入库（满足「链接存 Cloudflare 数据库」）
+
+- 迁移文件 `db/migrations/2026-11-22-asset-links.sql`：新建 `asset_links`
+  （`file_key` 主键、`url`、`source`、`bucket`、`content_type`、`size_bytes`、时间戳）。
+- 已写入 75 条（`source='cloudbase-cos'`，共 40,611,588 字节）。
+- 将来迁 R2 时按 `file_key` 批量 `UPDATE asset_links SET url=…, source='cloudflare-r2'` 即可，
+  `file_key` 保持不变、前端零改动。
+
+### 12.5 验证与运维
+
+- 单测：`tests/asset-cdn.test.mjs`（7/7 通过）；构建产物含三个新文件（`bash scripts/pages-build.sh` 实测）。
+- 浏览器实测：探针页确认 `AssetURL.isEnabled()=true`、`img.src` 已被重写为 COS 直链、图片正常显示。
+- 抽样匿名访问：图片/视频/GLB 均 HTTP 200、MIME 正确、`Cache-Control: public, max-age=31536000`。
+- **成本提醒**：体验版 3,000 资源点/月共享池，CDN 流量 210 点/GB；公开访问会持续扣点，
+  用完即停服（连带 AI 云函数）。需定期看 §11.2 的用量口径；根治方案是绑卡后迁 Cloudflare R2（出站免费）。
+- 重传脚本：`scripts/cos-sync.mjs`（从环境变量读临时密钥，运行前需 `callCloudApi(sts:GetFederationToken)` 刷新）。
