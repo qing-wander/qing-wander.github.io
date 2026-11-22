@@ -214,10 +214,7 @@ window.SITE_DATA = {
       "role": "机构金融投研 SaaS · Agent 工程师",
       "time": "2026.01 — 2026.07（组织架构调整）",
       "points": [
-        "搭建 QwenPaw / OpenCode 集成与通用 Agent 基座，实现<strong>多租户云沙箱</strong>隔离环境，完成发布依赖管理、日志上报与 Agent / Skill 全生命周期管控。",
-        "设计 <strong>MCP / Skill 统一能力扩展体系</strong>：能力注册、发现、调用、权限与版本全流程标准化，兼容 MCP 协议与外部 API，支持多模态能力接入。",
-        "设计多租户 AI 资源<strong>精细化计费链路</strong>（费率转换 / 实时预扣 / 离线扣费 / 账单校准 / 补偿机制），模型调用成本实时计量、全程可追溯。",
-        "自研<strong>分布式 IM 网关</strong>：统一承接飞书 / 企微 / 钉钉 / 微信 / QQ 五端消息，支撑多副本扩缩容与滚动发布不丢消息。"
+        "主导 AI 金融投研工作台（AI 进宝）核心基建研发：Agent 基座与多租户云沙箱、MCP / Skill 扩展、AI 资源计费、五端 IM 网关，<strong>支撑 Agent 从接入到计费全链路落地</strong>"
       ],
       "tags": [
         {
