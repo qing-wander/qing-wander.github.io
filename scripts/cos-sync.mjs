@@ -39,7 +39,12 @@ const files = [
   ...collect('videos'),
   ...collect('assets/skins/models'),
   'favicon.png', 'favicon-64.png',
-].filter((f) => !f.endsWith('.DS_Store'));
+].filter((f) => !f.endsWith('.DS_Store'))
+  // 分享卡（竖版/方形原图 + 预览）故意不上 COS：卡里的二维码与印刷域名会随
+  // 站点自定义域名改版重绘，而 COS 是 max-age=31536000, immutable 长缓存，
+  // 同名覆盖后 CDN 仍会发旧图。让它们始终走站点本地路径，改图 push 即生效。
+  // 对应 data/asset-map.js / asset-manifest.json 里也已移除这 6 条映射。
+  .filter((f) => !f.includes('分享卡'));
 
 console.log(`待上传 ${files.length} 个文件`);
 
