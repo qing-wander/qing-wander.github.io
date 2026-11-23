@@ -39,7 +39,7 @@ done
 echo "   ${HTML_FILES[*]}"
 
 echo "=== ② 静态资源"
-for item in css js data images videos favicon-64.png favicon.png; do
+for item in css js data images videos favicon-64.png favicon.png robots.txt sitemap.xml; do
   if [ ! -e "$item" ]; then
     echo "✗ 缺少 $item，先检查仓库是否完整"
     exit 1
