@@ -74,9 +74,21 @@
 <script src="data/asset-map.js"></script>
 <script src="js/asset-cdn.js"></script>
 <script>
-/* 风格系列：默认按日期每日自动轮换；手动切换后锁定（localStorage），控制台可恢复自动
-   优先级：?theme= 参数 > 手动锁定 > 按日期轮换 */
+/* 风格系列：每日自动轮换已暂停，默认固定橙色档案纸 ARCHIVE；
+   手动切换后锁定（localStorage），控制台可一键恢复默认橙色。
+   优先级：?theme= 参数 > 手动锁定 > 后台默认 > 固定默认 ARCHIVE */
 (function () {
+  /* 把 AUTO_ROTATE 改回 true 可恢复旧的按日期轮换逻辑。
+     轮换关闭时一次性清掉旧的手动锁定，避免老访客停在深色主题。 */
+  var AUTO_ROTATE = false;
+  var DEFAULT_THEME = 'archive';
+  try {
+    if (!AUTO_ROTATE && localStorage.getItem('portfolio_theme_rotation_off') !== '1') {
+      localStorage.removeItem('portfolio_theme_mode');
+      localStorage.removeItem('portfolio_theme_manual');
+      localStorage.setItem('portfolio_theme_rotation_off', '1');
+    }
+  } catch (e) {}
   var T = ['archive', 'blueprint', 'newsprint', 'noir'];
   var qs = new URLSearchParams(location.search).get('theme');
   var t = T.indexOf(qs) >= 0 ? qs : null;
@@ -91,7 +103,7 @@
     } else {
       var n = new Date();
       var day = Math.floor((n - new Date(n.getFullYear(), 0, 0)) / 864e5);
-      t = T[day % T.length];
+      t = AUTO_ROTATE ? T[day % T.length] : DEFAULT_THEME;
     }
   }
   document.documentElement.setAttribute('data-theme', t);

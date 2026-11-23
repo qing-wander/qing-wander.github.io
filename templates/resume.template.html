@@ -586,20 +586,32 @@ body {
 </style>
 
 <script>
-/* 主题引导（优先级：?theme= > 手动锁定 > 后台默认 > 按日期轮换）
-   后台默认由 /api/theme 下发（D1 admin_config），访客手动切换仍覆盖它。
+/* 主题引导（优先级：?theme= > 手动锁定 > 后台默认 > 固定默认 ARCHIVE）
+   每日按日期自动轮换已暂停，默认固定橙色档案纸；后台 /api/theme 仍可显式指定站点默认。
    github.io 是纯静态站，/api/theme 本地必然 404，所以与 main.js 的 API_BASES
    共用同一套线路规则：github.io → pages.dev；逐个尝试，拿到 JSON 才采用。 */
 (function () {
   var T = ['archive', 'blueprint', 'newsprint', 'noir'];
   var qs = new URLSearchParams(location.search).get('theme');
+  /* 每日自动轮换已暂停（AUTO_ROTATE=false）：默认固定橙色档案纸 ARCHIVE。
+     一次性清掉轮换期间留下的手动锁定，避免老访客仍停在深色主题；
+     之后访客主动切换风格仍然有效。把 AUTO_ROTATE 改回 true 可恢复旧轮换逻辑。 */
+  var AUTO_ROTATE = false;
+  var DEFAULT_THEME = 'archive';
+  try {
+    if (!AUTO_ROTATE && localStorage.getItem('portfolio_theme_rotation_off') !== '1') {
+      localStorage.removeItem('portfolio_theme_mode');
+      localStorage.removeItem('portfolio_theme_manual');
+      localStorage.setItem('portfolio_theme_rotation_off', '1');
+    }
+  } catch (e) {}
   var manual = null;
   try { if (localStorage.getItem('portfolio_theme_mode') === 'manual') manual = localStorage.getItem('portfolio_theme_manual'); } catch (e) {}
   var t = T.indexOf(qs) >= 0 ? qs : (T.indexOf(manual) >= 0 ? manual : null);
   if (!t) {
     var n = new Date();
     var day = Math.floor((n - new Date(n.getFullYear(), 0, 0)) / 864e5);
-    t = T[day % T.length];
+    t = AUTO_ROTATE ? T[day % T.length] : DEFAULT_THEME;
     if (T.indexOf(qs) < 0 && !manual) {
       var bases = (function () {
         var host = location.hostname || '';

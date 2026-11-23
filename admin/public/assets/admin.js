@@ -345,18 +345,18 @@
       .then(function () { b.disabled = false; });
   });
 
-  /* ── 站点默认主题 ── */
+  /* ── 站点默认主题（每日自动轮换已暂停，留空 = 默认橙色 ARCHIVE）── */
   function loadTheme() {
     return api('/api/theme').then(function (d) {
       var cur = d.theme || '';
-      $('themeCur').textContent = cur ? cur : '按日期轮换';
+      $('themeCur').textContent = cur ? cur : '默认橙色（ARCHIVE）';
       var list = d.themes || [];
       $('themeChips').innerHTML = list.map(function (t) {
         var on = t.id === cur ? ' is-on' : '';
         return '<button class="theme-chip' + on + '" type="button" data-theme-id="' + esc(t.id) + '">' +
           '<strong>' + esc(t.name) + '</strong><small>' + esc(t.note) + '</small></button>';
       }).join('') + '<button class="theme-chip' + (cur ? '' : ' is-on') + '" type="button" data-theme-id="">' +
-        '<strong>自动轮换</strong><small>按日期每天换一套</small></button>';
+        '<strong>默认橙色</strong><small>固定 ARCHIVE，不自动轮换</small></button>';
     });
   }
 
@@ -366,7 +366,7 @@
     var theme = b.getAttribute('data-theme-id');
     api('/api/theme', { method: 'POST', body: JSON.stringify({ theme: theme }) })
       .then(function () {
-        toast(theme ? '已切到：' + theme : '已改为按日期轮换');
+        toast(theme ? '已切到：' + theme : '已恢复默认橙色（ARCHIVE）');
         loadTheme();
       })
       .catch(function (err) { toast(err.message || '设置失败', true); });

@@ -1,7 +1,7 @@
 /* /api/theme —— 站点默认主题（后台可改）
    ──────────────────────────────────────────────────────────────
    GET  当前默认主题（admin_config.key = 'theme'）
-   POST { theme } 设置；theme 只能是四套配色之一或 ''（清空 = 回到按日期轮换）
+   POST { theme } 设置；theme 只能是四套配色之一或 ''（清空 = 恢复默认橙色 archive，不再按日期轮换）
    ────────────────────────────────────────────────────────────── */
 import { assertCsrf, json, fail, requireAdmin } from '../../lib/admin.js';
 

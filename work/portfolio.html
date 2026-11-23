@@ -443,18 +443,30 @@ data/company-profiles.json → js 快照 → 简历徽章 / 抽屉</pre></div></
 </footer>
 
 <script>
-/* 主题引导：?theme= > 手动锁定 > 后台默认 > 按日期轮换
+/* 主题引导：?theme= > 手动锁定 > 后台默认 > 固定默认 ARCHIVE（每日轮换已暂停）
    与首页 / 简历同一套线路规则：纯静态域名下接口在 pages.dev。 */
 (function () {
   var T = ['archive', 'blueprint', 'newsprint', 'noir'];
   var qs = new URLSearchParams(location.search).get('theme');
+  /* 每日自动轮换已暂停（AUTO_ROTATE=false）：默认固定橙色档案纸 ARCHIVE。
+     一次性清掉轮换期间留下的手动锁定，避免老访客仍停在深色主题；
+     之后访客主动切换风格仍然有效。把 AUTO_ROTATE 改回 true 可恢复旧轮换逻辑。 */
+  var AUTO_ROTATE = false;
+  var DEFAULT_THEME = 'archive';
+  try {
+    if (!AUTO_ROTATE && localStorage.getItem('portfolio_theme_rotation_off') !== '1') {
+      localStorage.removeItem('portfolio_theme_mode');
+      localStorage.removeItem('portfolio_theme_manual');
+      localStorage.setItem('portfolio_theme_rotation_off', '1');
+    }
+  } catch (e) {}
   var manual = null;
   try { if (localStorage.getItem('portfolio_theme_mode') === 'manual') manual = localStorage.getItem('portfolio_theme_manual'); } catch (e) {}
   var t = T.indexOf(qs) >= 0 ? qs : (T.indexOf(manual) >= 0 ? manual : null);
   if (!t) {
     var n = new Date();
     var day = Math.floor((n - new Date(n.getFullYear(), 0, 0)) / 864e5);
-    t = T[day % T.length];
+    t = AUTO_ROTATE ? T[day % T.length] : DEFAULT_THEME;
     if (T.indexOf(qs) < 0 && !manual) {
       var bases = (function () {
         var host = location.hostname || '';

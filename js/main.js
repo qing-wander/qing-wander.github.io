@@ -646,9 +646,6 @@
     var THEME_ORDER = ['archive', 'blueprint', 'newsprint', 'noir'];
     var THEME_STORE = { mode: 'portfolio_theme_mode', manual: 'portfolio_theme_manual' };
 
-    function storeGet(key) {
-      try { return localStorage.getItem(key); } catch (e) { return null; }
-    }
     function storeSet(key, val) {
       try { localStorage.setItem(key, val); } catch (e) {}
     }
@@ -657,21 +654,14 @@
     ctl.className = 'theme-ctl';
     ctl.innerHTML =
       '<button class="theme-ctl-btn" id="themeNextBtn" title="切换到下一套风格（手动选择后锁定）">▸ STYLE · <b id="themeNowName"></b></button>' +
-      '<button class="theme-ctl-btn" id="themeAutoBtn" title="暂停 / 恢复每日自动轮换">◌ AUTO · <b id="themeAutoState"></b></button>';
+      '<button class="theme-ctl-btn" id="themeResetBtn" title="清除手动锁定，恢复默认橙色档案纸主题">↺ RESET · ARCHIVE</button>';
     document.body.appendChild(ctl);
 
     var themeNowName = $('themeNowName');
-    var themeAutoState = $('themeAutoState');
-    var themeAutoBtn = $('themeAutoBtn');
 
     function applyTheme(t) {
       document.documentElement.setAttribute('data-theme', t);
       themeNowName.textContent = NAMES[t] || t.toUpperCase();
-    }
-    function renderAutoState() {
-      var manual = storeGet(THEME_STORE.mode) === 'manual';
-      themeAutoState.textContent = manual ? 'OFF' : 'ON';
-      themeAutoBtn.classList.toggle('off', manual);
     }
 
     var eggTimer = null, eggHits = 0, hideTimer = null;
@@ -689,7 +679,6 @@
           ctl.classList.toggle('show');
           if (ctl.classList.contains('show')) {
             applyTheme(document.documentElement.getAttribute('data-theme'));
-            renderAutoState();
             scheduleHide();
           }
         }
@@ -712,21 +701,18 @@
       applyTheme(next);
       storeSet(THEME_STORE.mode, 'manual');
       storeSet(THEME_STORE.manual, next);
-      renderAutoState();
       try { history.replaceState(null, '', location.pathname); } catch (e) {}
     });
 
-    themeAutoBtn.addEventListener('click', function () {
-      if (storeGet(THEME_STORE.mode) === 'manual') {
-        storeSet(THEME_STORE.mode, 'auto');
-        var n = new Date();
-        var day = Math.floor((n - new Date(n.getFullYear(), 0, 0)) / 864e5);
-        applyTheme(THEME_ORDER[day % THEME_ORDER.length]);
-      } else {
-        storeSet(THEME_STORE.mode, 'manual');
-        storeSet(THEME_STORE.manual, document.documentElement.getAttribute('data-theme'));
-      }
-      renderAutoState();
+    /* 每日自动轮换已暂停：这个按钮只清掉手动锁定、回到默认橙色 ARCHIVE，
+       不再按日期计算主题（旧版 AUTO 按钮的轮换分支已移除）。 */
+    $('themeResetBtn').addEventListener('click', function () {
+      try {
+        localStorage.removeItem(THEME_STORE.mode);
+        localStorage.removeItem(THEME_STORE.manual);
+        localStorage.setItem('portfolio_theme_rotation_off', '1');
+      } catch (e) {}
+      applyTheme('archive');
       try { history.replaceState(null, '', location.pathname); } catch (e) {}
     });
 
