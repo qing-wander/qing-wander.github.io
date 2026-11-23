@@ -15,12 +15,12 @@
 #   DEVICE_ID=my-device-00001 ./scripts/wall-check.sh
 #
 # 退出码：全部通过 0；有失败 1；参数错误 2。
-# 说明：线上主站 github.io 是纯静态，API 在 Cloudflare Pages，默认就打 pages.dev。
+# 说明：正式站 chenpeisheng.cn 已接入 Cloudflare Pages，API 同源；pages.dev 仍作备用线路。
 
 set -uo pipefail
 
-BASE="https://shenge-work.pages.dev"
-ORIGIN="${ORIGIN:-https://shenge-work.github.io}"
+BASE="https://chenpeisheng.cn"
+ORIGIN="${ORIGIN:-https://chenpeisheng.cn}"
 ADMIN_TOKEN="${WALL_ADMIN_TOKEN:-}"
 DEVICE_ID="${DEVICE_ID:-wc-selfcheck-0001}"
 OTHER_ID="${OTHER_ID:-wc-other-$(date +%s)}"

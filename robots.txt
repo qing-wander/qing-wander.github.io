@@ -2,4 +2,4 @@ User-agent: *
 Allow: /
 Disallow: /docs/
 
-Sitemap: https://shenge-work.github.io/sitemap.xml
+Sitemap: https://chenpeisheng.cn/sitemap.xml

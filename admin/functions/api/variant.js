@@ -17,7 +17,7 @@ export async function onRequestPost({ request, env }) {
   if (jd.length < 20) return fail('jd_too_short', 'JD 至少 20 字');
   const rewrite = body.rewrite === true;
 
-  const base = String(env.MAIN_SITE_URL || 'https://shenge-work.pages.dev').replace(/\/$/, '');
+  const base = String(env.MAIN_SITE_URL || 'https://chenpeisheng.cn').replace(/\/$/, '');
   const r = await fetch(`${base}/api/variant`, {
     method: 'POST',
     headers: {

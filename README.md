@@ -1,6 +1,6 @@
 # 陈培胜 · 求职作品集（CHEN PEISHENG Portfolio）
 
-AI Agent 工程师求职个人网站：基于纯原生 HTML / CSS / JavaScript 构建，无任何第三方依赖，通过 **GitHub Pages** 免费托管。包含作品集主页与在线简历页，全面展示个人优势、工作经历、项目作品、专业技能与联系方式。
+AI Agent 工程师求职个人网站：基于纯原生 HTML / CSS / JavaScript 构建，无任何第三方依赖，正式域名 **chenpeisheng.cn** 由 **Cloudflare Pages** 托管（GitHub Pages 保留为旧线路）。包含作品集主页与在线简历页，全面展示个人优势、工作经历、项目作品、专业技能与联系方式。
 
 **在线访问**
 - 作品集主页：https://chenpeisheng.cn/
@@ -159,7 +159,7 @@ python3 -m http.server 8000
 
 ## 留言墙（主页 SEC.10）
 
-按设备隔离的私密留言本：匿名访客写的内容只在这台设备可见，后端是 Cloudflare Pages Function + D1；主站 `github.io` 是纯静态，API 走备用站 `pages.dev`（双线路自动切换）。
+按设备隔离的私密留言本：匿名访客写的内容只在这台设备可见，后端是 Cloudflare Pages Function + D1；正式站 `chenpeisheng.cn` 与 API 同源，旧 `github.io` 访问时自动走备用站 `pages.dev`。
 
 - **回复与评论**：站长在独立后台 `shenge-work-admin.pages.dev` 的「留言审核 → 回复」里写的内容，会直接贴到访客那条留言下面；访客也可以点留言下的「评论 / 追问」继续聊。两者同存 `wall_replies`（`author=owner|visitor`），依旧只对原设备可见。站长回复不改留言 id，靠 `GET /api/wall?peek=1` 的 `latestReply` 触发「站长回复了你」提示；访客追问会发邮件给站长，邮件里的「打开后台直接回复」用 `?focus=<留言 id>` 直达那一条。后台另有「待回复」筛选与统计卡。
 
