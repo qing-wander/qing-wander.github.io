@@ -1155,7 +1155,7 @@
     }
   },
   "wall": {
-    "lead": "不想直接联系我，又对我的经历或能力有想法？<strong>写在这里</strong>——留言只保存在这台设备上，换设备就看不到了；我看到都会回。",
+    "lead": "不想直接联系我，又对我的经历或能力有想法？<strong>写在这里</strong>——留言只保存在这台设备上，换设备就看不到了；我看到都会回，回复会直接贴在这条留言下面。想接着聊，点留言下方的「评论」追问就行，回到这台设备刷新就能看到。",
     "emptyText": "这台设备还没有留言，写第一条试试 ▶",
     "closedText": "留言本暂未开放（站长还在配置存储），有事请走上面的联系方式 ▶",
     "errorText": "留言没能加载出来",
@@ -1179,6 +1179,22 @@
     "timeNow": "刚刚",
     "timeMin": "{n} 分钟前",
     "timeHour": "{n} 小时前",
-    "timeDay": "{n} 天前"
+    "timeDay": "{n} 天前",
+    "ownerLabel": "陈培胜 · 回复",
+    "visitorLabel": "你 · 追问",
+    "replyToggleText": "评论 / 追问",
+    "replyCloseText": "收起",
+    "replyPlaceholder": "接着聊两句…（只有这台设备看得到）",
+    "replySendText": "发送评论 ▶",
+    "replySendingText": "发送中…",
+    "replyOkText": "评论已贴到这条留言下面 ▶",
+    "replyDuplicateText": "这句刚刚已经发过啦",
+    "replyFailText": "评论没能发出去，稍后再试",
+    "replyNetFailText": "网络异常，评论未能发送",
+    "replyEmptyText": "先写点什么吧",
+    "replyShortText": "再多写两个字吧（至少 2 个字）",
+    "replyHintText": "回复与评论同样只在这台设备可见 · 回到本设备刷新即可看到新回复",
+    "replyCountText": "{n} 条对话",
+    "newReplyText": "站长回复了你 ▲"
   }
 }

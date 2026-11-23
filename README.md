@@ -103,9 +103,9 @@ AI Agent 工程师求职个人网站：基于纯原生 HTML / CSS / JavaScript �
 │   └── site-data.js        # 自动生成的 window.SITE_DATA 快照（勿手改）
 ├── images/                 # 形象照 / 项目图 / 证书 / 学信网二维码
 ├── functions/api/visits.js          # 访问计数 API（D1 存储，自建、不依赖第三方）
-├── functions/api/wall.js            # 留言墙 API（Turnstile 校验 / 两档限流 / 管理删除，D1 存储）
+├── functions/api/wall.js            # 留言墙 API（设备隔离 / 回复与评论 / 两档限流 / 管理删除，D1 存储）
 ├── functions/api/deliver.js         # 简历转发到邮箱（Resend）
-├── db/schema.sql                    # D1 表结构（counters / visitors / wall_messages / rate_limits）
+├── db/schema.sql                    # D1 表结构（counters / visitors / wall_messages / wall_replies / rate_limits）
 ├── wrangler.toml                    # 本地 wrangler 用的 Pages 绑定声明（D1 / KV）
 ├── functions/tencent/index.js       # CloudBase HTTP 云函数：/chat 问答 + JD 匹配 + TTS 路由
 ├── functions/tencent/tts.js         # 腾讯云 TextToVoice 直调（TC3 签名 / LRU 缓存 / 零依赖）
@@ -159,9 +159,9 @@ python3 -m http.server 8000
 
 ## 留言墙（主页 SEC.10）
 
-## 留言墙（主页 SEC.11）
+按设备隔离的私密留言本：匿名访客写的内容只在这台设备可见，后端是 Cloudflare Pages Function + D1；主站 `github.io` 是纯静态，API 走备用站 `pages.dev`（双线路自动切换）。
 
-匿名访客可公开留言，后端是 Cloudflare Pages Function + D1；主站 `github.io` 是纯静态，API 走备用站 `pages.dev`（双线路自动切换）。
+- **回复与评论**：站长在独立后台 `shenge-work-admin.pages.dev` 的「留言审核 → 回复」里写的内容，会直接贴到访客那条留言下面；访客也可以点留言下的「评论 / 追问」继续聊。两者同存 `wall_replies`（`author=owner|visitor`），依旧只对原设备可见。站长回复不改留言 id，靠 `GET /api/wall?peek=1` 的 `latestReply` 触发「站长回复了你」提示；访客追问会发邮件给站长，邮件里的「打开后台直接回复」用 `?focus=<留言 id>` 直达那一条。后台另有「待回复」筛选与统计卡。
 
 - **人机校验**：表单底部接 Cloudflare Turnstile（widget `shenge-work-portfolio`）。校验通过走正常额度（每 IP 10 分钟 3 条、每日 50 条）；未通过或脚本加载失败降到严格档（每 IP 每小时 1 条、每日 10 条）——**脚本被墙也不影响留言，只是额度收紧**。`GET /api/wall` 的 `turnstile` 字段可自查是否已配置密钥。
 - **线上自检**：`./scripts/wall-check.sh`（默认只读）。2026-11-19 迁到 D1（`portfolio-db`）后 11/11 全过；绑定/环境变量变更需重新部署才生效，见 [docs/resume-delivery.md](docs/resume-delivery.md) ②。

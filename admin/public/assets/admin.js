@@ -6,7 +6,10 @@
 
   var state = {
     dev: { offset: 0, limit: 50, q: '', total: 0, legacy: 0 },
-    msg: { offset: 0, limit: 50, q: '', status: '', device: '', total: 0 },
+    msg: { offset: 0, limit: 50, q: '', status: '', device: '', total: 0,
+           /* focus 来自邮件直达链接；open 是当前展开回复面板的留言 id；
+              replies 缓存列表接口返回的对话，展开面板时不必再请求一次。 */
+           focus: '', open: null, replies: {} },
     tab: 'devices'
   };
 
@@ -118,6 +121,7 @@
       $('stMessages').textContent = s.messages == null ? '—' : s.messages;
       $('stToday').textContent = s.today == null ? '—' : s.today;
       $('stHidden').textContent = s.hidden == null ? '—' : s.hidden;
+      $('stPending').textContent = s.pending_replies == null ? '—' : s.pending_replies;
       $('stBlocked').textContent = s.blocked_devices == null ? '—' : s.blocked_devices;
     });
   }
@@ -159,40 +163,106 @@
     });
   }
 
-  /* ── 留言审核 ── */
+  /* ── 留言审核 + 回复 / 评论对话 ── */
+  /* 回复面板：插在该留言行的下一行，内容来自列表接口已返回的 replies，
+     不额外发请求。站长回复写 author='owner'，访客追问是 author='visitor'。 */
+  function replyPanelHtml(messageId) {
+    var reps = state.msg.replies[messageId] || [];
+    var items = reps.length ? reps.map(function (r) {
+      var owner = r.author === 'owner';
+      var hidden = r.status === 'hidden';
+      return '<div class="rp-item' + (owner ? ' is-owner' : '') + (hidden ? ' is-hidden' : '') + '">' +
+        '<div class="rp-head">' +
+          '<span class="rp-who">' + (owner ? '我 · 回复' : '访客 · 追问') + '</span>' +
+          '<span class="rp-time">' + fmt(r.created_at) + '</span>' +
+          (hidden ? '<span class="tag tag-hide">已隐藏</span>' : '') +
+          '<button class="btn btn-sm btn-danger rp-del" type="button" data-act="reply-del" data-id="' + esc(r.id) + '" data-msg="' + esc(messageId) + '">删除</button>' +
+        '</div>' +
+        '<div class="rp-text">' + esc(r.text) + '</div>' +
+      '</div>';
+    }).join('') : '<p class="rp-empty">还没有对话。写下第一条回复，它会直接贴到访客那台设备的这条留言下面。</p>';
+
+    return '<div class="reply-panel">' +
+      '<div class="rp-title">对话 · ' + reps.length + ' 条</div>' +
+      '<div class="rp-list">' + items + '</div>' +
+      '<div class="rp-compose">' +
+        '<textarea class="rp-input" data-role="owner-reply-input" data-msg="' + esc(messageId) +
+          '" rows="3" maxlength="300" placeholder="写回复…（访客回到同一设备刷新即可看到）"></textarea>' +
+        '<div class="rp-foot">' +
+          '<span class="toolbar-note">⌘ / Ctrl + Enter 快速发送 · 回复只对该设备可见</span>' +
+          '<button class="btn btn-sm rp-send" type="button" data-act="reply-send" data-msg="' + esc(messageId) + '">发送回复 ▶</button>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  }
+
+  function openReplyPanel(messageId) {
+    var body = $('msgBody');
+    var old = body.querySelector('tr.reply-row');
+    if (old) old.parentNode.removeChild(old);
+    if (!messageId) return;
+    var row = null;
+    body.querySelectorAll('tr[data-msg-id]').forEach(function (tr) {
+      if (tr.getAttribute('data-msg-id') === messageId) row = tr;
+    });
+    if (!row) return;
+    var tr = document.createElement('tr');
+    tr.className = 'reply-row';
+    tr.setAttribute('data-reply-for', messageId);
+    var td = document.createElement('td');
+    td.colSpan = 7;
+    td.innerHTML = replyPanelHtml(messageId);
+    tr.appendChild(td);
+    row.parentNode.insertBefore(tr, row.nextSibling);
+    var input = td.querySelector('[data-role="owner-reply-input"]');
+    if (input) input.focus();
+  }
+
   function loadMessages() {
     var p = [];
     if (state.msg.q) p.push('q=' + encodeURIComponent(state.msg.q));
-    if (state.msg.status) p.push('status=' + state.msg.status);
+    if (state.msg.status) p.push('status=' + encodeURIComponent(state.msg.status));
     if (state.msg.device) p.push('device_hash=' + encodeURIComponent(state.msg.device));
+    if (state.msg.focus) p.push('focus=' + encodeURIComponent(state.msg.focus));
     p.push('limit=' + state.msg.limit);
     p.push('offset=' + state.msg.offset);
     return api('/api/messages?' + p.join('&')).then(function (d) {
       state.msg.total = d.total || 0;
       var rows = d.messages || [];
+      state.msg.replies = {};
+      rows.forEach(function (m) { state.msg.replies[m.id] = m.replies || []; });
       if (!rows.length) {
-        $('msgBody').innerHTML = '<tr><td colspan="6" class="empty">没有符合条件的留言</td></tr>';
+        $('msgBody').innerHTML = '<tr><td colspan="7" class="empty">没有符合条件的留言</td></tr>';
       } else {
         $('msgBody').innerHTML = rows.map(function (m) {
           var legacy = m.device_hash === 'legacy';
           var hidden = m.status === 'hidden';
-          return '<tr>' +
+          var n = Number(m.reply_count || 0);
+          var talk = n
+            ? '<span class="tag ' + (m.owner_replied ? 'tag-ok' : 'tag-hide') + '">' + n + ' 条 · ' + (m.owner_replied ? '已回' : '待回') + '</span>'
+            : '<span class="tag tag-legacy">无</span>';
+          return '<tr data-msg-id="' + esc(m.id) + '">' +
             '<td class="mono">' + fmt(m.created_at) + '</td>' +
             '<td class="mono" title="' + esc(m.device_hash) + '">' + (legacy ? '<span class="tag tag-legacy">legacy</span>' : esc(String(m.device_hash).slice(0, 8)) + '…') + '</td>' +
             '<td>' + esc(m.name) + '</td>' +
             '<td class="text">' + esc(m.text) + '</td>' +
             '<td>' + (hidden ? '<span class="tag tag-hide">已隐藏</span>' : '<span class="tag tag-ok">正常</span>') + '</td>' +
+            '<td>' + talk + '</td>' +
             '<td class="act">' +
-              '<button class="btn btn-sm ' + (hidden ? '' : 'btn-danger') + '" data-act="status" data-id="' + esc(m.id) + '" data-status="' + (hidden ? 'visible' : 'hidden') + '">' + (hidden ? '恢复' : '隐藏') + '</button>' +
+              '<button class="btn btn-sm" type="button" data-act="reply" data-id="' + esc(m.id) + '">回复</button> ' +
+              '<button class="btn btn-sm ' + (hidden ? '' : 'btn-danger') + '" type="button" data-act="status" data-id="' + esc(m.id) + '" data-status="' + (hidden ? 'visible' : 'hidden') + '">' + (hidden ? '恢复' : '隐藏') + '</button>' +
             '</td>' +
           '</tr>';
         }).join('');
       }
-      $('msgNote').textContent = '共 ' + state.msg.total + ' 条' + (state.msg.device ? ' · 设备 ' + state.msg.device.slice(0, 8) + '…' : '');
+      $('msgNote').textContent = '共 ' + state.msg.total + ' 条' +
+        (state.msg.device ? ' · 设备 ' + state.msg.device.slice(0, 8) + '…' : '') +
+        (state.msg.focus ? ' · 已定位单条留言（点「筛选」回到列表）' : '');
       $('msgClearDevice').hidden = !state.msg.device;
       $('msgPage').textContent = pageInfo(state.msg);
       $('msgPrev').disabled = state.msg.offset <= 0;
       $('msgNext').disabled = state.msg.offset + state.msg.limit >= state.msg.total;
+      if (state.msg.open) openReplyPanel(state.msg.open);
     });
   }
 
@@ -211,6 +281,8 @@
     if (b.getAttribute('data-act') === 'view') {
       state.msg.device = hash;
       state.msg.offset = 0;
+      state.msg.focus = '';
+      state.msg.open = null;
       switchTab('messages');
       return;
     }
@@ -225,17 +297,77 @@
   });
 
   $('msgBody').addEventListener('click', function (e) {
-    var b = e.target.closest('button[data-act="status"]');
+    var b = e.target && e.target.closest ? e.target.closest('button[data-act]') : null;
     if (!b) return;
-    var id = b.getAttribute('data-id');
-    var status = b.getAttribute('data-status');
-    b.disabled = true;
-    api('/api/messages/status', { method: 'POST', body: JSON.stringify({ id: id, status: status }) })
-      .then(function () {
-        toast(status === 'hidden' ? '已隐藏，公开端看不到' : '已恢复公开');
-        loadMessages(); loadStats();
-      })
-      .catch(function (err) { toast(err.message || '操作失败', true); b.disabled = false; });
+    var act = b.getAttribute('data-act');
+
+    if (act === 'status') {
+      var id = b.getAttribute('data-id');
+      var status = b.getAttribute('data-status');
+      b.disabled = true;
+      api('/api/messages/status', { method: 'POST', body: JSON.stringify({ id: id, status: status }) })
+        .then(function () {
+          toast(status === 'hidden' ? '已隐藏，公开端看不到' : '已恢复公开');
+          loadMessages(); loadStats();
+        })
+        .catch(function (err) { toast(err.message || '操作失败', true); b.disabled = false; });
+      return;
+    }
+
+    if (act === 'reply') {
+      var mid = b.getAttribute('data-id');
+      state.msg.open = (state.msg.open === mid) ? null : mid;
+      openReplyPanel(state.msg.open);
+      return;
+    }
+
+    if (act === 'reply-send') {
+      var msgId = b.getAttribute('data-msg');
+      var input = null;
+      $('msgBody').querySelectorAll('[data-role="owner-reply-input"]').forEach(function (el) {
+        if (el.getAttribute('data-msg') === msgId) input = el;
+      });
+      if (!input) return;
+      var text = String(input.value || '').trim();
+      if (Array.from(text).length < 2) { toast('再多写两个字吧（至少 2 个字）', true); input.focus(); return; }
+      b.disabled = true;
+      b.textContent = '发送中…';
+      api('/api/messages/reply', { method: 'POST', body: JSON.stringify({ messageId: msgId, text: text }) })
+        .then(function (d) {
+          state.msg.replies[msgId] = d.replies || [];
+          state.msg.open = msgId;
+          toast('已回复，访客回到本设备刷新即可看到');
+          return loadMessages().then(function () { openReplyPanel(msgId); loadStats(); });
+        })
+        .catch(function (err) {
+          toast(err.message || '回复失败', true);
+          b.disabled = false; b.textContent = '发送回复 ▶';
+        });
+      return;
+    }
+
+    if (act === 'reply-del') {
+      var rid = b.getAttribute('data-id');
+      var forMsg = b.getAttribute('data-msg');
+      b.disabled = true;
+      api('/api/messages/reply', { method: 'DELETE', body: JSON.stringify({ id: rid }) })
+        .then(function () {
+          toast('已删除这条回复');
+          state.msg.open = forMsg;
+          return loadMessages().then(function () { openReplyPanel(forMsg); loadStats(); });
+        })
+        .catch(function (err) { toast(err.message || '删除失败', true); b.disabled = false; });
+    }
+  });
+
+  /* 回复框 ⌘ / Ctrl + Enter 快速发送 */
+  $('msgBody').addEventListener('keydown', function (e) {
+    if (!(e.metaKey || e.ctrlKey) || e.key !== 'Enter') return;
+    if (!e.target || e.target.getAttribute('data-role') !== 'owner-reply-input') return;
+    e.preventDefault();
+    var msgId = e.target.getAttribute('data-msg');
+    var btn = $('msgBody').querySelector('[data-act="reply-send"][data-msg="' + msgId + '"]');
+    if (btn) btn.click();
   });
 
   /* ── 标签页 / 筛选 / 分页 ── */
@@ -481,6 +613,8 @@
     state.msg.q = $('msgSearch').value.trim();
     state.msg.status = $('msgStatus').value;
     state.msg.offset = 0;
+    state.msg.focus = '';   /* 重新筛选即退出邮件直达定位 */
+    state.msg.open = null;
     loadMessages();
   });
   $('msgSearch').addEventListener('keydown', function (e) { if (e.key === 'Enter') $('msgSearchBtn').click(); });
@@ -488,6 +622,8 @@
   $('msgClearDevice').addEventListener('click', function () {
     state.msg.device = '';
     state.msg.offset = 0;
+    state.msg.focus = '';
+    state.msg.open = null;
     loadMessages();
   });
 
@@ -535,7 +671,25 @@
     history.replaceState(null, '', '/');
   })();
 
+  /* 邮件里的「打开后台直接回复」带 ?focus=<留言 id>：
+     跳过设备台账，直接切到留言审核、只加载这一条并自动展开回复面板。 */
+  var focusId = new URLSearchParams(location.search).get('focus') || '';
+  if (focusId) {
+    state.msg.focus = focusId;
+    state.msg.open = focusId;
+    $('msgStatus').value = '';
+  }
+
   api('/api/auth/me').then(function (d) {
-    if (d.authed) { showDash(); loadAll(); } else { showLogin(); }
+    if (d.authed) {
+      showDash();
+      if (focusId) {
+        state.tab = 'messages';
+        switchTab('messages');  /* 内部 loadMessages 会带 focus 并展开面板 */
+        loadStats();
+      } else {
+        loadAll();
+      }
+    } else { showLogin(); }
   }).catch(function () { showLogin(); });
 })();

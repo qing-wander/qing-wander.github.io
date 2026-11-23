@@ -1553,6 +1553,28 @@ a.cap-ref:hover, a.cap-ref:focus-visible {
 .wall-item-time { font-family: var(--font-mono); font-size: 11px; color: var(--ink-soft); margin-left: auto; }
 .wall-item-text { font-size: 14px; line-height: 1.75; color: var(--ink); word-break: break-word; white-space: pre-wrap; }
 
+/* ── 留言对话：站长回复（owner）+ 访客追问 / 评论（visitor） ── */
+.wall-thread { margin-top: 12px; border-top: 2px dashed rgba(var(--ink-rgb), .22); padding-top: 10px; }
+.wall-thread-count { font-family: var(--font-mono); font-size: 10px; letter-spacing: .08em; color: var(--ink-soft); margin-bottom: 8px; }
+.wall-reply { border-left: 3px solid rgba(var(--ink-rgb), .35); background: rgba(var(--ink-rgb), .045); padding: 8px 12px 10px; margin-top: 8px; }
+.wall-reply.is-owner { border-left-color: var(--blue); background: rgba(43, 75, 224, .09); }
+.wall-reply-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.wall-reply-author { font-family: var(--font-mono); font-size: 10.5px; font-weight: 700; letter-spacing: .04em; color: var(--ink); }
+.wall-reply.is-owner .wall-reply-author { color: var(--blue); }
+.wall-reply-time { font-family: var(--font-mono); font-size: 10px; color: var(--ink-soft); margin-left: auto; }
+.wall-reply-text { font-size: 13px; line-height: 1.7; color: var(--ink); white-space: pre-wrap; word-break: break-word; margin-top: 4px; }
+.wall-reply-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 9px; }
+.wall-reply-toggle { font-family: var(--font-mono); font-size: 11px; font-weight: 700; color: var(--ink); background: transparent; border: 2px solid var(--ink); padding: 4px 10px; cursor: pointer; }
+.wall-reply-toggle:hover { background: var(--orange); color: var(--accent-text); }
+.wall-reply-toggle:focus-visible, .wall-reply-send:focus-visible { outline: 3px solid var(--orange); outline-offset: 2px; }
+.wall-reply-hint { font-family: var(--font-mono); font-size: 10px; color: var(--ink-soft); }
+.wall-reply-form { display: flex; flex-direction: column; gap: 8px; margin-top: 9px; }
+.wall-reply-input { min-height: 62px; resize: vertical; font-size: 13px; }
+.wall-reply-form-foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.wall-reply-send { font-family: var(--font-mono); font-size: 11px; font-weight: 700; color: var(--accent-text); background: var(--blue); border: 2px solid var(--ink); padding: 6px 12px; cursor: pointer; }
+.wall-reply-send:hover { background: var(--orange); }
+.wall-reply-send:disabled { opacity: .55; cursor: not-allowed; }
+
 /* ── 留言板增强：工具条 / 分页 / 状态 / 新留言高亮 ── */
 .wall-form-tip {
   font-family: var(--font-mono);

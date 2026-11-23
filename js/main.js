@@ -1433,6 +1433,9 @@
       messages: [], total: 0, hasMore: false,
       busy: false, refreshing: false, loadingMore: false,
       showNew: false, latestId: null, highlightId: null, myIds: [],
+      /* 对话（2026-11-23）：replyOpen 是当前展开评论框的留言 id，
+         latestReply 是已见最新站长回复时间，用于轮询提示「站长回复了你」。 */
+      replyOpen: null, replyBusy: false, latestReply: 0, showNewReply: false,
       updatedAt: 0, base: '', status: 0, reason: '', closedMsg: '', errorMsg: ''
     };
     try { /* 本次会话自己贴的留言，刷新后仍能标「· 我」 */
@@ -1524,6 +1527,48 @@
         escT(text || state.errorMsg || T.errorText || '留言没能加载出来') +
         '<button type="button" id="wallRetry">' + escT(T.retryText || '重试') + '</button></p>';
     }
+    /* 一条留言下面的对话：站长回复（owner）用蓝色强调，访客追问（visitor）用中性样式。
+       所有文本都走 escT，回复正文与留言正文一样是不可信输入。 */
+    function renderReplies(m) {
+      var replies = Array.isArray(m.replies) ? m.replies : [];
+      var open = state.replyOpen === m.id;
+      var html = '<div class="wall-thread">';
+      if (replies.length) {
+        html += '<div class="wall-thread-count">' +
+          escT(tpl(T.replyCountText || '{n} 条对话', { n: replies.length })) + '</div>';
+        html += replies.map(function (r) {
+          var owner = r.author === 'owner';
+          var iso = '';
+          try { iso = new Date(r.ts).toISOString(); } catch (e) {}
+          return '<div class="wall-reply' + (owner ? ' is-owner' : '') + '">' +
+            '<div class="wall-reply-head"><span class="wall-reply-author">' +
+            escT(owner ? (T.ownerLabel || '陈培胜 · 回复') : (T.visitorLabel || '你 · 追问')) + '</span>' +
+            '<time class="wall-reply-time" datetime="' + escT(iso) + '" title="' + escT(fmtTime(r.ts)) + '">' +
+            escT(relTime(r.ts)) + '</time></div>' +
+            '<p class="wall-reply-text">' + escT(r.text) + '</p>' +
+            '</div>';
+        }).join('');
+      }
+      html += '<div class="wall-reply-actions">' +
+        '<button class="wall-reply-toggle" type="button" data-act="reply-open" data-id="' + escT(m.id) + '"' +
+        (open ? ' aria-expanded="true"' : '') + '>' +
+        escT(open ? (T.replyCloseText || '收起') : (T.replyToggleText || '评论 / 追问')) + '</button>' +
+        (open ? '' : '<span class="wall-reply-hint">' +
+          escT(T.replyHintText || '回复与评论同样只在这台设备可见') + '</span>') +
+        '</div>';
+      if (open) {
+        html += '<div class="wall-reply-form">' +
+          '<textarea class="wall-input wall-reply-input" data-role="reply-input" data-id="' + escT(m.id) +
+          '" maxlength="300" rows="2" placeholder="' + escT(T.replyPlaceholder || '接着聊两句…') + '"></textarea>' +
+          '<div class="wall-reply-form-foot">' +
+          '<span class="wall-reply-hint">⌘ / Ctrl + Enter 快速发送</span>' +
+          '<button class="wall-reply-send" type="button" data-act="reply-send" data-id="' + escT(m.id) + '"' +
+          (state.replyBusy ? ' disabled' : '') + '>' +
+          escT(state.replyBusy ? (T.replySendingText || '发送中…') : (T.replySendText || '发送评论 ▶')) +
+          '</button></div></div>';
+      }
+      return html + '</div>';
+    }
     function renderItems() {
       if (!listEl) return;
       if (!state.messages.length) {
@@ -1542,6 +1587,7 @@
           '<time class="wall-item-time" data-ts="' + escT(String(m.ts)) + '" datetime="' + escT(iso) +
           '" title="' + escT(fmtTime(m.ts)) + '">' + escT(relTime(m.ts)) + '</time></div>' +
           '<p class="wall-item-text">' + escT(m.text) + '</p>' +
+          renderReplies(m) +
           '</article>';
       }).join('');
     }
@@ -1560,8 +1606,10 @@
         moreBtn.textContent = state.loadingMore ? (T.moreLoadingText || '读取中…') : (T.moreText || '加载更早的留言 ▼');
       }
       if (newBtn) {
-        newBtn.hidden = !(open && state.showNew);
-        newBtn.textContent = T.newText || '有新留言 ▲';
+        newBtn.hidden = !(open && (state.showNew || state.showNewReply));
+        newBtn.textContent = state.showNewReply
+          ? (T.newReplyText || '站长回复了你 ▲')
+          : (T.newText || '有新留言 ▲');
       }
       if (refreshBtn) {
         refreshBtn.disabled = state.busy || state.mode === 'closed';
@@ -1623,6 +1671,13 @@
       state.total = Number(d.total) || state.messages.length;
       state.hasMore = typeof d.hasMore === 'boolean' ? d.hasMore : (state.messages.length < state.total);
       state.latestId = state.messages.length ? state.messages[0].id : null;
+      /* 记录已见的最新站长回复时间：页面刷新后不该再把旧回复当成新消息提示 */
+      state.latestReply = 0;
+      state.messages.forEach(function (m) {
+        (m.replies || []).forEach(function (r) {
+          if (r.author === 'owner' && Number(r.ts) > state.latestReply) state.latestReply = Number(r.ts);
+        });
+      });
       state.mode = 'open';
       state.updatedAt = Date.now();
     }
@@ -1711,6 +1766,11 @@
             state.showNew = true;
             updateBoardMeta();
           }
+          /* 站长回复不改变留言 id，靠服务端返回的 latestReply 单独判断 */
+          if (Number(d.latestReply || 0) > (Number(state.latestReply) || 0) && !state.showNewReply) {
+            state.showNewReply = true;
+            updateBoardMeta();
+          }
         })
         .catch(function () {});
     }
@@ -1720,7 +1780,11 @@
         el.textContent = relTime(Number(el.getAttribute('data-ts')));
       });
     }
-    function refresh() { state.showNew = false; loadFirst(true, state.messages.length); }
+    function refresh() {
+      state.showNew = false;
+      state.showNewReply = false;
+      loadFirst(true, state.messages.length);
+    }
     function updateCount() {
       if (!countEl) return;
       var n = Array.from(textEl.value || '').length;
@@ -1744,8 +1808,76 @@
     if (refreshBtn) refreshBtn.addEventListener('click', refresh);
     if (newBtn) newBtn.addEventListener('click', refresh);
     if (moreBtn) moreBtn.addEventListener('click', loadMore);
+    /* 访客评论：POST /api/wall {replyTo, text}，服务端校验设备归属后写入 wall_replies。
+       返回体仍是本设备整页，applyPage() 直接复用，不必单独维护对话状态。 */
+    function submitReply(id) {
+      if (state.replyBusy || !listEl || !id) return;
+      var input = null;
+      listEl.querySelectorAll('[data-role="reply-input"]').forEach(function (el) {
+        if (el.getAttribute('data-id') === id) input = el;
+      });
+      if (!input) return;
+      var text = String(input.value || '').trim();
+      if (!text) { showToast(T.replyEmptyText || '先写点什么吧', 'err'); input.focus(); return; }
+      if (Array.from(text).length < 2) {
+        showToast(T.replyShortText || '再多写两个字吧（至少 2 个字）', 'err'); input.focus(); return;
+      }
+      state.replyBusy = true;
+      var sendBtn = null;
+      listEl.querySelectorAll('[data-act="reply-send"]').forEach(function (el) {
+        if (el.getAttribute('data-id') === id) sendBtn = el;
+      });
+      if (sendBtn) { sendBtn.disabled = true; sendBtn.textContent = T.replySendingText || '发送中…'; }
+      apiFetch('/api/wall', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ replyTo: id, text: text })
+      })
+        .then(function (res) {
+          var d = res.body || {};
+          if (res.ok && d.ok) {
+            applyPage(d, true);
+            state.showNew = false;
+            state.showNewReply = false;
+            state.replyOpen = id; /* 保持展开，方便继续聊 */
+            showToast(d.duplicate
+              ? (T.replyDuplicateText || '这句刚刚已经发过啦')
+              : (T.replyOkText || '评论已贴到这条留言下面 ▶'), d.duplicate ? 'info' : 'ok');
+          } else {
+            showToast(d.message || T.replyFailText || '评论没能发出去，稍后再试', 'err');
+          }
+        })
+        .catch(function () { showToast(T.replyNetFailText || '网络异常，评论未能发送', 'err'); })
+        .then(function () {
+          state.replyBusy = false;
+          render(); /* 恢复按钮状态并渲染新对话 */
+        });
+    }
+
     if (listEl) listEl.addEventListener('click', function (e) {
-      if (e.target && e.target.id === 'wallRetry') loadFirst(false);
+      if (e.target && e.target.id === 'wallRetry') { loadFirst(false); return; }
+      var btn = e.target && e.target.closest ? e.target.closest('[data-act]') : null;
+      if (!btn || !listEl.contains(btn)) return;
+      var id = btn.getAttribute('data-id');
+      var act = btn.getAttribute('data-act');
+      if (act === 'reply-open') {
+        state.replyOpen = (state.replyOpen === id) ? null : id;
+        render();
+        if (state.replyOpen === id) {
+          listEl.querySelectorAll('[data-role="reply-input"]').forEach(function (el) {
+            if (el.getAttribute('data-id') === id) el.focus();
+          });
+        }
+      } else if (act === 'reply-send') {
+        submitReply(id);
+      }
+    });
+    if (listEl) listEl.addEventListener('keydown', function (e) {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'Enter' &&
+          e.target && e.target.getAttribute('data-role') === 'reply-input') {
+        e.preventDefault();
+        submitReply(e.target.getAttribute('data-id'));
+      }
     });
     if (textEl) textEl.addEventListener('input', updateCount);
 
@@ -1787,6 +1919,7 @@
               try { sessionStorage.setItem('cp-wall-myids', JSON.stringify(state.myIds.slice(-30))); } catch (err) {}
             }
             state.showNew = false;
+            state.showNewReply = false;
             textEl.value = '';
             nameEl.value = '';
             updateCount();

@@ -12,15 +12,23 @@
        同一人的手机与电脑算两台设备，device_id 也能被伪造。
 
    接口：
-     GET    /api/wall?limit=20&offset=0     → 本设备的留言分页
-     GET    /api/wall?peek=1                → 本设备总数 + 最新 id（轻量轮询）
+     GET    /api/wall?limit=20&offset=0     → 本设备的留言分页（每条带 replies 对话）
+     GET    /api/wall?peek=1                → 本设备总数 + 最新 id + 最新站长回复时间
      POST   /api/wall {name?, text}         → 写留言（绑定当前设备）
-     DELETE /api/wall {id} + X-Admin-Token  → 站长应急删除（后台正式入口走 /api/admin/wall/*）
+     POST   /api/wall {replyTo, text}       → 在本设备某条留言下评论 / 追问（2026-11-23）
+     DELETE /api/wall {id} + X-Admin-Token  → 站长应急删除（后台正式入口走后台项目的 /api/messages/*）
      OPTIONS                                → CORS 预检（允许 X-Device-Id / X-Admin-Token）
+
+   为什么评论复用 POST /api/wall 而不是新开路由：
+     · 设备校验、内容净化、来源白名单、Turnstile、CORS、D1 连接全都能直接复用；
+     · 返回体仍是「本设备整页」，前端 applyPage() 一行就能刷新对话；
+     · body.replyTo 存在即走 handleVisitorReply，原留言路径一行不改。
+     站长回复由独立后台项目的 /api/messages/reply 写入，公开端只读不写 owner。
 
    存储（D1，表结构见 db/schema.sql）：
      wall_devices    device_hash / first_seen / last_seen / post_count / ua / status / note
      wall_messages   + device_hash / status / admin_note / updated_at
+     wall_replies    message_id / author(owner|visitor) / text / device_hash / status
      rate_limits     仍按 IP 与全站日额度限流
 
    历史数据：迁移前的留言 device_hash = 'legacy'，公开端查不到，只在后台可见。
@@ -38,13 +46,17 @@
      WALL_NOTIFY_FROM    可选，单独指定留言通知的发件人
    ────────────────────────────────────────────────────────────────────── */
 
-import { notifyWallMessage } from '../lib/wall-notify.js';
+import { notifyWallMessage, notifyWallReply } from '../lib/wall-notify.js';
 
 const JSON_HEADERS = { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' };
 
-const MAX_TEXT = 300;         // 留言正文上限（按 Unicode 码点计，emoji 算 1 个）
+const MAX_TEXT = 300;         // 留言 / 评论正文上限（按 Unicode 码点计，emoji 算 1 个）
 const MIN_TEXT = 2;           // 正文最少字数
 const MAX_NAME = 16;          // 称呼长度上限
+const MAX_REPLIES_PER_MESSAGE = 20; // 单条留言下最多保留 20 条对话（站长 + 访客合计）
+const REPLY_IP_LIMIT = 6;     // 评论限流：每 IP 每 10 分钟 6 条（与留言额度分开）
+const REPLY_DAY_LIMIT = 40;   // 评论限流：全站每天 40 条
+const REPLY_DUP_WINDOW_MS = 300000; // 5 分钟内同一留言相同正文视为重复
 const PER_DEVICE_CAP = 20;    // 单设备最多保留 20 条（超出滚掉自己最旧的）
 const GLOBAL_CAP = 500;       // 全站兜底上限，只做库体量控制，不按人裁剪
 const DEFAULT_LIMIT = 20;     // 每页默认条数
@@ -225,8 +237,36 @@ function pageOf(messages, total, limit, offset) {
   };
 }
 
+/* 批量给本页留言挂上对话：一次 IN 查询，避免一条留言一次 SQL。
+   只取 visible；后台把某条评论设为 hidden 时不影响原留言与其它回复。
+   wall_replies 尚未迁移的老环境降级为空对话，不让整个留言墙 500。 */
+async function attachReplies(db, messages) {
+  const list = messages || [];
+  const byId = {};
+  list.forEach((m) => { byId[m.id] = []; });
+  if (list.length) {
+    const holes = list.map(() => '?').join(',');
+    let rows = [];
+    try {
+      const r = await db.prepare(
+        `SELECT message_id, id, author, text, created_at AS ts FROM wall_replies
+          WHERE message_id IN (${holes}) AND status = 'visible' ORDER BY seq ASC`
+      ).bind(...list.map((m) => m.id)).all();
+      rows = r.results || [];
+    } catch (e) {
+      rows = [];
+    }
+    rows.forEach((r) => {
+      if (!byId[r.message_id]) return;
+      byId[r.message_id].push({ id: r.id, author: r.author, text: r.text, ts: r.ts });
+    });
+  }
+  return list.map((m) => Object.assign({}, m, { replies: byId[m.id] || [] }));
+}
+
 /* 只返回「当前设备 + 正常状态」的留言。
-   历史迁移数据 device_hash='legacy'、后台隐藏的 status='hidden' 都不会出现在这里。 */
+   历史迁移数据 device_hash='legacy'、后台隐藏的 status='hidden' 都不会出现在这里。
+   回复按所属留言返回，设备归属由留言本身保证（回复表 device_hash 与留言一致）。 */
 async function listPage(db, dh, limit, offset) {
   const rows = await db.prepare(
     `SELECT ${COLS} FROM wall_messages
@@ -236,7 +276,8 @@ async function listPage(db, dh, limit, offset) {
   const cnt = await db.prepare(
     `SELECT COUNT(*) AS n FROM wall_messages WHERE device_hash = ? AND status = 'visible'`
   ).bind(dh).first();
-  return pageOf(rows.results || [], cnt ? cnt.n : 0, limit, offset);
+  const messages = await attachReplies(db, rows.results || []);
+  return pageOf(messages, cnt ? cnt.n : 0, limit, offset);
 }
 
 /* 裁剪：先按设备裁（只动自己的），再按全站兜底裁（防止库无限增长）。
@@ -254,6 +295,11 @@ async function trim(db, dh) {
         SELECT seq FROM wall_messages ORDER BY seq DESC LIMIT ?
       ))`
   ).bind(GLOBAL_CAP).run();
+  /* 级联清理：留言被裁掉后，它的对话不该继续占库。反查孤儿比在两条 DELETE
+     之前逐一收集 id 简单，全站留言上限 500、量很小。表未迁移时静默跳过。 */
+  try {
+    await db.prepare('DELETE FROM wall_replies WHERE message_id NOT IN (SELECT id FROM wall_messages)').run();
+  } catch (e) { /* noop：老库没有 wall_replies */ }
 }
 
 async function upsertDevice(db, dh, now, ua) {
@@ -273,6 +319,104 @@ function safeEqual(a, b) {
   let diff = 0;
   for (let i = 0; i < x.length; i++) diff |= x.charCodeAt(i) ^ y.charCodeAt(i);
   return diff === 0;
+}
+
+/* ── 访客评论 / 追问 ──────────────────────────────────────────────────
+   POST /api/wall { replyTo, text }：在本设备某条留言下追加一条 visitor 回复。
+   关键约束：
+     · 设备归属：parent.device_hash 必须等于当前 dh，否则任何人都不能给别人的
+       私密留言写评论（设备隔离不是认证，但足以挡住串台与恶意刷屏）；
+     · hidden 的留言不可评论，被拉黑的设备不可评论；
+     · 独立限流（不与留言额度共用）、5 分钟同文去重、单条留言 20 条对话上限；
+     · 成功后发一封「新评论」给站长，邮件带后台 ?focus= 直达链接；
+     · 返回本设备整页（含 replies），前端复用 applyPage() 即可刷新对话。 */
+async function handleVisitorReply({ request, env, ctx, db, dh, cors, body, text }) {
+  const messageId = clean(body.replyTo, 64);
+  if (!messageId) {
+    return json({ ok: false, error: 'bad_request', message: '缺少要评论的留言' }, cors, 400);
+  }
+  const now = Date.now();
+  try {
+    const dev = await db.prepare('SELECT status FROM wall_devices WHERE device_hash = ?').bind(dh).first();
+    if (dev && dev.status === 'blocked') {
+      return json({ ok: false, error: 'device_blocked', message: '这台设备的留言功能已被关闭' }, cors, 403);
+    }
+
+    const parent = await db.prepare(
+      'SELECT id, name, text, device_hash, status FROM wall_messages WHERE id = ?'
+    ).bind(messageId).first();
+    if (!parent || parent.status !== 'visible') {
+      return json({ ok: false, error: 'not_found', message: '这条留言不存在或已被隐藏' }, cors, 404);
+    }
+    if (parent.device_hash !== dh) {
+      return json({ ok: false, error: 'forbidden', message: '只能评论本设备的留言' }, cors, 403);
+    }
+
+    const cnt = await db.prepare(
+      `SELECT COUNT(*) AS n FROM wall_replies WHERE message_id = ?`
+    ).bind(messageId).first();
+    if (cnt && Number(cnt.n) >= MAX_REPLIES_PER_MESSAGE) {
+      return json({ ok: false, error: 'rate_limited', message: '这条留言下的对话已经满啦，另写一条留言吧' }, cors, 429);
+    }
+
+    const dup = await db.prepare(
+      `SELECT 1 AS hit FROM wall_replies
+        WHERE message_id = ? AND author = 'visitor' AND text = ? AND created_at > ? LIMIT 1`
+    ).bind(messageId, text, now - REPLY_DUP_WINDOW_MS).first();
+    if (dup) {
+      return json(Object.assign(await listPage(db, dh, DEFAULT_LIMIT, 0),
+        { duplicate: true, kind: 'reply' }), cors, 200);
+    }
+
+    const ipKey = await ipHash(request);
+    const win = Math.floor(now / IP_WINDOW_MS);
+    const winEnd = (win + 1) * IP_WINDOW_MS;
+    const ipOk = await gate(db, 'wall:reply:ip:' + ipKey, String(win), REPLY_IP_LIMIT,
+      Math.ceil((winEnd - now) / 1000) + 60);
+    if (ipOk === null) {
+      return json({
+        ok: false, error: 'rate_limited', message: '评论有点频繁，稍后再试',
+        retryAfter: Math.max(1, Math.ceil((winEnd - now) / 1000)),
+      }, cors, 429);
+    }
+    const dayStart = new Date(now);
+    const dayKey = dayStart.toISOString().slice(0, 10);
+    const dayEnd = Date.UTC(dayStart.getUTCFullYear(), dayStart.getUTCMonth(), dayStart.getUTCDate() + 1);
+    const dayOk = await gate(db, 'wall:reply:day', dayKey, REPLY_DAY_LIMIT,
+      Math.ceil((dayEnd - now) / 1000) + 3600);
+    if (dayOk === null) {
+      return json({ ok: false, error: 'rate_limited', message: '今日评论已达上限，明天再来' }, cors, 429);
+    }
+
+    const item = {
+      id: 'r' + now.toString(36) + Math.random().toString(36).slice(2, 7),
+      messageId: messageId,
+      author: 'visitor',
+      text: text,
+      created_at: now,
+      device_hash: dh,
+    };
+    const ins = await db.prepare(
+      `INSERT INTO wall_replies (id, message_id, author, text, created_at, device_hash, status)
+       VALUES (?, ?, 'visitor', ?, ?, ?, 'visible')`
+    ).bind(item.id, item.messageId, item.text, item.created_at, item.device_hash).run();
+    if (!ins || !ins.success) return json({ ok: false, error: 'db_error' }, cors, 500);
+    await db.prepare('UPDATE wall_messages SET updated_at = ? WHERE id = ?').bind(now, messageId).run();
+
+    const notice = notifyWallReply(env, {
+      messageId: messageId,
+      messageText: parent.text,
+      name: parent.name,
+      text: item.text,
+      created_at: item.created_at,
+    }, { origin: request.headers.get('Origin') || '', deviceHash: dh });
+    if (ctx && typeof ctx.waitUntil === 'function') ctx.waitUntil(notice);
+    else await notice;
+
+    return json(Object.assign(await listPage(db, dh, DEFAULT_LIMIT, 0), { kind: 'reply' }), cors, 201);
+  } catch (e) {
+    return json({ ok: false, error: 'db_error', message: '评论没能保存，稍后再试' }, cors, 500);
+  }
 }
 
 export async function onRequestOptions({ request, env }) {
@@ -312,9 +456,20 @@ export async function onRequestGet({ request, env }) {
         `SELECT id, created_at AS ts FROM wall_messages
           WHERE device_hash = ? AND status = 'visible' ORDER BY seq DESC LIMIT 1`
       ).bind(dh).first();
+      /* 站长回复不会改变留言 id，单看 latest 发现不了；单独返回最新 owner 回复时间，
+         前端据此提示「站长回复了你」。表未迁移时给 0。 */
+      let latestReply = 0;
+      try {
+        const lr = await db.prepare(
+          `SELECT MAX(created_at) AS ts FROM wall_replies
+            WHERE device_hash = ? AND author = 'owner' AND status = 'visible'`
+        ).bind(dh).first();
+        latestReply = lr && lr.ts ? Number(lr.ts) : 0;
+      } catch (e) { latestReply = 0; }
       return json({
         ok: true, open: true, total: cnt ? cnt.n : 0,
         latest: first ? { id: first.id, ts: first.ts } : null,
+        latestReply: latestReply,
         turnstile: flags.turnstile,
       }, PUBLIC_CORS);
     }
@@ -357,6 +512,13 @@ export async function onRequestPost({ request, env, ctx }) {
   if (Array.from(text).length < MIN_TEXT) {
     return json({ ok: false, error: 'bad_request', message: '再多写两个字吧（至少 2 个字）' }, cors, 400);
   }
+
+  /* body.replyTo 存在 = 在这条留言下评论，不是新开一条留言。
+     放在主写入路径之前，避免评论去占用「新留言」的限流与去重额度。 */
+  if (body.replyTo != null && String(body.replyTo).trim() !== '') {
+    return handleVisitorReply({ request, env, ctx, db, dh, cors, body, text });
+  }
+
   const name = clean(body.name, MAX_NAME) || '匿名访客';
 
   const now = Date.now();
@@ -465,6 +627,8 @@ export async function onRequestDelete({ request, env }) {
   if (!id) return json({ ok: false, error: 'bad_request', message: '缺少 id' }, cors, 400);
 
   try {
+    /* 先删对话再删留言：留言没了，挂在它下面的回复也不该留在库里 */
+    try { await db.prepare('DELETE FROM wall_replies WHERE message_id = ?').bind(id).run(); } catch (e) {}
     const del = await db.prepare('DELETE FROM wall_messages WHERE id = ?').bind(id).run();
     if (!del || !del.meta || del.meta.changes === 0) {
       return json({ ok: false, error: 'not_found', message: '留言不存在' }, cors, 404);

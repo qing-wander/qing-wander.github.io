@@ -117,15 +117,22 @@ CI（`.github/workflows/content-build.yml`）在 push / PR 上跑同样三件事
 
 | 方法 | 路径 | 说明 |
 |---|---|---|
-| GET | `/api/wall?limit&offset` | 只返回本设备 `status='visible'` 的留言 |
-| GET | `/api/wall?peek=1` | 本设备总数 + 最新一条（轮询用） |
+| GET | `/api/wall?limit&offset` | 只返回本设备 `status='visible'` 的留言，每条附 `replies` 对话 |
+| GET | `/api/wall?peek=1` | 本设备总数 + 最新一条 + `latestReply`（最新站长回复时间，轮询提示用） |
 | POST | `/api/wall` | 绑定当前设备写入；被拉黑设备返回 403 |
-| DELETE | `/api/wall` + `X-Admin-Token` | 站长应急删除（唯一保留的令牌接口） |
+| POST | `/api/wall` + `{replyTo, text}` | 在本设备某条留言下评论 / 追问，校验设备归属，独立限流 |
+| DELETE | `/api/wall` + `X-Admin-Token` | 站长应急删除（唯一保留的令牌接口，级联删回复） |
 
 > **2026-11-21 起旧后台接口 `/api/admin/wall/*` 已下线。** 设备台账、留言审核、CSV 导出
 > 全部走独立后台 `shenge-work-admin.pages.dev`（会话鉴权，见 `admin/`）：`/api/devices`、
-> `/api/messages`、`/api/messages/status`、`/api/devices/block`、`/api/export`。
+> `/api/messages`、`/api/messages/status`、`/api/messages/reply`、`/api/devices/block`、`/api/export`。
 > 保留 `DELETE /api/wall` 只为应急删除单条，避免静态令牌长期持有全站读权限。
+>
+> **2026-11-23 起增加 `wall_replies` 表**（迁移 `db/migrations/2026-11-23-wall-replies.sql`）：
+> 一条留言可挂多条 `author=owner`（站长后台回复）与 `author=visitor`（访客评论），
+> `device_hash` 与留言一致，公开端按留言所属设备读取，隐私模型不变。站长回复只经后台
+> `POST /api/messages/reply` 写入，公开端只读；后台支持「待回复 / 已回复」筛选、`focus`
+> 直达与回复删除。访客评论会邮件通知站长，站长回复不发邮件（匿名无收件地址）。
 
 无设备头时返回 `reason: "device_required"` 且**不带任何正文**，前端显示「本设备拿不到存储权限」。
 
@@ -191,10 +198,12 @@ admin/
 | POST | `/api/auth/login` | 口令换 cookie |
 | POST | `/api/auth/logout` | 清 cookie |
 | GET | `/api/auth/me` | 前端判断登录态 |
-| GET | `/api/stats` | PV / UV / 24h UV / 设备数 / 留言数 / 今日新增 / 隐藏 / 拉黑 |
+| GET | `/api/stats` | PV / UV / 24h UV / 设备数 / 留言数 / 今日新增 / 隐藏 / 待回复 / 拉黑 |
 | GET | `/api/devices` | 设备台账（首见、最近活跃、留言数、最近一条、状态） |
-| GET | `/api/messages` | 留言审核（按设备 / 状态 / 关键词过滤） |
+| GET | `/api/messages` | 留言审核（设备 / 状态 / 待回复 / 关键词 / `focus` 直达，每条附对话） |
 | POST | `/api/messages/status` | 隐藏 / 恢复 |
+| POST | `/api/messages/reply` | 站长回复某条留言（写 `author=owner`） |
+| DELETE | `/api/messages/reply` | 删除一条回复（误发 / 审核） |
 | POST | `/api/devices/block` | 拉黑 / 解封 |
 | GET | `/api/export` | 导出 CSV（留言 + 设备两段） |
 
