@@ -1,11 +1,11 @@
 {
-  "generated_at": "2026-11-22T19:47:16Z",
+  "generated_at": "2026-11-23T11:11:46Z",
   "provider": "tfidf",
   "model": "char-bigram-tfidf",
   "dim": 1200,
   "count": 36,
   "source": "data/site-data.json",
-  "source_sha256": "25fcbc29f0ac09df02401f56da4ef5ce5e2aac71351df96835be8b746e567a0a",
+  "source_sha256": "bd2200fae03b02c6eb57d91f321b0497394e677a2359f6feddd3d375492ecdd0",
   "quant": {
     "type": "int8-symmetric",
     "scale": 218.434872,
