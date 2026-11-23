@@ -3,7 +3,7 @@
    作用：页脚「推荐的人」只有一份名单，避免 JSON / JS 两份数据漂移。 */
 window.PEOPLE = {
   "meta": {
-    "_note": "页脚「推荐的人」名单。只收录本人知情并同意展示的人；每条必须有具体推荐理由（不能只写名字）。改完运行 python3 scripts/sync_people.py 重建快照。当前为空：页脚该模块自动隐藏，不影响版面。",
+    "_note": "页脚「推荐的人」名单。只收录本人知情并同意展示的人；每条必须有具体推荐理由（不能只写名字）。改完运行 python3 scripts/sync_people.py 重建快照。注意 .fp-reason 是单行省略，理由的前 14 字要带出最强看点，全文靠 hover/title 呈现；名单为空时该模块自动隐藏。",
     "limit": 24,
     "footerCount": 4,
     "example": {
@@ -18,5 +18,17 @@ window.PEOPLE = {
       ]
     }
   },
-  "people": []
+  "people": [
+    {
+      "name": "杨胜",
+      "role": "AI 应用架构师 · 开源 CCode 作者",
+      "site": "https://resume.nodetime.top",
+      "initial": "Y",
+      "reason": "日均 20 亿 Token 的五层可观测与评测体系，少见地把 Agent 成本与 Trace 拆到了工程颗粒度",
+      "tags": [
+        "Agent 可观测",
+        "AI 编程工具"
+      ]
+    }
+  ]
 };
