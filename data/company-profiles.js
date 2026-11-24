@@ -1384,7 +1384,8 @@ window.COMPANY_PROFILES = {
           {
             "name": "Sharon",
             "title": "产品负责人",
-            "bio": "公司产品负责人"
+            "bio": "公司产品负责人",
+            "photo": "images/company/zhishu/exec-sharon.png"
           }
         ],
         "offices": [

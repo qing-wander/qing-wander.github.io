@@ -279,15 +279,18 @@
     if (!team.length) return '';
     var src = (c.bossProfile || {}).source || '';
     var slides = '';
+    var bars = '';
     var dots = '';
     team.forEach(function (f, i) {
+      /* 上下布局：头像在上、姓名/职位/简介在下，对齐 BOSS 直聘卡片 */
       slides += '<article class="cp-exec-slide">' +
-        execPhotoHtml(f, 'cp-exec-photo') +
+        '<div class="cp-exec-portrait">' + execPhotoHtml(f, 'cp-exec-photo') + '</div>' +
         '<div class="cp-exec-slide-body">' +
         '<p class="cp-exec-slide-name">' + esc(f.name || '') + sup(src) + '</p>' +
         '<p class="cp-exec-slide-title">' + esc(f.title || '') + '</p>' +
         execBioHtml(f, 'cp-exec-slide-bio') +
         '</div></article>';
+      bars += '<span class="cp-exec-bar' + (i ? '' : ' is-active') + '"></span>';
       dots += '<button class="cp-exec-dot' + (i ? '' : ' is-active') + '" type="button"' +
         ' data-cp-exec-go="' + i + '" aria-label="查看第 ' + (i + 1) + ' 位高管"></button>';
     });
@@ -298,7 +301,10 @@
     return '<div class="cp-head-exec" data-cp-exec-carousel data-cp-exec-index="0"' +
       ' data-cp-exec-count="' + team.length + '">' +
       '<p class="cp-exec-cap">高管介绍</p>' +
-      '<div class="cp-exec-viewport"><div class="cp-exec-track">' + slides + '</div></div>' +
+      (team.length > 1 ? '<div class="cp-exec-bars" aria-hidden="true">' + bars + '</div>' : '') +
+      /* viewport 同时承载点击拖拽与触摸横滑；tabindex 让键盘可聚焦 */
+      '<div class="cp-exec-viewport" tabindex="0" role="group" aria-label="高管轮播，可左右滑动">' +
+      '<div class="cp-exec-track">' + slides + '</div></div>' +
       '<div class="cp-exec-ctrl">' + nav + '<div class="cp-exec-dots">' + dots + '</div></div>' +
       '</div>';
   }
@@ -1042,31 +1048,86 @@
       t.setAttribute('aria-expanded', clamped ? 'false' : 'true');
       t.textContent = clamped ? '展开' : '收起';
     }, true);
-    /* 头部高管轮播：左右箭头 + 圆点，抽屉与独立页共用 */
+    /* 头部高管轮播：跳到指定页，箭头 / 圆点 / 横滑共用同一套状态同步 */
+    function goToSlide(box, idx) {
+      var track = box.querySelector('.cp-exec-track');
+      var dots = box.querySelectorAll('.cp-exec-dot');
+      var bars = box.querySelectorAll('.cp-exec-bar');
+      var prev = box.querySelector('.cp-exec-nav.is-prev');
+      var next = box.querySelector('.cp-exec-nav.is-next');
+      var total = parseInt(box.getAttribute('data-cp-exec-count'), 10) || dots.length;
+      idx = Math.max(0, Math.min(total - 1, idx));
+      box.setAttribute('data-cp-exec-index', idx);
+      if (track) track.style.transform = 'translateX(-' + (idx * 100) + '%)';
+      for (var i = 0; i < dots.length; i++) dots[i].classList.toggle('is-active', i === idx);
+      for (var j = 0; j < bars.length; j++) bars[j].classList.toggle('is-active', j === idx);
+      if (prev) prev.disabled = idx === 0;
+      if (next) next.disabled = idx === total - 1;
+    }
+    /* 箭头 + 圆点点击 */
     document.addEventListener('click', function (ev) {
       var t = ev.target.closest ? ev.target.closest('[data-cp-exec-nav], [data-cp-exec-go]') : null;
       if (!t) return;
       var box = t.closest('[data-cp-exec-carousel]');
       if (!box) return;
       ev.preventDefault();
-      var track = box.querySelector('.cp-exec-track');
-      var dots = box.querySelectorAll('.cp-exec-dot');
-      var prev = box.querySelector('.cp-exec-nav.is-prev');
-      var next = box.querySelector('.cp-exec-nav.is-next');
-      var total = parseInt(box.getAttribute('data-cp-exec-count'), 10) || dots.length;
+      var total = parseInt(box.getAttribute('data-cp-exec-count'), 10) || 0;
       var idx = parseInt(box.getAttribute('data-cp-exec-index'), 10) || 0;
       if (t.hasAttribute('data-cp-exec-go')) {
         idx = parseInt(t.getAttribute('data-cp-exec-go'), 10) || 0;
       } else {
         idx += t.getAttribute('data-cp-exec-nav') === 'next' ? 1 : -1;
       }
-      idx = Math.max(0, Math.min(total - 1, idx));
-      box.setAttribute('data-cp-exec-index', idx);
-      if (track) track.style.transform = 'translateX(-' + (idx * 100) + '%)';
-      for (var i = 0; i < dots.length; i++) dots[i].classList.toggle('is-active', i === idx);
-      if (prev) prev.disabled = idx === 0;
-      if (next) next.disabled = idx === total - 1;
+      goToSlide(box, Math.max(0, Math.min(total - 1, idx)));
     }, true);
+    /* 触摸 / 鼠标横滑：手指横向移动超过阈值即翻页；纵向手势交还页面滚动 */
+    document.addEventListener('pointerdown', function (ev) {
+      var vp = ev.target.closest ? ev.target.closest('.cp-exec-viewport') : null;
+      if (!vp || ev.target.closest('button, a')) return;
+      var box = vp.closest('[data-cp-exec-carousel]');
+      if (!box) return;
+      var track = box.querySelector('.cp-exec-track');
+      var startX = ev.clientX, startY = ev.clientY, w = vp.clientWidth || 1;
+      var total = parseInt(box.getAttribute('data-cp-exec-count'), 10) || 1;
+      var idx = parseInt(box.getAttribute('data-cp-exec-index'), 10) || 0;
+      var decided = false, horizontal = false;
+      function move(e) {
+        var dx = e.clientX - startX, dy = e.clientY - startY;
+        if (!decided) {
+          if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
+          decided = true;
+          horizontal = Math.abs(dx) > Math.abs(dy);
+          if (horizontal && track) track.classList.add('is-dragging');
+        }
+        if (!horizontal) return;
+        if (e.cancelable) e.preventDefault();
+        if (track) track.style.transform = 'translateX(' + (-idx * 100 + (dx / w) * 100) + '%)';
+      }
+      function up(e) {
+        document.removeEventListener('pointermove', move);
+        document.removeEventListener('pointerup', up);
+        document.removeEventListener('pointercancel', up);
+        if (track) track.classList.remove('is-dragging');
+        if (!decided || !horizontal) { goToSlide(box, idx); return; }
+        var dx = e.clientX - startX;
+        if (Math.abs(dx) > Math.min(48, w * 0.18)) idx += dx < 0 ? 1 : -1;
+        goToSlide(box, idx);
+      }
+      document.addEventListener('pointermove', move, { passive: false });
+      document.addEventListener('pointerup', up);
+      document.addEventListener('pointercancel', up);
+    });
+    /* 键盘：轮播聚焦后左右方向键翻页 */
+    document.addEventListener('keydown', function (ev) {
+      if (ev.key !== 'ArrowLeft' && ev.key !== 'ArrowRight') return;
+      var vp = ev.target.closest ? ev.target.closest('.cp-exec-viewport') : null;
+      if (!vp) return;
+      var box = vp.closest('[data-cp-exec-carousel]');
+      if (!box) return;
+      ev.preventDefault();
+      var idx = parseInt(box.getAttribute('data-cp-exec-index'), 10) || 0;
+      goToSlide(box, idx + (ev.key === 'ArrowRight' ? 1 : -1));
+    });
     /* 长板块展开 / 收起：标题三角与底部按钮共用一份委托，抽屉与独立页都生效 */
     document.addEventListener('click', function (ev) {
       var t = ev.target.closest ? ev.target.closest('[data-cp-fold-toggle]') : null;

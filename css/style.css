@@ -942,10 +942,20 @@ body.bar-tight .nav.open a { font-size: 17px; padding: 12px 10px; border-bottom:
   cursor: pointer;
 }
 .exp-card:nth-child(2) .exp-badge { background: var(--blue); }
-/* logo 图自带深色圆角与透明角，底色会从四角透出非常突兀：有 logo 时透明底 */
+/* logo 图自带圆角与透明角，底色会从四角透出非常突兀：有 logo 时透明底 */
 .exp-badge.has-logo,
-.exp-card:nth-child(2) .exp-badge.has-logo { background: transparent; }
-.exp-badge img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.exp-card:nth-child(2) .exp-badge.has-logo {
+  background: transparent;
+  /* 边框改成整圈并跟随 logo 的圆角，去掉直角方框与背景留白 */
+  border: 2px solid var(--ink);
+  border-radius: 11px;
+  top: -4px; left: -4px;
+  transition: border-color .15s ease;
+}
+.exp-badge img {
+  display: block; width: 100%; height: 100%;
+  object-fit: cover; border-radius: 9px;
+}
 /* 有 logo 时隐藏 ::before 底色方块与 "WORK" 字样，避免叠色透出 */
 .exp-card.has-logo-badge::before,
 .exp-card.has-logo-badge::after { display: none; }
@@ -955,6 +965,8 @@ body.bar-tight .nav.open a { font-size: 17px; padding: 12px 10px; border-bottom:
 @media (hover: hover) {
   .exp-card[data-cp]:hover { border-color: var(--orange); }
   .exp-card[data-cp]:hover .cp-name-link { color: var(--orange); border-bottom-color: currentColor; }
+  /* logo 边框与公司名同步变橙，保持一致 */
+  .exp-card[data-cp]:hover .exp-badge.has-logo { border-color: var(--orange); }
 }
 .exp-head {
   display: flex;
