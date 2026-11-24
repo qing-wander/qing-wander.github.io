@@ -1364,9 +1364,15 @@
           "Lessie AI（lessie.ai）",
           "Deeplink（出海网红营销 AI Agency）"
         ],
-        "foundingTeam": [
-          {
-            "name": "Seven",
+      "foundingTeam": [
+        {
+          "name": "Colin",
+          "title": "创始人",
+          "bio": "- 华科软件工程毕业，抖音早期核心创始成员。\n- 亲历抖音从数千万到数亿用户增长，两届字节春晚红包项目负责人\n- 后连续创业，23 年创立 Superlinear，获知名资本投资，25 年推出产品 Lessie AI",
+          "photo": "images/company/zhishu/exec-colin.png"
+        },
+        {
+          "name": "Seven",
             "title": "市场负责人",
             "bio": "DeepLink 业务市场负责人",
             "photo": "images/company/zhishu/exec-seven.png"
