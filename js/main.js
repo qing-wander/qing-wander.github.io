@@ -197,6 +197,8 @@
         ? ' data-cp="' + esc(x.profileId) + '" title="点击查看公司档案"'
         : '';
       var name = esc(x.company);
+      /* 业务标签（companyNote）与网页简历 resume.experience 同源，主页 / 简历两边口径统一 */
+      var roleText = (x.companyNote ? esc(x.companyNote) + ' · ' : '') + esc(x.role);
       var quick = '';
       if (x.profileId) {
         name = '<a class="cp-name-link" data-cp="' + esc(x.profileId) +
@@ -212,7 +214,7 @@
           : '') +
         '<div class="exp-head"><div><h3 class="exp-company">' + name + '</h3>' +
         quick +
-        '<p class="exp-role">' + esc(x.role) + '</p></div><span class="exp-time">' + esc(x.time) + '</span></div>' +
+        '<p class="exp-role">' + roleText + '</p></div><span class="exp-time">' + esc(x.time) + '</span></div>' +
         '<ul class="exp-points">' + (x.points || []).map(function (p) {
           return '<li>' + p + '</li>'; /* 要点支持 <strong> 内联标记 */
         }).join('') + '</ul>' +

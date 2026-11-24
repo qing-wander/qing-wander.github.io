@@ -656,7 +656,7 @@
     '<div class="ai-stage-actor" id="aiActor"></div>' +
     '<div class="ai-stage-ground" aria-hidden="true"></div>' +
     '<div class="ai-stage-name" id="aiSkinName"></div>' +
-    '<div class="ai-stage-hint" id="aiStageHint"><i class="ai-stage-hint-dot" aria-hidden="true"></i>点我问 <b>数字分身</b></div>' +
+    '<div class="ai-stage-hint" id="aiStageHint"><i class="ai-stage-hint-dot" aria-hidden="true"></i>点我问 <b>AI数字分身</b></div>' +
     '<div class="ai-stage-think" id="aiStageThink" aria-hidden="true"><i></i><i></i><i></i></div>' +
     '<button class="ai-stage-menu-btn" id="aiSkinBtn" type="button" aria-label="打开皮肤菜单">&#9672;</button>';
   aiFab.parentNode.insertBefore(stage, aiFab);

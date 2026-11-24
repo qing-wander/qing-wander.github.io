@@ -310,6 +310,14 @@ body.cp-lock { overflow: hidden; }
   .cp-exec-slide .cp-exec-photo.is-placeholder { width: 100px; height: 104px; }
 }
 
+/* 独立档案页：高管卡片紧贴卡纸右上角——去掉头部为抽屉按钮预留的 44px 与右侧外边距。
+   抽屉右上角有「全屏 / 关闭」按钮，必须保留避让留白，故只在 .cp-page-body 生效；
+   移动端轮播会换行独立成行，也不参与贴角。 */
+@media (min-width: 721px) {
+  .cp-page-body .cp-head { padding-top: 12px; padding-right: 0; }
+  .cp-page-body .cp-head-top { padding-right: 0; }
+}
+
 /* ══ 5. 各内容区 ═════════════════════════════════════ */
 .cp-sec { padding: 20px 28px 4px; }
 .cp-sec-first { padding-top: 18px; }
