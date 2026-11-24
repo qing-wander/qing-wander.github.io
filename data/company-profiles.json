@@ -19,6 +19,21 @@
         "text": "comein.cn",
         "href": "https://www.comein.cn"
       },
+      "wechat": [
+        {
+          "name": "进门财经",
+          "account": "进门财经",
+          "note": "公司声明：唯一官方网站 comein.cn、唯一公众号「进门财经」、唯一 APP「进门财经」；官方平台不从事荐股等证券投资咨询。",
+          "source": 14,
+          "url": "https://k.sina.com.cn/article_3884145577_e7835ba901901byd8.html"
+        },
+        {
+          "name": "进门",
+          "note": "部分上市公司业绩说明会公告的写作口径：微信搜索「进门」公众号，在「服务」中点击「进门小程序」进入路演；与官方声明的「进门财经」并列保留。",
+          "source": 15,
+          "url": "https://disc.static.sse.org.cn/disc/disk03/finalpage/2025-08-23/8903a9c9-7b56-4f99-99e0-bfeb5a687332.PDF"
+        }
+      ],
       "registry": {
         "founded": "2013-10-10",
         "hq": "深圳 · 南山（留仙洞国际创新谷）",
@@ -285,6 +300,16 @@
           "n": 13,
           "name": "企查猫 · 进门财经竞争对手清单",
           "url": "https://www.qibook.com/company-wiki-s/shenzhenjinmencaijingkejigufenyouxiangongsi-12fc4b6b.html?s=t"
+        },
+        {
+          "n": 14,
+          "name": "新浪财经 · 进门财经《郑重提醒：警惕冒用进门财经名义的违法活动》（官方平台声明）",
+          "url": "https://k.sina.com.cn/article_3884145577_e7835ba901901byd8.html"
+        },
+        {
+          "n": 15,
+          "name": "上海证券交易所 · 远光软件 2025 年半年度网上业绩说明会公告（进门公众号/小程序入口）",
+          "url": "https://disc.static.sse.org.cn/disc/disk03/finalpage/2025-08-23/8903a9c9-7b56-4f99-99e0-bfeb5a687332.PDF"
         }
       ],
       "competitors": {
@@ -453,6 +478,14 @@
         "text": "rabyte.cn",
         "href": "https://rabyte.cn"
       },
+      "wechat": [
+        {
+          "name": "讯兔科技",
+          "note": "多所高校就业网校招启事写明「欢迎关注微信公众号：讯兔科技」。",
+          "source": 7,
+          "url": "https://career.cic.tsinghua.edu.cn/xsglxt/f/jyxt/anony/showZwxx?zpxxid=514529450"
+        }
+      ],
       "registry": {
         "founded": "2021-06-21",
         "hq": "上海 · 自贸区商城路（工商现地址：虹口区邯郸路 135 号）",
@@ -606,6 +639,11 @@
           "n": 6,
           "name": "百度百科 · Alpha派（二审终审与产品里程碑）",
           "url": "https://baike.baidu.com/item/Alpha派/67915033"
+        },
+        {
+          "n": 7,
+          "name": "清华大学学生职业发展指导中心 · 讯兔科技 2026 校招（关注公众号：讯兔科技）",
+          "url": "https://career.cic.tsinghua.edu.cn/xsglxt/f/jyxt/anony/showZwxx?zpxxid=514529450"
         }
       ]
     },
@@ -1132,6 +1170,14 @@
         "text": "turingmarket.cn",
         "href": "https://www.turingmarket.cn"
       },
+      "wechat": [
+        {
+          "name": "图灵 Turing Market",
+          "note": "官方推广文章提示「扫码关注图灵 Turing Market 微信公众号」参与免费公测。",
+          "source": 7,
+          "url": "http://mp.weixin.qq.com/s?__biz=Mzg3Nzg0MDE2Ng==&mid=2247492285&idx=1&sn=1e34217c9da3d2abb66e5edd0f54f7dc"
+        }
+      ],
       "registry": {
         "founded": "2025-04-15",
         "hq": "深圳 · 南山（西丽）",
@@ -1273,6 +1319,11 @@
           "n": 6,
           "name": "Lessie AI 产品官网",
           "url": "https://lessie.cn"
+        },
+        {
+          "n": 7,
+          "name": "微信公众号文章 · 图灵 Turing Market 官号推广（扫码关注公众号参与公测）",
+          "url": "http://mp.weixin.qq.com/s?__biz=Mzg3Nzg0MDE2Ng==&mid=2247492285&idx=1&sn=1e34217c9da3d2abb66e5edd0f54f7dc"
         }
       ]
     },
@@ -1287,6 +1338,14 @@
         "text": "aha.inc",
         "href": "https://aha.inc"
       },
+      "wechat": [
+        {
+          "name": "AhaCreator",
+          "note": "官方内容账号，发布活跃入驻达人规模、飞书合作等产品与品牌动态。",
+          "source": 8,
+          "url": "http://mp.weixin.qq.com/s?__biz=MzYzMjQ0OTYyNA==&mid=2247485250&idx=1&sn=9f7bbdf48e6a55dbf7dd96315c9608d4"
+        }
+      ],
       "registry": {
         "founded": "2024-04-28",
         "hq": "北京 · 大兴",
@@ -1440,6 +1499,11 @@
           "n": 7,
           "name": "Lessie AI 产品官网",
           "url": "https://lessie.cn"
+        },
+        {
+          "n": 8,
+          "name": "AhaCreator 官方公众号文章 · 突破 20 万活跃入驻达人",
+          "url": "http://mp.weixin.qq.com/s?__biz=MzYzMjQ0OTYyNA==&mid=2247485250&idx=1&sn=9f7bbdf48e6a55dbf7dd96315c9608d4"
         }
       ]
     },
@@ -1609,6 +1673,20 @@
         "text": "wotokol.com",
         "href": "https://www.wotokol.com"
       },
+      "wechat": [
+        {
+          "name": "卧兔网络",
+          "note": "官方公众号，发布跨境活动行、WotoHub 红人资源与品牌动态。",
+          "source": 6,
+          "url": "http://mp.weixin.qq.com/s?__biz=MzU5NjU1NDE1Nw==&mid=2247502197&idx=1&sn=b1c19920e8228b80605acb7137819ab7"
+        },
+        {
+          "name": "卧兔品牌出海",
+          "note": "A 轮融资报道中列出的另一个官方关注公众号，与「卧兔网络」并列保留。",
+          "source": 7,
+          "url": "https://www.toutiao.com/article/7091860009818292770/"
+        }
+      ],
       "registry": {
         "founded": "2017-11-27",
         "hq": "杭州 · 滨江（纽约 / 德国 / 新加坡设海外中心）",
@@ -1745,6 +1823,16 @@
           "n": 5,
           "name": "Lessie AI 产品官网",
           "url": "https://lessie.cn"
+        },
+        {
+          "n": 6,
+          "name": "卧兔网络官方公众号文章 · 1.3 亿海外红人资源里程碑",
+          "url": "http://mp.weixin.qq.com/s?__biz=MzU5NjU1NDE1Nw==&mid=2247502197&idx=1&sn=b1c19920e8228b80605acb7137819ab7"
+        },
+        {
+          "n": 7,
+          "name": "今日头条 · WotoKOL 卧兔网络 A 轮融资报道（关注公众号：卧兔品牌出海、卧兔网络）",
+          "url": "https://www.toutiao.com/article/7091860009818292770/"
         }
       ]
     },
@@ -1913,6 +2001,14 @@
         "text": "fanggeek.com.cn",
         "href": "http://fanggeek.com.cn/"
       },
+      "wechat": [
+        {
+          "name": "房极客招聘",
+          "note": "招聘官方公众号；校招简章提示「还可关注【房极客招聘】微信公众号」。未把同名地产经纪品牌公众号算作本公司账号。",
+          "source": 10,
+          "url": "https://job.hut.edu.cn/detail/online?id=2459788"
+        }
+      ],
       "registry": {
         "founded": "2016-07-07",
         "hq": "深圳 · 南山后海中心区海信南方大厦 18 层（深圳湾超级总部基地）",
@@ -2175,6 +2271,11 @@
           "name": "CSDN 博客 · 2026 年房产中介 ERP 系统评测",
           "url": "https://blog.csdn.net/taotaoe1222/article/details/163231291",
           "n": 9
+        },
+        {
+          "n": 10,
+          "name": "湖南工业大学就业信息网 · 房极客 2023 届秋招简章（【房极客招聘】公众号）",
+          "url": "https://job.hut.edu.cn/detail/online?id=2459788"
         }
       ],
       "competitors": {
@@ -2343,6 +2444,15 @@
         "text": "chowsangsang.com",
         "href": "https://www.chowsangsang.com"
       },
+      "wechat": [
+        {
+          "name": "周生生珠宝",
+          "account": "ChowSangSangOfficial",
+          "note": "官方新闻稿写「微信公众号@周生生珠宝」；官方货品保证单标注微信账户 ChowSangSangOfficial（另见来源 13）。",
+          "source": 12,
+          "url": "https://ex.chinadaily.com.cn/exchange/partners/82/rss/channel/cn/columns/sz8srm/stories/WS6641da00a3109f7860ddd482.html"
+        }
+      ],
       "registry": {
         "founded": "1934 年创立于广州",
         "hq": "中国香港 · 1973 年港交所上市（00116.HK）",
@@ -2593,6 +2703,16 @@
           "name": "金店排行 · 2025 市场综合占有率 / 门店规模 / 品牌热度综合榜单",
           "url": "http://rcdd.cn/info-9759.html",
           "n": 11
+        },
+        {
+          "n": 12,
+          "name": "中国日报网 · 周生生 90 周年品牌大使稿（官方社交平台：微信公众号@周生生珠宝）",
+          "url": "https://ex.chinadaily.com.cn/exchange/partners/82/rss/channel/cn/columns/sz8srm/stories/WS6641da00a3109f7860ddd482.html"
+        },
+        {
+          "n": 13,
+          "name": "周生生官方货品保证单 · 微信账户 ChowSangSangOfficial",
+          "url": "https://cni2.chowsangsang.com//epdf/17a75b3b7f9bf8d67435a83ad5ecba2c.pdf"
         }
       ],
       "competitors": {

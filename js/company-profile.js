@@ -222,6 +222,26 @@
     return html + '</section>';
   }
 
+  /* 微信公众号：只收可确证的官方账号；微信号未公开时不编造。 */
+  function wechatBlock(c) {
+    var list = c.wechat || [];
+    if (!list.length) return '';
+    var html = '<section class="cp-sec"><h4 class="cp-sec-title">微信公众号</h4><div class="cp-wechat-list">';
+    list.forEach(function (w) {
+      var link = w.url
+        ? '<a class="cp-wechat-link" href="' + esc(w.url) +
+          '" target="_blank" rel="noopener noreferrer">查看来源文章 ↗</a>'
+        : '';
+      html += '<div class="cp-wechat-item">' +
+        '<span class="cp-wechat-mark" aria-hidden="true">微</span>' +
+        '<div class="cp-wechat-body"><p class="cp-wechat-name">' + esc(w.name) + sup(w.source || '') + '</p>' +
+        (w.account ? '<p class="cp-wechat-id">微信号 · ' + esc(w.account) + '</p>' : '') +
+        (w.note ? '<p class="cp-wechat-note">' + esc(w.note) + '</p>' : '') +
+        link + '</div></div>';
+    });
+    return html + '</div></section>';
+  }
+
   function recognitionBlock(c) {
     if (!c.recognition || !c.recognition.length) return '';
     var html = '<section class="cp-sec"><h4 class="cp-sec-title">行业知名度与客户</h4><ul class="cp-recog">';
@@ -602,7 +622,8 @@
       competitorBlock(c) +
       outlookBlock(c) +
       officeBlock(c, id) +
-      sourcesBlock(c);
+      sourcesBlock(c) +
+      wechatBlock(c);
     return html;
   }
 
