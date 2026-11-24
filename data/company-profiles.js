@@ -470,7 +470,8 @@ window.COMPANY_PROFILES = {
           {
             "name": "程建辉",
             "title": "创始人&CEO",
-            "bio": "曾在华为、联想高级管理岗位任职，拥有十年企业管理与资本市场运作经验；2009 年创立「禾木咨询」任总裁，禾木咨询为进门财经全资子公司；2013 年创立「进门财经」任总裁。"
+            "bio": "曾在华为、联想高级管理岗位任职，拥有十年企业管理与资本市场运作经验；2009 年创立「禾木咨询」任总裁，禾木咨询为进门财经全资子公司；2013 年创立「进门财经」任总裁。",
+            "photo": "images/company/comein/exec-chengjianhui.png"
           }
         ],
         "milestones": [
@@ -1371,7 +1372,8 @@ window.COMPANY_PROFILES = {
           {
             "name": "Seven",
             "title": "市场负责人",
-            "bio": "DeepLink 业务市场负责人"
+            "bio": "DeepLink 业务市场负责人",
+            "photo": "images/company/zhishu/exec-seven.png"
           },
           {
             "name": "Sharon",

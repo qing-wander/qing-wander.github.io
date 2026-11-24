@@ -216,6 +216,62 @@
     return html + '</div>';
   }
 
+  /* 头部高管轮播：数据与 BOSS 板块的高管卡片同源，头像缺失时退化为字标 */
+  function execPhotoUrl(f) {
+    var url = (f && f.photo) || '';
+    if (url && window.AssetURL && window.AssetURL.of) url = window.AssetURL.of(url);
+    return url;
+  }
+  function execPhotoHtml(f, cls) {
+    var url = execPhotoUrl(f);
+    if (url) {
+      return '<img class="' + cls + '" src="' + esc(url) + '" alt="' + esc(f.name || '') + '">';
+    }
+    return '<span class="' + cls + ' is-placeholder" aria-hidden="true">' +
+      esc(((f && f.name) || '?').charAt(0)) + '</span>';
+  }
+  function execBioHtml(f, cls) {
+    var bio = (f && f.bio) || '';
+    if (!bio) return '';
+    var long = bio.length > 40;
+    var s = '<p class="' + cls + (long ? ' is-clamped' : '') + '" data-cp-exec-bio>' + esc(bio) + '</p>';
+    if (long) {
+      s += '<button class="cp-exec-bio-toggle" type="button" data-cp-exec-bio-toggle' +
+        ' aria-expanded="false">展开</button>';
+    }
+    return s;
+  }
+  function execCarousel(c) {
+    var team = (((c.bossProfile || {}).foundingTeam) || []).filter(function (f) {
+      return f && (f.name || f.photo);
+    });
+    if (!team.length) return '';
+    var src = (c.bossProfile || {}).source || '';
+    var slides = '';
+    var dots = '';
+    team.forEach(function (f, i) {
+      slides += '<article class="cp-exec-slide">' +
+        execPhotoHtml(f, 'cp-exec-photo') +
+        '<div class="cp-exec-slide-body">' +
+        '<p class="cp-exec-slide-name">' + esc(f.name || '') + sup(src) + '</p>' +
+        '<p class="cp-exec-slide-title">' + esc(f.title || '') + '</p>' +
+        execBioHtml(f, 'cp-exec-slide-bio') +
+        '</div></article>';
+      dots += '<button class="cp-exec-dot' + (i ? '' : ' is-active') + '" type="button"' +
+        ' data-cp-exec-go="' + i + '" aria-label="查看第 ' + (i + 1) + ' 位高管"></button>';
+    });
+    var nav = team.length > 1
+      ? '<button class="cp-exec-nav is-prev" type="button" data-cp-exec-nav="prev" aria-label="上一位高管" disabled>‹</button>' +
+        '<button class="cp-exec-nav is-next" type="button" data-cp-exec-nav="next" aria-label="下一位高管">›</button>'
+      : '';
+    return '<div class="cp-head-exec" data-cp-exec-carousel data-cp-exec-index="0"' +
+      ' data-cp-exec-count="' + team.length + '">' +
+      '<p class="cp-exec-cap">高管介绍</p>' +
+      '<div class="cp-exec-viewport"><div class="cp-exec-track">' + slides + '</div></div>' +
+      '<div class="cp-exec-ctrl">' + nav + '<div class="cp-exec-dots">' + dots + '</div></div>' +
+      '</div>';
+  }
+
   /* ══════════════ 长板块展开 / 收起 ══════════════
      内容较多的板块默认只露出首屏，点标题行或底部按钮展开完整内容。
      抽屉与独立档案页共用 render()，所以折叠结构直接生成在 HTML 字符串里；
@@ -491,10 +547,14 @@
     add(multi('发展历程', b.milestones, true));
     add(multi('平台荣誉', b.awards, true));
     if (b.foundingTeam && b.foundingTeam.length) {
+      var exec = '<div class="cp-exec-list">';
       b.foundingTeam.forEach(function (f) {
-        add('<div class="cp-row"><p class="cp-row-label">' + esc(f.title) + '</p><p class="cp-row-text">' +
-          '<b>' + esc(f.name) + '</b> · ' + esc(f.bio) + sup(src) + '</p></div>');
+        exec += '<div class="cp-exec">' + execPhotoHtml(f, 'cp-exec-photo') +
+          '<div class="cp-exec-body"><p class="cp-exec-name">' + esc(f.name || '') + sup(src) + '</p>' +
+          '<p class="cp-exec-title">' + esc(f.title || '') + '</p>' +
+          execBioHtml(f, 'cp-exec-bio') + '</div></div>';
       });
+      add(exec + '</div>');
     }
     add(multi('办公地点', b.offices, true));
     return foldableSection(title, html, {
@@ -744,6 +804,12 @@
     var site = c.website ? '<a class="cp-site" href="' + esc(c.website.href) +
       '" target="_blank" rel="noopener noreferrer">' + esc(c.website.text) + ' ↗</a>' : '';
     var founded = reg.founded ? '<span class="cp-founded">成立于 ' + esc(reg.founded) + '</span>' : '';
+    var pred = c.predecessor || null;
+    var predLine = pred && pred.name
+      ? '<p class="cp-entity cp-pred-entity">前身主体：' + esc(pred.name) +
+        (pred.shortName ? '（' + esc(pred.shortName) + '）' : '') +
+        sup((pred.sources || [])[0] || '') + '</p>'
+      : '';
 
     var stamp = c.logo
       ? '<span class="cp-stamp has-logo" aria-hidden="true"><img class="cp-stamp-logo" src="' +
@@ -761,7 +827,9 @@
       '      <p class="cp-entity">' + esc(c.entity || c.name) + sup(reg.source || '') + '</p>' +
       (c.renameNote ? '      <p class="cp-entity">' + esc(c.renameNote) +
         sup((c.bossProfile || {}).source || '') + '</p>' : '') +
+      predLine +
       '    </div>' +
+      execCarousel(c) +
       '  </div>' +
       '  <p class="cp-oneline">' + esc(c.oneLine || '') + '</p>' +
       '  <div class="cp-pills">' + pills + '</div>' +
@@ -929,6 +997,43 @@
       var pre = new Image();
       pre.src = window.CPPanorama.resolve(p.img);
     }
+    /* 高管简介展开 / 收起：头部轮播与 BOSS 卡片共用 */
+    document.addEventListener('click', function (ev) {
+      var t = ev.target.closest ? ev.target.closest('[data-cp-exec-bio-toggle]') : null;
+      if (!t) return;
+      var host = t.closest('.cp-exec-slide, .cp-exec');
+      var bio = host && host.querySelector('[data-cp-exec-bio]');
+      if (!bio) return;
+      ev.preventDefault();
+      var clamped = bio.classList.toggle('is-clamped');
+      t.setAttribute('aria-expanded', clamped ? 'false' : 'true');
+      t.textContent = clamped ? '展开' : '收起';
+    }, true);
+    /* 头部高管轮播：左右箭头 + 圆点，抽屉与独立页共用 */
+    document.addEventListener('click', function (ev) {
+      var t = ev.target.closest ? ev.target.closest('[data-cp-exec-nav], [data-cp-exec-go]') : null;
+      if (!t) return;
+      var box = t.closest('[data-cp-exec-carousel]');
+      if (!box) return;
+      ev.preventDefault();
+      var track = box.querySelector('.cp-exec-track');
+      var dots = box.querySelectorAll('.cp-exec-dot');
+      var prev = box.querySelector('.cp-exec-nav.is-prev');
+      var next = box.querySelector('.cp-exec-nav.is-next');
+      var total = parseInt(box.getAttribute('data-cp-exec-count'), 10) || dots.length;
+      var idx = parseInt(box.getAttribute('data-cp-exec-index'), 10) || 0;
+      if (t.hasAttribute('data-cp-exec-go')) {
+        idx = parseInt(t.getAttribute('data-cp-exec-go'), 10) || 0;
+      } else {
+        idx += t.getAttribute('data-cp-exec-nav') === 'next' ? 1 : -1;
+      }
+      idx = Math.max(0, Math.min(total - 1, idx));
+      box.setAttribute('data-cp-exec-index', idx);
+      if (track) track.style.transform = 'translateX(-' + (idx * 100) + '%)';
+      for (var i = 0; i < dots.length; i++) dots[i].classList.toggle('is-active', i === idx);
+      if (prev) prev.disabled = idx === 0;
+      if (next) next.disabled = idx === total - 1;
+    }, true);
     /* 长板块展开 / 收起：标题三角与底部按钮共用一份委托，抽屉与独立页都生效 */
     document.addEventListener('click', function (ev) {
       var t = ev.target.closest ? ev.target.closest('[data-cp-fold-toggle]') : null;
