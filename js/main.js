@@ -398,7 +398,8 @@
     return marks;
   }
 
-  /* 骨架：头部 + 图表容器，数据成功后才整体显示 */
+  /* 骨架：头部 + 热力图容器 + 贪吃蛇。蛇图是纯 SVG，不依赖 JSON，先渲染；
+     热力图由 JSON 单独填充。两侧解耦：任一失败不影响另一侧。 */
   function renderGhSkeleton(box) {
     box.innerHTML =
       '<div class="gh-head">' +
@@ -407,12 +408,43 @@
         ' target="_blank" rel="noopener noreferrer">github.com/shenge-work ↗</a>' +
       '</div>' +
       '<div class="gh-stats" hidden></div>' +
-      '<div class="gh-scroll"></div>' +
-      '<div class="gh-legend" hidden><span>Less</span>' +
-        '<i class="gh-cell gh-lv0"></i><i class="gh-cell gh-lv1"></i>' +
-        '<i class="gh-cell gh-lv2"></i><i class="gh-cell gh-lv3"></i>' +
-        '<i class="gh-cell gh-lv4"></i><span>More</span>' +
+      '<div class="gh-graph-block" hidden>' +
+        '<div class="gh-scroll"></div>' +
+        '<div class="gh-legend"><span>Less</span>' +
+          '<i class="gh-cell gh-lv0"></i><i class="gh-cell gh-lv1"></i>' +
+          '<i class="gh-cell gh-lv2"></i><i class="gh-cell gh-lv3"></i>' +
+          '<i class="gh-cell gh-lv4"></i><span>More</span>' +
+        '</div>' +
+      '</div>' +
+      '<div class="gh-snake-block">' +
+        '<div class="gh-sub">GITHUB SNAKE · 同一份贡献数据</div>' +
+        '<div class="gh-snake">' +
+          '<img class="gh-snake-light" src="data/snake.svg?v=20261122" alt="GitHub 贡献蛇形动画" loading="lazy" decoding="async">' +
+          '<img class="gh-snake-dark" src="data/snake-dark.svg?v=20261122" alt="GitHub 贡献蛇形动画（深色）" loading="lazy" decoding="async">' +
+        '</div>' +
       '</div>';
+    box.hidden = false;
+
+    /* 明/暗蛇图都未就绪（404）时只收起蛇图区；热力图仍可独立显示 */
+    var snakeBlock = box.querySelector('.gh-snake-block');
+    var imgs = box.querySelectorAll('.gh-snake img');
+    var failed = 0;
+    Array.prototype.forEach.call(imgs, function (img) {
+      img.addEventListener('error', function () {
+        failed++;
+        if (failed >= imgs.length && snakeBlock) {
+          snakeBlock.hidden = true;
+          ghMaybeHide(box);
+        }
+      });
+    });
+  }
+
+  /* 热力图与蛇图都不可用时才整卡隐藏 */
+  function ghMaybeHide(box) {
+    var graph = box.querySelector('.gh-graph-block');
+    var snake = box.querySelector('.gh-snake-block');
+    if ((!graph || graph.hidden) && (!snake || snake.hidden)) box.hidden = true;
   }
 
   /* 统计行 */
@@ -461,7 +493,9 @@
   function initContributions() {
     var box = $('ghActivity');
     if (!box) return;
+    /* 蛇图先出，热力图等 JSON；两者互不影响 */
     box.hidden = true;
+    renderGhSkeleton(box);
     fetch('data/contributions.json?v=' + Date.now(), { cache: 'no-cache' })
       .then(function (res) {
         if (!res.ok) throw new Error('HTTP ' + res.status);
@@ -469,16 +503,15 @@
       })
       .then(function (data) {
         if (!data || !data.weeks || !data.weeks.length) return;
-        renderGhSkeleton(box);
         renderGhStats(box, data);
         renderGhGraph(box, data);
-        var legend = box.querySelector('.gh-legend');
-        if (legend) legend.hidden = false;
+        var graph = box.querySelector('.gh-graph-block');
+        if (graph) graph.hidden = false;
         box.hidden = false;
       })
       .catch(function () {
-        /* JSON 失败时整块保持隐藏，不影响联系方式卡片 */
-        box.hidden = true;
+        /* JSON 失败只收起热力图，蛇图继续显示 */
+        ghMaybeHide(box);
       });
   }
 

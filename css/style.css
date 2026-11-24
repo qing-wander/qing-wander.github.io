@@ -1451,6 +1451,13 @@ a.cap-ref:hover, a.cap-ref:focus-visible {
 .gh-lv4 { background: var(--green); }
 .gh-legend { display: flex; align-items: center; gap: 4px; margin-top: 12px; font-family: var(--font-mono); font-size: 11px; color: var(--ink-soft); }
 .gh-legend .gh-cell { width: 10px; height: 10px; }
+/* 热力图与蛇图共存：两者都在时才画分隔线，单侧降级时不留空线 */
+.gh-graph-block:not([hidden]) + .gh-snake-block {
+  border-top: 1px solid color-mix(in srgb, var(--ink) 12%, transparent);
+  margin-top: 18px;
+  padding-top: 15px;
+}
+.gh-sub { font-family: var(--font-mono); font-size: 10px; font-weight: 700; letter-spacing: 0.1em; color: var(--ink-soft); margin-bottom: 9px; }
 
 /* 真蛇动效图（Actions 生成的 snk SVG，明/暗两张按皮肤切换） */
 .gh-snake { margin: 6px 0 2px; }
