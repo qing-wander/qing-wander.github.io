@@ -1434,32 +1434,9 @@ a.cap-ref:hover, a.cap-ref:focus-visible {
 .gh-stats strong { color: var(--ink); font-family: var(--font-display); font-size: 19px; font-weight: 900; margin-right: 2px; }
 .gh-range { margin-left: auto; font-family: var(--font-mono); font-size: 11px; color: var(--ink-soft); }
 .gh-activity [hidden] { display: none !important; }
-.gh-scroll { overflow-x: auto; padding-bottom: 6px; }
-.gh-graph { display: grid; grid-template-columns: 28px max-content; gap: 6px; align-items: start; }
-.gh-weekdays { display: grid; grid-template-rows: repeat(7, 12px); gap: 3px; padding-top: 18px; }
-.gh-weekdays span { font-family: var(--font-mono); font-size: 9px; line-height: 12px; color: var(--ink-soft); }
-.gh-board { min-width: max-content; }
-.gh-months { display: flex; gap: 3px; height: 18px; padding-right: 24px; }
-.gh-months span { flex: 0 0 12px; width: 12px; font-family: var(--font-mono); font-size: 10px; line-height: 15px; color: var(--ink-soft); white-space: nowrap; }
-.gh-grid { display: flex; gap: 3px; min-width: max-content; }
-.gh-col { display: flex; flex-direction: column; gap: 3px; }
-.gh-cell { display: block; width: 12px; height: 12px; border-radius: 2px; border: 1px solid color-mix(in srgb, var(--ink) 10%, transparent); }
-.gh-lv0 { background: color-mix(in srgb, var(--ink) 7%, var(--card)); }
-.gh-lv1 { background: color-mix(in srgb, var(--green) 26%, var(--card)); }
-.gh-lv2 { background: color-mix(in srgb, var(--green) 48%, var(--card)); }
-.gh-lv3 { background: color-mix(in srgb, var(--green) 74%, var(--card)); }
-.gh-lv4 { background: var(--green); }
-.gh-legend { display: flex; align-items: center; gap: 4px; margin-top: 12px; font-family: var(--font-mono); font-size: 11px; color: var(--ink-soft); }
-.gh-legend .gh-cell { width: 10px; height: 10px; }
-/* 热力图与蛇图共存：两者都在时才画分隔线，单侧降级时不留空线 */
-.gh-graph-block:not([hidden]) + .gh-snake-block {
-  border-top: 1px solid color-mix(in srgb, var(--ink) 12%, transparent);
-  margin-top: 18px;
-  padding-top: 15px;
-}
-.gh-sub { font-family: var(--font-mono); font-size: 10px; font-weight: 700; letter-spacing: 0.1em; color: var(--ink-soft); margin-bottom: 9px; }
 
-/* 真蛇动效图（Actions 生成的 snk SVG，明/暗两张按皮肤切换） */
+/* GitHub 贡献蛇图：53×7 网格 + 游走动画 + 注入的月份/星期坐标轴。
+   明/暗两张按皮肤切换，坐标轴颜色已写进各自 SVG。 */
 .gh-snake { margin: 6px 0 2px; }
 .gh-snake img { width: 100%; height: auto; display: block; }
 .gh-snake img.gh-snake-dark { display: none; }

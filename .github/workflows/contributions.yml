@@ -53,6 +53,13 @@ jobs:
             data/snake.svg?palette=github&color_snake=%23FF5A1E
             data/snake-dark.svg?palette=github-dark&color_snake=%23FF9A5A
 
+      # snk 每次重生成会覆盖 SVG，所以坐标轴必须在它之后注入：
+      # 从 contributions.json 的 weeks 推算月份列，写入月份/星期标签，
+      # 让网格与动画共存于同一张图（标签和格子共享 viewBox，缩放对齐）。
+      - name: 给蛇图注入月份/星期坐标轴
+        continue-on-error: true   # JSON 缺失时保留无坐标图的兜底
+        run: python3 scripts/inject_svg_axes.py
+
       - name: 提交变更
         run: |
           # 容忍文件缺失：统计 JSON 可能因 GraphQL 偶发失败未生成，蛇图由 snk 独立产出

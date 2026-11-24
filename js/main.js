@@ -363,43 +363,12 @@
     window.__WALL_TEXT = Object.assign({ empty: wl.emptyText || '', closed: wl.closedText || '' }, wl);
   }
 
-  /* ══════════════ GitHub 贡献热力图 ══════════════
-     数据：data/contributions.json（由 .github/workflows/contributions.yml 每日用
-     GraphQL 拉取并提交，前端不碰 token）。GitHub 官方按天数据只在
-     contributionsCollection 里，REST 拿不到；weeks 是从周日开始的列，
-     每列 7 天，据此可精确还原月份行、星期列与格子。加载失败整块隐藏。 */
-  function ghLevel(count) {
-    if (!count) return 0;
-    if (count <= 2) return 1;
-    if (count <= 5) return 2;
-    if (count <= 9) return 3;
-    return 4;
-  }
-
-  var GH_MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-  /* 周日为第 0 行；GitHub 只标 Mon/Wed/Fri 三行 */
-  var GH_WEEKDAYS = ['', 'Mon', '', 'Wed', '', 'Fri', ''];
-
-  /* 月份标签所在列：以每周周三为基准，换月后至少隔 3 列再标注，
-     避免 Nov/Dec 这类紧邻月份的英文缩写互相压字（GitHub 同样做了间距处理）。 */
-  function ghMonthMarks(weeks) {
-    var marks = [];
-    var lastCol = -99;
-    var labeledMonth = -1;
-    weeks.forEach(function (week, i) {
-      var mid = week[3] || week[0];
-      var month = new Date(mid.date + 'T00:00:00Z').getUTCMonth();
-      if (month !== labeledMonth && i - lastCol >= 3) {
-        marks.push({ i: i, label: GH_MONTHS[month] });
-        labeledMonth = month;
-        lastCol = i;
-      }
-    });
-    return marks;
-  }
-
-  /* 骨架：头部 + 热力图容器 + 贪吃蛇。蛇图是纯 SVG，不依赖 JSON，先渲染；
-     热力图由 JSON 单独填充。两侧解耦：任一失败不影响另一侧。 */
+  /* ══════════════ GitHub 贡献蛇图 ══════════════
+     一张图同时具备：Platane/snk 生成的 53×7 贡献网格（格子按贡献着色 +
+     蛇身游走动画），月份/星期坐标轴由 scripts/inject_svg_axes.py 直接注入
+     SVG，共享同一 viewBox 坐标系，缩放时永远对齐。
+     统计行另取 data/contributions.json（Actions 每日用 GraphQL 拉取，前端
+     不碰 token）；拿不到就只隐藏统计，不影响图。 */
   function renderGhSkeleton(box) {
     box.innerHTML =
       '<div class="gh-head">' +
@@ -408,46 +377,26 @@
         ' target="_blank" rel="noopener noreferrer">github.com/shenge-work ↗</a>' +
       '</div>' +
       '<div class="gh-stats" hidden></div>' +
-      '<div class="gh-graph-block" hidden>' +
-        '<div class="gh-scroll"></div>' +
-        '<div class="gh-legend"><span>Less</span>' +
-          '<i class="gh-cell gh-lv0"></i><i class="gh-cell gh-lv1"></i>' +
-          '<i class="gh-cell gh-lv2"></i><i class="gh-cell gh-lv3"></i>' +
-          '<i class="gh-cell gh-lv4"></i><span>More</span>' +
-        '</div>' +
-      '</div>' +
-      '<div class="gh-snake-block">' +
-        '<div class="gh-sub">GITHUB SNAKE · 同一份贡献数据</div>' +
-        '<div class="gh-snake">' +
-          '<img class="gh-snake-light" src="data/snake.svg?v=20261122" alt="GitHub 贡献蛇形动画" loading="lazy" decoding="async">' +
-          '<img class="gh-snake-dark" src="data/snake-dark.svg?v=20261122" alt="GitHub 贡献蛇形动画（深色）" loading="lazy" decoding="async">' +
-        '</div>' +
+      '<div class="gh-snake">' +
+        '<img class="gh-snake-light" src="data/snake.svg?v=20261124"' +
+        ' alt="GitHub 贡献热力网格与贪吃蛇动效（含月份星期坐标）" loading="lazy" decoding="async">' +
+        '<img class="gh-snake-dark" src="data/snake-dark.svg?v=20261124"' +
+        ' alt="GitHub 贡献热力网格与贪吃蛇动效（深色）" loading="lazy" decoding="async">' +
       '</div>';
     box.hidden = false;
 
-    /* 明/暗蛇图都未就绪（404）时只收起蛇图区；热力图仍可独立显示 */
-    var snakeBlock = box.querySelector('.gh-snake-block');
+    /* 明/暗两张都未就绪（404）时整块隐藏，避免空卡片 */
     var imgs = box.querySelectorAll('.gh-snake img');
     var failed = 0;
     Array.prototype.forEach.call(imgs, function (img) {
       img.addEventListener('error', function () {
         failed++;
-        if (failed >= imgs.length && snakeBlock) {
-          snakeBlock.hidden = true;
-          ghMaybeHide(box);
-        }
+        if (failed >= imgs.length) box.hidden = true;
       });
     });
   }
 
-  /* 热力图与蛇图都不可用时才整卡隐藏 */
-  function ghMaybeHide(box) {
-    var graph = box.querySelector('.gh-graph-block');
-    var snake = box.querySelector('.gh-snake-block');
-    if ((!graph || graph.hidden) && (!snake || snake.hidden)) box.hidden = true;
-  }
-
-  /* 统计行 */
+  /* 统计行：仅 JSON 成功时填充 */
   function renderGhStats(box, data) {
     var range = data.range || {};
     var stats = box.querySelector('.gh-stats');
@@ -460,41 +409,10 @@
     stats.hidden = false;
   }
 
-  /* 格子图：月份行 + 星期列 + 每周一列，颜色 5 级，悬停显示日期和次数 */
-  function renderGhGraph(box, data) {
-    var weeks = data.weeks || [];
-    var scroll = box.querySelector('.gh-scroll');
-    if (!scroll || !weeks.length) return;
-    var marks = {};
-    ghMonthMarks(weeks).forEach(function (m) { marks[m.i] = m.label; });
-
-    var monthsHtml = weeks.map(function (_, i) {
-      return '<span>' + (marks[i] ? esc(marks[i]) : '') + '</span>';
-    }).join('');
-    var daysHtml = GH_WEEKDAYS.map(function (d) { return '<span>' + d + '</span>'; }).join('');
-    var gridHtml = weeks.map(function (week) {
-      return '<div class="gh-col">' + week.map(function (day) {
-        var label = day.date + '：' + day.count + ' 次贡献';
-        return '<i class="gh-cell gh-lv' + ghLevel(day.count) + '"' +
-          ' title="' + esc(label) + '" aria-label="' + esc(label) + '"></i>';
-      }).join('') + '</div>';
-    }).join('');
-
-    scroll.innerHTML =
-      '<div class="gh-graph">' +
-        '<div class="gh-weekdays">' + daysHtml + '</div>' +
-        '<div class="gh-board">' +
-          '<div class="gh-months">' + monthsHtml + '</div>' +
-          '<div class="gh-grid">' + gridHtml + '</div>' +
-        '</div>' +
-      '</div>';
-  }
-
   function initContributions() {
     var box = $('ghActivity');
     if (!box) return;
-    /* 蛇图先出，热力图等 JSON；两者互不影响 */
-    box.hidden = true;
+    /* 蛇图（含坐标轴）先出，统计等 JSON，两者互不影响 */
     renderGhSkeleton(box);
     fetch('data/contributions.json?v=' + Date.now(), { cache: 'no-cache' })
       .then(function (res) {
@@ -502,16 +420,10 @@
         return res.json();
       })
       .then(function (data) {
-        if (!data || !data.weeks || !data.weeks.length) return;
-        renderGhStats(box, data);
-        renderGhGraph(box, data);
-        var graph = box.querySelector('.gh-graph-block');
-        if (graph) graph.hidden = false;
-        box.hidden = false;
+        if (data) renderGhStats(box, data);
       })
       .catch(function () {
-        /* JSON 失败只收起热力图，蛇图继续显示 */
-        ghMaybeHide(box);
+        /* 统计拿不到就保持隐藏，不影响图 */
       });
   }
 
