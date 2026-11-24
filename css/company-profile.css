@@ -192,6 +192,54 @@ body.cp-lock { overflow: hidden; }
   opacity: .4;
 }
 
+/* 长板块折叠：标题行即开关，收起态只留首屏内容 + 渐隐提示还有更多 */
+.cp-foldable { padding-bottom: 14px; }
+.cp-fold-head { margin-bottom: 0; align-items: center; }
+.cp-fold-head::after { flex: 0 0 26px; min-width: 26px; }
+.cp-src-title.cp-fold-head { margin-bottom: 0; }
+.cp-fold-trigger {
+  display: inline-flex; align-items: center; gap: 8px;
+  flex: 1 1 auto; min-width: 0; padding: 0;
+  border: 0; background: transparent; color: inherit;
+  font: inherit; letter-spacing: inherit; text-align: left;
+  cursor: pointer;
+}
+.cp-fold-trigger:focus-visible,
+.cp-fold-more:focus-visible { outline: 2px solid var(--orange, #FF5A1E); outline-offset: 3px; }
+.cp-fold-tri {
+  flex: none; width: 14px;
+  font-family: var(--font-mono, monospace); font-size: 12px; line-height: 1;
+  color: var(--orange, #FF5A1E);
+}
+.cp-fold-meta {
+  margin-left: auto; flex: none;
+  font-family: var(--font-mono, monospace); font-size: 10px; font-weight: 700;
+  letter-spacing: 0; color: var(--ink-soft);
+  white-space: nowrap;
+}
+.cp-fold-panel { margin-top: 12px; }
+.cp-fold-clip { position: relative; }
+.cp-foldable.is-folded .cp-fold-clip {
+  max-height: var(--fold-h, 132px);
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(to bottom, #000 0, #000 68%, transparent 100%);
+  mask-image: linear-gradient(to bottom, #000 0, #000 68%, transparent 100%);
+}
+.cp-fold-more {
+  margin-top: 8px; padding: 3px 0;
+  border: 0; border-bottom: 1px dashed currentColor;
+  background: transparent; color: var(--blue, #2B4BE0);
+  font-family: var(--font-cn, sans-serif); font-size: 11px; font-weight: 700;
+  cursor: pointer;
+}
+.cp-foldable.is-folded .cp-fold-more { color: var(--orange, #FF5A1E); }
+.cp-fold-more:hover { color: var(--orange, #FF5A1E); }
+
+@media (max-width: 680px) {
+  .cp-fold-meta { font-size: 9px; }
+  .cp-fold-head::after { flex-basis: 14px; min-width: 14px; }
+}
+
 /* 微信公众号 */
 .cp-wechat-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 .cp-wechat-item {
@@ -993,6 +1041,16 @@ a.cp-name-link:focus-visible { outline: 2px solid var(--orange, #FF5A1E); outlin
 }
 
 @media print {
+  /* 长板块：存 PDF / 打印时强制展开，纸面不输出折叠控件 */
+  .cp-foldable.is-folded .cp-fold-clip {
+    max-height: none !important; overflow: visible !important;
+    -webkit-mask-image: none !important; mask-image: none !important;
+  }
+  .cp-foldable .cp-fold-tri,
+  .cp-foldable .cp-fold-meta,
+  .cp-foldable .cp-fold-more { display: none !important; }
+  .cp-foldable .cp-fold-trigger { pointer-events: none; }
+  .cp-foldable .cp-fold-head::after { flex: 1 1 auto !important; }
   /* 打印时不输出视频播放器（纸面无意义） */
   .cp-video-wrap { display: none !important; }
   .cp-interview, .cp-cmp-card, .cp-inv-item, .cp-eh-row, .cp-conf { break-inside: avoid; }

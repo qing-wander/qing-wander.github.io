@@ -18,6 +18,8 @@
   var DATA = (typeof window !== 'undefined' && window.COMPANY_PROFILES) || null;
   var companies = (DATA && DATA.companies) || {};
   var meta = (DATA && DATA.meta) || {};
+  /* 长板块展开状态：同一页面会话内记住用户手动展开过的板块（不对刷新持久化，默认仍收起） */
+  var foldState = Object.create(null);
 
   function company(id) { return companies[id] || null; }
 
@@ -141,7 +143,7 @@
 
   function renderFundingBlock(c) {
     if (!c.funding || !c.funding.rounds || !c.funding.rounds.length) return '';
-    var html = '<div class="cp-funding"><h4>融资历程</h4>';
+    var html = '';
     if (c.funding.note) html += '<p class="cp-note">' + esc(c.funding.note) + '</p>';
     html += '<ol class="cp-rounds">';
     for (var i = 0; i < c.funding.rounds.length; i++) {
@@ -153,8 +155,10 @@
         '<p class="cp-round-meta">' + esc(r.investors || '') + '</p></div>' +
         '<span class="cp-round-date">' + esc(r.date) + '</span>' + sup(r.source || '') + '</li>';
     }
-    html += '</ol></div>';
-    return html;
+    html += '</ol>';
+    return foldableSection('融资历程', html, {
+      cid: c.id, key: 'funding', count: c.funding.rounds.length, threshold: 4, foldH: 160
+    });
   }
 
   /* ══════════════ 抽屉 ══════════════ */
@@ -212,22 +216,77 @@
     return html + '</div>';
   }
 
-  function sectionBlock(title, rows) {
-    var html = '<section class="cp-sec"><h4 class="cp-sec-title">' + esc(title) + '</h4>';
+  /* ══════════════ 长板块展开 / 收起 ══════════════
+     内容较多的板块默认只露出首屏，点标题行或底部按钮展开完整内容。
+     抽屉与独立档案页共用 render()，所以折叠结构直接生成在 HTML 字符串里；
+     用户手动展开过的板块记在本次页面会话，关闭抽屉再打开仍保持展开。 */
+  var FOLD_TEXT_LIMIT = 1400;
+
+  function foldBlock(o) {
+    o = o || {};
+    var inner = o.inner || '';
+    var tag = o.tag || 'section';
+    var cls = (o.cls || 'cp-sec') + (o.extraCls ? ' ' + o.extraCls : '');
+    var headTag = o.headTag || 'h4';
+    var headCls = o.headCls || 'cp-sec-title';
+    var count = o.count || 0;
+    var countText = o.countText || (count ? '共 ' + count + ' 项' : '内容较多');
+    var threshold = o.threshold == null ? 4 : o.threshold;
+    var needFold = o.fold === true ||
+      (o.fold !== false && (!!o.heavy || count >= threshold || inner.length >= FOLD_TEXT_LIMIT));
+
+    if (!needFold) {
+      return '<' + tag + ' class="' + cls + '"><' + headTag + ' class="' + headCls + '">' +
+        o.titleHtml + '</' + headTag + '>' + inner + '</' + tag + '>';
+    }
+    var stateKey = (o.cid || 'x') + ':' + (o.key || 'block');
+    var expanded = !!foldState[stateKey];
+    var panelId = 'cpfold-' + String(stateKey).replace(/[^a-zA-Z0-9_-]/g, '-');
+    return '<' + tag + ' class="' + cls + ' cp-foldable' + (expanded ? '' : ' is-folded') + '"' +
+      ' data-cp-fold data-cp-fold-key="' + esc(stateKey) + '"' +
+      ' data-cp-fold-count="' + esc(countText) + '" style="--fold-h:' + (o.foldH || 132) + 'px">' +
+      '<' + headTag + ' class="' + headCls + ' cp-fold-head">' +
+      '<button class="cp-fold-trigger" type="button" data-cp-fold-toggle' +
+      ' aria-expanded="' + (expanded ? 'true' : 'false') + '" aria-controls="' + esc(panelId) + '">' +
+      '<span class="cp-fold-tri" aria-hidden="true">' + (expanded ? '▾' : '▸') + '</span>' +
+      '<span class="cp-fold-label">' + o.titleHtml + '</span>' +
+      '<span class="cp-fold-meta">' + esc(countText) + ' · ' +
+      (expanded ? '已展开' : '已折叠') + '</span>' +
+      '</button></' + headTag + '>' +
+      '<div class="cp-fold-panel" id="' + esc(panelId) + '">' +
+      '<div class="cp-fold-clip">' + inner + '</div>' +
+      '<button class="cp-fold-more" type="button" data-cp-fold-toggle aria-expanded="' +
+      (expanded ? 'true' : 'false') + '">' +
+      (expanded ? '收起板块 ↑' : '展开全部 ↓') + '</button>' +
+      '</div></' + tag + '>';
+  }
+
+  function foldableSection(title, inner, opts) {
+    opts = opts || {};
+    opts.titleHtml = opts.titleHtml || esc(title);
+    opts.inner = inner;
+    return foldBlock(opts);
+  }
+
+  function sectionBlock(title, rows, cid) {
+    var html = '';
+    var n = 0;
     for (var i = 0; i < rows.length; i++) {
       if (!rows[i].text) continue;
       html += '<div class="cp-row"><p class="cp-row-label">' + esc(rows[i].label) + '</p>' +
         '<p class="cp-row-text">' + esc(rows[i].text) + sup(rows[i].source || '') + '</p></div>';
+      n++;
     }
-    return html + '</section>';
+    return foldableSection(title, html, {
+      cid: cid, key: 'business', count: n, threshold: 5, foldH: 150
+    });
   }
 
   /* 投资方明细：机构品牌名与工商登记主体分开列，注明核验依据，不把自述当结论。 */
   function investorsBlock(c) {
     var inv = c.investors;
     if (!inv || !inv.list || !inv.list.length) return '';
-    var html = '<section class="cp-sec"><h4 class="cp-sec-title">投资方与股权穿透</h4>' +
-      '<p class="cp-note">' + esc(inv.note || '') + sup(18) + '</p>' +
+    var html = '<p class="cp-note">' + esc(inv.note || '') + sup(18) + '</p>' +
       '<div class="cp-inv-list">';
     inv.list.forEach(function (it) {
       html += '<div class="cp-inv-item' + (it.stake === '未公开' ? ' is-unverified' : '') + '">' +
@@ -242,15 +301,16 @@
     });
     html += '</div>';
     if (inv.others) html += '<p class="cp-inv-others">' + esc(inv.others) + '</p>';
-    return html + '</section>';
+    return foldableSection('投资方与股权穿透', html, {
+      cid: c.id, key: 'investors', count: inv.list.length, threshold: 4, foldH: 220
+    });
   }
 
   /* 主体 / 名称变更 × 融资轮次 × 投资方：只做并列陈列，不合并口径。 */
   function entityHistoryBlock(c) {
     var eh = c.entityHistory;
     if (!eh || !eh.rows || !eh.rows.length) return '';
-    var html = '<section class="cp-sec"><h4 class="cp-sec-title">主体名称变更与融资轮次对照</h4>' +
-      '<p class="cp-note">' + esc(eh.note || '') + '</p><div class="cp-eh-list">';
+    var html = '<p class="cp-note">' + esc(eh.note || '') + '</p><div class="cp-eh-list">';
     eh.rows.forEach(function (r) {
       html += '<div class="cp-eh-row">' +
         '<div class="cp-eh-time">' + esc(r.period || '') + '</div>' +
@@ -261,7 +321,10 @@
           '<p class="cp-eh-field"><span>依据与判断</span>' + esc(r.basis || '—') + sup(r.source || '') + '</p>' +
         '</div></div>';
     });
-    return html + '</div></section>';
+    html += '</div>';
+    return foldableSection('主体名称变更与融资轮次对照', html, {
+      cid: c.id, key: 'entity-history', count: eh.rows.length, threshold: 4, foldH: 210
+    });
   }
 
   /* 数据可信度：把「工商/司法可核验」与「企业自述」分开，明确列出冲突口径。 */
@@ -275,16 +338,19 @@
       return s + '</ul>';
     }
     var levelText = { A: 'A · 审计 / 交易所披露', B: 'B · 部分可核验', C: 'C · 主要为企业自述' }[dc.level] || dc.level;
-    return '<section class="cp-sec cp-conf cp-conf-' + esc(dc.level || 'b').toLowerCase() + '">' +
-      '<h4 class="cp-sec-title">数据可信度 <span class="cp-conf-badge">' + esc(levelText) + '</span></h4>' +
-      '<p class="cp-note">' + esc(dc.summary || '') + '</p>' +
+    var inner = '<p class="cp-note">' + esc(dc.summary || '') + '</p>' +
       '<div class="cp-conf-cols">' +
         '<div><h5>可独立核验</h5>' + list(dc.verified, 'is-ok') + '</div>' +
         '<div><h5>仅企业 / 媒体自述</h5>' + list(dc.unverified, 'is-warn') + '</div>' +
         '<div><h5>口径冲突</h5>' + list(dc.conflicts, 'is-risk') + '</div>' +
       '</div>' +
-      '<p class="cp-conf-foot">档案中的规模、收入、覆盖率类数字多为官网或受访者口径，未经第三方审计；本档案不对其真实性作背书，仅标注来源与冲突。</p>' +
-      '</section>';
+      '<p class="cp-conf-foot">档案中的规模、收入、覆盖率类数字多为官网或受访者口径，未经第三方审计；本档案不对其真实性作背书，仅标注来源与冲突。</p>';
+    var count = (dc.verified || []).length + (dc.unverified || []).length + (dc.conflicts || []).length;
+    return foldableSection('', inner, {
+      cid: c.id, key: 'confidence', count: count, threshold: 8, foldH: 170,
+      extraCls: 'cp-conf cp-conf-' + esc(dc.level || 'b').toLowerCase(),
+      titleHtml: '数据可信度 <span class="cp-conf-badge">' + esc(levelText) + '</span>'
+    });
   }
 
   /* 微信公众号：只收可确证的官方账号；微信号未公开时不编造。 */
@@ -309,12 +375,15 @@
 
   function recognitionBlock(c) {
     if (!c.recognition || !c.recognition.length) return '';
-    var html = '<section class="cp-sec"><h4 class="cp-sec-title">行业知名度与客户</h4><ul class="cp-recog">';
+    var html = '<ul class="cp-recog">';
     c.recognition.forEach(function (r) {
       html += '<li><p class="cp-recog-t">' + esc(r.title) + '</p>' +
         '<p class="cp-recog-d">' + esc(r.detail) + sup(r.source || '') + '</p></li>';
     });
-    return html + '</ul></section>';
+    html += '</ul>';
+    return foldableSection('行业知名度与客户', html, {
+      cid: c.id, key: 'recognition', count: c.recognition.length, threshold: 5, foldH: 160
+    });
   }
 
   /* 产品橱窗：封面 + 一句话提炼 + 官网外链，整卡可点。
@@ -322,8 +391,7 @@
   function showcaseBlock(c) {
     var list = c.showcase || [];
     if (!list.length) return '';
-    var html = '<section class="cp-sec"><h4 class="cp-sec-title">产品橱窗</h4>' +
-      '<p class="cp-showcase-note">' + list.length + ' 款产品 · 点击卡片访问官网</p>' +
+    var html = '<p class="cp-showcase-note">' + list.length + ' 款产品 · 点击卡片访问官网</p>' +
       '<div class="cp-showcase">';
     list.forEach(function (p) {
       /* 截图卡：「本人参与」徽章放标题行，避免叠在封面上挡内容；字标卡封面是色块，徽章留在封面右上 */
@@ -356,15 +424,22 @@
         '<span class="cp-product-go">访问官网 ↗</span></div>' +
         '</div></a>';
     });
-    return html + '</div></section>';
+    html += '</div>';
+    return foldableSection('产品橱窗', html, {
+      cid: c.id, key: 'showcase', count: list.length, threshold: 3,
+      heavy: list.some(function (p) { return !!p.img; }), foldH: 260,
+      countText: list.length + ' 款产品'
+    });
   }
 
   function bossProfileBlock(c) {
     var b = c.bossProfile;
     if (!b) return '';
     var src = b.source || '';
-    var html = '<section class="cp-sec"><h4 class="cp-sec-title">' +
-      esc(b.platformTitle || '招聘平台档案 · BOSS直聘') + '</h4>';
+    var title = b.platformTitle || '招聘平台档案 · BOSS直聘';
+    var html = '';
+    var n = 0;
+    function add(s) { if (s) { html += s; n++; } }
     /* 档案只沉淀稳定事实：在招职位数 / 招聘 Boss 数属每日变动的动态信息，
        用户明确不展示——数据层与展示层均已移除（见 data/company-profiles.json）。 */
     var quick = [
@@ -396,33 +471,36 @@
         arr.map(function (m) { return esc(m); }).join('<br>') +
         (withSource ? sup(src) : '') + '</p></div>';
     }
-    html += line('名称沿革', b.rename);
-    html += line('平台简介', b.intro, true);
-    html += line('工商口径', b.registryNote);
-    html += line('口径说明', b.financingNote);
-    html += multi('企业文化', b.culture, true);
+    add(line('名称沿革', b.rename));
+    add(line('平台简介', b.intro, true));
+    add(line('工商口径', b.registryNote));
+    add(line('口径说明', b.financingNote));
+    add(multi('企业文化', b.culture, true));
     if (b.welfare && b.welfare.length) {
-      html += '<div class="cp-row"><p class="cp-row-label">' +
-        esc(b.welfareLabel || '福利标签') + '</p>' + tagList(b.welfare) + '</div>';
+      add('<div class="cp-row"><p class="cp-row-label">' +
+        esc(b.welfareLabel || '福利标签') + '</p>' + tagList(b.welfare) + '</div>');
     }
     if (b.talentDevelopment && b.talentDevelopment.length) {
-      html += '<div class="cp-row"><p class="cp-row-label">人才发展</p>' + tagList(b.talentDevelopment) + '</div>';
+      add('<div class="cp-row"><p class="cp-row-label">人才发展</p>' + tagList(b.talentDevelopment) + '</div>');
     }
     /* 有产品橱窗时收编这行 pill，避免同一批产品名重复出现 */
     if (b.products && b.products.length && !(c.showcase && c.showcase.length)) {
-      html += '<div class="cp-row"><p class="cp-row-label">产品矩阵</p>' + tagList(b.products) + '</div>';
+      add('<div class="cp-row"><p class="cp-row-label">产品矩阵</p>' + tagList(b.products) + '</div>');
     }
-    html += multi('产品与服务', b.productDetails);
-    html += multi('发展历程', b.milestones, true);
-    html += multi('平台荣誉', b.awards, true);
+    add(multi('产品与服务', b.productDetails));
+    add(multi('发展历程', b.milestones, true));
+    add(multi('平台荣誉', b.awards, true));
     if (b.foundingTeam && b.foundingTeam.length) {
       b.foundingTeam.forEach(function (f) {
-        html += '<div class="cp-row"><p class="cp-row-label">' + esc(f.title) + '</p><p class="cp-row-text">' +
-          '<b>' + esc(f.name) + '</b> · ' + esc(f.bio) + sup(src) + '</p></div>';
+        add('<div class="cp-row"><p class="cp-row-label">' + esc(f.title) + '</p><p class="cp-row-text">' +
+          '<b>' + esc(f.name) + '</b> · ' + esc(f.bio) + sup(src) + '</p></div>');
       });
     }
-    html += multi('办公地点', b.offices, true);
-    return html + '</section>';
+    add(multi('办公地点', b.offices, true));
+    return foldableSection(title, html, {
+      cid: c.id, key: 'boss', count: n, threshold: 6, foldH: 220,
+      countText: n + ' 条信息'
+    });
   }
 
   /* 前身 / 历史沿革：沉淀公司不变的历史事实（非招聘动态信息） */
@@ -435,8 +513,7 @@
       return '<div class="cp-row"><p class="cp-row-label">' + esc(label) +
         '</p><p class="cp-row-text">' + esc(text) + '</p></div>';
     }
-    var html = '<section class="cp-sec"><h4 class="cp-sec-title">前身与沿革</h4>' +
-      '<div class="cp-predecessor"><div class="cp-pred-head">' +
+    var html = '<div class="cp-predecessor"><div class="cp-pred-head">' +
       '<span class="cp-pred-tag">前身</span>' +
       '<span class="cp-pred-name">' + esc(p.shortName || p.name || '') + '</span>' +
       (p.founded ? '<span class="cp-pred-founded">' + esc(p.founded) + ' 成立</span>' : '') +
@@ -450,22 +527,26 @@
       kv('主营业务', p.business) +
       (p.link ? '<div class="cp-row"><p class="cp-row-label">与本公司关系</p>' +
         '<p class="cp-row-text">' + esc(p.link) + src + '</p></div>' : '') +
-      '</div></section>';
-    return html;
+      '</div>';
+    return foldableSection('前身与沿革', html, {
+      cid: c.id, key: 'predecessor', count: 8, threshold: 7, foldH: 160
+    });
   }
 
   /* 访谈 / 视频：本地归档 + 对象存储直链，防原链接失效 */
   function interviewBlock(c) {
     var list = c.interviews || [];
     if (!list.length) return '';
-    var html = '<section class="cp-sec"><h4 class="cp-sec-title">访谈 / 视频</h4>';
+    var html = '';
+    var hasVideo = false;
     list.forEach(function (v) {
       var videoSrc = v.video || '';
+      if (videoSrc) hasVideo = true;
       var poster = v.poster || '';
       var player = '';
       if (videoSrc) {
-        if (typeof window.AssetURL && window.AssetURL.of) videoSrc = window.AssetURL.of(videoSrc);
-        if (poster && typeof window.AssetURL && window.AssetURL.of) poster = window.AssetURL.of(poster);
+        if (window.AssetURL && window.AssetURL.of) videoSrc = window.AssetURL.of(videoSrc);
+        if (poster && window.AssetURL && window.AssetURL.of) poster = window.AssetURL.of(poster);
         player = '<div class="cp-video-wrap"><video class="cp-video" controls preload="metadata"' +
           (poster ? ' poster="' + esc(poster) + '"' : '') +
           ' src="' + esc(videoSrc) + '">您的浏览器不支持 HTML5 视频。</video></div>';
@@ -494,7 +575,11 @@
         (v.archiveNote ? '<span class="cp-video-archive">' + esc(v.archiveNote) + '</span>' : '') +
         '</div></div></article>';
     });
-    return html + '</section>';
+    return foldableSection('访谈 / 视频', html, {
+      cid: c.id, key: 'interviews', count: list.length, threshold: 2,
+      heavy: hasVideo, foldH: 190,
+      countText: list.length + ' 条'
+    });
   }
 
   /* 友商 / 竞品分析：竞争格局概述 + 竞品卡片。
@@ -506,7 +591,7 @@
     var list = cmp.players || [];
     if (!list.length && !cmp.landscape) return '';
     var linkable = list.some(function (p) { return p.profileId && company(p.profileId); });
-    var html = '<section class="cp-sec"><h4 class="cp-sec-title">友商 / 竞品分析</h4>';
+    var html = '';
     if (linkable) {
       html += '<p class="cp-cmp-hint">点击友商名称或「查看公司档案」，进入对应公司的完整档案</p>';
     }
@@ -558,7 +643,10 @@
       });
       html += '</div>';
     }
-    return html + '</section>';
+    return foldableSection('友商 / 竞品分析', html, {
+      cid: c.id, key: 'competitors', count: list.length, threshold: 4, foldH: 240,
+      countText: list.length + ' 家'
+    });
   }
 
   function outlookBlock(c) {
@@ -569,11 +657,14 @@
         return '<li>' + esc(x) + '</li>';
       }).join('') + '</ul>';
     }
-    return '<section class="cp-sec"><h4 class="cp-sec-title">发展前景</h4>' +
-      '<div class="cp-outlook"><div class="cp-outlook-col"><p class="cp-outlook-h is-op">▚ 机会</p>' +
+    var inner = '<div class="cp-outlook"><div class="cp-outlook-col"><p class="cp-outlook-h is-op">▚ 机会</p>' +
       lis(o.opportunities) + '</div>' +
-      '<div class="cp-outlook-col"><p class="cp-outlook-h is-risk">▞ 风险</p>' + lis(o.risks) + '</div></div>' +
-      '</section>';
+      '<div class="cp-outlook-col"><p class="cp-outlook-h is-risk">▞ 风险</p>' + lis(o.risks) + '</div></div>';
+    return foldableSection('发展前景', inner, {
+      cid: c.id, key: 'outlook',
+      count: (o.opportunities || []).length + (o.risks || []).length,
+      threshold: 8, foldH: 180
+    });
   }
 
   /* 办公图相册：超过 3 张默认折叠（第 4 张起加 is-extra），
@@ -628,15 +719,20 @@
   }
 
   function sourcesBlock(c) {
-    var list = (c.sources || []).map(function (s) {
+    var src = c.sources || [];
+    var list = src.map(function (s) {
       return '<li><span class="cp-src-no">[' + esc(s.n) + ']</span>' +
         (s.url ? '<a href="' + esc(s.url) + '" target="_blank" rel="noopener noreferrer">' + esc(s.name) + ' ↗</a>'
                : esc(s.name)) + '</li>';
     }).join('');
-    return '<footer class="cp-sources"><p class="cp-src-title">数据来源（采集于 ' +
-      esc(meta.collectedAt || '') + '）</p><ol>' + list + '</ol>' +
-      (meta.disclaimer ? '<p class="cp-disclaimer">' + esc(meta.disclaimer) + '</p>' : '') +
-      '</footer>';
+    var inner = '<ol>' + list + '</ol>' +
+      (meta.disclaimer ? '<p class="cp-disclaimer">' + esc(meta.disclaimer) + '</p>' : '');
+    return foldBlock({
+      tag: 'footer', cls: 'cp-sources', headTag: 'p', headCls: 'cp-src-title',
+      titleHtml: '数据来源（采集于 ' + esc(meta.collectedAt || '') + '）',
+      inner: inner, cid: c.id, key: 'sources', count: src.length, threshold: 10,
+      foldH: 170, countText: src.length + ' 条来源'
+    });
   }
 
   function renderPanel(id) {
@@ -677,7 +773,7 @@
         { label: '商业模式', text: (c.business || {}).model },
         { label: '行业位置', text: (c.business || {}).position },
         { label: '平台自述', text: (c.business || {}).bossIntro, source: (c.bossProfile || {}).source }
-      ]) +
+      ], c.id) +
       showcaseBlock(c) +
       interviewBlock(c) +
       (c.chart ? renderChartBlock(c) : '') +
@@ -833,6 +929,29 @@
       var pre = new Image();
       pre.src = window.CPPanorama.resolve(p.img);
     }
+    /* 长板块展开 / 收起：标题三角与底部按钮共用一份委托，抽屉与独立页都生效 */
+    document.addEventListener('click', function (ev) {
+      var t = ev.target.closest ? ev.target.closest('[data-cp-fold-toggle]') : null;
+      if (!t) return;
+      var box = t.closest('[data-cp-fold]');
+      if (!box) return;
+      ev.preventDefault();
+      var folded = box.classList.toggle('is-folded');
+      var stateKey = box.getAttribute('data-cp-fold-key');
+      if (stateKey) foldState[stateKey] = !folded;
+      var count = box.getAttribute('data-cp-fold-count') || '';
+      var toggles = box.querySelectorAll('[data-cp-fold-toggle]');
+      for (var i = 0; i < toggles.length; i++) {
+        toggles[i].setAttribute('aria-expanded', folded ? 'false' : 'true');
+        if (toggles[i].classList.contains('cp-fold-more')) {
+          toggles[i].textContent = folded ? '展开全部 ↓' : '收起板块 ↑';
+        }
+      }
+      var tri = box.querySelector('.cp-fold-tri');
+      if (tri) tri.textContent = folded ? '▸' : '▾';
+      var meta = box.querySelector('.cp-fold-meta');
+      if (meta) meta.textContent = (count ? count + ' · ' : '') + (folded ? '已折叠' : '已展开');
+    }, true);
     /* 相册展开 / 收起：不绑定具体节点，抽屉与独立页复用 */
     document.addEventListener('click', function (ev) {
       var t = ev.target.closest ? ev.target.closest('[data-cp-album-toggle]') : null;
