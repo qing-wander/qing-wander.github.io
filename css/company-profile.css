@@ -86,8 +86,8 @@
 
 .cp-panel-scroll { overflow-y: auto; overscroll-behavior: contain; scroll-behavior: smooth; }
 
-.cp-close {
-  position: absolute; top: 14px; right: 14px; z-index: 5;
+.cp-close, .cp-fullscreen {
+  position: absolute; top: 14px; z-index: 5;
   width: 36px; height: 36px;
   border: 2.5px solid var(--ink);
   background: var(--card);
@@ -97,10 +97,27 @@
   box-shadow: 2px 2px 0 rgba(0, 0, 0, .2);
   transition: transform .15s ease, background .15s ease, color .15s ease;
 }
+.cp-close { right: 14px; }
+.cp-fullscreen { right: 58px; padding: 6px; }
+.cp-fullscreen svg { display: block; width: 100%; height: 100%; }
 .cp-close:hover, .cp-close:focus-visible {
   transform: rotate(90deg);
   background: var(--orange); color: #fff;
   outline: none;
+}
+.cp-fullscreen:hover, .cp-fullscreen:focus-visible {
+  background: var(--orange); color: #fff;
+  outline: none;
+}
+
+/* 全屏展开：抽屉铺满视口，去掉遮罩与位移动画 */
+.cp-drawer.is-fullscreen .cp-backdrop { display: none; }
+.cp-drawer.is-fullscreen .cp-panel {
+  top: 0; left: 0; right: 0; bottom: 0;
+  width: 100vw; height: 100vh; max-height: none;
+  border: 0; border-radius: 0;
+  box-shadow: none;
+  animation: none;
 }
 
 body.cp-lock { overflow: hidden; }

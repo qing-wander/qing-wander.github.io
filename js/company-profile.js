@@ -174,6 +174,9 @@
     drawer.innerHTML =
       '<div class="cp-backdrop" data-cp-close="1"></div>' +
       '<aside class="cp-panel" role="dialog" aria-modal="true" aria-labelledby="cpTitle">' +
+      '  <button class="cp-fullscreen" type="button" data-cp-fullscreen aria-label="全屏展开公司档案" aria-pressed="false">' +
+      '    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="square"/></svg>' +
+      '  </button>' +
       '  <button class="cp-close" type="button" data-cp-close="1" aria-label="关闭公司档案">✕</button>' +
       '  <div class="cp-panel-scroll" id="cpScroll"></div>' +
       '</aside>';
@@ -181,14 +184,42 @@
     drawer.addEventListener('click', function (ev) {
       var t = ev.target.closest ? ev.target.closest('[data-cp-close]') : null;
       if (t) { ev.preventDefault(); close(); return; }
+      var full = ev.target.closest ? ev.target.closest('[data-cp-fullscreen]') : null;
+      if (full) { ev.preventDefault(); toggleFullscreen(); return; }
       var tab = ev.target.closest ? ev.target.closest('.cp-tab') : null;
       if (tab) { switchTab(tab); return; }
       /* 相册图片点击统一由 start() 里的全文档委托处理（抽屉 / 独立页共用） */
     });
     drawer.addEventListener('keydown', function (ev) {
-      if (ev.key === 'Escape') close();
+      if (ev.key !== 'Escape') return;
+      if (drawer.classList.contains('is-fullscreen')) {
+        ev.preventDefault();
+        ev.stopPropagation();
+        setFullscreen(false);
+        return;
+      }
+      close();
     });
     return drawer;
+  }
+
+  /* 抽屉全屏切换：按钮、aria 状态与图标同步；关闭抽屉时自动复位 */
+  var FS_ICON_OPEN = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="square"/></svg>';
+  var FS_ICON_EXIT = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4v5H4M20 9h-5V4M15 20v-5h5M4 15h5v5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="square"/></svg>';
+
+  function setFullscreen(on) {
+    if (!drawer) return;
+    drawer.classList.toggle('is-fullscreen', !!on);
+    var btn = drawer.querySelector('[data-cp-fullscreen]');
+    if (!btn) return;
+    btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+    btn.setAttribute('aria-label', on ? '退出全屏' : '全屏展开公司档案');
+    btn.innerHTML = on ? FS_ICON_EXIT : FS_ICON_OPEN;
+  }
+
+  function toggleFullscreen() {
+    if (!drawer) return;
+    setFullscreen(!drawer.classList.contains('is-fullscreen'));
   }
 
   function switchTab(tab) {
@@ -885,6 +916,7 @@
 
   function close() {
     if (!drawer || drawer.hidden) return;
+    setFullscreen(false);
     drawer.hidden = true;
     document.body.classList.remove('cp-lock');
     if (lastFocus && lastFocus.focus) { try { lastFocus.focus(); } catch (e) {} }
@@ -936,6 +968,7 @@
 
   window.addEventListener('keydown', function (ev) {
     if (ev.key !== 'Escape') return;
+    if (drawer && !drawer.hidden && drawer.classList.contains('is-fullscreen')) return;
     if (window.CPPanorama && window.CPPanorama.isOpen && window.CPPanorama.isOpen()) {
       window.CPPanorama.close(); return;
     }
