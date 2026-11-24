@@ -1,8 +1,8 @@
 {
-  "kb_version": "kb-4882e8e4",
+  "kb_version": "kb-7ca744b1",
   "generated_from": "data/site-data.json",
   "count": 42,
-  "total_chars": 7209,
+  "total_chars": 7193,
   "chunks": [
     {
       "id": "me-01",
@@ -19,7 +19,7 @@
       "visibility": "public",
       "lang": "zh",
       "source_path": "data/site-data.json#/hero",
-      "kb_version": "kb-4882e8e4"
+      "kb_version": "kb-7ca744b1"
     },
     {
       "id": "me-02",
@@ -38,7 +38,7 @@
       "visibility": "public",
       "lang": "zh",
       "source_path": "data/site-data.json#/objective/cards",
-      "kb_version": "kb-4882e8e4"
+      "kb_version": "kb-7ca744b1"
     },
     {
       "id": "me-03",
@@ -47,7 +47,7 @@
       "entity_id": "me",
       "entity_type": "person",
       "title": "陈培胜 · 履历总览",
-      "text": "【陈培胜 · 履历总览】5 年工程经验 · 5 段企业经历 · 6 套 0→1 系统 · 50+ 万级月均邮件触达。企业经历：深圳进门财经科技股份有限公司（Agent 工程师 · 2026.01—07（组织架构调整））；深圳指数引力科技有限公司（Agent 工程师 · 2024.03—2025.11）；深圳市房极客网络科技有限公司（Java 开发 · 2023.08—2024.01）；周生生（中国）商业有限公司（Java 开发 · 2021.09—2023.06）。",
+      "text": "【陈培胜 · 履历总览】5 年工程经验 · 5 段企业经历 · 6 套 0→1 系统 · 50+ 万级月均邮件触达。企业经历：深圳进门财经科技股份有限公司（Agent 工程师 · 2026.01—07）；深圳指数引力科技有限公司（Agent 工程师 · 2024.03—2025.11）；深圳市房极客网络科技有限公司（Java 开发 · 2023.08—2024.01）；周生生（中国）商业有限公司（Java 开发 · 2021.09—2023.06）。",
       "url": "resume.html",
       "tags": [
         "海外触达",
@@ -56,7 +56,7 @@
       "visibility": "public",
       "lang": "zh",
       "source_path": "data/site-data.json#/resume/experience",
-      "kb_version": "kb-4882e8e4"
+      "kb_version": "kb-7ca744b1"
     },
     {
       "id": "edu-main",
@@ -76,7 +76,7 @@
       "visibility": "public",
       "lang": "zh",
       "source_path": "data/site-data.json#/resume/education",
-      "kb_version": "kb-4882e8e4"
+      "kb_version": "kb-7ca744b1"
     },
     {
       "id": "edu-verify",
@@ -91,7 +91,7 @@
       "visibility": "public",
       "lang": "zh",
       "source_path": "data/site-data.json#/resume/education/verify",
-      "kb_version": "kb-4882e8e4"
+      "kb_version": "kb-7ca744b1"
     },
     {
       "id": "exp-inmen-01",
@@ -100,7 +100,7 @@
       "entity_id": "exp-inmen",
       "entity_type": "experience",
       "title": "深圳进门财经科技股份有限公司 · Agent 工程师",
-      "text": "【深圳进门财经科技股份有限公司 · Agent 工程师 · 2026.01—07（组织架构调整）】主导 AI 金融投研工作台（AI 进宝）核心基建研发：Agent 基座与多租户云沙箱、MCP / Skill 扩展、AI 资源计费、五端 IM 网关，支撑 Agent 从接入到计费全链路落地",
+      "text": "【深圳进门财经科技股份有限公司 · Agent 工程师 · 2026.01—07】主导 AI 金融投研工作台（AI 进宝）核心基建研发：Agent 基座与多租户云沙箱、MCP / Skill 扩展、AI 资源计费、五端 IM 网关，支撑 Agent 从接入到计费全链路落地",
       "url": "resume.html",
       "tags": [
         "Agent 基座",
@@ -112,7 +112,7 @@
       "visibility": "public",
       "lang": "zh",
       "source_path": "data/site-data.json#/resume/experience/0/bullets/0",
-      "kb_version": "kb-4882e8e4"
+      "kb_version": "kb-7ca744b1"
     },
     {
       "id": "exp-lessie-01",
@@ -130,7 +130,7 @@
       "visibility": "public",
       "lang": "zh",
       "source_path": "data/site-data.json#/resume/experience/1/bullets/0",
-      "kb_version": "kb-4882e8e4"
+      "kb_version": "kb-7ca744b1"
     },
     {
       "id": "exp-lessie-02",
@@ -145,7 +145,7 @@
       "visibility": "public",
       "lang": "zh",
       "source_path": "data/site-data.json#/resume/experience/1/bullets/1",
-      "kb_version": "kb-4882e8e4"
+      "kb_version": "kb-7ca744b1"
     },
     {
       "id": "exp-lessie-03",
@@ -162,7 +162,7 @@
       "visibility": "public",
       "lang": "zh",
       "source_path": "data/site-data.json#/resume/experience/1/bullets/2",
-      "kb_version": "kb-4882e8e4"
+      "kb_version": "kb-7ca744b1"
     },
     {
       "id": "exp-lessie-04",
@@ -179,7 +179,7 @@
       "visibility": "public",
       "lang": "zh",
       "source_path": "data/site-data.json#/resume/experience/1/bullets/3",
-      "kb_version": "kb-4882e8e4"
+      "kb_version": "kb-7ca744b1"
     },
     {
       "id": "exp-fangjike-01",
@@ -196,7 +196,7 @@
       "visibility": "public",
       "lang": "zh",
       "source_path": "data/site-data.json#/resume/experience/2/bullets/0",
-      "kb_version": "kb-4882e8e4"
+      "kb_version": "kb-7ca744b1"
     },
     {
       "id": "exp-chowsang-01",
@@ -213,7 +213,7 @@
       "visibility": "public",
       "lang": "zh",
       "source_path": "data/site-data.json#/resume/experience/3/bullets/0",
-      "kb_version": "kb-4882e8e4"
+      "kb_version": "kb-7ca744b1"
     },
     {
       "id": "exp-chowsang-02",
@@ -231,7 +231,7 @@
       "visibility": "public",
       "lang": "zh",
       "source_path": "data/site-data.json#/resume/experience/3/bullets/1",
-      "kb_version": "kb-4882e8e4"
+      "kb_version": "kb-7ca744b1"
     },
     {
       "id": "proj-comein-lead",
@@ -250,7 +250,7 @@
       "visibility": "public",
       "lang": "zh",
       "source_path": "data/site-data.json#/resume/projects/0",
-      "kb_version": "kb-4882e8e4"
+      "kb_version": "kb-7ca744b1"
     },
     {
       "id": "proj-comein-01",
@@ -269,7 +269,7 @@
       "visibility": "public",
       "lang": "zh",
       "source_path": "data/site-data.json#/resume/projects/0/bullets/0",
-      "kb_version": "kb-4882e8e4"
+      "kb_version": "kb-7ca744b1"
     },
     {
       "id": "proj-comein-02",
@@ -289,7 +289,7 @@
       "visibility": "public",
       "lang": "zh",
       "source_path": "data/site-data.json#/resume/projects/0/bullets/1",
-      "kb_version": "kb-4882e8e4"
+      "kb_version": "kb-7ca744b1"
     },
     {
       "id": "proj-comein-03",
@@ -308,7 +308,7 @@
       "visibility": "public",
       "lang": "zh",
       "source_path": "data/site-data.json#/resume/projects/0/bullets/2",
-      "kb_version": "kb-4882e8e4"
+      "kb_version": "kb-7ca744b1"
     },
     {
       "id": "proj-comein-04",
@@ -329,7 +329,7 @@
       "visibility": "public",
       "lang": "zh",
       "source_path": "data/site-data.json#/resume/projects/0/bullets/3",
-      "kb_version": "kb-4882e8e4"
+      "kb_version": "kb-7ca744b1"
     },
     {
       "id": "proj-comein-05",
@@ -349,7 +349,7 @@
       "visibility": "public",
       "lang": "zh",
       "source_path": "data/site-data.json#/resume/projects/0/bullets/4",
-      "kb_version": "kb-4882e8e4"
+      "kb_version": "kb-7ca744b1"
     },
     {
       "id": "proj-lessie-lead",
@@ -367,7 +367,7 @@
       "visibility": "public",
       "lang": "zh",
       "source_path": "data/site-data.json#/resume/projects/1",
-      "kb_version": "kb-4882e8e4"
+      "kb_version": "kb-7ca744b1"
     },
     {
       "id": "proj-lessie-01",
@@ -386,7 +386,7 @@
       "visibility": "public",
       "lang": "zh",
       "source_path": "data/site-data.json#/resume/projects/1/bullets/0",
-      "kb_version": "kb-4882e8e4"
+      "kb_version": "kb-7ca744b1"
     },
     {
       "id": "proj-lessie-02",
@@ -404,7 +404,7 @@
       "visibility": "public",
       "lang": "zh",
       "source_path": "data/site-data.json#/resume/projects/1/bullets/1",
-      "kb_version": "kb-4882e8e4"
+      "kb_version": "kb-7ca744b1"
     },
     {
       "id": "proj-lessie-03",
@@ -425,7 +425,7 @@
       "visibility": "public",
       "lang": "zh",
       "source_path": "data/site-data.json#/resume/projects/1/bullets/2",
-      "kb_version": "kb-4882e8e4"
+      "kb_version": "kb-7ca744b1"
     },
     {
       "id": "proj-lessie-04",
@@ -446,7 +446,7 @@
       "visibility": "public",
       "lang": "zh",
       "source_path": "data/site-data.json#/resume/projects/1/bullets/3",
-      "kb_version": "kb-4882e8e4"
+      "kb_version": "kb-7ca744b1"
     },
     {
       "id": "proj-lessie-05",
@@ -465,7 +465,7 @@
       "visibility": "public",
       "lang": "zh",
       "source_path": "data/site-data.json#/resume/projects/1/bullets/4",
-      "kb_version": "kb-4882e8e4"
+      "kb_version": "kb-7ca744b1"
     },
     {
       "id": "proj-hicreator-lead",
@@ -480,7 +480,7 @@
       "visibility": "public",
       "lang": "zh",
       "source_path": "data/site-data.json#/resume/projects/2",
-      "kb_version": "kb-4882e8e4"
+      "kb_version": "kb-7ca744b1"
     },
     {
       "id": "proj-hicreator-01",
@@ -495,7 +495,7 @@
       "visibility": "public",
       "lang": "zh",
       "source_path": "data/site-data.json#/resume/projects/2/bullets/0",
-      "kb_version": "kb-4882e8e4"
+      "kb_version": "kb-7ca744b1"
     },
     {
       "id": "proj-hicreator-02",
@@ -513,7 +513,7 @@
       "visibility": "public",
       "lang": "zh",
       "source_path": "data/site-data.json#/resume/projects/2/bullets/1",
-      "kb_version": "kb-4882e8e4"
+      "kb_version": "kb-7ca744b1"
     },
     {
       "id": "proj-hicreator-03",
@@ -531,7 +531,7 @@
       "visibility": "public",
       "lang": "zh",
       "source_path": "data/site-data.json#/resume/projects/2/bullets/2",
-      "kb_version": "kb-4882e8e4"
+      "kb_version": "kb-7ca744b1"
     },
     {
       "id": "proj-hicreator-04",
@@ -548,7 +548,7 @@
       "visibility": "public",
       "lang": "zh",
       "source_path": "data/site-data.json#/resume/projects/2/bullets/3",
-      "kb_version": "kb-4882e8e4"
+      "kb_version": "kb-7ca744b1"
     },
     {
       "id": "skill-01",
@@ -570,7 +570,7 @@
       "visibility": "public",
       "lang": "zh",
       "source_path": "data/site-data.json#/resume/skills/0",
-      "kb_version": "kb-4882e8e4"
+      "kb_version": "kb-7ca744b1"
     },
     {
       "id": "skill-02",
@@ -592,7 +592,7 @@
       "visibility": "public",
       "lang": "zh",
       "source_path": "data/site-data.json#/resume/skills/1",
-      "kb_version": "kb-4882e8e4"
+      "kb_version": "kb-7ca744b1"
     },
     {
       "id": "skill-03",
@@ -607,7 +607,7 @@
       "visibility": "public",
       "lang": "zh",
       "source_path": "data/site-data.json#/resume/skills/2",
-      "kb_version": "kb-4882e8e4"
+      "kb_version": "kb-7ca744b1"
     },
     {
       "id": "skill-04",
@@ -629,7 +629,7 @@
       "visibility": "public",
       "lang": "zh",
       "source_path": "data/site-data.json#/resume/skills/3",
-      "kb_version": "kb-4882e8e4"
+      "kb_version": "kb-7ca744b1"
     },
     {
       "id": "skill-05",
@@ -650,7 +650,7 @@
       "visibility": "public",
       "lang": "zh",
       "source_path": "data/site-data.json#/resume/skills/4",
-      "kb_version": "kb-4882e8e4"
+      "kb_version": "kb-7ca744b1"
     },
     {
       "id": "work-w01",
@@ -667,7 +667,7 @@
       "visibility": "public",
       "lang": "zh",
       "source_path": "data/site-data.json#/works/0",
-      "kb_version": "kb-4882e8e4"
+      "kb_version": "kb-7ca744b1"
     },
     {
       "id": "work-w02",
@@ -684,7 +684,7 @@
       "visibility": "public",
       "lang": "zh",
       "source_path": "data/site-data.json#/works/1",
-      "kb_version": "kb-4882e8e4"
+      "kb_version": "kb-7ca744b1"
     },
     {
       "id": "work-w03",
@@ -702,7 +702,7 @@
       "visibility": "public",
       "lang": "zh",
       "source_path": "data/site-data.json#/works/2",
-      "kb_version": "kb-4882e8e4"
+      "kb_version": "kb-7ca744b1"
     },
     {
       "id": "work-w04",
@@ -717,7 +717,7 @@
       "visibility": "public",
       "lang": "zh",
       "source_path": "data/site-data.json#/works/3",
-      "kb_version": "kb-4882e8e4"
+      "kb_version": "kb-7ca744b1"
     },
     {
       "id": "work-w05",
@@ -732,7 +732,7 @@
       "visibility": "public",
       "lang": "zh",
       "source_path": "data/site-data.json#/works/4",
-      "kb_version": "kb-4882e8e4"
+      "kb_version": "kb-7ca744b1"
     },
     {
       "id": "work-w06",
@@ -747,7 +747,7 @@
       "visibility": "public",
       "lang": "zh",
       "source_path": "data/site-data.json#/works/5",
-      "kb_version": "kb-4882e8e4"
+      "kb_version": "kb-7ca744b1"
     },
     {
       "id": "contact-01",
@@ -762,7 +762,7 @@
       "visibility": "public",
       "lang": "zh",
       "source_path": "data/site-data.json#/contact/cards",
-      "kb_version": "kb-4882e8e4"
+      "kb_version": "kb-7ca744b1"
     }
   ]
 }

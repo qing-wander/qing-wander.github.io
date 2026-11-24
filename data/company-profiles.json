@@ -260,10 +260,35 @@
           "name": "三个皮匠报告 · 研报平台功能与适用人群对比",
           "url": "https://www.sgpjbg.com.cn/searchtag/25965109.html",
           "n": 8
+        },
+        {
+          "n": 9,
+          "name": "讯兔科技官网",
+          "url": "https://rabyte.cn"
+        },
+        {
+          "n": 10,
+          "name": "百度百科 · 讯兔科技（上海）有限公司",
+          "url": "https://baike.baidu.com/item/讯兔科技(上海)有限公司/58267361"
+        },
+        {
+          "n": 11,
+          "name": "中华网财经 / 鳌头财经 · 讯兔科技融资与合规诉讼报道",
+          "url": "https://finance.china.com/jinrong/13004689/20260410/49404917.html"
+        },
+        {
+          "n": 12,
+          "name": "百度百科 · Alpha派（二审终审口径）",
+          "url": "https://baike.baidu.com/item/Alpha派/67915033"
+        },
+        {
+          "n": 13,
+          "name": "企查猫 · 进门财经竞争对手清单",
+          "url": "https://www.qibook.com/company-wiki-s/shenzhenjinmencaijingkejigufenyouxiangongsi-12fc4b6b.html?s=t"
         }
       ],
       "competitors": {
-        "landscape": "机构投研赛道分化为两条演化路径：一条以 Wind、iFinD、Choice 为代表，靠长期积累的结构化金融数据与机构终端工作流，把取数、建模、分析串成闭环；另一条以进门财经、Gangtise、AlphaPai 为代表，靠路演、专家交流、会议纪要等非结构化专业内容，用 AI 做内容理解与研究辅助。东吴证券 2026 年研报将进门财经归入「专业内容平台 → 内容研究 Agent」路径，与 Wind 的「终端 AI 化 → 工作流智能化」明确区分——两者并非同一赛道的正面替代，而是资源形态与入口的差异。",
+        "landscape": "机构投研赛道分化为两条演化路径：一条以 Wind、iFinD、Choice 为代表，靠长期积累的结构化金融数据与机构终端工作流，把取数、建模、分析串成闭环；另一条以进门财经、Gangtise、AlphaPai 为代表，靠路演、专家交流、会议纪要等非结构化专业内容，用 AI 做内容理解与研究辅助。东吴证券 2026 年研报将进门财经归入「专业内容平台 → 内容研究 Agent」路径，与 Wind 的「终端 AI 化 → 工作流智能化」明确区分——两者并非同一赛道的正面替代，而是资源形态与入口的差异。 2026 年新增的直接对手讯兔科技（Alpha派）从买方 AI 投研助手切入同一会议场景，与进门在路演内容的使用上还存在已终审的不正当竞争诉讼，数据授权与白名单机制成为竞争边界；点开友商卡片可进入对应公司的完整档案。",
         "players": [
           {
             "name": "Wind 万得",
@@ -336,6 +361,19 @@
             "vs": "解决「找报告」，不解决「听路演 / 对接上市公司 IR」；与进门在信息获取层部分重叠。",
             "url": "",
             "source": 8
+          },
+          {
+            "name": "讯兔科技（Alpha派）",
+            "mark": "讯",
+            "tone": "coral",
+            "kind": "直接竞品",
+            "vendor": "讯兔科技（上海）有限公司",
+            "position": "AI 原生投研助手 Alpha派 / PaiWork + AlphaLink 券商服务管理",
+            "scale": "2021 成立 · B 轮超 3 亿元；Alpha派覆盖 6000+ 机构（2026.03 媒体口径）",
+            "vs": "同为投研会议与买方服务入口：进门以路演内容源、白名单授权与 IR 客户见长；讯兔以 AI 助手渗透买方，双方就路演数据使用发生诉讼并已终审。",
+            "url": "",
+            "source": 11,
+            "profileId": "xuntu"
           }
         ]
       },
@@ -404,6 +442,173 @@
         "source": 3
       }
     },
+    "xuntu": {
+      "id": "xuntu",
+      "code": "XT",
+      "name": "讯兔科技（上海）有限公司（Alpha派 / PaiWork）",
+      "shortName": "讯兔科技",
+      "industry": "金融科技 · AI 投研 / 机构信息服务",
+      "entity": "讯兔科技（上海）有限公司（品牌：讯兔科技 / Alpha派；全资控股讯兔科技（北京）有限公司）",
+      "website": {
+        "text": "rabyte.cn",
+        "href": "https://rabyte.cn"
+      },
+      "registry": {
+        "founded": "2021-06-21",
+        "hq": "上海 · 自贸区商城路（工商现地址：虹口区邯郸路 135 号）",
+        "legalRep": "李罗丹",
+        "capital": "1000 万元人民币（实缴 300 万元，百科口径）",
+        "source": 2
+      },
+      "stage": "B 轮",
+      "scale": "26 人参保（2025 年工商口径）",
+      "oneLine": "AI 驱动的金融数据与生产力服务商：Alpha派 / PaiWork 投研助手 + AlphaLink 券商服务管理 + AlphaMiner 投研协作",
+      "quickStats": [
+        "2021 成立",
+        "B 轮 · 超 3 亿元",
+        "Alpha派覆盖 6000+ 机构",
+        "与进门财经存在不正当竞争诉讼"
+      ],
+      "kpis": [
+        {
+          "label": "成立",
+          "value": "2021.06",
+          "source": 2
+        },
+        {
+          "label": "最新融资",
+          "value": "B 轮 · 超 3 亿元",
+          "sub": "2026.09 · 中保投资、广发信德等（百科口径）",
+          "source": 2
+        },
+        {
+          "label": "用户规模",
+          "value": "8 万+ 投研人员 / 6000+ 机构",
+          "sub": "2026.03 媒体口径；百科另记 12 万+ / 8000+（2026.11）",
+          "source": 3
+        },
+        {
+          "label": "团队规模",
+          "value": "26 人参保",
+          "sub": "2025 年工商年报口径",
+          "source": 2
+        }
+      ],
+      "business": {
+        "main": "官网定位「AI 驱动的金融数据与生产力服务商」，从帮基金经理写会议纪要切入金融投研场景。产品线包括：Alpha派（AI 原生投研助手，覆盖挖线索、听路演、跑调研、读观点、找资源）、PaiWork（2026.04 推出的 AI 投研工作台，支持桌面端直连本地文件）、AlphaLink（券商服务全流程管理：路演日历、回放、录制、纪要、派点管理）与 AlphaMiner（资管机构内部投研协作系统）。官网称覆盖 95% 主流公开路演平台会议。",
+        "model": "SaaS 订阅制 + 机构服务：以 Alpha派 个人/机构订阅为基本盘，向 PaiWork 工作台与券商/资管侧系统延伸；媒体报道称正从二级市场向一级市场、银行保险等泛金融场景扩张。",
+        "position": "与进门财经在「买方高效参会 + 投研会议内容」场景直接重叠：进门掌握路演内容源与白名单授权机制，讯兔从 AI 助手与信息聚合切入买方工作流；双方的不正当竞争诉讼已明确数据使用边界。",
+        "bossIntro": "创始人李罗丹为前头部公募 Data Lab 负责人，核心团队兼具金融投研与 AI 技术背景；官网称公司为证监会金融科技创新试点单位、专精特新企业（企业及媒体口径）。"
+      },
+      "funding": {
+        "note": "轮次与时间来自百科及媒体报道；A 轮金额有「近 2 亿元 / 2 亿元」两种表述，并列保留，不做加总。",
+        "rounds": [
+          {
+            "date": "2025-10",
+            "round": "Pre-A 轮",
+            "amount": "超 1 亿元",
+            "investors": "高瓴创投、红杉中国联合领投",
+            "source": 2
+          },
+          {
+            "date": "2026-03",
+            "round": "A 轮",
+            "amount": "近 2 亿元",
+            "investors": "启明创投、红杉中国、高瓴创投领投；广发乾和、信宸资本、清科控股跟投；钟鼎资本、嘉程资本加注",
+            "source": 3
+          },
+          {
+            "date": "2026-09",
+            "round": "B 轮",
+            "amount": "超 3 亿元",
+            "investors": "中保投资、广发信德等（百科口径）",
+            "source": 2
+          }
+        ]
+      },
+      "recognition": [
+        {
+          "title": "行业渗透",
+          "detail": "截至 2026.03，媒体口径累计服务 8 万+ 投研人员、6000+ 机构，头部机构渗透率 90%；百科另记 12 万+ 用户 / 8000+ 机构（2026.11），口径并列保留。",
+          "source": 3
+        },
+        {
+          "title": "资质",
+          "detail": "高新技术企业（2023 年认定）、上海市专精特新、证监会金融科技创新试点单位；Alpha派 入选 2026 世界人工智能大会 SAIL 奖 TOP30（百科口径）",
+          "source": 2
+        },
+        {
+          "title": "与进门财经的诉讼（一审）",
+          "detail": "2025 年 9 月，上海浦东新区法院一审认定 Alpha派 发布未经许可及白名单验证的进门财经线上路演内容构成不正当竞争，判赔经济损失及维权开支 410 万元、下架相关内容并刊登声明。",
+          "source": 3
+        },
+        {
+          "title": "与进门财经的诉讼（二审）",
+          "detail": "2026 年 5 月 28 日，上海知识产权法院驳回讯兔科技上诉、维持原判（百度百科 Alpha派 词条口径）。",
+          "source": 6
+        }
+      ],
+      "outlook": {
+        "opportunities": [
+          "金融投研是 AI Agent 高价值垂类，机构付费意愿与头部渗透率较强",
+          "PaiWork 桌面端与生态伙伴计划把工具从信息整理扩展到投研工作流与数据共建"
+        ],
+        "risks": [
+          "诉讼划出数据合规红线：未获白名单验证的路演内容不可超范围传播",
+          "媒体称 2024 年上海主体收入 1641 万元（消息口径），与融资规模存在落差；Wind / 同花顺 / 券商自建平台竞争加剧"
+        ]
+      },
+      "competitors": {
+        "landscape": "金融 AI 投研在 2026 年全面竞争：Wind、同花顺、东方财富从数据终端切入 AI，讯兔与进门财经则从投研会议与内容场景切入；双方围绕线上路演数据的使用还发生过司法纠纷。",
+        "players": [
+          {
+            "name": "进门财经",
+            "mark": "进",
+            "tone": "amber",
+            "kind": "直接竞品",
+            "vendor": "深圳进门财经科技股份有限公司",
+            "position": "券商路演 + 上市公司 IRM + AI 投研工作台「AI 进宝」",
+            "scale": "2013 成立 · B+ 轮腾讯 1 亿元；100–499 人；覆盖券商公开路演 95%+",
+            "vs": "双方均从投研会议场景切入：进门掌握路演内容源与白名单机制，讯兔以 Alpha派 从买方 AI 助手渗透，并因内容使用发生不正当竞争诉讼。",
+            "url": "",
+            "source": 3,
+            "profileId": "comein"
+          }
+        ]
+      },
+      "sources": [
+        {
+          "n": 1,
+          "name": "讯兔科技官网（产品与定位）",
+          "url": "https://rabyte.cn"
+        },
+        {
+          "n": 2,
+          "name": "百度百科 · 讯兔科技（上海）有限公司",
+          "url": "https://baike.baidu.com/item/讯兔科技(上海)有限公司/58267361"
+        },
+        {
+          "n": 3,
+          "name": "中华网财经 / 鳌头财经 · 顶级资本热捧的讯兔科技，高成长与合规风险并存",
+          "url": "https://finance.china.com/jinrong/13004689/20260410/49404917.html"
+        },
+        {
+          "n": 4,
+          "name": "讯兔科技官网 · Alpha派 产品介绍",
+          "url": "https://www.rabyte.cn/info_2.php"
+        },
+        {
+          "n": 5,
+          "name": "企查猫 · 深圳进门财经科技股份有限公司 业务与产品信息（竞争对手清单）",
+          "url": "https://www.qibook.com/company-wiki-s/shenzhenjinmencaijingkejigufenyouxiangongsi-12fc4b6b.html?s=t"
+        },
+        {
+          "n": 6,
+          "name": "百度百科 · Alpha派（二审终审与产品里程碑）",
+          "url": "https://baike.baidu.com/item/Alpha派/67915033"
+        }
+      ]
+    },
     "zhishu": {
       "id": "zhishu",
       "code": "LES",
@@ -466,7 +671,7 @@
         "bossIntro": "我们是一家基于 AI 技术和数据匹配算法，面向全球市场提供端到端的 AI agent 应用服务的创业公司，团队业务分为 Deeplink（中国出海企业海外网红营销 AI Agency）与 Lessie AI（People Search AI Agent）两个方向。"
       },
       "funding": {
-        "note": "公开报道口径：成立一年内完成三轮融资，股东含红杉、阿尔法公社等（更早两轮金额未公开）",
+        "note": "公开报道口径：成立一年内完成三轮融资，股东含红杉、阿尔法公社等（更早两轮金额未公开） 创始人官方公开信（sources[18]）亦称「一年间完成三轮融资，股东均为一线 VC」。",
         "rounds": [
           {
             "date": "2024 – 2025",
@@ -510,6 +715,11 @@
           "title": "创始团队",
           "detail": "创始人为前抖音创始团队成员之一，团队汇集腾讯、抖音、阿里等头部互联网公司成员，半数及以上专注产品与研发，推崇扁平化管理（BOSS直聘公司简介）",
           "source": 5
+        },
+        {
+          "title": "创始人自述",
+          "detail": "创始人于北川在官方招聘文档中写明：Superlinear 于 2024 年 8 月成立，一年间完成三轮融资、股东均为一线 VC；2025 年 9 月发布 Lessie AI；2025 年 10 月 ARR 突破 500 万美元（企业自述口径）。",
+          "source": 18
         }
       ],
       "outlook": {
@@ -627,6 +837,36 @@
           "name": "My SaaS Journey · 2026 B2B 销售 AI 调研工具（ZoomInfo / Apollo / Sales Navigator / Clay）",
           "url": "https://mysaasjourney.com/blog/ai-agent-tools-b2b-sales-company-research",
           "n": 12
+        },
+        {
+          "n": 13,
+          "name": "图灵集市官网 · 智能体红人营销平台",
+          "url": "https://www.turingmarket.cn"
+        },
+        {
+          "n": 14,
+          "name": "AhaCreator 官网 · AI 原生达人营销平台",
+          "url": "https://aha.inc"
+        },
+        {
+          "n": 15,
+          "name": "锦秋基金 · 景跃羽森 / SophiaPro 创始人复盘",
+          "url": "https://jinqiucapital.com/library/jinqiu-spotlight/wechat/3887776643-2247506274_1"
+        },
+        {
+          "n": 16,
+          "name": "WotoKOL 官网 · 关于我们",
+          "url": "https://www.wotokol.com/about"
+        },
+        {
+          "n": 17,
+          "name": "Kolect 官网 · About（AI 原生增长系统）",
+          "url": "https://www.kolect.ai/about"
+        },
+        {
+          "n": 18,
+          "name": "飞书文档 · 欢迎加入 Superlinear，面向全球市场的 AI Agent 创业团队（创始人自述）",
+          "url": "https://superlinear.feishu.cn/wiki/EW05wAVWVioRZ7kuu67c5YWFnSG"
         }
       ],
       "aliases": [
@@ -677,7 +917,7 @@
         }
       ],
       "competitors": {
-        "landscape": "AI「找人」赛道正从「专有数据库关键词检索」转向「自然语言 + 多源实时搜索」。Lessie 的自我定位是替代 Apollo、Hunter、Modash 的组合：用一句话描述目标人群，实时检索 LinkedIn、X、GitHub、TikTok 等 100+ 公共来源，按 ICP 打分后给出联系方式与外联草稿。它的差异点是多角色人群（B2B 线索、红人、投资人、候选人）与统一积分体系；短板是非 LinkedIn 源联系人准确率自评偏低、缺少 CRM/ATS 工作流、积分定价不透明。",
+        "landscape": "AI「找人」赛道正从「专有数据库关键词检索」转向「自然语言 + 多源实时搜索」。Lessie 的自我定位是替代 Apollo、Hunter、Modash 的组合：用一句话描述目标人群，实时检索 LinkedIn、X、GitHub、TikTok 等 100+ 公共来源，按 ICP 打分后给出联系方式与外联草稿。它的差异点是多角色人群（B2B 线索、红人、投资人、候选人）与统一积分体系；短板是非 LinkedIn 源联系人准确率自评偏低、缺少 CRM/ATS 工作流、积分定价不透明。 国内同赛道在 2025–2026 年集中出现：图灵集市、AhaCreator、景跃羽森、卧兔与 Kolect.ai 都把「找人」与「履约 / 效果」打包，竞争从数据库覆盖转向 Agent 执行与按结果结算；点开友商卡片可进入对应公司的完整档案。",
         "players": [
           {
             "name": "Apollo.io",
@@ -762,6 +1002,71 @@
             "vs": "招聘是 Lessie 八大用例之一，但缺少 ATS、共享收件箱与候选人合规流程，招聘深度不及垂直工具。",
             "url": "",
             "source": 11
+          },
+          {
+            "name": "图灵集市 Turing Market",
+            "mark": "图",
+            "tone": "teal",
+            "kind": "直接竞品",
+            "vendor": "图灵集市（深圳）科技有限公司",
+            "position": "按结果付费的海外红人营销智能体",
+            "scale": "2025 成立 · 天使轮近千万元；招聘口径 20–99 人",
+            "vs": "同为「一句话找人 + 自动建联」的 Agent，图灵以商品链接为入口按结果收费；Lessie 覆盖 B2B/红人/招聘等多人群。",
+            "url": "",
+            "source": 13,
+            "profileId": "turingmarket"
+          },
+          {
+            "name": "AhaCreator（Head AI）",
+            "mark": "A",
+            "tone": "purple",
+            "kind": "直接竞品",
+            "vendor": "北京维度跳跃者科技有限公司 / Ahalab.ai Inc.",
+            "position": "AI 原生全球达人营销平台，跑完匹配到结算",
+            "scale": "2024 成立 · Pre-A+ 轮；18 万+ 入驻达人、500 万+ 可触达",
+            "vs": "AhaCreator 以双边交易网络和履约担保见长；Lessie 的差异是统一积分池下的多角色人群搜索。",
+            "url": "",
+            "source": 14,
+            "profileId": "aha"
+          },
+          {
+            "name": "景跃羽森（SophiaPro）",
+            "mark": "景",
+            "tone": "amber",
+            "kind": "相邻赛道",
+            "vendor": "北京景跃羽森科技有限公司",
+            "position": "出海营销数字员工 Karis.im → C 端 Invoko.ai",
+            "scale": "2025 成立 · 种子轮；团队规模未公开",
+            "vs": "早期 Karis.im 同样做营销 sourcing，与 Lessie 找人能力有交集；团队已转向 C 端桌面助手，直接竞争有限。",
+            "url": "",
+            "source": 15,
+            "profileId": "jingyue"
+          },
+          {
+            "name": "杭州卧兔 WotoKOL",
+            "mark": "兔",
+            "tone": "green",
+            "kind": "直接竞品",
+            "vendor": "杭州卧兔网络科技有限公司",
+            "position": "海外红人营销服务 + WotoHub SaaS + TikTok 达人营销",
+            "scale": "2017 成立 · A 轮；82 人参保口径，6000 万+ 红人",
+            "vs": "老牌服务商，红人库和本地执行资源积累深；Lessie 以 AI Agent 原生和多人群用例切入。",
+            "url": "",
+            "source": 16,
+            "profileId": "wotokol"
+          },
+          {
+            "name": "Kolect.ai（Panoverse）",
+            "mark": "K",
+            "tone": "coral",
+            "kind": "直接竞品",
+            "vendor": "Panoverse Inc.",
+            "position": "自然语言达人搜索 + 托管式增长系统",
+            "scale": "2024 成立（品牌）· 数百万美元融资；300M+ 可搜索达人",
+            "vs": "同样从「描述人群」实时找人，Kolect 叠加托管增长与效果保底；Lessie 覆盖人群类型更广。",
+            "url": "",
+            "source": 17,
+            "profileId": "kolect"
           }
         ]
       },
@@ -815,6 +1120,784 @@
         ],
         "source": 5
       }
+    },
+    "turingmarket": {
+      "id": "turingmarket",
+      "code": "TM",
+      "name": "图灵集市（深圳）科技有限公司",
+      "shortName": "图灵集市",
+      "industry": "AI 营销 · 海外红人营销智能体",
+      "entity": "图灵集市（深圳）科技有限公司（品牌 Turing Market）",
+      "website": {
+        "text": "turingmarket.cn",
+        "href": "https://www.turingmarket.cn"
+      },
+      "registry": {
+        "founded": "2025-04-15",
+        "hq": "深圳 · 南山（西丽）",
+        "legalRep": "田逸豪",
+        "capital": "108.11 万元人民币",
+        "source": 1
+      },
+      "stage": "天使轮",
+      "scale": "20–99 人（招聘平台口径）",
+      "oneLine": "按结果付费的海外红人营销智能体：从商品链接出发，完成红人发现、建联、谈判与履约跟踪",
+      "quickStats": [
+        "2025 成立",
+        "天使轮 · 近千万元",
+        "20–99 人（招聘口径）",
+        "千万级红人资源库"
+      ],
+      "kpis": [
+        {
+          "label": "成立",
+          "value": "2025.04",
+          "source": 1
+        },
+        {
+          "label": "最新融资",
+          "value": "天使轮 · 近千万元",
+          "sub": "2025.08 · 爱企查品牌库口径",
+          "source": 3
+        },
+        {
+          "label": "团队规模",
+          "value": "20–99 人",
+          "sub": "BOSS直聘招聘页口径；工商年报人数未公开",
+          "source": 2
+        },
+        {
+          "label": "红人数据",
+          "value": "2.3M+ 已分析红人",
+          "sub": "官网另称 87M+ 营销信号",
+          "source": 4
+        }
+      ],
+      "business": {
+        "main": "官网定位「为结果负责的智能体红人营销平台」：导入 Amazon / TikTok Shop / DTC 商品链接，由 AI 理解卖点与目标人群；用户一句话描述市场、粉丝量、内容方向，智能体完成全库匹配、个性化邀约、邮件跟进与谈判进度记录，关键发送与成交由人拍板。",
+        "model": "按结果付费：官网写「没找到合适红人不收费、同条件重搜不重复收费」；中文站定价页另有「成功合作抽佣 5%」口径，并列保留，不做费率承诺。",
+        "position": "2025 年成立的早期玩家，与 Lessie / hicreator 在「AI 找人 + 出海红人营销」正面重叠，差异点是以商品链接为入口、强调按结果结算与团队协同工作台。",
+        "bossIntro": "招聘页自述：海外红人营销智能 Agent 平台，核心成员来自清华大学博士团队，已有两轮融资；服务团队有跨境电商与大型红人营销项目经验。"
+      },
+      "funding": {
+        "note": "成立约 4 个月披露天使轮；BOSS直聘另称「已获得 2 轮融资」，其余轮次金额未公开。",
+        "rounds": [
+          {
+            "date": "2025-08",
+            "round": "天使轮",
+            "amount": "近千万元",
+            "investors": "投资方未公开",
+            "source": 3
+          },
+          {
+            "date": "未公开",
+            "round": "其他轮次",
+            "amount": "未公开",
+            "investors": "招聘页称共 2 轮，未披露明细",
+            "source": 2
+          }
+        ]
+      },
+      "recognition": [
+        {
+          "title": "技术背景",
+          "detail": "招聘页称核心团队为清华大学博士团队，具 8 年+ 海外营销经验（企业自述口径）",
+          "source": 2
+        },
+        {
+          "title": "知识产权",
+          "detail": "2025-08 申请「一种基于生成对抗进化策略算法的自适应迭代电商大模型」专利；另有软件著作权 1 项",
+          "source": 5
+        },
+        {
+          "title": "客户案例",
+          "detail": "公开百科口径称服务 Anker、小米、Shein、Usmall 等出海品牌，非第三方审计数据",
+          "source": 5
+        }
+      ],
+      "outlook": {
+        "opportunities": [
+          "按结果付费降低品牌试错门槛，若履约数据可信，可撬动传统代理的预算",
+          "从商品链接理解产品再找人，比纯关键词检索更贴近投放决策"
+        ],
+        "risks": [
+          "2025 年新公司，数据库、成交样本与现金流仍在早期验证阶段",
+          "官网同时写「有结果才收费」与「5% 抽佣」，口径需持续核对"
+        ]
+      },
+      "competitors": {
+        "landscape": "同赛道玩家普遍从「给名单」转向「跑完合作」：图灵集市主打按结果付费的商品链接入口，与 Lessie 的多人群搜索形成错位竞争。",
+        "players": [
+          {
+            "name": "指数引力 / 超线性（Lessie）",
+            "mark": "L",
+            "tone": "purple",
+            "kind": "直接竞品",
+            "vendor": "深圳指数引力科技有限公司",
+            "position": "AI 人脉搜索 + 海外红人营销 SaaS",
+            "scale": "2024 成立 · Pre-A 数千万元；20–99 人（招聘口径）",
+            "vs": "Lessie 覆盖 B2B 线索、红人、投资人、候选人等多人群；图灵更聚焦出海红人并按结果收费。",
+            "url": "",
+            "source": 6,
+            "profileId": "zhishu"
+          }
+        ]
+      },
+      "sources": [
+        {
+          "n": 1,
+          "name": "企查猫 · 图灵集市（深圳）科技有限公司 企业信息",
+          "url": "https://www.qibook.com/company-wiki-s/tulingjishishenzhenkejiyouxiangongsi-c25c1509.html?s=t"
+        },
+        {
+          "n": 2,
+          "name": "BOSS直聘 · 图灵集市招聘页（红人营销商务总监）",
+          "url": "https://www.zhipin.com/job_detail/6b571e6fcb00ee1503N-29y5EldU.html"
+        },
+        {
+          "n": 3,
+          "name": "爱企查品牌库 · Turing Market",
+          "url": "https://aiqicha.baidu.com/brand/detail?pid=58887777071804&id=886312623"
+        },
+        {
+          "n": 4,
+          "name": "图灵集市官网 · 为结果负责的智能体红人营销平台",
+          "url": "https://www.turingmarket.cn"
+        },
+        {
+          "n": 5,
+          "name": "百度百科 · 图灵集市（深圳）科技有限公司",
+          "url": "https://baike.baidu.com/item/图灵集市（深圳）科技有限公司/66297315"
+        },
+        {
+          "n": 6,
+          "name": "Lessie AI 产品官网",
+          "url": "https://lessie.cn"
+        }
+      ]
+    },
+    "aha": {
+      "id": "aha",
+      "code": "AH",
+      "name": "北京维度跳跃者科技有限公司（AhaCreator / Head AI）",
+      "shortName": "AhaCreator",
+      "industry": "AI 营销 · 全球达人营销平台",
+      "entity": "北京维度跳跃者科技有限公司 · 海外主体 Ahalab.ai Inc.；境内品牌 AhaCreator，2025.05 升级为 Head AI",
+      "website": {
+        "text": "aha.inc",
+        "href": "https://aha.inc"
+      },
+      "registry": {
+        "founded": "2024-04-28",
+        "hq": "北京 · 大兴",
+        "legalRep": "黄晓敏",
+        "capital": "5 万元人民币",
+        "source": 1
+      },
+      "stage": "Pre-A+ 轮",
+      "scale": "40+ 人（2026.06 采访口径，多数为产研）",
+      "oneLine": "AI 原生全球达人营销平台：AI Agent 跑完匹配、建联、议价、合同与结算，按成交结果抽佣",
+      "quickStats": [
+        "2024 成立",
+        "Pre-A+ · 蓝色光标",
+        "18 万+ 入驻达人",
+        "500 万+ 可触达达人"
+      ],
+      "kpis": [
+        {
+          "label": "成立",
+          "value": "2024.04",
+          "source": 1
+        },
+        {
+          "label": "最新融资",
+          "value": "Pre-A+ 轮",
+          "sub": "2026.06 · 蓝色光标（战略）",
+          "source": 2
+        },
+        {
+          "label": "达人网络",
+          "value": "18 万+ 已入驻",
+          "sub": "官网另称 500 万+ 可触达、140+ 国家地区",
+          "source": 4
+        },
+        {
+          "label": "客户规模",
+          "value": "400+ 验证品牌",
+          "sub": "官网称累计向达人支付 $1M+",
+          "source": 4
+        }
+      ],
+      "business": {
+        "main": "AhaCreator 把达人发现、AI 多模态匹配与假互动识别、建联议价、合同签约、内容审核、交付跟踪、跨境结算串成一条 AI 原生工作流；品牌只需创建 campaign、确认达人名单、审核内容，其余由 Agent 执行。2025 年 5 月品牌升级为 Head AI，扩展到联盟营销等泛市场产品。",
+        "model": "不收月费，按成交金额抽取服务费：官网当前写 5%（限时口径的媒体解读亦见来源），最低预存 2000 美元、交付验收后放款；第三方工具目录仍记录 10% agent fee，口径并列保留。",
+        "position": "与 Lessie / hicreator 同做「AI 找人 + 达人营销」，但更强调双边交易网络与履约担保（合同、托管、未交付退款），融资与品牌客户规模在同类早期公司中靠前。",
+        "bossIntro": "创始人 Kay Feng（冯如初）曾任 Dora AI 海外增长；CPO Francis Yang 曾任 TikTok Creator Marketplace 产品经理。官网 About 页列出 140k+ 入驻达人、400+ 验证品牌、5M+ 预筛选达人池。"
+      },
+      "funding": {
+        "note": "累计融资超千万美元为媒体口径，非精确到账额；三轮时间线按天眼查品牌库与投资界整理。",
+        "rounds": [
+          {
+            "date": "2024-11-20",
+            "round": "种子轮",
+            "amount": "数百万美元",
+            "investors": "金沙江创投、锦秋基金、GSR 等",
+            "source": 3
+          },
+          {
+            "date": "2026-05",
+            "round": "Pre-A 轮",
+            "amount": "未单独披露",
+            "investors": "联想创投、初心资本；锦秋、金沙江跟投",
+            "source": 2
+          },
+          {
+            "date": "2026-06-11",
+            "round": "Pre-A+ 轮",
+            "amount": "未单独披露",
+            "investors": "蓝色光标（战略投资方）",
+            "source": 2
+          }
+        ]
+      },
+      "recognition": [
+        {
+          "title": "产品里程碑",
+          "detail": "2025-03 产品上线，媒体报道当日登 Product Hunt 日榜；14 天 ARR 达 $2.5M（企业自述口径）",
+          "source": 3
+        },
+        {
+          "title": "生态合作",
+          "detail": "飞书首个海外达人营销 AI Agent 合作伙伴；与蓝色光标达成深度战略合作",
+          "source": 5
+        },
+        {
+          "title": "行业收录",
+          "detail": "被 Influencer Marketing Hub 2026 达人营销 AI Agent 名单收录（第三方目录口径）",
+          "source": 6
+        }
+      ],
+      "outlook": {
+        "opportunities": [
+          "从工具转向交易：托管、合同、结算构成履约壁垒，真实成交数据会持续强化匹配",
+          "蓝标等渠道方合作，可触达更大规模的品牌预算"
+        ],
+        "risks": [
+          "费率与规模数字多为官网/媒体口径，缺少第三方审计",
+          "平台型竞品若把达人合作内建为原生能力，双边网络冷启动优势会被稀释"
+        ]
+      },
+      "competitors": {
+        "landscape": "海外达人营销 Agent 竞争已从数据库覆盖转向「谁能把合作跑完」：AhaCreator 以抽佣与履约担保切入，与 Lessie 的广人群搜索形成正面交叠。",
+        "players": [
+          {
+            "name": "指数引力 / 超线性（Lessie）",
+            "mark": "L",
+            "tone": "purple",
+            "kind": "直接竞品",
+            "vendor": "深圳指数引力科技有限公司",
+            "position": "AI 人脉搜索 + 海外红人营销 SaaS",
+            "scale": "2024 成立 · Pre-A 数千万元；20–99 人（招聘口径）",
+            "vs": "Lessie 用统一积分池覆盖 B2B 线索、红人、招聘等多人群；AhaCreator 聚焦海外达人双边交易与履约。",
+            "url": "",
+            "source": 7,
+            "profileId": "zhishu"
+          }
+        ]
+      },
+      "sources": [
+        {
+          "n": 1,
+          "name": "天眼查品牌库 · Aha Creator / 北京维度跳跃者科技有限公司",
+          "url": "https://m.tianyancha.com/brand/b64e1871718"
+        },
+        {
+          "n": 2,
+          "name": "投资界 · Head AI（Aha Creator）公司档案与融资历程",
+          "url": "https://vc.pedaily.cn/company/864935.html"
+        },
+        {
+          "n": 3,
+          "name": "百度百科 · Head（原 Aha Lab）",
+          "url": "https://baike.baidu.com/item/Head/67455089"
+        },
+        {
+          "n": 4,
+          "name": "AhaCreator 官网 · About（平台规模与产品介绍）",
+          "url": "https://aha.inc"
+        },
+        {
+          "n": 5,
+          "name": "白鲸出海 · 蓝色光标与 AhaCreator 达成深度合作",
+          "url": "https://xmt.pub/index.php/read/25934"
+        },
+        {
+          "n": 6,
+          "name": "Narku · AhaCreator：AI 原生海外达人营销平台介绍",
+          "url": "https://www.narku.com/archives/2430"
+        },
+        {
+          "n": 7,
+          "name": "Lessie AI 产品官网",
+          "url": "https://lessie.cn"
+        }
+      ]
+    },
+    "jingyue": {
+      "id": "jingyue",
+      "code": "JY",
+      "name": "北京景跃羽森科技有限公司（SophiaPro 团队）",
+      "shortName": "景跃羽森",
+      "industry": "AI 应用 · 营销 Agent / 桌面 AI 助手",
+      "entity": "北京景跃羽森科技有限公司；公开品牌 SophiaPro，创始人程梦琪（工商与团队口径并列保留，不与其他关联主体合并）",
+      "website": {
+        "text": "invoko.ai",
+        "href": "https://invoko.ai"
+      },
+      "registry": {
+        "founded": "2025-05-13",
+        "hq": "北京 · 海淀",
+        "legalRep": "程梦琪",
+        "capital": "10 万元人民币",
+        "source": 1
+      },
+      "stage": "种子轮",
+      "scale": "未公开（工商年报参保 0 人）",
+      "oneLine": "从出海营销数字员工 Karis.im 起步、后转向 C 端 Invoko.ai 的 AI 应用创业团队",
+      "quickStats": [
+        "2025 成立",
+        "种子轮 · 锦秋基金",
+        "4 款产品快速迭代",
+        "团队规模未公开"
+      ],
+      "kpis": [
+        {
+          "label": "成立",
+          "value": "2025.05",
+          "source": 1
+        },
+        {
+          "label": "融资",
+          "value": "种子轮",
+          "sub": "锦秋基金首轮；BAI 资本亦见投资界披露，金额未公开",
+          "source": 4
+        },
+        {
+          "label": "产品迭代",
+          "value": "4 款",
+          "sub": "Karis.im → TryClico → Invoko.ai 等",
+          "source": 2
+        },
+        {
+          "label": "团队规模",
+          "value": "未公开",
+          "sub": "工商年报参保 0 人，实际团队未披露",
+          "source": 1
+        }
+      ],
+      "business": {
+        "main": "团队 2025 年中以 Karis.im 切入「出海企业市场营销数字员工」，做达人 sourcing 与营销 Agent；几个月后发现 sourcing 七八成取决于 API 与数据质量、且只占用户工作约 30%，转向 workflow 与 C 端，先后推出浏览器插件 TryClico 和 Mac 桌面 AI 助手 Invoko.ai。",
+        "model": "未公开：公开资料未披露定价与收入。创始人在复盘里提到垂类 Agent 容易演变为「人肉服务」的 agency 模式，因此调整到 C 端产品路线。",
+        "position": "与 Lessie 在「用 Agent 做营销找人」上有早期交集，但已转向 C 端桌面助手，当前不属同一形态的直接竞品；其复盘对 AI 应用创业有参考价值。",
+        "bossIntro": "核心人物程梦琪：公开报道称有 TikTok 海外市场背景；锦秋基金 2025 年完成对 SophiaPro 的首轮投资。"
+      },
+      "funding": {
+        "note": "不同资料对轮次与主体口径不一（景跃羽森 / SophiaPro / 北京索菲亚飞轮科技有限公司），这里并列保留，不合并为同一法律主体。",
+        "rounds": [
+          {
+            "date": "2025",
+            "round": "首轮 / 种子轮",
+            "amount": "未公开",
+            "investors": "锦秋基金",
+            "source": 2
+          },
+          {
+            "date": "2025-09",
+            "round": "种子轮",
+            "amount": "未公开",
+            "investors": "锦秋基金、BAI 资本（投资界 Invoko.ai 档案口径）",
+            "source": 4
+          }
+        ]
+      },
+      "recognition": [
+        {
+          "title": "创业复盘",
+          "detail": "创始人程梦琪在锦秋小饭桌 × Google 分享「AI 应用创业 300 天、10 个关键选择」，锦秋基金与白鲸出海整理发布",
+          "source": 2
+        },
+        {
+          "title": "产品验证",
+          "detail": "Invoko.ai 上线不到三个月，用户已提出皮肤等个性化需求（投资人文章口径）",
+          "source": 2
+        },
+        {
+          "title": "工商口径",
+          "detail": "天眼查显示在营、小微企业，股东为程梦琪（80%）与李雨濛（20%）",
+          "source": 1
+        }
+      ],
+      "outlook": {
+        "opportunities": [
+          "从垂类 Agent 转向 C 端工作流/桌面助手，积累真实用户 query 与交互数据",
+          "创始团队有海外营销背景，对出海场景理解较深"
+        ],
+        "risks": [
+          " pivots 频繁、产品方向尚未稳定；公开经营数据极少",
+          "桌面 AI 助手赛道受基础模型与平台原生能力挤压"
+        ]
+      },
+      "competitors": {
+        "landscape": "营销 Agent 赛道在 2025 年高度拥挤：不少团队从达人 sourcing 起步后转向 workflow 或 C 端。景跃羽森与 Lessie 的交集集中在早期 Karis.im 阶段。",
+        "players": [
+          {
+            "name": "指数引力 / 超线性（Lessie）",
+            "mark": "L",
+            "tone": "purple",
+            "kind": "相邻赛道",
+            "vendor": "深圳指数引力科技有限公司",
+            "position": "AI 人脉搜索 + 海外红人营销 SaaS",
+            "scale": "2024 成立 · Pre-A 数千万元；20–99 人（招聘口径）",
+            "vs": "Karis.im 早期同样做出海营销找人；团队已转向 C 端桌面助手，当前直接竞争有限。",
+            "url": "",
+            "source": 6,
+            "profileId": "zhishu"
+          }
+        ]
+      },
+      "sources": [
+        {
+          "n": 1,
+          "name": "天眼查 · 北京景跃羽森科技有限公司",
+          "url": "https://m.tianyancha.com/company/7549681186"
+        },
+        {
+          "n": 2,
+          "name": "锦秋基金 · 创业快三百天，做过的 10 个选择（SophiaPro 复盘）",
+          "url": "https://jinqiucapital.com/library/jinqiu-spotlight/wechat/3887776643-2247506274_1"
+        },
+        {
+          "n": 3,
+          "name": "白鲸出海 · 真实复盘：AI 应用创业 300 天，我做过的 10 个关键选择",
+          "url": "https://www.baijing.cn/article/55448"
+        },
+        {
+          "n": 4,
+          "name": "投资界 · Invoko.ai（SophiaPro 团队）种子轮档案",
+          "url": "https://vc.pedaily.cn/company/904258.html"
+        },
+        {
+          "n": 5,
+          "name": "猎聘 · 北京景跃羽森科技有限公司",
+          "url": "https://m.liepin.com/company/gs124306568"
+        },
+        {
+          "n": 6,
+          "name": "Lessie AI 产品官网",
+          "url": "https://lessie.cn"
+        }
+      ]
+    },
+    "wotokol": {
+      "id": "wotokol",
+      "code": "WK",
+      "name": "杭州卧兔网络科技有限公司（WotoKOL / WotoHub）",
+      "shortName": "杭州卧兔",
+      "industry": "海外红人营销 · SaaS 与定制服务",
+      "entity": "杭州卧兔网络科技有限公司（品牌 WOTO GLOBAL / WotoKOL / WotoHub）",
+      "website": {
+        "text": "wotokol.com",
+        "href": "https://www.wotokol.com"
+      },
+      "registry": {
+        "founded": "2017-11-27",
+        "hq": "杭州 · 滨江（纽约 / 德国 / 新加坡设海外中心）",
+        "legalRep": "胡煜",
+        "capital": "56.8181 万元人民币",
+        "source": 1
+      },
+      "stage": "A 轮",
+      "scale": "82 人（2025 工商参保口径）",
+      "oneLine": "AI 与数据驱动的全球海外红人营销服务商：定制服务 + WotoHub SaaS + TikTok 达人营销",
+      "quickStats": [
+        "2017 成立",
+        "A 轮 · 数千万",
+        "6000 万+ 海外红人",
+        "10 万+ SaaS 注册用户"
+      ],
+      "kpis": [
+        {
+          "label": "成立",
+          "value": "2017.11",
+          "source": 1
+        },
+        {
+          "label": "最新融资",
+          "value": "A 轮 · 数千万元",
+          "sub": "2022.04 · 君品资本、云想科技",
+          "source": 3
+        },
+        {
+          "label": "团队规模",
+          "value": "82 人",
+          "sub": "2025 年工商参保口径；招聘平台自述 150–500 人",
+          "source": 1
+        },
+        {
+          "label": "资源沉淀",
+          "value": "6000 万+ 红人",
+          "sub": "官网称 10 万+ SaaS 用户、5000+ 品牌合作",
+          "source": 2
+        }
+      ],
+      "business": {
+        "main": "三条业务线：WOTO GLOBAL 提供全球红人/媒体/明星与本地执行资源，为中国品牌做出海整合营销；WotoKOL 提供定制化海外红人营销服务；WotoHub 是自主研发布局海外红人营销 SaaS，覆盖红人筛选、批量邮件触达、带货监控、竞品洞察与达人接单，并在 2025 年上线 WotoHub.AI 小兔。",
+        "model": "「服务费 + SaaS + 投放执行」复合模式：大品牌按项目定制，中小跨境卖家使用 WotoHub 自助工具；另提供 TikTok Shop 达人营销与商业投放服务。",
+        "position": "比 2024–2025 年成立的 AI Agent 初创更早积累红人库与本地执行网络，属于「老牌服务商 + 自研 SaaS」路线；Lessie 更偏 AI Agent 原生与多人群搜索。",
+        "bossIntro": "公司使命「链接全球意见领袖，助力中国品牌出海」；官网历程称 2019 年成为阿里巴巴集团与 TikTok 官方海外红人营销服务商，2021 年 WotoHub 上线。"
+      },
+      "funding": {
+        "note": "官网历程与百科对 2018–2019 年融资表述略有差异，这里保留可核对的两条主线。",
+        "rounds": [
+          {
+            "date": "2018",
+            "round": "天使轮",
+            "amount": "数百万元",
+            "investors": "官网历程口径，投资方未列明",
+            "source": 2
+          },
+          {
+            "date": "2022-04-26",
+            "round": "A 轮",
+            "amount": "数千万元",
+            "investors": "君品资本、云想科技",
+            "source": 3
+          }
+        ]
+      },
+      "recognition": [
+        {
+          "title": "资质认证",
+          "detail": "国家高新技术企业；ISO27001、ISO20000 体系证书；2025 年度杭州市跨境电商标杆企业",
+          "source": 2
+        },
+        {
+          "title": "平台认可",
+          "detail": "TikTok For Business 出海代理商、TikTok Shop 多国官方认证 TAP 机构；Shopee 官方认证运营服务商",
+          "source": 2
+        },
+        {
+          "title": "媒体与行业",
+          "detail": "CCTV2《经济半小时》报道；入选跨境电商 50 强、出海先锋企业等榜单",
+          "source": 2
+        }
+      ],
+      "outlook": {
+        "opportunities": [
+          "8 年海外红人营销经验与本地执行网络，适合需要落地服务的品牌",
+          "SaaS 注册用户破 10 万，可继续向自助化、AI 化转化"
+        ],
+        "risks": [
+          "服务与 SaaS 混合模式扩张速度受人力与交付质量约束",
+          "AI Agent 初创以按结果付费切入，可能挤压传统按项目收费的空间"
+        ]
+      },
+      "competitors": {
+        "landscape": "海外红人营销在中国出海服务里已形成「服务商 + SaaS + AI Agent」三层结构：卧兔胜在资源与服务厚度，New AI 玩家胜在自动化与结算创新。",
+        "players": [
+          {
+            "name": "指数引力 / 超线性（Lessie）",
+            "mark": "L",
+            "tone": "purple",
+            "kind": "直接竞品",
+            "vendor": "深圳指数引力科技有限公司",
+            "position": "AI 人脉搜索 + 海外红人营销 SaaS",
+            "scale": "2024 成立 · Pre-A 数千万元；20–99 人（招聘口径）",
+            "vs": "Lessie 以 AI Agent 原生与多人群用例切入；卧兔有 8 年红人资源、本地执行和 10 万+ SaaS 用户积累。",
+            "url": "",
+            "source": 5,
+            "profileId": "zhishu"
+          }
+        ]
+      },
+      "sources": [
+        {
+          "n": 1,
+          "name": "企查查 · 杭州卧兔网络科技有限公司",
+          "url": "https://www.qcc.com/firm_2c209b3198eac6ddd912cdb2bdc8d2ee"
+        },
+        {
+          "n": 2,
+          "name": "WotoKOL 官网 · 关于我们（历程与资质）",
+          "url": "https://www.wotokol.com/about"
+        },
+        {
+          "n": 3,
+          "name": "百度百科 · 杭州卧兔网络科技有限公司",
+          "url": "https://baike.baidu.com/item/杭州卧兔网络科技有限公司/23595897"
+        },
+        {
+          "n": 4,
+          "name": "WotoKOL 官网首页（红人资源与服务口径）",
+          "url": "https://www.wotokol.com/"
+        },
+        {
+          "n": 5,
+          "name": "Lessie AI 产品官网",
+          "url": "https://lessie.cn"
+        }
+      ]
+    },
+    "kolect": {
+      "id": "kolect",
+      "code": "KL",
+      "name": "Panoverse Inc.（Kolect.ai）",
+      "shortName": "Kolect.ai",
+      "industry": "AI 营销 · 达人搜索与增长系统",
+      "entity": "Panoverse Inc.（运营 Kolect.ai；官网 About 页标注 Operated by Panoverse Inc., Backed by Link Ventures）",
+      "website": {
+        "text": "kolect.ai",
+        "href": "https://www.kolect.ai"
+      },
+      "registry": {
+        "founded": "2024（品牌口径；PitchBook 记 Panoverse 主体 2025 成立）",
+        "hq": "美国 · 波士顿 / 剑桥（Cambridge, MA）",
+        "legalRep": "Steven（创始人，报道口径）",
+        "capital": "未公开",
+        "source": 1
+      },
+      "stage": "早期 VC（数百万美元）",
+      "scale": "6 人（2025.08 创始人访谈口径）",
+      "oneLine": "从达人搜索到托管式增长系统：3 亿+ 可搜索创作者，48 小时出结论，按效果计费",
+      "quickStats": [
+        "2024 成立（品牌）",
+        "数百万美元融资",
+        "300M+ 可搜索达人",
+        "150+ 服务品牌"
+      ],
+      "kpis": [
+        {
+          "label": "成立",
+          "value": "2024",
+          "sub": "品牌口径；主体 Panoverse 在 PitchBook 记为 2025",
+          "source": 2
+        },
+        {
+          "label": "融资",
+          "value": "数百万美元",
+          "sub": "2025.05 北美本地基金，创始人访谈口径",
+          "source": 2
+        },
+        {
+          "label": "达人检索",
+          "value": "300M+",
+          "sub": "官网称每条结果含匹配理由与真实度估计",
+          "source": 1
+        },
+        {
+          "label": "业务规模",
+          "value": "150+ 品牌",
+          "sub": "官网称月曝光 10 亿+",
+          "source": 1
+        }
+      ],
+      "business": {
+        "main": "两条产品线：Creator Search 用自然语言实时检索 3 亿+ TikTok / Instagram / YouTube 达人，返回匹配理由、相关视频、0–100 真实度估计与公开联系邮箱；Growth System 把达人、付费投放与复购数据接到同一模型，按「看—决策—执行—学习」每 48 小时一轮迭代，可以由 Kolect 团队、品牌团队或既有代理商运行。另有 Kolect for Creators 帮达人被品牌发现。",
+        "model": "按效果结算：创始人在访谈里明确「按 CPM / CPC 约定指标与数量再定预算」，不达标退还部分预算；第三方目录记录创作者搜索起价 $7.20/月，仅作参考。自我定位是强管控交付的 Agency 而非纯工具平台。",
+        "position": "与 Lessie 同样主打「一句话描述人群 → 实时找人」，但把边界从搜索扩到托管式增长系统与效果保底；覆盖人群以海外社交媒体达人为主。",
+        "bossIntro": "创始人 Steven 为 00 后华人、Babson 商学院创业与科技专业，此前做过 B2B 教育 LMS 与 AI 社交两次创业；团队 6 人起步，核心市场为美国。"
+      },
+      "funding": {
+        "note": "创始人访谈与 PitchBook 对金额/时间口径不一致，保留并列，不做加总。",
+        "rounds": [
+          {
+            "date": "2025-05",
+            "round": "早期融资",
+            "amount": "数百万美元（含跟投）",
+            "investors": "北美本地基金，名称未公开",
+            "source": 2
+          },
+          {
+            "date": "2025-07",
+            "round": "Early Stage VC",
+            "amount": "$50K（PitchBook 记录）",
+            "investors": "Link Ventures、LongRiver 等；另列 Harvard Innovation Launch Lab 孵化",
+            "source": 3
+          }
+        ]
+      },
+      "recognition": [
+        {
+          "title": "客户案例",
+          "detail": "官网展示 SHEIN、CapCut、Notion、Tineco、usmile、PLAUD 等品牌案例",
+          "source": 1
+        },
+        {
+          "title": "效率口径",
+          "detail": "创始人称 1000 封邀约从 30 天压缩到 1 天 5000 封、CPM 从 $25 降到 $18 以下、复购率 90%，均为访谈自述",
+          "source": 2
+        },
+        {
+          "title": "数据合规",
+          "detail": "官网说明只用达人公开资料，真实度为规则估算而非平台数据，支持删除与退出",
+          "source": 1
+        }
+      ],
+      "outlook": {
+        "opportunities": [
+          "把「搜索工具」升级为按效果结算的托管增长系统，客单价与粘性更高",
+          "小团队高自动化效率，适合中美跨境品牌的中长尾达人投放"
+        ],
+        "risks": [
+          "效果保底依赖统计套利，极端品类仍需退款兜底",
+          "规模、CPM 与复购等数据均为创始人口径，缺少独立审计"
+        ]
+      },
+      "competitors": {
+        "landscape": "AI 达人搜索正在与效果营销合并：Kolect 以托管和保底往前走一步，与 Lessie 的自然语言找人能力正面重叠，但后者覆盖的人群类型更广。",
+        "players": [
+          {
+            "name": "指数引力 / 超线性（Lessie）",
+            "mark": "L",
+            "tone": "purple",
+            "kind": "直接竞品",
+            "vendor": "深圳指数引力科技有限公司",
+            "position": "AI 人脉搜索 + 海外红人营销 SaaS",
+            "scale": "2024 成立 · Pre-A 数千万元；20–99 人（招聘口径）",
+            "vs": "Lessie 更广的人群搜索与统一积分；Kolect 聚焦海外达人并把结果保底做成托管服务。",
+            "url": "",
+            "source": 5,
+            "profileId": "zhishu"
+          }
+        ]
+      },
+      "sources": [
+        {
+          "n": 1,
+          "name": "Kolect 官网 · About（产品、规模与数据口径）",
+          "url": "https://www.kolect.ai/about"
+        },
+        {
+          "n": 2,
+          "name": "腾讯新闻 / Z Waves · Kolect AI 创始人 Steven 访谈",
+          "url": "https://news.qq.com/rain/a/20250831A04H8800"
+        },
+        {
+          "n": 3,
+          "name": "PitchBook · Panoverse 公司档案",
+          "url": "https://pitchbook.com/profiles/company/802836-73"
+        },
+        {
+          "n": 4,
+          "name": "CheckToolForMe · Kolect 评测与定价",
+          "url": "https://www.checktoolforme.com/tool/kolect"
+        },
+        {
+          "n": 5,
+          "name": "Lessie AI 产品官网",
+          "url": "https://lessie.cn"
+        }
+      ]
     },
     "fanggeek": {
       "id": "fanggeek",

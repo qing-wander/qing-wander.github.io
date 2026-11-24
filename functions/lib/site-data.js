@@ -210,7 +210,7 @@ export default {
       "profileId": "comein",
       "company": "进门财经 · 深圳进门财经科技股份有限公司",
       "role": "机构金融投研 SaaS · Agent 工程师",
-      "time": "2026.01 — 2026.07（组织架构调整）",
+      "time": "2026.01 — 2026.07",
       "points": [
         "主导 AI 金融投研工作台（AI 进宝）核心基建研发：Agent 基座与多租户云沙箱、MCP / Skill 扩展、AI 资源计费、五端 IM 网关，<strong>支撑 Agent 从接入到计费全链路落地</strong>"
       ],
@@ -899,7 +899,7 @@ export default {
         "company": "深圳进门财经科技股份有限公司",
         "companyNote": "机构金融投研 SaaS",
         "role": "Agent 工程师",
-        "period": "2026.01 — 07（组织架构调整）",
+        "period": "2026.01 — 07",
         "lock": [
           "company",
           "companyNote",
@@ -918,7 +918,7 @@ export default {
         "id": "exp-lessie",
         "profileId": "zhishu",
         "company": "深圳指数引力科技有限公司",
-        "companyNote": "网红营销 SaaS（红杉投资）",
+        "companyNote": "网红营销 SaaS",
         "role": "Agent 工程师",
         "period": "2024.03 — 2025.11",
         "lock": [

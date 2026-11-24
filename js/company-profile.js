@@ -412,12 +412,19 @@
     return html + '</section>';
   }
 
-  /* 竞品分析：竞争格局概述 + 竞品卡片 */
+  /* 友商 / 竞品分析：竞争格局概述 + 竞品卡片。
+     带 profileId 且档案存在的友商，名称与卡片底部可点进对应公司档案：
+       · 简历 / 首页：由 [data-cp] 委托打开抽屉；
+       · 独立档案页 company.html：保留 href 跳到 ?c=id（见 start() 里的放行）。 */
   function competitorBlock(c) {
     var cmp = c.competitors || {};
     var list = cmp.players || [];
     if (!list.length && !cmp.landscape) return '';
-    var html = '<section class="cp-sec"><h4 class="cp-sec-title">竞品分析</h4>';
+    var linkable = list.some(function (p) { return p.profileId && company(p.profileId); });
+    var html = '<section class="cp-sec"><h4 class="cp-sec-title">友商 / 竞品分析</h4>';
+    if (linkable) {
+      html += '<p class="cp-cmp-hint">点击友商名称或「查看公司档案」，进入对应公司的完整档案</p>';
+    }
     if (cmp.landscape) {
       html += '<p class="cp-cmp-landscape">' + esc(cmp.landscape) + '</p>';
     }
@@ -429,6 +436,14 @@
           '错位竞品': 'offset', '单点竞品': 'point', '新兴竞品': 'emerging',
           '平台型竞品': 'platform', '差异化竞品': 'diff', 'adjacent': 'adjacent'
         }[p.kind] || 'other');
+        var linked = !!(p.profileId && company(p.profileId));
+        var profileHref = linked ? 'company.html?c=' + encodeURIComponent(p.profileId) : '';
+        var profileAttrs = linked
+          ? ' href="' + esc(profileHref) + '" data-cp="' + esc(p.profileId) + '" data-cp-nav="1"'
+          : '';
+        var nameHtml = linked
+          ? '<a class="cp-cmp-name is-link"' + profileAttrs + '>' + esc(p.name || '') + '</a>'
+          : '<span class="cp-cmp-name">' + esc(p.name || '') + '</span>';
         var rows = '';
         function row(label, val, withSup) {
           if (!val) return '';
@@ -442,13 +457,16 @@
         var head = '<div class="cp-cmp-card-head">' +
           '<span class="cp-cmp-mark tone-' + esc(p.tone || 'blue') + '">' +
           esc(p.mark || '') + '</span>' +
-          '<div class="cp-cmp-ident"><span class="cp-cmp-name">' + esc(p.name || '') + '</span>' +
+          '<div class="cp-cmp-ident">' + nameHtml +
           (p.vendor ? '<span class="cp-cmp-vendor">' + esc(p.vendor) + '</span>' : '') +
           '</div><span class="' + kindClass + '">' + esc(p.kind || '') + '</span></div>';
         var foot = (p.url
           ? '<a class="cp-cmp-link" href="' + esc(p.url) +
             '" target="_blank" rel="noopener noreferrer">访问官网 ↗</a>'
           : '<span class="cp-cmp-src">竞品信息来源见 ' + sup(p.source || '') + '</span>');
+        if (linked) {
+          foot += '<a class="cp-cmp-profile"' + profileAttrs + '>查看公司档案 →</a>';
+        }
         html += '<article class="cp-cmp-card">' + head +
           '<div class="cp-cmp-rows">' + rows + '</div>' +
           '<div class="cp-cmp-foot">' + foot + '</div></article>';
@@ -677,6 +695,9 @@
          由 open() 内的 replaceState 维护 #company= 深链 */
       var b = ev.target.closest ? ev.target.closest('[data-cp]') : null;
       if (!b) return;
+      /* 独立档案页里的友商卡片走真实链接 ?c=id，交给浏览器导航；
+         简历 / 首页上同一张卡片仍由 open() 打开抽屉。 */
+      if (b.getAttribute('data-cp-nav') === '1' && document.getElementById('cpPageBody')) return;
       if (b.tagName === 'A') ev.preventDefault();
       if (drawer && !drawer.hidden && drawer.querySelector('.cp-panel').getAttribute('data-cp-open-id') === b.dataset.cp) {
         close(); /* 再点同一家公司 = 收起 */
