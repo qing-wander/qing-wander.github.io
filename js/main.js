@@ -365,8 +365,9 @@
 
   /* ══════════════ GitHub 贡献热力图 ══════════════
      数据：data/contributions.json（由 .github/workflows/contributions.yml 每日用
-     GraphQL 拉取并提交，前端不碰 token）。加载失败 / 数据未发布时整块保持隐藏，
-     不影响联系方式卡片。 */
+     GraphQL 拉取并提交，前端不碰 token）。GitHub 官方按天数据只在
+     contributionsCollection 里，REST 拿不到；weeks 是从周日开始的列，
+     每列 7 天，据此可精确还原月份行、星期列与格子。加载失败整块隐藏。 */
   function ghLevel(count) {
     if (!count) return 0;
     if (count <= 2) return 1;
@@ -375,8 +376,27 @@
     return 4;
   }
 
-  /* 骨架：头部 + 蛇图容器，先渲染；统计行由 JSON 单独填充，二者解耦，
-     避免 GraphQL 偶发失败把整卡连同蛇图一起隐藏。 */
+  var GH_MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  /* 周日为第 0 行；GitHub 只标 Mon/Wed/Fri 三行 */
+  var GH_WEEKDAYS = ['', 'Mon', '', 'Wed', '', 'Fri', ''];
+
+  /* 月份标签所在列：以每周周三为基准，跨月即标注；首列强制标注。
+     这样与 GitHub 年度图一致（首尾可能是同一个月，各自出现一次）。 */
+  function ghMonthMarks(weeks) {
+    var marks = [];
+    var lastMonth = -1;
+    weeks.forEach(function (week, i) {
+      var mid = week[3] || week[0];
+      var month = new Date(mid.date + 'T00:00:00Z').getUTCMonth();
+      if (i === 0 || month !== lastMonth) {
+        marks.push({ i: i, label: GH_MONTHS[month] });
+        lastMonth = month;
+      }
+    });
+    return marks;
+  }
+
+  /* 骨架：头部 + 图表容器，数据成功后才整体显示 */
   function renderGhSkeleton(box) {
     box.innerHTML =
       '<div class="gh-head">' +
@@ -385,25 +405,15 @@
         ' target="_blank" rel="noopener noreferrer">github.com/shenge-work ↗</a>' +
       '</div>' +
       '<div class="gh-stats" hidden></div>' +
-      '<div class="gh-snake">' +
-        '<img class="gh-snake-light" src="data/snake.svg?v=20261122" alt="GitHub 贡献蛇形动画" loading="lazy" decoding="async">' +
-        '<img class="gh-snake-dark" src="data/snake-dark.svg?v=20261122" alt="GitHub 贡献蛇形动画（深色）" loading="lazy" decoding="async">' +
+      '<div class="gh-scroll"></div>' +
+      '<div class="gh-legend" hidden><span>Less</span>' +
+        '<i class="gh-cell gh-lv0"></i><i class="gh-cell gh-lv1"></i>' +
+        '<i class="gh-cell gh-lv2"></i><i class="gh-cell gh-lv3"></i>' +
+        '<i class="gh-cell gh-lv4"></i><span>More</span>' +
       '</div>';
-    box.hidden = false;
-
-    /* 明/暗蛇图都未就绪（404）时整块隐藏，避免空卡片 */
-    var snakeBox = box.querySelector('.gh-snake');
-    var imgs = snakeBox ? snakeBox.querySelectorAll('img') : [];
-    var failed = 0;
-    Array.prototype.forEach.call(imgs, function (img) {
-      img.addEventListener('error', function () {
-        failed++;
-        if (failed >= imgs.length) box.hidden = true;
-      });
-    });
   }
 
-  /* 统计行：仅 JSON 成功时填充，失败保持隐藏 */
+  /* 统计行 */
   function renderGhStats(box, data) {
     var range = data.range || {};
     var stats = box.querySelector('.gh-stats');
@@ -416,20 +426,57 @@
     stats.hidden = false;
   }
 
+  /* 格子图：月份行 + 星期列 + 每周一列，颜色 5 级，悬停显示日期和次数 */
+  function renderGhGraph(box, data) {
+    var weeks = data.weeks || [];
+    var scroll = box.querySelector('.gh-scroll');
+    if (!scroll || !weeks.length) return;
+    var marks = {};
+    ghMonthMarks(weeks).forEach(function (m) { marks[m.i] = m.label; });
+
+    var monthsHtml = weeks.map(function (_, i) {
+      return '<span>' + (marks[i] ? esc(marks[i]) : '') + '</span>';
+    }).join('');
+    var daysHtml = GH_WEEKDAYS.map(function (d) { return '<span>' + d + '</span>'; }).join('');
+    var gridHtml = weeks.map(function (week) {
+      return '<div class="gh-col">' + week.map(function (day) {
+        var label = day.date + '：' + day.count + ' 次贡献';
+        return '<i class="gh-cell gh-lv' + ghLevel(day.count) + '"' +
+          ' title="' + esc(label) + '" aria-label="' + esc(label) + '"></i>';
+      }).join('') + '</div>';
+    }).join('');
+
+    scroll.innerHTML =
+      '<div class="gh-graph">' +
+        '<div class="gh-weekdays">' + daysHtml + '</div>' +
+        '<div class="gh-board">' +
+          '<div class="gh-months">' + monthsHtml + '</div>' +
+          '<div class="gh-grid">' + gridHtml + '</div>' +
+        '</div>' +
+      '</div>';
+  }
+
   function initContributions() {
     var box = $('ghActivity');
     if (!box) return;
-    renderGhSkeleton(box);
+    box.hidden = true;
     fetch('data/contributions.json?v=' + Date.now(), { cache: 'no-cache' })
       .then(function (res) {
         if (!res.ok) throw new Error('HTTP ' + res.status);
         return res.json();
       })
       .then(function (data) {
-        if (data) renderGhStats(box, data);
+        if (!data || !data.weeks || !data.weeks.length) return;
+        renderGhSkeleton(box);
+        renderGhStats(box, data);
+        renderGhGraph(box, data);
+        var legend = box.querySelector('.gh-legend');
+        if (legend) legend.hidden = false;
+        box.hidden = false;
       })
       .catch(function () {
-        /* 统计 JSON 偶发失败不影响蛇图，统计行保持隐藏 */
+        /* JSON 失败时整块保持隐藏，不影响联系方式卡片 */
+        box.hidden = true;
       });
   }
 
