@@ -380,17 +380,19 @@
   /* 周日为第 0 行；GitHub 只标 Mon/Wed/Fri 三行 */
   var GH_WEEKDAYS = ['', 'Mon', '', 'Wed', '', 'Fri', ''];
 
-  /* 月份标签所在列：以每周周三为基准，跨月即标注；首列强制标注。
-     这样与 GitHub 年度图一致（首尾可能是同一个月，各自出现一次）。 */
+  /* 月份标签所在列：以每周周三为基准，换月后至少隔 3 列再标注，
+     避免 Nov/Dec 这类紧邻月份的英文缩写互相压字（GitHub 同样做了间距处理）。 */
   function ghMonthMarks(weeks) {
     var marks = [];
-    var lastMonth = -1;
+    var lastCol = -99;
+    var labeledMonth = -1;
     weeks.forEach(function (week, i) {
       var mid = week[3] || week[0];
       var month = new Date(mid.date + 'T00:00:00Z').getUTCMonth();
-      if (i === 0 || month !== lastMonth) {
+      if (month !== labeledMonth && i - lastCol >= 3) {
         marks.push({ i: i, label: GH_MONTHS[month] });
-        lastMonth = month;
+        labeledMonth = month;
+        lastCol = i;
       }
     });
     return marks;
