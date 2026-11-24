@@ -218,6 +218,104 @@ body.cp-lock { overflow: hidden; }
 .cp-wechat-link:hover { color: var(--orange, #FF5A1E); }
 @media (max-width: 680px) { .cp-wechat-list { grid-template-columns: 1fr; } }
 
+/* 投资方与股权穿透 */
+.cp-inv-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.cp-inv-item {
+  min-width: 0; border: 1.5px solid var(--ink); background: var(--card);
+  padding: 11px 12px 10px;
+}
+.cp-inv-item.is-unverified {
+  border-style: dashed;
+  background: color-mix(in srgb, var(--orange) 6%, var(--card));
+}
+.cp-inv-name { font-size: 13px; font-weight: 800; line-height: 1.35; overflow-wrap: anywhere; }
+.cp-inv-grid {
+  display: grid; grid-template-columns: 1.6fr .6fr 1.4fr; gap: 8px;
+  margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--line, #E6E2DA);
+}
+.cp-inv-grid > div { min-width: 0; }
+.cp-inv-grid span {
+  display: block; font-size: 9.5px; font-weight: 700; letter-spacing: .06em;
+  color: var(--ink-soft); margin-bottom: 2px;
+}
+.cp-inv-grid p { font-size: 10.5px; line-height: 1.5; margin: 0; overflow-wrap: anywhere; }
+.cp-inv-verify {
+  margin: 8px 0 0; font-size: 10.5px; line-height: 1.55; color: var(--ink-soft);
+}
+.cp-inv-verify b { color: var(--ink); font-weight: 800; }
+.cp-inv-others {
+  margin: 10px 0 0; padding: 8px 10px; font-size: 11px; line-height: 1.6;
+  color: var(--ink-soft); background: var(--line, #E6E2DA);
+}
+
+/* 主体名称变更与融资轮次对照 */
+.cp-eh-list { border-left: 2px solid var(--ink); margin-left: 6px; padding-left: 14px; }
+.cp-eh-row { display: flex; gap: 12px; padding: 0 0 14px; position: relative; }
+.cp-eh-row::before {
+  content: ''; position: absolute; left: -19px; top: 5px;
+  width: 8px; height: 8px; border: 2px solid var(--ink);
+  background: var(--card); border-radius: 50%;
+}
+.cp-eh-time {
+  flex: none; width: 62px; font-family: var(--font-mono, monospace);
+  font-size: 10.5px; font-weight: 700; color: var(--blue, #2D6CDF); padding-top: 2px;
+}
+.cp-eh-body { min-width: 0; flex: 1; }
+.cp-eh-entity { font-size: 12.5px; font-weight: 800; line-height: 1.4; overflow-wrap: anywhere; }
+.cp-eh-event { margin-top: 3px; font-size: 11px; line-height: 1.6; }
+.cp-eh-field {
+  margin-top: 5px; font-size: 10.5px; line-height: 1.55; color: var(--ink-soft);
+}
+.cp-eh-field span {
+  display: inline-block; margin-right: 6px; padding: 1px 5px;
+  font-size: 9.5px; font-weight: 800; color: var(--ink);
+  background: var(--line, #E6E2DA);
+}
+
+/* 数据可信度 */
+.cp-conf {
+  margin: 12px 28px 8px; padding: 12px 14px;
+  border: 1.5px solid var(--ink); background: var(--card);
+}
+.cp-conf .cp-sec-title { margin-bottom: 8px; }
+.cp-conf-badge {
+  flex: none; font-size: 9.5px; font-weight: 800; letter-spacing: .04em;
+  padding: 2px 7px; border: 1.5px solid currentColor; color: var(--ink-soft);
+}
+.cp-conf-a .cp-conf-badge { color: var(--green, #1E8E5A); }
+.cp-conf-b .cp-conf-badge { color: var(--blue, #2D6CDF); }
+.cp-conf-c .cp-conf-badge { color: var(--orange, #FF5A1E); }
+.cp-conf .cp-note { margin-bottom: 10px; }
+.cp-conf-cols { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.cp-conf-cols > div { min-width: 0; }
+.cp-conf-cols h5 {
+  margin: 0 0 5px; font-size: 10.5px; font-weight: 800; letter-spacing: .04em;
+  padding-bottom: 4px; border-bottom: 1px solid var(--line, #E6E2DA);
+}
+.cp-conf-list { margin: 0; padding: 0; list-style: none; }
+.cp-conf-list li {
+  position: relative; padding-left: 11px; margin-bottom: 4px;
+  font-size: 10.5px; line-height: 1.55; color: var(--ink-soft);
+}
+.cp-conf-list li::before {
+  content: ''; position: absolute; left: 0; top: 6px;
+  width: 5px; height: 5px; border-radius: 50%; background: currentColor;
+}
+.cp-conf-list.is-ok li::before { background: var(--green, #1E8E5A); }
+.cp-conf-list.is-warn li::before { background: var(--blue, #2D6CDF); }
+.cp-conf-list.is-risk li::before { background: var(--orange, #FF5A1E); }
+.cp-conf-foot {
+  margin: 10px 0 0; padding-top: 8px; font-size: 10px; line-height: 1.55;
+  color: var(--ink-soft); border-top: 1px dashed var(--line, #E6E2DA);
+}
+@media (max-width: 680px) {
+  .cp-inv-list, .cp-conf-cols { grid-template-columns: 1fr; }
+  .cp-inv-grid { grid-template-columns: 1fr 1fr; }
+  .cp-conf { margin: 0 16px 8px; }
+  .cp-eh-row { flex-direction: column; gap: 2px; }
+  .cp-eh-time { width: auto; }
+}
+
 /* KPI 四格 */
 .cp-kpis {
   display: grid;
@@ -328,6 +426,76 @@ body.cp-lock { overflow: hidden; }
 /* 融资时间线 */
 .cp-funding { margin: 0 28px 6px; }
 .cp-funding h4 { font-size: 13px; font-weight: 900; letter-spacing: .14em; margin-bottom: 8px; }
+/* ══ 读者互动：浏览 / 点赞 / 评论 ═══════════════════════ */
+.cp-social { padding-bottom: 20px; }
+.cs-bar {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 10px;
+  margin-bottom: 12px;
+}
+.cs-views {
+  font-family: var(--font-mono, monospace); font-size: 11.5px;
+  color: var(--ink-soft); padding: 5px 9px;
+  border: 1.5px solid var(--line, #E6E2DA); background: var(--paper);
+}
+.cs-views b { color: var(--ink); font-size: 13px; }
+.cs-like-main, .cs-like-btn, .cs-reply-btn, .cs-submit {
+  font-family: inherit; cursor: pointer; border: 1.5px solid var(--ink);
+  background: var(--card); color: var(--ink); transition: background .12s, color .12s, box-shadow .12s;
+}
+.cs-like-main {
+  padding: 5px 11px; font-size: 12px; font-weight: 700;
+  box-shadow: 2px 2px 0 rgba(0,0,0,.16);
+}
+.cs-like-main b { font-family: var(--font-mono, monospace); }
+.cs-like-main.is-on, .cs-like-btn.is-on { background: var(--orange); color: #fff; }
+.cs-like-main:hover, .cs-submit:hover { box-shadow: 3px 3px 0 var(--ink); }
+.cs-like-main:disabled, .cs-submit:disabled { opacity: .55; cursor: wait; }
+.cs-form { margin-bottom: 14px; }
+.cs-form-row { display: flex; gap: 8px; margin-bottom: 7px; }
+.cs-form input[type="text"], .cs-form textarea {
+  flex: 1; min-width: 0; font-family: inherit; font-size: 12px;
+  padding: 7px 9px; border: 1.5px solid var(--line, #E6E2DA);
+  background: var(--card); color: var(--ink); resize: vertical;
+}
+.cs-form input[type="text"] { flex: 0 1 180px; }
+.cs-form input:focus, .cs-form textarea:focus {
+  outline: none; border-color: var(--ink); box-shadow: 2px 2px 0 rgba(0,0,0,.12);
+}
+.cs-submit { padding: 6px 13px; font-size: 12px; font-weight: 700; white-space: nowrap; }
+.cs-list { display: flex; flex-direction: column; gap: 10px; }
+.cs-empty { font-size: 11.5px; color: var(--ink-soft); margin: 4px 0; }
+.cs-tip { font-size: 10.5px; color: var(--ink-soft); margin: 10px 0 0; line-height: 1.5; }
+.cs-comment {
+  padding: 10px 12px; border: 1.5px solid var(--line, #E6E2DA);
+  background: var(--card); break-inside: avoid;
+}
+.cs-msg-head { display: flex; align-items: baseline; gap: 8px; margin-bottom: 5px; }
+.cs-msg-head b { font-size: 12px; color: var(--ink); }
+.cs-msg-head span { font-size: 10px; color: var(--ink-soft); }
+.cs-msg-text {
+  font-size: 12px; line-height: 1.6; color: var(--ink);
+  white-space: pre-wrap; overflow-wrap: anywhere; margin: 0 0 7px;
+}
+.cs-msg-actions { display: flex; gap: 12px; }
+.cs-like-btn, .cs-reply-btn {
+  border: 0; border-bottom: 1px dashed currentColor; background: transparent;
+  padding: 0 0 1px; font-size: 10.5px; color: var(--ink-soft);
+}
+.cs-like-btn:hover, .cs-reply-btn:hover { color: var(--orange); }
+.cs-replies {
+  margin-top: 9px; padding-left: 12px;
+  border-left: 2px solid var(--line, #E6E2DA);
+  display: flex; flex-direction: column; gap: 8px;
+}
+.cs-reply .cs-msg-text { font-size: 11.5px; }
+@media (max-width: 680px) {
+  .cs-form-row { flex-direction: column; }
+  .cs-form input[type="text"] { flex: 1 1 auto; }
+}
+@media print {
+  .cp-social { display: none !important; }
+}
+
 .cp-note { font-size: 11.5px; color: var(--ink-soft); margin-bottom: 12px; }
 .cp-rounds { list-style: none; margin: 0; padding: 0; position: relative; }
 .cp-rounds::before {
@@ -827,7 +995,7 @@ a.cp-name-link:focus-visible { outline: 2px solid var(--orange, #FF5A1E); outlin
 @media print {
   /* 打印时不输出视频播放器（纸面无意义） */
   .cp-video-wrap { display: none !important; }
-  .cp-interview, .cp-cmp-card { break-inside: avoid; }
+  .cp-interview, .cp-cmp-card, .cp-inv-item, .cp-eh-row, .cp-conf { break-inside: avoid; }
   .cp-cmp-hint, .cp-cmp-profile { display: none !important; }
   .cp-cmp-name.is-link { color: #000 !important; border-bottom: 1px dotted rgba(0,0,0,.4); }
   /* 打印 / 存 PDF：公司名保留为真实超链接（Chrome 会写入 PDF），

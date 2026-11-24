@@ -222,6 +222,71 @@
     return html + '</section>';
   }
 
+  /* 投资方明细：机构品牌名与工商登记主体分开列，注明核验依据，不把自述当结论。 */
+  function investorsBlock(c) {
+    var inv = c.investors;
+    if (!inv || !inv.list || !inv.list.length) return '';
+    var html = '<section class="cp-sec"><h4 class="cp-sec-title">投资方与股权穿透</h4>' +
+      '<p class="cp-note">' + esc(inv.note || '') + sup(18) + '</p>' +
+      '<div class="cp-inv-list">';
+    inv.list.forEach(function (it) {
+      html += '<div class="cp-inv-item' + (it.stake === '未公开' ? ' is-unverified' : '') + '">' +
+        '<p class="cp-inv-name">' + esc(it.name) + sup(it.source || '') + '</p>' +
+        '<div class="cp-inv-grid">' +
+          '<div><span>工商 / 上层主体</span><p>' + esc(it.entity || '—') + '</p></div>' +
+          '<div><span>持股</span><p>' + esc(it.stake || '—') + '</p></div>' +
+          '<div><span>参与轮次</span><p>' + esc(it.rounds || '—') + '</p></div>' +
+        '</div>' +
+        '<p class="cp-inv-verify"><b>核验依据</b> ' + esc(it.verify || '—') + '</p>' +
+        '</div>';
+    });
+    html += '</div>';
+    if (inv.others) html += '<p class="cp-inv-others">' + esc(inv.others) + '</p>';
+    return html + '</section>';
+  }
+
+  /* 主体 / 名称变更 × 融资轮次 × 投资方：只做并列陈列，不合并口径。 */
+  function entityHistoryBlock(c) {
+    var eh = c.entityHistory;
+    if (!eh || !eh.rows || !eh.rows.length) return '';
+    var html = '<section class="cp-sec"><h4 class="cp-sec-title">主体名称变更与融资轮次对照</h4>' +
+      '<p class="cp-note">' + esc(eh.note || '') + '</p><div class="cp-eh-list">';
+    eh.rows.forEach(function (r) {
+      html += '<div class="cp-eh-row">' +
+        '<div class="cp-eh-time">' + esc(r.period || '') + '</div>' +
+        '<div class="cp-eh-body">' +
+          '<p class="cp-eh-entity">' + esc(r.entity || '') + '</p>' +
+          '<p class="cp-eh-event">' + esc(r.event || '') + '</p>' +
+          '<p class="cp-eh-field"><span>对应投资方</span>' + esc(r.investors || '—') + '</p>' +
+          '<p class="cp-eh-field"><span>依据与判断</span>' + esc(r.basis || '—') + sup(r.source || '') + '</p>' +
+        '</div></div>';
+    });
+    return html + '</div></section>';
+  }
+
+  /* 数据可信度：把「工商/司法可核验」与「企业自述」分开，明确列出冲突口径。 */
+  function dataConfidenceBlock(c) {
+    var dc = c.dataConfidence;
+    if (!dc) return '';
+    function list(arr, cls) {
+      if (!arr || !arr.length) return '';
+      var s = '<ul class="cp-conf-list ' + cls + '">';
+      arr.forEach(function (x) { s += '<li>' + esc(x) + '</li>'; });
+      return s + '</ul>';
+    }
+    var levelText = { A: 'A · 审计 / 交易所披露', B: 'B · 部分可核验', C: 'C · 主要为企业自述' }[dc.level] || dc.level;
+    return '<section class="cp-sec cp-conf cp-conf-' + esc(dc.level || 'b').toLowerCase() + '">' +
+      '<h4 class="cp-sec-title">数据可信度 <span class="cp-conf-badge">' + esc(levelText) + '</span></h4>' +
+      '<p class="cp-note">' + esc(dc.summary || '') + '</p>' +
+      '<div class="cp-conf-cols">' +
+        '<div><h5>可独立核验</h5>' + list(dc.verified, 'is-ok') + '</div>' +
+        '<div><h5>仅企业 / 媒体自述</h5>' + list(dc.unverified, 'is-warn') + '</div>' +
+        '<div><h5>口径冲突</h5>' + list(dc.conflicts, 'is-risk') + '</div>' +
+      '</div>' +
+      '<p class="cp-conf-foot">档案中的规模、收入、覆盖率类数字多为官网或受访者口径，未经第三方审计；本档案不对其真实性作背书，仅标注来源与冲突。</p>' +
+      '</section>';
+  }
+
   /* 微信公众号：只收可确证的官方账号；微信号未公开时不编造。 */
   function wechatBlock(c) {
     var list = c.wechat || [];
@@ -617,13 +682,17 @@
       interviewBlock(c) +
       (c.chart ? renderChartBlock(c) : '') +
       (c.funding ? renderFundingBlock(c) : '') +
+      investorsBlock(c) +
+      entityHistoryBlock(c) +
       recognitionBlock(c) +
       bossProfileBlock(c) +
       competitorBlock(c) +
       outlookBlock(c) +
       officeBlock(c, id) +
+      dataConfidenceBlock(c) +
       sourcesBlock(c) +
-      wechatBlock(c);
+      wechatBlock(c) +
+      (window.CompanySocial ? window.CompanySocial.skeleton(id) : '');
     return html;
   }
 
@@ -635,6 +704,10 @@
     if (!c) return;
     buildDrawer();
     drawer.querySelector('.cp-panel-scroll').innerHTML = renderPanel(id);
+    /* 互动区块（浏览 / 点赞 / 评论）在抽屉内容就位后再挂载；组件未加载时静默跳过 */
+    if (window.CompanySocial) {
+      window.CompanySocial.mount(drawer.querySelector('.cp-panel-scroll'), id);
+    }
     drawer.querySelector('.cp-panel').setAttribute('data-cp-open-id', id);
     drawer.hidden = false;
     document.body.classList.add('cp-lock');

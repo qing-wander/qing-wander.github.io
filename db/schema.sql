@@ -88,3 +88,53 @@ CREATE TABLE IF NOT EXISTS rate_limits (
 );
 
 CREATE INDEX IF NOT EXISTS idx_rate_limits_expires ON rate_limits (expires_at);
+
+-- ══ 公司档案互动（2026-11-24）════════════════════════════════════════════
+-- 浏览 / 点赞 / 评论回复都按「设备标识 + UA」唯一化：
+--   前端生成随机 device id（localStorage）+ 设备指纹（平台/屏幕/语言/时区），
+--   请求头带 X-Device-Id / X-Device-Fp 与浏览器自带 UA；
+--   服务端拼成 HMAC-SHA256（pepper 见 DEVICE_HASH_PEPPER），只存 32 位哈希，
+--   不存设备原文、不存明文 IP。清缓存 / 换浏览器 = 新设备。
+-- company_id 只是档案 id（如 zhishu / comein），不是用户数据，公开可读。
+
+-- 每家公司、每个设备+UA 只计一次浏览（INSERT OR IGNORE 去重）
+CREATE TABLE IF NOT EXISTS company_views (
+  company_id   TEXT NOT NULL,
+  visitor_hash TEXT NOT NULL,
+  first_seen   INTEGER NOT NULL,
+  last_seen    INTEGER NOT NULL,
+  PRIMARY KEY (company_id, visitor_hash)
+);
+CREATE INDEX IF NOT EXISTS idx_company_views_company ON company_views (company_id);
+
+-- 档案点赞：每设备+UA 每家公司最多一条，取消即删行
+CREATE TABLE IF NOT EXISTS company_likes (
+  company_id   TEXT NOT NULL,
+  visitor_hash TEXT NOT NULL,
+  created_at   INTEGER NOT NULL,
+  PRIMARY KEY (company_id, visitor_hash)
+);
+
+-- 评论与回复：parent_id 为空 = 顶层评论；回复挂在顶层评论下。
+-- 昵称与内容都是访客自填，展示时前端必须按纯文本渲染，禁止 innerHTML 注入。
+CREATE TABLE IF NOT EXISTS company_comments (
+  id           TEXT PRIMARY KEY,
+  company_id   TEXT NOT NULL,
+  parent_id    TEXT,
+  name         TEXT NOT NULL,
+  text         TEXT NOT NULL,
+  visitor_hash TEXT NOT NULL,
+  created_at   INTEGER NOT NULL,
+  likes_count  INTEGER NOT NULL DEFAULT 0,
+  status       TEXT NOT NULL DEFAULT 'visible'  -- visible | hidden
+);
+CREATE INDEX IF NOT EXISTS idx_company_comments_company
+  ON company_comments (company_id, created_at);
+
+-- 评论点赞：每设备+UA 每评论最多一条，取消即删行
+CREATE TABLE IF NOT EXISTS company_comment_likes (
+  comment_id   TEXT NOT NULL,
+  visitor_hash TEXT NOT NULL,
+  created_at   INTEGER NOT NULL,
+  PRIMARY KEY (comment_id, visitor_hash)
+);

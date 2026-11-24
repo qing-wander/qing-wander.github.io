@@ -83,6 +83,20 @@ GitHub Pages 不吃这条构建命令、也无 25MiB 限制，所以没受影响
 
 仓库里的 `functions/`（腾讯云函数源码）、`worker/`、`docs/`、`scripts/` 不进构建产物，只部署前端真正要用的文件。
 
+> 注：上表的构建命令是旧版摘录。当前以 `scripts/pages-build.sh` 为准，它会把 `functions/api/`、`js/`、`css/` 等一并复制进 `dist/`（含公司档案互动接口）。
+
+## D1 新表（公司档案互动，2026-11-24）
+
+`/api/company-social` 用 D1 存浏览量、点赞、评论回复。部署代码后**必须先在远程 D1 应用一次迁移**，否则接口会返回 500 `db_error`：
+
+```bash
+npx wrangler d1 execute portfolio-db --remote --file=db/migrations/2026-11-24-company-social.sql
+```
+
+迁移是幂等的（`IF NOT EXISTS`），重复执行安全。新库也可直接用 `db/schema.sql` 建全套表。
+接口的设备唯一化依赖环境变量 `DEVICE_HASH_PEPPER`（与留言墙 `functions/api/wall.js` 共用同一个值）；
+不设置时代码用默认值，只建议本地联调使用。
+
 ## 跨域（CORS）白名单
 
 页面的 AI 问答走腾讯云 CloudBase 函数 `resume-ai-chat`，它按 `Origin` 做白名单校验（见 `functions/tencent/index.js`），不放行就返回 403 `origin_denied`，浏览器侧报 CORS 错误。
