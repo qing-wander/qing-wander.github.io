@@ -195,7 +195,7 @@
         合成链路：公开站 <span class="mono">/api/chat (mode=tts)</span> → 腾讯云函数 <span class="mono" id="voiceUpstream">—</span>。
         音色白名单在 <span class="mono">functions/lib/tts.js</span>，前端拿不到密钥，也不允许传白名单外的 ID。
       </p>
-      <p class="cfg-note">大模型音色（月华 / 飞镜 / 爱小芊）要先去腾讯云控制台开通，没开通时试听会直接显示腾讯云返回的错误码。</p>
+      <p class="cfg-note">清单里只有 10 个精品音色（腾讯云免费额度覆盖）。大模型音色（月华 / 飞镜 / 爱小芊）实测未开通时会让云函数直接 502，所以没放进来；等控制台开通后把 ID 加回 <span class="mono">functions/lib/tts.js</span> 的 VOICES 即可。</p>
     </article>
   </section>
 

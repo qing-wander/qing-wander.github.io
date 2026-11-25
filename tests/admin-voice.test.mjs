@@ -124,7 +124,7 @@ test('synthesize：转发给云函数时带 mode/voice/text，Origin 用主站�
 test('synthesize：云函数报错时把 code 与文案原样带回来', async () => {
   const stub = stubFetch(() => ({ status: 502, body: { ok: false, error: 'tts_failed', code: 'UnsupportedVoiceType', message: '云端语音暂时不可用' } }));
   try {
-    const r = await synthesize(envOf(), { text: '你好', voice: 501004 });
+    const r = await synthesize(envOf(), { text: '你好', voice: 101001 });
     assert.equal(r.ok, false);
     assert.equal(r.error, 'UnsupportedVoiceType');
     assert.equal(r.status, 502);
