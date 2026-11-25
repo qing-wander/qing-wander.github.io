@@ -1,0 +1,526 @@
+{
+  "capturedAt": "2026-11-25T16:20:41.677Z",
+  "base": "http://127.0.0.1:8791",
+  "engine": "pre-react(M0)",
+  "method": "fullPage jpeg q60; settle 1.6s; 3D 舞台不保证入镜（对照采集一致性优先）",
+  "shots": [
+    {
+      "page": "index",
+      "theme": "archive",
+      "w": 1024,
+      "file": "index/archive-1024.jpeg",
+      "kb": 931,
+      "sha1": "6b0417bfd523"
+    },
+    {
+      "page": "index",
+      "theme": "archive",
+      "w": 390,
+      "file": "index/archive-390.jpeg",
+      "kb": 1620,
+      "sha1": "76a1610cafae"
+    },
+    {
+      "page": "index",
+      "theme": "archive",
+      "w": 680,
+      "file": "index/archive-680.jpeg",
+      "kb": 631,
+      "sha1": "7b322348f536"
+    },
+    {
+      "page": "index",
+      "theme": "archive",
+      "w": 768,
+      "file": "index/archive-768.jpeg",
+      "kb": 775,
+      "sha1": "4d10d0c4138c"
+    },
+    {
+      "page": "index",
+      "theme": "blueprint",
+      "w": 1024,
+      "file": "index/blueprint-1024.jpeg",
+      "kb": 911,
+      "sha1": "4dd7eea326cc"
+    },
+    {
+      "page": "index",
+      "theme": "blueprint",
+      "w": 390,
+      "file": "index/blueprint-390.jpeg",
+      "kb": 1457,
+      "sha1": "cfa354932a9e"
+    },
+    {
+      "page": "index",
+      "theme": "blueprint",
+      "w": 680,
+      "file": "index/blueprint-680.jpeg",
+      "kb": 431,
+      "sha1": "8d0547cef3be"
+    },
+    {
+      "page": "index",
+      "theme": "blueprint",
+      "w": 768,
+      "file": "index/blueprint-768.jpeg",
+      "kb": 433,
+      "sha1": "60cfb67ce88a"
+    },
+    {
+      "page": "index",
+      "theme": "newsprint",
+      "w": 1024,
+      "file": "index/newsprint-1024.jpeg",
+      "kb": 913,
+      "sha1": "96cf47c22dd8"
+    },
+    {
+      "page": "index",
+      "theme": "newsprint",
+      "w": 390,
+      "file": "index/newsprint-390.jpeg",
+      "kb": 1376,
+      "sha1": "bc5450bd8b72"
+    },
+    {
+      "page": "index",
+      "theme": "newsprint",
+      "w": 680,
+      "file": "index/newsprint-680.jpeg",
+      "kb": 737,
+      "sha1": "2ae5ab76103b"
+    },
+    {
+      "page": "index",
+      "theme": "newsprint",
+      "w": 768,
+      "file": "index/newsprint-768.jpeg",
+      "kb": 716,
+      "sha1": "de5ccddb2f67"
+    },
+    {
+      "page": "index",
+      "theme": "noir",
+      "w": 1024,
+      "file": "index/noir-1024.jpeg",
+      "kb": 778,
+      "sha1": "81cae335efed"
+    },
+    {
+      "page": "index",
+      "theme": "noir",
+      "w": 390,
+      "file": "index/noir-390.jpeg",
+      "kb": 1220,
+      "sha1": "f9f673cc8330"
+    },
+    {
+      "page": "index",
+      "theme": "noir",
+      "w": 680,
+      "file": "index/noir-680.jpeg",
+      "kb": 325,
+      "sha1": "eb143e62716e"
+    },
+    {
+      "page": "index",
+      "theme": "noir",
+      "w": 768,
+      "file": "index/noir-768.jpeg",
+      "kb": 616,
+      "sha1": "66866044c0c1"
+    },
+    {
+      "page": "resume",
+      "theme": "archive",
+      "w": 1024,
+      "file": "resume/archive-1024.jpeg",
+      "kb": 368,
+      "sha1": "6dfd5777e1cf"
+    },
+    {
+      "page": "resume",
+      "theme": "archive",
+      "w": 390,
+      "file": "resume/archive-390.jpeg",
+      "kb": 938,
+      "sha1": "77cc134ce622"
+    },
+    {
+      "page": "resume",
+      "theme": "archive",
+      "w": 680,
+      "file": "resume/archive-680.jpeg",
+      "kb": 358,
+      "sha1": "fb389c738a02"
+    },
+    {
+      "page": "resume",
+      "theme": "archive",
+      "w": 768,
+      "file": "resume/archive-768.jpeg",
+      "kb": 359,
+      "sha1": "c76c5ecc1e30"
+    },
+    {
+      "page": "resume",
+      "theme": "blueprint",
+      "w": 1024,
+      "file": "resume/blueprint-1024.jpeg",
+      "kb": 358,
+      "sha1": "97688e14afb6"
+    },
+    {
+      "page": "resume",
+      "theme": "blueprint",
+      "w": 390,
+      "file": "resume/blueprint-390.jpeg",
+      "kb": 922,
+      "sha1": "a7d9239b2b6c"
+    },
+    {
+      "page": "resume",
+      "theme": "blueprint",
+      "w": 680,
+      "file": "resume/blueprint-680.jpeg",
+      "kb": 347,
+      "sha1": "51c451e03835"
+    },
+    {
+      "page": "resume",
+      "theme": "blueprint",
+      "w": 768,
+      "file": "resume/blueprint-768.jpeg",
+      "kb": 348,
+      "sha1": "07f193d4b7d2"
+    },
+    {
+      "page": "resume",
+      "theme": "newsprint",
+      "w": 1024,
+      "file": "resume/newsprint-1024.jpeg",
+      "kb": 355,
+      "sha1": "dc57bb0d6a46"
+    },
+    {
+      "page": "resume",
+      "theme": "newsprint",
+      "w": 390,
+      "file": "resume/newsprint-390.jpeg",
+      "kb": 904,
+      "sha1": "c5186e0ce44b"
+    },
+    {
+      "page": "resume",
+      "theme": "newsprint",
+      "w": 680,
+      "file": "resume/newsprint-680.jpeg",
+      "kb": 345,
+      "sha1": "d4c289ca24f1"
+    },
+    {
+      "page": "resume",
+      "theme": "newsprint",
+      "w": 768,
+      "file": "resume/newsprint-768.jpeg",
+      "kb": 346,
+      "sha1": "e45ad4af8a59"
+    },
+    {
+      "page": "resume",
+      "theme": "noir",
+      "w": 1024,
+      "file": "resume/noir-1024.jpeg",
+      "kb": 318,
+      "sha1": "8b098722bcb1"
+    },
+    {
+      "page": "resume",
+      "theme": "noir",
+      "w": 390,
+      "file": "resume/noir-390.jpeg",
+      "kb": 822,
+      "sha1": "c083d711d389"
+    },
+    {
+      "page": "resume",
+      "theme": "noir",
+      "w": 680,
+      "file": "resume/noir-680.jpeg",
+      "kb": 310,
+      "sha1": "69adb21ef89a"
+    },
+    {
+      "page": "resume",
+      "theme": "noir",
+      "w": 768,
+      "file": "resume/noir-768.jpeg",
+      "kb": 310,
+      "sha1": "d9d8005b118f"
+    },
+    {
+      "page": "jd",
+      "theme": "archive",
+      "w": 1024,
+      "file": "jd/archive-1024.jpeg",
+      "kb": 87,
+      "sha1": "fc372db0e1b1"
+    },
+    {
+      "page": "jd",
+      "theme": "archive",
+      "w": 390,
+      "file": "jd/archive-390.jpeg",
+      "kb": 158,
+      "sha1": "806cf5053c7a"
+    },
+    {
+      "page": "jd",
+      "theme": "archive",
+      "w": 680,
+      "file": "jd/archive-680.jpeg",
+      "kb": 71,
+      "sha1": "34e21e24d71a"
+    },
+    {
+      "page": "jd",
+      "theme": "archive",
+      "w": 768,
+      "file": "jd/archive-768.jpeg",
+      "kb": 76,
+      "sha1": "141205c731bf"
+    },
+    {
+      "page": "jd",
+      "theme": "blueprint",
+      "w": 1024,
+      "file": "jd/blueprint-1024.jpeg",
+      "kb": 85,
+      "sha1": "a682415a4f8f"
+    },
+    {
+      "page": "jd",
+      "theme": "blueprint",
+      "w": 390,
+      "file": "jd/blueprint-390.jpeg",
+      "kb": 156,
+      "sha1": "b35f33cc704b"
+    },
+    {
+      "page": "jd",
+      "theme": "blueprint",
+      "w": 680,
+      "file": "jd/blueprint-680.jpeg",
+      "kb": 70,
+      "sha1": "88b37d97ae98"
+    },
+    {
+      "page": "jd",
+      "theme": "blueprint",
+      "w": 768,
+      "file": "jd/blueprint-768.jpeg",
+      "kb": 73,
+      "sha1": "50d052707172"
+    },
+    {
+      "page": "jd",
+      "theme": "newsprint",
+      "w": 1024,
+      "file": "jd/newsprint-1024.jpeg",
+      "kb": 85,
+      "sha1": "297126b7be26"
+    },
+    {
+      "page": "jd",
+      "theme": "newsprint",
+      "w": 390,
+      "file": "jd/newsprint-390.jpeg",
+      "kb": 155,
+      "sha1": "dc762f3bc367"
+    },
+    {
+      "page": "jd",
+      "theme": "newsprint",
+      "w": 680,
+      "file": "jd/newsprint-680.jpeg",
+      "kb": 70,
+      "sha1": "ed72f40eb107"
+    },
+    {
+      "page": "jd",
+      "theme": "newsprint",
+      "w": 768,
+      "file": "jd/newsprint-768.jpeg",
+      "kb": 74,
+      "sha1": "5ec896a807df"
+    },
+    {
+      "page": "jd",
+      "theme": "noir",
+      "w": 1024,
+      "file": "jd/noir-1024.jpeg",
+      "kb": 82,
+      "sha1": "350835f2fb41"
+    },
+    {
+      "page": "jd",
+      "theme": "noir",
+      "w": 390,
+      "file": "jd/noir-390.jpeg",
+      "kb": 147,
+      "sha1": "62daf1ed0622"
+    },
+    {
+      "page": "jd",
+      "theme": "noir",
+      "w": 680,
+      "file": "jd/noir-680.jpeg",
+      "kb": 67,
+      "sha1": "f659eee983cb"
+    },
+    {
+      "page": "jd",
+      "theme": "noir",
+      "w": 768,
+      "file": "jd/noir-768.jpeg",
+      "kb": 71,
+      "sha1": "96ff2b1fcbd4"
+    },
+    {
+      "page": "company",
+      "theme": "archive",
+      "w": 1024,
+      "file": "company/archive-1024.jpeg",
+      "kb": 418,
+      "sha1": "f7858d7ce923"
+    },
+    {
+      "page": "company",
+      "theme": "archive",
+      "w": 390,
+      "file": "company/archive-390.jpeg",
+      "kb": 782,
+      "sha1": "684d2fadaeb5"
+    },
+    {
+      "page": "company",
+      "theme": "archive",
+      "w": 680,
+      "file": "company/archive-680.jpeg",
+      "kb": 344,
+      "sha1": "2e245f2322d0"
+    },
+    {
+      "page": "company",
+      "theme": "archive",
+      "w": 768,
+      "file": "company/archive-768.jpeg",
+      "kb": 381,
+      "sha1": "b965f3b1cf74"
+    },
+    {
+      "page": "company",
+      "theme": "blueprint",
+      "w": 1024,
+      "file": "company/blueprint-1024.jpeg",
+      "kb": 418,
+      "sha1": "f7858d7ce923"
+    },
+    {
+      "page": "company",
+      "theme": "blueprint",
+      "w": 390,
+      "file": "company/blueprint-390.jpeg",
+      "kb": 782,
+      "sha1": "684d2fadaeb5"
+    },
+    {
+      "page": "company",
+      "theme": "blueprint",
+      "w": 680,
+      "file": "company/blueprint-680.jpeg",
+      "kb": 344,
+      "sha1": "2e245f2322d0"
+    },
+    {
+      "page": "company",
+      "theme": "blueprint",
+      "w": 768,
+      "file": "company/blueprint-768.jpeg",
+      "kb": 381,
+      "sha1": "b965f3b1cf74"
+    },
+    {
+      "page": "company",
+      "theme": "newsprint",
+      "w": 1024,
+      "file": "company/newsprint-1024.jpeg",
+      "kb": 418,
+      "sha1": "f7858d7ce923"
+    },
+    {
+      "page": "company",
+      "theme": "newsprint",
+      "w": 390,
+      "file": "company/newsprint-390.jpeg",
+      "kb": 782,
+      "sha1": "684d2fadaeb5"
+    },
+    {
+      "page": "company",
+      "theme": "newsprint",
+      "w": 680,
+      "file": "company/newsprint-680.jpeg",
+      "kb": 344,
+      "sha1": "2e245f2322d0"
+    },
+    {
+      "page": "company",
+      "theme": "newsprint",
+      "w": 768,
+      "file": "company/newsprint-768.jpeg",
+      "kb": 381,
+      "sha1": "b965f3b1cf74"
+    },
+    {
+      "page": "company",
+      "theme": "noir",
+      "w": 1024,
+      "file": "company/noir-1024.jpeg",
+      "kb": 418,
+      "sha1": "d72fc2978824"
+    },
+    {
+      "page": "company",
+      "theme": "noir",
+      "w": 390,
+      "file": "company/noir-390.jpeg",
+      "kb": 782,
+      "sha1": "373f012c11cd"
+    },
+    {
+      "page": "company",
+      "theme": "noir",
+      "w": 680,
+      "file": "company/noir-680.jpeg",
+      "kb": 344,
+      "sha1": "8e0164d6453e"
+    },
+    {
+      "page": "company",
+      "theme": "noir",
+      "w": 768,
+      "file": "company/noir-768.jpeg",
+      "kb": 381,
+      "sha1": "ec9fdb32e3a6"
+    }
+  ],
+  "summary": {
+    "total": 64,
+    "valid": 64,
+    "suspect": 0,
+    "failedThisRun": 0
+  }
+}

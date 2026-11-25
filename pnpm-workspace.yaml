@@ -1,0 +1,5 @@
+allowBuilds:
+  esbuild: true
+  sharp: true
+# pnpm 单包配置（pnpm 12 起 build 权限声明放这里）
+# esbuild / sharp：平台二进制包，postinstall 仅校验，必须放行否则每次 install 报错退出

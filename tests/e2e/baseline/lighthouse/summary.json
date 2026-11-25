@@ -1,0 +1,159 @@
+{
+  "capturedAt": "2026-11-25T15:58:03.229Z",
+  "base": "https://shenge-work.pages.dev",
+  "engine": "lighthouse@pre-react(M0)",
+  "pages": [
+    {
+      "page": "index",
+      "variant": "mobile",
+      "url": "https://shenge-work.pages.dev/",
+      "scores": {
+        "performance": 55,
+        "accessibility": 92,
+        "seo": 100,
+        "best-practices": 75
+      },
+      "metrics": {
+        "FCP": "22.2 s",
+        "LCP": "25.3 s",
+        "TBT": "70 ms",
+        "CLS": "0",
+        "TTI": "35.4 s"
+      },
+      "sha1": "b200fde00c49"
+    },
+    {
+      "page": "index",
+      "variant": "desktop",
+      "url": "https://shenge-work.pages.dev/",
+      "scores": {
+        "performance": 67,
+        "accessibility": 92,
+        "seo": 100,
+        "best-practices": 75
+      },
+      "metrics": {
+        "FCP": "2.8 s",
+        "LCP": "4.9 s",
+        "TBT": "270 ms",
+        "CLS": "0",
+        "TTI": "13.7 s"
+      },
+      "sha1": "b6e6c7983afa"
+    },
+    {
+      "page": "resume",
+      "variant": "mobile",
+      "url": "https://shenge-work.pages.dev/resume.html",
+      "scores": {
+        "performance": 94,
+        "accessibility": 93,
+        "seo": 100,
+        "best-practices": 75
+      },
+      "metrics": {
+        "FCP": "2.0 s",
+        "LCP": "2.0 s",
+        "TBT": "20 ms",
+        "CLS": "0.01",
+        "TTI": "7.3 s"
+      },
+      "sha1": "9c6a0f93eec9"
+    },
+    {
+      "page": "resume",
+      "variant": "desktop",
+      "url": "https://shenge-work.pages.dev/resume.html",
+      "scores": {
+        "performance": 93,
+        "accessibility": 93,
+        "seo": 92,
+        "best-practices": 96
+      },
+      "metrics": {
+        "FCP": "1.9 s",
+        "LCP": "1.9 s",
+        "TBT": "0 ms",
+        "CLS": "0.01",
+        "TTI": "1.9 s"
+      },
+      "sha1": "609caa30fed4"
+    },
+    {
+      "page": "jd",
+      "variant": "mobile",
+      "url": "https://shenge-work.pages.dev/jd.html",
+      "scores": {
+        "performance": 96,
+        "accessibility": 96,
+        "seo": 100,
+        "best-practices": 96
+      },
+      "metrics": {
+        "FCP": "1.8 s",
+        "LCP": "1.8 s",
+        "TBT": "0 ms",
+        "CLS": "0",
+        "TTI": "1.8 s"
+      },
+      "sha1": "cb13e1139b0d"
+    },
+    {
+      "page": "jd",
+      "variant": "desktop",
+      "url": "https://shenge-work.pages.dev/jd.html",
+      "scores": {
+        "performance": 98,
+        "accessibility": 96,
+        "seo": 100,
+        "best-practices": 100
+      },
+      "metrics": {
+        "FCP": "1.9 s",
+        "LCP": "1.9 s",
+        "TBT": "0 ms",
+        "CLS": "0",
+        "TTI": "1.9 s"
+      },
+      "sha1": "1aacfe9ff206"
+    },
+    {
+      "page": "company",
+      "variant": "mobile",
+      "url": "https://shenge-work.pages.dev/company.html?c=zhishu",
+      "scores": {
+        "performance": 90,
+        "accessibility": 92,
+        "seo": 66,
+        "best-practices": 96
+      },
+      "metrics": {
+        "FCP": "1.9 s",
+        "LCP": "2.4 s",
+        "TBT": "250 ms",
+        "CLS": "0.004",
+        "TTI": "4.2 s"
+      },
+      "sha1": "612d7d6dc6c5"
+    },
+    {
+      "page": "company",
+      "variant": "desktop",
+      "url": "https://shenge-work.pages.dev/company.html?c=zhishu",
+      "scores": {
+        "performance": 84,
+        "accessibility": 92,
+        "seo": 66,
+        "best-practices": 96
+      },
+      "metrics": {
+        "FCP": "1.8 s",
+        "LCP": "2.5 s",
+        "TBT": "420 ms",
+        "CLS": "0.004",
+        "TTI": "4.1 s"
+      },
+      "sha1": "9d63908d3486"
+    }
+  ]
+}

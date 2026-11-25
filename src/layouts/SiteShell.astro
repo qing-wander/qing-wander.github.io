@@ -1,0 +1,31 @@
+---
+// 站点级 HTML 壳 —— React 迁移后所有页面共用（docs/react-refactor-plan.md §5.1）
+// M0 阶段最小可用：viewport / 字体 / favicon / theme-color；
+// 后续阶段逐页补齐：主题引导脚本、Turnstile、model-viewer、全局 CSS 引入（§5.5 平移时的对接点）。
+interface Props {
+  title: string;
+  description?: string;
+  canonical?: string;
+}
+
+const { title, description, canonical } = Astro.props;
+const SITE = 'https://chenpeisheng.cn';
+const canonicalHref = canonical ?? SITE;
+---
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#F3EEE2" />
+    <title>{title}</title>
+    {description && <meta name="description" content={description} />}
+    <link rel="canonical" href={canonicalHref} />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-64.png" />
+    <link rel="apple-touch-icon" href="/favicon.png" />
+    <link rel="stylesheet" href="/css/fonts.css" />
+  </head>
+  <body>
+    <slot />
+  </body>
+</html>

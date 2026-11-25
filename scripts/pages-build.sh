@@ -39,7 +39,9 @@ done
 echo "   ${HTML_FILES[*]}"
 
 echo "=== ② 静态资源"
-for item in css js data images videos favicon-64.png favicon.png robots.txt sitemap.xml; do
+# work/：作品案例页（生成器产物，React 迁移接管前由旧文件兜底）
+#   ⚠ 2026-11-25 M0 盘点发现：work/ 从未进 dist，线上 /work/portfolio.html 一直 404（仅 GitHub Pages 备份线路正常）
+for item in css js data images videos work favicon-64.png favicon.png robots.txt sitemap.xml manifest.json; do
   if [ ! -e "$item" ]; then
     echo "✗ 缺少 $item，先检查仓库是否完整"
     exit 1
@@ -121,15 +123,53 @@ for f in index.html resume.html jd.html company.html school.html 404.html \
          functions/lib/resume-inject.js functions/lib/resume-pdf.js functions/api/resume-pdf.js \
          css/secure-access.css js/secure-access.js functions/api/secure-asset.js \
          functions/lib/secure-access.js functions/lib/secure-assets.js \
-         'functions/data/[file].js' data/fallback/site-data.js data/fallback/people.js \
-         functions/_middleware.js robots.txt; do
+                 'functions/data/[file].js' data/fallback/site-data.js data/fallback/people.js \
+         functions/_middleware.js robots.txt manifest.json work/portfolio.html; do
   if [ ! -f "$OUT/$f" ]; then
     echo "✗ dist 缺少 $f，独立页会变成 404 / 首页 fallback"
     exit 1
   fi
 done
 
-echo "=== ⑦ 单文件上限 25MiB"
+echo "=== ⑦ React 迁移页面混排（docs/react-refactor-plan.md §6 / M0 起）"
+# 已迁移到 Astro 6 + React 19 的页面清单（相对 dist 根的 URL 路径）。
+#   M0:work/portfolio.html（管道验证壳）→ M1 admin → M2 jd/company/school → M3 index → M4 resume
+# 清单为空或 REACT_MIGRATED_PAGES=none 时本段跳过，构建行为与迁移前完全一致；
+# 混排只替换 dist 内对应 URL 的产物，未迁移页面继续走旧静态文件（渐进迁移 / N3 约束）。
+REACT_MIGRATED_PAGES="${REACT_MIGRATED_PAGES:-work/portfolio.html}"
+if [ -n "$REACT_MIGRATED_PAGES" ] && [ "$REACT_MIGRATED_PAGES" != "none" ]; then
+  echo "   · 迁移页：$REACT_MIGRATED_PAGES"
+  # pnpm 就绪：Pages 构建镜像 / 本地 / GitHub Actions 均为 Node 22+（corepack 内置）
+  if ! command -v pnpm >/dev/null 2>&1; then
+    corepack enable 2>/dev/null || true
+  fi
+  command -v pnpm >/dev/null 2>&1 || { echo "✗ pnpm 不可用（需要 Node >= 22 自带 corepack）"; exit 1; }
+  pnpm install --frozen-lockfile --prefer-offline || { echo "✗ pnpm install 失败"; exit 1; }
+  pnpm build || { echo "✗ astro build 失败"; exit 1; }
+  for p in $REACT_MIGRATED_PAGES; do
+    if [ ! -f "dist-react/$p" ]; then
+      echo "✗ dist-react 缺少已迁移页 $p （src/pages 与清单不同步？）"
+      exit 1
+    fi
+    mkdir -p "$OUT/$(dirname "$p")"
+    cp "dist-react/$p" "$OUT/$p"
+    echo "   · 混排 $p ← dist-react（替代旧生成器产物）"
+  done
+  # 岛脚本/样式 hash 产物：页面引用 /_astro/**，整体拷入（与旧站 js/ css/ 目录互不冲突）
+  if [ -d dist-react/_astro ]; then cp -R dist-react/_astro "$OUT/_astro"; fi
+  # 岛引用完整性：产物 HTML 里每个 /_astro/* 资源都必须存在，缺了就是线上 404
+  # （岛资源文件名只含 [hash].js/.css，字符集收敛可避开引号转义）
+  for p in $REACT_MIGRATED_PAGES; do
+    while IFS= read -r asset; do
+      if [ ! -f "$OUT/$asset" ]; then
+        echo "✗ $p 引用的 $asset 不在产物中（岛构建不完整）"
+        exit 1
+      fi
+    done < <(grep -oE '/_astro/[A-Za-z0-9._-]+' "$OUT/$p" || true)
+  done
+fi
+
+echo "=== ⑧ 单文件上限 25MiB"
 BIG="$(find "$OUT" -type f -size +25M 2>/dev/null || true)"
 if [ -n "$BIG" ]; then
   echo "✗ 以下文件超过 Cloudflare Pages 单文件 25MiB 上限："

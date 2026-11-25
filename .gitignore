@@ -38,3 +38,13 @@ functions/tencent/kb/
 # 已整目录归档到飞书云盘：https://my.feishu.cn/drive/folder/BnalfpLM8lzNYLdkYu3cqH71nAc
 # 需要时用 lark-cli drive +pull 拉回；线上在用的是 assets/skins/models/*.glb（不受影响）。
 assets/character-views/
+
+# React 迁移工程（M0 起，docs/react-refactor-plan.md）
+dist-react/
+.astro/
+
+# M0 基线产物：截图与完整 LHR 仅本地存档（体积大且按需可重生成）；
+# 入库的只有 visual-manifest.json（截图清单+sha1）与 lighthouse/summary.json（分数汇总）
+tests/e2e/baseline/screenshots/
+tests/e2e/baseline/lighthouse/*
+!tests/e2e/baseline/lighthouse/summary.json

@@ -1,0 +1,53 @@
+{
+  "name": "chenpeisheng-portfolio",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "packageManager": "pnpm@12.23.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "description": "求职作品集 · React 迁移目标态（见 docs/react-refactor-plan.md）",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "check": "astro check",
+    "preview": "astro preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint .",
+    "e2e:visual-baseline": "node tests/e2e/capture-baseline.mjs",
+    "e2e:perf-baseline": "node tests/e2e/perf-baseline.mjs"
+  },
+  "dependencies": {
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "sharp",
+      "playwright"
+    ]
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.12",
+    "@astrojs/react": "^4.4.0",
+    "@eslint/js": "^10.0.1",
+    "@testing-library/jest-dom": "^8.0.0",
+    "@testing-library/react": "^16.3.0",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "astro": "^6.0.0",
+    "chrome-launcher": "^1.2.3",
+    "eslint": "^9.0.0",
+    "eslint-plugin-astro": "^1.0.0",
+    "eslint-plugin-react-hooks": "^5.0.0",
+    "jsdom": "^27.0.0",
+    "lighthouse": "^12.0.0",
+    "playwright": "^1.56.0",
+    "typescript": "^5.9.0",
+    "typescript-eslint": "^8.0.0",
+    "vitest": "^3.0.0"
+  }
+}

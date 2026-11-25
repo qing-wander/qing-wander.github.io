@@ -1,0 +1,72 @@
+---
+// /work/portfolio.html —— M0 空壳验证页（docs/react-refactor-plan.md §6-M0）
+//
+// 迁移状态：本页面已由 React 产物接管（pages-build.sh 的 REACT_MIGRATED_PAGES）。
+// M2 将按 work-details.json 全字段补完整 CASE STUDY 内容与样式体系。
+// URL 契约（N3）：work/portfolio.html 逐字保留 —— Astro build.format 'file' 输出同名文件。
+import SiteShell from '../../layouts/SiteShell.astro';
+import PortfolioShell from '../../components/work/PortfolioShell';
+import workDetails from '@data/work-details.json';
+
+// ── 数据装配（真相源 import，不复制不改写）──
+const detail = workDetails.works.portfolio;
+if (!detail) throw new Error('work-details.json 缺少 works.portfolio');
+import siteData from '@data/site-data.json';
+const meta = (siteData.works as Array<{ title: string; titleEn: string; no: string; detailId?: string }>)
+  .find((w) => w.detailId === 'portfolio');
+if (!meta) throw new Error('site-data.json works 数组缺少 detailId=portfolio 条目');
+
+const canonical = Astro.site ? new URL('work/portfolio.html', Astro.site).href : 'https://chenpeisheng.cn/work/portfolio.html';
+---
+<SiteShell
+  title={`${meta.title} · 作品案例 | 陈培胜`}
+  description={detail.tagline}
+  canonical={canonical}
+>
+  <PortfolioShell
+    client:load
+    meta={{ title: meta.title, titleEn: meta.titleEn, no: meta.no }}
+    detail={{
+      tagline: detail.tagline,
+      role: detail.role,
+      period: detail.period,
+      status: detail.status,
+      heroMetrics: detail.heroMetrics,
+    }}
+    buildInfo={{
+      dataPath: 'data/work-details.json + data/site-data.json',
+      builtAt: new Date().toISOString().slice(0, 10),
+      engine: 'astro-ssg',
+    }}
+  />
+</SiteShell>
+
+<style is:global>
+  /* M0 空壳样式（Neo-brutalism 基元的最小近似，M2 迁移时对齐 style.css 体系） */
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: var(--font-body, 'Noto Sans SC', 'PingFang SC', sans-serif);
+    background: #F3EEE2; color: #1A160C;
+  }
+  .pf-shell { max-width: 860px; margin: 0 auto; padding: 48px 20px 80px; }
+  .pf-no { font-family: monospace; font-size: 11px; letter-spacing: .14em; color: rgba(26,22,12,.55); margin: 0 0 10px; }
+  .pf-title { font-size: 30px; font-weight: 900; margin: 0 0 6px; }
+  .pf-title-en { font-size: 14px; color: rgba(26,22,12,.45); letter-spacing: .1em; margin-left: 8px; }
+  .pf-tagline { font-size: 16px; margin: 12px 0 4px; }
+  .pf-meta { font-size: 12.5px; color: rgba(26,22,12,.6); margin: 0 0 32px; }
+  .pf-metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 36px; }
+  .pf-metric { background: #FFFCF4; border: 2px solid #1A160C; box-shadow: 4px 4px 0 rgba(26,22,12,.2); padding: 14px; }
+  .pf-metric-value { font-size: 26px; font-weight: 900; margin: 0; }
+  .pf-metric-unit { font-size: 13px; margin-left: 2px; font-weight: 700; }
+  .pf-metric-label { font-size: 12.5px; font-weight: 700; margin: 4px 0 2px; }
+  .pf-metric-note { font-size: 11px; color: rgba(26,22,12,.55); margin: 0; }
+  .pf-verify { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .pf-verify-btn { font-family: monospace; font-size: 13px; font-weight: 700; padding: 10px 18px; background: #1A160C; color: #F3EEE2; border: 2px solid #1A160C; cursor: pointer; }
+  .pf-verify-info { font-family: monospace; font-size: 11px; color: rgba(26,22,12,.6); margin: 0; }
+  @media (max-width: 680px) {
+    .pf-title { font-size: 24px; }
+    .pf-metrics { grid-template-columns: 1fr 1fr; }
+  }
+</style>
