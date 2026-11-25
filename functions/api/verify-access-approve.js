@@ -51,6 +51,12 @@ function detailTable(row) {
     ['查看用途', row.purpose],
     ['申请时间', formatBeijing(row.created_at)],
     ['来源页面', (() => { try { return JSON.parse(row.meta || '{}').origin || '—'; } catch (e) { return '—'; } })()],
+    ['申请设备', (() => {
+      try {
+        const v = String(JSON.parse(row.meta || '{}').deviceId || '');
+        return v ? v.slice(0, 8) + '…（批准后仅此设备可查看）' : '—';
+      } catch (e) { return '—'; }
+    })()],
     ['IP 哈希', (() => { try { return JSON.parse(row.meta || '{}').ipHash || '—'; } catch (e) { return '—'; } })()],
   ];
   return '<table>' + pairs.map(([k, v]) =>
@@ -62,7 +68,8 @@ function detailTable(row) {
 function statusPage(status) {
   if (status === 'approved') {
     return page('已批准 · 学历核验', '<div class="kicker">VERIFY / APPROVED</div><h1>已批准解锁</h1>' +
-      '<div class="done">申请人的页面会在几秒内自动显示验证码与二维码，无需刷新。此链接已失效，不能重复操作。</div>');
+      '<div class="done">申请人的页面会在几秒内自动显示验证码与二维码，无需刷新。授权仅对本次申请的设备有效，' +
+      '批准后 24 小时自动过期，到期后对方需重新申请。此链接已失效，不能重复操作。</div>');
   }
   if (status === 'rejected') {
     return page('已拒绝 · 学历核验', '<div class="kicker">VERIFY / REJECTED</div><h1>已拒绝申请</h1>' +

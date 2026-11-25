@@ -399,6 +399,20 @@ body {
 }
 .dl-field textarea { resize: vertical; min-height: 74px; line-height: 1.7; }
 .dl-required .dl-label::after { content: ' *'; color: var(--orange); }
+.dl-hint { font-size: 11px; line-height: 1.6; color: var(--ink-soft); }
+.dl-group { border: 2px dashed rgba(20,19,17,.35); padding: 12px 13px; background: var(--paper); }
+.dl-group-title {
+  font-family: var(--font-mono, monospace);
+  font-size: 11px; font-weight: 700; letter-spacing: .08em;
+  color: var(--orange); margin-bottom: 9px;
+}
+.dl-checks { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px 14px; }
+.dl-check {
+  display: flex; align-items: flex-start; gap: 8px;
+  font-size: 12.5px; line-height: 1.5; color: var(--ink); cursor: pointer;
+}
+.dl-check input { accent-color: var(--orange); width: 16px; height: 16px; flex-shrink: 0; margin-top: 1px; }
+.dl-check small { display: block; font-size: 10px; color: var(--ink-soft); }
 /* 提交区：常驻弹窗底部，只有表单字段区滚动，按钮任何屏幕尺寸都可见 */
 .dl-foot {
   display: flex;
@@ -883,27 +897,30 @@ body.pv-open { overflow: hidden; }
 <div class="actions">
   <button class="btn btn-solid" onclick="openPrintPreview()">保存/打印为 PDF ⎙</button>
   <button class="btn btn-blue" id="btnLongImage" onclick="exportLongImage(this)">生成长图 ▤</button>
-  <button class="btn btn-green" id="btnDeliver" data-analytics="resume_deliver_open" onclick="openDeliver()">发简历到邮箱 ✉</button>
+  <button class="btn btn-green" id="btnDeliver" data-analytics="resume_deliver_open" onclick="openDeliver()">自动投递 ✉</button>
   <a class="btn btn-black" href="index.html">← 返回作品集主页</a>
 </div>
 
-<!-- ── 转发弹窗：浏览者填收件人邮箱，把在线简历发给对方（自己 / 同事 / 指定人） ── -->
-<!-- ── 转发弹窗：浏览简历的人填收件人邮箱，把在线简历发到对方邮箱（无需下载附件） ── -->
+<!-- ── 自动投递弹窗：填收件人 / 称呼 / JD / 附件勾选，发一封带 PDF 的简历邮件 ── -->
 <div class="dl-overlay" id="dlOverlay" role="dialog" aria-modal="true" aria-labelledby="dlTitle">
   <div class="dl-panel">
     <button class="dl-close" onclick="closeDeliver()" data-analytics="resume_deliver_close" aria-label="关闭弹窗">×</button>
     <div class="dl-head">
-      <span class="dl-badge">SHARE RESUME</span>
-      <h3 id="dlTitle">把这份简历发到邮箱</h3>
-      <p class="dl-sub">不用下载附件：填收件人邮箱，对方会收到一封含<strong>在线简历直达链接</strong>的邮件。发给自己、转发给同事都行。</p>
+      <span class="dl-badge">AUTO DELIVERY</span>
+      <h3 id="dlTitle">自动投递简历</h3>
+      <p class="dl-sub">邮件会带<strong>简历 PDF 附件</strong>、简历提炼、在线简历入口；称呼与岗位 JD 按你填的内容动态生成。</p>
     </div>
     <form id="dlForm" novalidate>
+      <label class="dl-field">
+        <span class="dl-label">投递对象称呼（可选，留空则显示「您好」）</span>
+        <input id="dlRecipient" type="text" maxlength="40" placeholder="如：张经理 / 李 HR" autocomplete="off">
+      </label>
       <label class="dl-field dl-required">
         <span class="dl-label">收件人邮箱（最多 3 个，逗号分隔）</span>
         <input id="dlTo" type="text" maxlength="360" placeholder="hr@company.com" autocomplete="off" required>
       </label>
       <label class="dl-field">
-        <span class="dl-label">你的称呼（可选）</span>
+        <span class="dl-label">你的称呼（可选，出现在邮件投递人栏）</span>
         <input id="dlName" type="text" maxlength="24" placeholder="如：某某公司 张 HR" autocomplete="off">
       </label>
       <label class="dl-field">
@@ -911,13 +928,28 @@ body.pv-open { overflow: hidden; }
         <input id="dlEmail" type="email" maxlength="120" placeholder="you@company.com" autocomplete="off">
       </label>
       <label class="dl-field">
+        <span class="dl-label">岗位 JD（可选）</span>
+        <textarea id="dlJd" rows="3" maxlength="4000" placeholder="粘贴招聘 JD，会放进邮件里可展开 / 收起的区块；不填则不显示…"></textarea>
+        <span class="dl-hint">邮件客户端不支持折叠时会直接展开完整 JD；「岗位匹配」入口在邮件里也保留。</span>
+      </label>
+      <div class="dl-group">
+        <div class="dl-group-title">ATTACHMENTS / 附加材料（默认不选）</div>
+        <div class="dl-checks">
+          <label class="dl-check"><input type="checkbox" id="dlAttId" value="idCard"><span>身份证复印件<small>文件待提供</small></span></label>
+          <label class="dl-check"><input type="checkbox" id="dlAttDip" value="diploma"><span>学历证书<small>文件待提供</small></span></label>
+          <label class="dl-check"><input type="checkbox" id="dlAttDeg" value="degree"><span>学位证书<small>文件待提供</small></span></label>
+          <label class="dl-check"><input type="checkbox" id="dlAttOther" value="other"><span>其他资质证书<small>文件待提供</small></span></label>
+        </div>
+        <span class="dl-hint">勾选后若文件已备好会随信附上；暂未提供的会在邮件正文标注「待补充」。</span>
+      </div>
+      <label class="dl-field">
         <span class="dl-label">附言（可选）</span>
         <textarea id="dlNote" rows="2" maxlength="500" placeholder="想对收件人说的话，会出现在邮件正文里…"></textarea>
       </label>
     </form>
     <div class="dl-foot">
-      <span class="dl-tip" id="dlTip">邮件由系统发送，收件人点开链接即可查看完整简历</span>
-      <button class="btn btn-solid dl-send" id="dlSend" data-analytics="resume_deliver_submit" type="submit" form="dlForm">发送简历 ▶</button>
+      <span class="dl-tip" id="dlTip">邮件由系统发送，含 PDF 简历附件与在线简历入口</span>
+      <button class="btn btn-solid dl-send" id="dlSend" data-analytics="resume_deliver_submit" type="submit" form="dlForm">自动投递 ▶</button>
     </div>
     <div class="dl-alt" id="dlAlt" hidden>
       <p>自动发信暂不可用，改用你的邮箱客户端发送（收件人已填好）：</p>
@@ -949,11 +981,18 @@ function dlRecipients() {
   return uniq;
 }
 
+function dlAttachments() {
+  return ['dlAttId', 'dlAttDip', 'dlAttDeg', 'dlAttOther'].filter(function (id) {
+    var el = document.getElementById(id);
+    return el && el.checked;
+  }).map(function (id) { return document.getElementById(id).value; });
+}
+
 function openDeliver() {
   var o = document.getElementById('dlOverlay');
   o.classList.add('show');
   document.getElementById('dlAlt').hidden = true;
-  setTimeout(function () { document.getElementById('dlTo').focus(); }, 60);
+  setTimeout(function () { document.getElementById('dlRecipient').focus(); }, 60);
 }
 function closeDeliver() {
   document.getElementById('dlOverlay').classList.remove('show');
@@ -970,21 +1009,26 @@ function closeDeliver() {
 
 function buildMailto() {
   var to = dlRecipients();
+  var recipient = document.getElementById('dlRecipient').value.trim();
   var name = document.getElementById('dlName').value.trim();
   var email = document.getElementById('dlEmail').value.trim();
+  var jd = document.getElementById('dlJd').value.trim();
   var note = document.getElementById('dlNote').value.trim();
-  var subject = '陈培胜 · AI Agent 工程师 · 在线简历' + (name ? '（' + name + ' 转发）' : '');
+  var subject = '陈培胜 · AI Agent 工程师 · 简历自动投递' + (recipient ? '（致 ' + recipient + '）' : '');
   var lines = [
-    '这是一份在线简历，点开即可查看完整内容（无需下载附件）：',
+    (recipient ? recipient + '，您好：' : '您好：'),
+    '这是一封简历自动投递邮件。',
     '',
     '简历地址：https://chenpeisheng.cn/resume.html',
     '备用地址：https://shenge-work.pages.dev/resume.html',
+    '岗位匹配：https://chenpeisheng.cn/jd.html',
     '',
     '陈培胜 · AI Agent 工程师 · 5 年研发 · Agent 开发 / AI 工程化 / 企业 AI 基建',
     '联系邮箱：hi@chenpeisheng.cn'
   ];
-  if (note) lines = lines.concat(['', '—— 转发人附言 ——', note]);
-  if (name || email) lines = lines.concat(['', '转发人：' + [name, email].filter(Boolean).join(' / ')]);
+  if (jd) lines = lines.concat(['', '—— 岗位 JD ——', jd]);
+  if (note) lines = lines.concat(['', '—— 投递附言 ——', note]);
+  if (name || email) lines = lines.concat(['', '投递人：' + [name, email].filter(Boolean).join(' / ')]);
   return 'mailto:' + encodeURIComponent(to.join(',')) + '?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(lines.join('\n'));
 }
 
@@ -1033,7 +1077,7 @@ document.getElementById('dlForm').addEventListener('submit', function (e) {
   if (bad.length) { fail('收件人邮箱格式不正确：' + bad[0], 'dlTo'); return; }
   if (email && !DL_EMAIL_RE.test(email)) { fail('你的邮箱格式不正确（可留空）', 'dlEmail'); return; }
 
-  tip.textContent = '邮件由系统发送，收件人点开链接即可查看完整简历';
+  tip.textContent = '邮件由系统发送，含 PDF 简历附件与在线简历入口';
   tip.style.color = '';
 
   function showMailtoFallback(msg) {
@@ -1058,9 +1102,12 @@ document.getElementById('dlForm').addEventListener('submit', function (e) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       to: to.join(','),
+      recipient: document.getElementById('dlRecipient').value.trim(),
       name: document.getElementById('dlName').value.trim(),
       email: email,
-      note: document.getElementById('dlNote').value.trim()
+      note: document.getElementById('dlNote').value.trim(),
+      jd: document.getElementById('dlJd').value.trim(),
+      attachments: dlAttachments()
     })
   })
     .then(function (res) {
@@ -1068,7 +1115,7 @@ document.getElementById('dlForm').addEventListener('submit', function (e) {
         var sentTo = (res.body.to || to).join('、');
         dlTrack('resume_deliver_result', { status: 'success', recipients: to.length });
         closeDeliver();
-        alert('已发送 ✉\n简历已发到：' + sentTo + '\n收件人点开邮件里的链接即可查看完整简历。');
+        alert('已投递 ✉\n简历已发到：' + sentTo + '\n邮件含 PDF 附件与在线简历入口，请提醒收件人留意。');
       } else if (res.body && (res.body.error === 'resend_not_configured' || res.body.error === 'recipient_not_verified')) {
         showMailtoFallback(res.body.message || '自动发信暂不可用，请用邮箱客户端发送');
       } else if (res.body && res.body.error === 'rate_limited') {
@@ -1085,7 +1132,7 @@ document.getElementById('dlForm').addEventListener('submit', function (e) {
     .then(function () {
       DL_STATE.sending = false;
       btn.disabled = false;
-      btn.textContent = '发送简历 ▶';
+      btn.textContent = '自动投递 ▶';
     });
 });
 

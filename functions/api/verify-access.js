@@ -9,8 +9,9 @@
      POST /api/verify-access {name, identity, org, contact, purpose, reason,
                               consent, device, origin, website}
        → {ok:true, message, requestId} / {ok:false, error, message}
-     GET  /api/verify-access?id=<申请ID>
-       → {ok:true, status:'pending'|'approved'|'rejected'}；批准后解锁生效
+     GET  /api/verify-access?id=<申请ID>  （需带 X-Device-Id）
+       → {ok:true, status:'pending'|'approved'|'rejected'|'expired', approvedAt, expiresAt}
+       批准只对申请时的设备有效，且批准后 24 小时后自动变为 expired，需重新申请
      OPTIONS → 204（CORS 预检）
 
    防滥用：
@@ -41,6 +42,8 @@ const MAX_REASON = 600;
 const MIN_REASON = 15;
 const MAX_DEVICE_KEY = 60;
 const MAX_DEVICE_VALUE = 120;
+const MAX_DEVICE_ID = 64;
+const APPROVAL_TTL_MS = 24 * 3600 * 1000;  // 批准解锁后 24 小时有效
 const IP_WINDOW_MS = 600000;   // 10 分钟
 const IP_LIMIT = 3;
 const DAY_LIMIT = 30;
@@ -190,14 +193,33 @@ export async function onRequestGet(context) {
   }
   try {
     const row = await env.DB.prepare(
-      'SELECT status, school_id, approved_at FROM verify_access_requests WHERE id = ?'
+      'SELECT status, school_id, approved_at, meta FROM verify_access_requests WHERE id = ?'
     ).bind(id).first();
     if (!row) return json({ ok: false, error: 'not_found' }, cors, 200);
+
+    /* 设备绑定：批准只对提交申请的那台设备生效。历史记录没记设备 ID 时放行，
+       避免旧数据突然全部失效。 */
+    let savedDevice = '';
+    try { savedDevice = String((JSON.parse(row.meta || '{}').deviceId) || ''); } catch (e) {}
+    const givenDevice = clean(request.headers.get('X-Device-Id'), MAX_DEVICE_ID);
+    if (savedDevice && givenDevice !== savedDevice) {
+      return json({ ok: false, error: 'device_mismatch', message: '该授权仅对申请时的设备有效' }, cors, 200);
+    }
+
+    const approvedAt = Number(row.approved_at || 0);
+    let status = row.status;
+    let expiresAt = 0;
+    if (status === 'approved') {
+      expiresAt = approvedAt + APPROVAL_TTL_MS;
+      /* 24 小时后自动过期：前端据此重新加锁并提示再次申请 */
+      if (!approvedAt || Date.now() > expiresAt) status = 'expired';
+    }
     return json({
       ok: true,
-      status: row.status,
+      status,
       schoolId: row.school_id || '',
-      approvedAt: row.approved_at || 0,
+      approvedAt,
+      expiresAt,
     }, cors, 200);
   } catch (e) {
     console.warn('[verify-access] 查询审批状态失败', (e && e.message) || e);

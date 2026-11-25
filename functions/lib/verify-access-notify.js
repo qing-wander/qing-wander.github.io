@@ -86,6 +86,7 @@ export function buildAccessNotice(item, meta, approval) {
     approvalUrl || '（当前环境未绑定数据库，无法生成审批链接；请改用回复邮件确认）',
     '',
     '批准后，对方页面会在无需刷新的情况下自动显示验证码与二维码。',
+    '授权仅对本次申请的设备有效，批准后 24 小时自动过期；到期后对方需重新提交申请。',
     '如需回复申请人：' + (EMAIL_RE.test(contact) ? contact : '（未留邮箱，请从联系方式中判断）'),
   ].join('\n');
 
@@ -123,7 +124,8 @@ export function buildAccessNotice(item, meta, approval) {
         '<a href="' + escapeHtml(approvalUrl) + '" style="display:inline-block;padding:12px 20px;background:#141311;color:#fff;font:bold 15px/1.4 \'PingFang SC\',\'Microsoft YaHei\',sans-serif;text-decoration:none;border:2px solid #141311;">' +
         '审查并决定是否解锁 →</a>' +
         '<p style="margin:10px 0 0;font:12px/1.6 \'PingFang SC\',\'Microsoft YaHei\',sans-serif;color:#141311;">' +
-        '链接 ' + escapeHtml(expiresAt) + ' 失效；打开后需再次点「批准解锁」才生效，邮件预读不会误操作。</p>' +
+        '链接 ' + escapeHtml(expiresAt) + ' 失效；打开后需再次点「批准解锁」才生效，邮件预读不会误操作。' +
+        '批准后的授权仅对申请人本次使用的设备有效，24 小时后自动过期，到期需重新申请。</p>' +
         '<p style="margin:6px 0 0;word-break:break-all;font:11px/1.6 ui-monospace,Menlo,Consolas,monospace;color:#141311;">' +
         escapeHtml(approvalUrl) + '</p></div>'
       : '<p style="margin-top:18px;font:12px/1.6 \'PingFang SC\',\'Microsoft YaHei\',sans-serif;color:#6b675e;">当前环境未绑定数据库，无法生成审批链接；请改用回复邮件确认。</p>',

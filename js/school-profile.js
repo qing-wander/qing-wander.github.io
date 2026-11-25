@@ -239,8 +239,10 @@
      验证码与二维码不进 DOM：只渲染占位预览 + 申请入口。
      申请提交后由本人核实身份再决定是否解锁；静态站点的源码仍含原始
      数据，这层锁是「礼貌门禁」而非密码学保护。 */
-  function verifyBlock(s) {
+  function verifyBlock(s, expiredAt) {
     var v = s.verify || {};
+    var note = '为保护隐私，学历在线验证码与二维码已加锁。若因招聘核验、背调等正当用途需要查看，请填写申请；本人核实身份后再解锁。';
+    if (expiredAt) note = '上次授权已于 ' + formatExpiry(expiredAt) + ' 到期，请重新申请。' + note;
     return '<div class="sp-verify-lock" data-sp-verify-lock>' +
       '<div class="sp-lock-preview" aria-hidden="true">' +
         '<div class="sp-lock-lines">' +
@@ -251,7 +253,7 @@
         '<span class="sp-lock-qr"><i>LOCK</i></span>' +
       '</div>' +
       '<div class="sp-lock-action">' +
-        '<p class="sp-lock-note">为保护隐私，学历在线验证码与二维码已加锁。若因招聘核验、背调等正当用途需要查看，请填写申请；本人核实身份后再解锁。</p>' +
+        '<p class="sp-lock-note' + (expiredAt ? ' is-expired' : '') + '">' + esc(note) + '</p>' +
         '<button class="sp-apply-btn" type="button" data-sp-verify-apply>申请查看权限 →</button>' +
       '</div>' +
     '</div>';
@@ -259,7 +261,8 @@
 
   /* 审批通过后：把锁占位原址替换为真实验证码 / 二维码。
      这里刻意用 rawEsc 而不是 esc —— esc 会把验证码统一打成圆点。 */
-  function unlockedVerifyMarkup(v) {
+  function unlockedVerifyMarkup(v, unlock) {
+    var until = unlock && unlock.expiresAt ? formatExpiry(unlock.expiresAt) : '24 小时后';
     return '<div class="sp-verify-open" data-sp-verify-open>' +
       '<div class="sp-verify-text">' +
         '<p class="sp-verify-label">' + rawEsc(v.label || '学历在线验证码') + sup(5) + '</p>' +
@@ -268,15 +271,15 @@
         (v.url ? '<p class="sp-verify-tip"><a href="' + rawEsc(v.url) + '" target="_blank" rel="noopener noreferrer">前往学信网查验 ↗</a></p>' : '') +
       '</div>' +
       '<img class="sp-verify-qr" src="' + rawEsc(v.qrImage || '') + '" alt="' + rawEsc(v.qrAlt || '') + '" data-sp-zoom>' +
-      '<p class="sp-verify-flag">✓ 已获本人批准查看 · 仅限申请用途</p>' +
+      '<p class="sp-verify-flag">✓ 已获本人批准查看 · 仅限申请用途 · 有效期至 ' + rawEsc(until) + '</p>' +
     '</div>';
   }
 
-  function revealVerify() {
+  function revealVerify(unlock) {
     var s = CUR;
     if (!s || !s.verify) return;
-    var lock = document.querySelector('[data-sp-verify-lock]');
-    if (lock) lock.outerHTML = unlockedVerifyMarkup(s.verify);
+    var lock = document.querySelector('[data-sp-verify-lock], [data-sp-verify-open]');
+    if (lock) lock.outerHTML = unlockedVerifyMarkup(s.verify, unlock);
 
     /* 相册里那张二维码占位也一起还原，别让「已解锁」还留个 LOCK */
     var qr = arr(s.album).filter(function (a) {
@@ -291,6 +294,29 @@
     /* 「数据说明」板块此前也统一脱敏了，解锁后重绘成原文 */
     var srcBox = document.querySelector('[data-sp-fold="sources"] .sp-fold-clip');
     if (srcBox) srcBox.innerHTML = sourcesBlock(s, true);
+  }
+
+  /* 授权过期 / 设备不匹配时回到加锁态，避免出现「已解锁」残留 */
+  function relockVerify(expiredAt) {
+    var s = CUR;
+    if (!s) return;
+    var el = document.querySelector('[data-sp-verify-lock], [data-sp-verify-open]');
+    if (el) el.outerHTML = verifyBlock(s, expiredAt);
+
+    var qr = arr(s.album).filter(function (a) {
+      return a.img && String(a.img).indexOf('edu-verify-qr') >= 0;
+    })[0];
+    if (qr) {
+      Array.prototype.forEach.call(document.querySelectorAll('.sp-album-img'), function (img) {
+        var src = img.getAttribute('src') || '';
+        if (src === qr.img || src.indexOf('edu-verify-qr') >= 0) {
+          img.outerHTML = '<div class="sp-album-locked" data-sp-album-qr="1"><span>LOCK</span>' +
+            '<small>二维码已加锁 · 请在「学历核验」板块申请查看</small></div>';
+        }
+      });
+    }
+    var srcBox = document.querySelector('[data-sp-fold="sources"] .sp-fold-clip');
+    if (srcBox) srcBox.innerHTML = sourcesBlock(s);
   }
 
   /* ── 8. 数据说明 + 来源 + 页脚 ────────────────────────── */
@@ -394,10 +420,21 @@
 
   /* ── 审批结果轮询：申请成功后本人点邮件链接批准，页面无需刷新即解锁 ── */
   var ACCESS_KEY = 'sp_verify_access';
+  var UNLOCK_KEY = 'sp_verify_unlock';
+  var ACCESS_TTL_MS = 24 * 3600 * 1000;  // 与服务端一致：批准 24 小时后自动过期
   var POLL_MS = 5000;
   var POLL_MAX = 360;   // 最多等 30 分钟；离开页面再回来会续上
   var pollTimer = null;
   var pollTick = 0;
+
+  function formatExpiry(ts) {
+    try {
+      return new Date(Number(ts)).toLocaleString('zh-CN', {
+        year: 'numeric', month: '2-digit', day: '2-digit',
+        hour: '2-digit', minute: '2-digit', hour12: false,
+      });
+    } catch (e) { return ''; }
+  }
 
   function saveAccess(id, base, schoolId) {
     try {
@@ -416,6 +453,30 @@
     try { localStorage.removeItem(ACCESS_KEY); } catch (e) {}
     if (pollTimer) { clearTimeout(pollTimer); pollTimer = null; }
   }
+
+  /* 解锁状态落盘：刷新 / 重开页面后仍是解锁态，但仅限同一设备且在 24 小时内 */
+  function saveUnlock(id, device, approvedAt, expiresAt, schoolId) {
+    try {
+      localStorage.setItem(UNLOCK_KEY, JSON.stringify({
+        id: id, device: device || '', schoolId: schoolId || '',
+        approvedAt: Number(approvedAt) || Date.now(),
+        expiresAt: Number(expiresAt) || (Date.now() + ACCESS_TTL_MS)
+      }));
+    } catch (e) {}
+  }
+  function clearUnlock() {
+    try { localStorage.removeItem(UNLOCK_KEY); } catch (e) {}
+  }
+  function readUnlock() {
+    var u = null;
+    try { u = JSON.parse(localStorage.getItem(UNLOCK_KEY) || 'null'); } catch (e) { clearUnlock(); return null; }
+    if (!u || !/^[0-9a-f]{32}$/i.test(u.id || '')) { clearUnlock(); return null; }
+    var did = deviceId();
+    if (did && u.device && u.device !== did) { clearUnlock(); return null; }
+    if (!u.expiresAt || Date.now() > Number(u.expiresAt)) { clearUnlock(); return null; }
+    return u;
+  }
+
   function setDoneText(msg) {
     var el = document.querySelector('[data-sp-form-done-text]');
     if (el) el.textContent = msg;
@@ -432,17 +493,35 @@
       return;
     }
     var url = new URL(a.base + '/api/verify-access?id=' + encodeURIComponent(a.id), location.href).href;
-    fetch(url, { method: 'GET', headers: { 'Accept': 'application/json' }, credentials: 'omit', cache: 'no-store' })
+    var did = deviceId();
+    var headers = { 'Accept': 'application/json' };
+    if (did) headers['X-Device-Id'] = did;
+    fetch(url, { method: 'GET', headers: headers, credentials: 'omit', cache: 'no-store' })
       .then(function (r) {
         var ct = r.headers.get('content-type') || '';
         if (ct.indexOf('application/json') < 0) throw new Error('not_json');
         return r.json();
       })
       .then(function (d) {
-        if (d && d.ok && d.status === 'approved') {
-          revealVerify();
+        if (d && d.error === 'device_mismatch') {
           clearAccess();
-          setDoneText('本人已批准，学历核验板块已解锁。你可以关闭此弹窗查看验证码与二维码。');
+          clearUnlock();
+          relockVerify();
+          setDoneText('该次批准仅对申请时的设备有效。请在当前设备重新提交申请。');
+          return;
+        }
+        if (d && d.ok && d.status === 'approved') {
+          saveUnlock(a.id, did, d.approvedAt, d.expiresAt, a.schoolId);
+          revealVerify(readUnlock());
+          clearAccess();
+          setDoneText('本人已批准，学历核验板块已解锁。授权仅限当前设备、24 小时内有效，到期后需重新申请。');
+          return;
+        }
+        if (d && d.ok && d.status === 'expired') {
+          clearAccess();
+          clearUnlock();
+          relockVerify(Date.now() - ACCESS_TTL_MS);
+          setDoneText('授权已到期（有效期 24 小时），请重新提交申请。');
           return;
         }
         if (d && d.ok && d.status === 'rejected') {
@@ -470,6 +549,16 @@
     if (!a) return;
     if (Date.now() - (a.startedAt || 0) > POLL_MAX * POLL_MS) { clearAccess(); return; }
     startPolling(a.id, a.base || '', a.schoolId || '');
+  }
+
+  /* 页面打开时：先认领仍在有效期内的解锁态，否则续上未完成的等待 */
+  function bootAccess() {
+    var raw = null;
+    try { raw = JSON.parse(localStorage.getItem(UNLOCK_KEY) || 'null'); } catch (e) {}
+    var u = readUnlock();
+    if (u) { revealVerify(u); return; }
+    if (raw && raw.expiresAt && Number(raw.expiresAt) <= Date.now()) relockVerify(raw.expiresAt);
+    resumePolling();
   }
 
   var lastFocused = null;
@@ -517,7 +606,7 @@
         '<button class="sp-modal-close" type="button" data-sp-modal-close aria-label="关闭弹窗">×</button>' +
         '<p class="sp-modal-kicker">VERIFY / ACCESS REQUEST</p>' +
         '<h3 class="sp-modal-title" id="spAccessTitle">申请查看学历核验信息</h3>' +
-        '<p class="sp-modal-lead">请说明你的身份与查看用途。信息会连同申请时间、设备与浏览器信息邮件发送给简历本人；本人核实身份后再决定是否解锁。</p>' +
+        '<p class="sp-modal-lead">请说明你的身份与查看用途。信息会连同申请时间、设备与浏览器信息邮件发送给简历本人；本人核实身份后再决定是否解锁。批准后仅对当前设备有效，24 小时后自动过期，到期需重新申请。</p>' +
         '<form class="sp-access-form" data-sp-access-form novalidate>' +
           '<label class="sp-field"><span class="sp-field-label">你的姓名 / 称呼 <em>必填</em></span>' +
             '<input type="text" name="name" maxlength="40" autocomplete="name" placeholder="例如：张三">' +
@@ -561,7 +650,7 @@
         '</form>' +
         '<div class="sp-form-done" data-sp-form-done hidden>' +
           '<b>申请已提交</b>' +
-          '<p data-sp-form-done-text>请留在此页等待：本人核验身份后批准，学历核验板块会自动解锁，无需刷新。若离开本页，回来后也会继续等待结果。</p>' +
+          '<p data-sp-form-done-text>请留在此页等待：本人核验身份后批准，学历核验板块会自动解锁，无需刷新。授权仅对当前设备有效，24 小时后自动过期。若离开本页，回来后也会继续等待结果。</p>' +
           '<button class="sp-submit is-alt" type="button" data-sp-modal-close>关闭</button>' +
         '</div>' +
       '</div>';
@@ -651,7 +740,7 @@
             if (done) done.hidden = false;
             if (d.requestId) {
               startPolling(d.requestId, activeBase, new URLSearchParams(location.search).get('c') || '');
-              setDoneText('申请已提交。请留在此页等待：本人核验身份后批准，学历核验板块会自动解锁，无需刷新。');
+              setDoneText('申请已提交。请留在此页等待：本人核验身份后批准，学历核验板块会自动解锁，无需刷新。授权仅对当前设备有效，24 小时后自动过期。');
             } else {
               var txt = form.parentNode.querySelector('[data-sp-form-done-text]');
               if (txt) txt.textContent = '申请已提交。当前站点未启用在线审批，本人会通过你留下的联系方式回复。';
@@ -707,8 +796,8 @@
       var form = closest(e.target, '[data-sp-access-form]');
       if (form) { e.preventDefault(); submitAccess(form); }
     }, true);
-    /* 页面重新打开时续上未完成的等待；延后一拍，等 school.html 渲染完 DOM */
-    setTimeout(resumePolling, 0);
+    /* 页面重新打开时先恢复未过期的解锁态，再续上未完成的等待；延后一拍等 DOM 渲染完 */
+    setTimeout(bootAccess, 0);
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start);

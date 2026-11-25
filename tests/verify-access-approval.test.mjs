@@ -64,6 +64,7 @@ async function submit(env, body = BODY) {
       headers: {
         'Content-Type': 'application/json', Origin: ORIGIN,
         'User-Agent': 'Mozilla/5.0 TestBrowser/1.0',
+        'X-Device-Id': 'device-A',
         Referer: ORIGIN + '/school.html?c=xinhua',
       },
       body: JSON.stringify(body),
@@ -71,10 +72,12 @@ async function submit(env, body = BODY) {
   });
 }
 
-async function status(env, id) {
+async function status(env, id, device = 'device-A') {
+  const headers = { Origin: ORIGIN };
+  if (device) headers['X-Device-Id'] = device;
   const res = await statusGet({
     env,
-    request: new Request(ORIGIN + '/api/verify-access?id=' + id, { headers: { Origin: ORIGIN } }),
+    request: new Request(ORIGIN + '/api/verify-access?id=' + id, { headers }),
   });
   return { res, body: await res.json() };
 }
@@ -184,4 +187,50 @@ test('GET 状态接口校验 id 格式与来源白名单', async () => {
     request: new Request(ORIGIN + '/api/verify-access?id=' + 'a'.repeat(32), { headers: { Origin: 'https://evil.example' } }),
   });
   assert.equal(blocked.status, 403);
+});
+
+test('设备绑定：批准只对申请时的设备生效，换设备查询被拒绝', async (t) => {
+  mockResend(t);
+  const env = envOf();
+  const { requestId } = await (await submit(env)).json();
+  const row = await env.DB.prepare('SELECT created_at FROM verify_access_requests WHERE id = ?').bind(requestId).first();
+  const token = await signApproval(requestId, env, row.created_at);
+  await approvePostPage(env, { id: requestId, exp: String(token.exp), sig: token.sig }, 'approve');
+
+  const same = await status(env, requestId, 'device-A');
+  assert.equal(same.body.status, 'approved');
+  assert.ok(same.body.expiresAt > Date.now());
+  assert.match(same.body.expiresAt.toString(), /^\d{13}$/);
+
+  const other = await status(env, requestId, 'device-B');
+  assert.equal(other.body.ok, false);
+  assert.equal(other.body.error, 'device_mismatch');
+});
+
+test('24 小时有效期：批准即刻有效，超过 24 小时返回 expired', async (t) => {
+  mockResend(t);
+  const env = envOf();
+  const { requestId } = await (await submit(env)).json();
+  const row = await env.DB.prepare('SELECT created_at FROM verify_access_requests WHERE id = ?').bind(requestId).first();
+  const token = await signApproval(requestId, env, row.created_at);
+  await approvePostPage(env, { id: requestId, exp: String(token.exp), sig: token.sig }, 'approve');
+
+  assert.equal((await status(env, requestId)).body.status, 'approved');
+
+  const approvedAt = Date.now() - 25 * 3600 * 1000;
+  await env.DB.prepare('UPDATE verify_access_requests SET approved_at = ? WHERE id = ?').bind(approvedAt, requestId).run();
+  const expired = (await status(env, requestId)).body;
+  assert.equal(expired.status, 'expired');
+  assert.equal(expired.approvedAt, approvedAt);
+  assert.equal(expired.expiresAt, approvedAt + 24 * 3600 * 1000);
+});
+
+test('前端已接入设备绑定、24 小时过期与解锁态恢复', () => {
+  const js = readFileSync(new URL('../js/school-profile.js', import.meta.url), 'utf8');
+  for (const needle of [
+    'UNLOCK_KEY', 'ACCESS_TTL_MS', "headers['X-Device-Id']",
+    "d.status === 'expired'", "d.error === 'device_mismatch'", 'relockVerify', 'bootAccess',
+  ]) {
+    assert.ok(js.includes(needle), '前端缺少：' + needle);
+  }
 });

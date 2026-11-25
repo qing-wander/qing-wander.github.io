@@ -23,6 +23,7 @@ const HTML = join(ROOT, 'resume.html');
 const OUT = join(ROOT, 'assets', 'print-preview');
 const MANIFEST = join(OUT, 'manifest.json');
 const DELIVERED_PDF = join(ROOT, '.temp', '陈培胜-简历-2026.pdf');
+const ATTACH_PDF = join(ROOT, 'assets', 'resume', 'chen-peisheng-resume-2026.pdf');
 const CHECK_ONLY = process.argv.includes('--check');
 
 const CANDIDATES = [
@@ -61,7 +62,11 @@ function check() {
       }
     }
   }
-  console.log(`✓ 打印预览与 resume.html 同步（${m.pdf_pages} 页 × 2 版，sha256 ${actual.slice(0, 12)}）`);
+  if (!existsSync(ATTACH_PDF)) {
+    console.error(`::error::缺少邮件附件 PDF ${ATTACH_PDF}，先跑 node scripts/render_print_previews.mjs`);
+    return 1;
+  }
+  console.log(`✓ 打印预览与 resume.html 同步（${m.pdf_pages} 页 × 2 版，sha256 ${actual.slice(0, 12)}；邮件附件 PDF 就位）`);
   return 0;
 }
 
@@ -117,6 +122,11 @@ try {
   mkdirSync(dirname(DELIVERED_PDF), { recursive: true });
   copyFileSync(pdf, DELIVERED_PDF);
   console.log(`✓ 投递用 PDF 同步更新：${DELIVERED_PDF}`);
+
+  /* 自动投递附件：同一份 PDF 落到部署目录，Functions 用 fetch 读它做邮件附件 */
+  mkdirSync(dirname(ATTACH_PDF), { recursive: true });
+  copyFileSync(pdf, ATTACH_PDF);
+  console.log(`✓ 邮件附件 PDF 同步更新：${ATTACH_PDF}`);
   process.exit(check());
 } finally {
   rmSync(dir, { recursive: true, force: true });

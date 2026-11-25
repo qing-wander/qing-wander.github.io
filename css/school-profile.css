@@ -254,6 +254,7 @@
 }
 .sp-lock-action { display: flex; flex-direction: column; justify-content: center; gap: 10px; }
 .sp-lock-note { font-size: 11.5px; line-height: 1.7; color: var(--ink-soft); }
+.sp-lock-note.is-expired { color: #C4112C; font-weight: 700; }
 .sp-apply-btn {
   align-self: flex-start; cursor: pointer;
   font: bold 13px/1.4 var(--font-cn, sans-serif); padding: 9px 16px;
