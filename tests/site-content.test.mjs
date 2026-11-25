@@ -223,13 +223,26 @@ test('公开路由返回云端快照，标记 X-Content-Source', async () => {
   assert.equal(text.includes('"resume"'), false);
 });
 
-test('公开路由：JSON 项直出原文，未知文件 404，未配置回退静态副本', async () => {
+test('公开路由：JSON 项直出原文，未知文件交给静态资源，未配置回退静态副本', async () => {
   const env = envOf();
   await writeContent(env, 'contributions', '{"total":42}');
   const ok = await dataGet({ request: req('/data/contributions.json'), env, params: { file: 'contributions.json' } });
   assert.equal(await ok.text(), '{"total":42}');
   assert.match(ok.headers.get('Content-Type'), /json/);
 
+  /* 白名单之外（蛇图 SVG、asset-map.js…）必须 next() 交回静态资源，
+     否则线上 /data/snake.svg 会被这条通配路由打成 404 */
+  const seen = [];
+  const passthrough = await dataGet({
+    request: req('/data/snake.svg'),
+    env,
+    params: { file: 'snake.svg' },
+    next: async () => { seen.push('next'); return new Response('<svg/>', { status: 200 }); },
+  });
+  assert.deepEqual(seen, ['next']);
+  assert.equal(passthrough.status, 200);
+
+  /* 静态目录里也没有的路径，静态层自己会给 404；直调（无 next）时仍兜 404 */
   const missing = await dataGet({ request: req('/data/evil.js'), env, params: { file: 'evil.js' } });
   assert.equal(missing.status, 404);
 

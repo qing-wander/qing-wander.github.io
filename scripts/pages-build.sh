@@ -98,7 +98,8 @@ echo "=== ⑥ 独立页硬校验：缺一个就让构建失败，别等线上被
 for f in index.html resume.html jd.html company.html school.html 404.html \
          admin/index.html admin/assets/admin.js admin/assets/admin.css login.html login/index.html \
          css/jd-match.css css/school-profile.css js/jd-match.js js/school-profile.js \
-         data/school-profiles.js functions/api/wall.js \
+         data/school-profiles.js data/snake.svg data/snake-dark.svg data/asset-map.js \
+         functions/api/wall.js \
          assets/print-preview/manifest.json assets/print-preview/color-1.png \
          assets/print-preview/bw-1.png assets/print-preview/color-2.png \
          assets/print-preview/bw-2.png          assets/resume/chen-peisheng-resume-2026.pdf \

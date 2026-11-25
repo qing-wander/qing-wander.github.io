@@ -8,15 +8,22 @@
      site-data.js / company-profiles.js / school-profiles.js / people.js
      contributions.json / work-details.json / asset-manifest.json
 
+   白名单之外的文件一律 next() 交回静态资源：这条路由是 [file] 通配，
+   会一并吃掉 data/ 下所有非 JSON 快照（snake.svg 蛇图、asset-map.js
+   资源映射脚本…）。之前在这里直接 404，线上表现为蛇图只剩 alt 文字、
+   COS 资源映射失效。静态目录里没有的文件，next() 自己会给 404。
+
    缓存 5 分钟：后台改完最多 5 分钟全站生效；想立刻看可加 ?v= 时间戳。
    ────────────────────────────────────────────────────────────── */
 import { isKey, keyForFile, readContent, toSnapshot, KEYS } from '../lib/site-content.js';
 
 export async function onRequestGet(context) {
-  const { request, env, params } = context;
+  const { request, env, params, next } = context;
   const file = params && params.file;
   const key = keyForFile(file);
+  /* 不是数据快照 → 放行给静态资源（单测直接调用时没有 next，退回 404） */
   if (!key || !isKey(key)) {
+    if (typeof next === 'function') return next();
     return new Response('Not found', { status: 404 });
   }
 

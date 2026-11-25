@@ -390,9 +390,9 @@
       '</div>' +
       '<div class="gh-stats" hidden></div>' +
       '<div class="gh-snake">' +
-        '<img class="gh-snake-light" src="data/snake.svg?v=20261124"' +
+        '<img class="gh-snake-light" src="data/snake.svg?v=20261125"' +
         ' alt="GitHub 贡献热力网格与贪吃蛇动效（含月份星期坐标）" loading="lazy" decoding="async">' +
-        '<img class="gh-snake-dark" src="data/snake-dark.svg?v=20261124"' +
+        '<img class="gh-snake-dark" src="data/snake-dark.svg?v=20261125"' +
         ' alt="GitHub 贡献热力网格与贪吃蛇动效（深色）" loading="lazy" decoding="async">' +
       '</div>';
     box.hidden = false;
