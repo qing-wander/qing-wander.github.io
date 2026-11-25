@@ -13,7 +13,8 @@
    Resend API Key 只放 Cloudflare 环境变量（RESEND_API_KEY），永不进前端。
 
    接口：
-     POST /api/deliver { to, recipient?, name?, email?, note?, jd?, attachments? }
+     POST /api/deliver { to, recipient?, name?, email?, note?, jd?, attachments?,
+                         fileNames?, fileOrder?, zip? }
        to           收件人邮箱，逗号 / 分号 / 空格分隔多个（最多 3 个）
        recipient    投递对象称呼（可选，如「张经理」；留空正文显示「您好」）
        name         投递人称呼（可选，如「张 HR / 某某公司」）
@@ -21,6 +22,10 @@
        note         附言（可选，最多 500 字）
        jd           岗位 JD（可选，最多 4000 字；无则不渲染 JD 区块）
        attachments  勾选的证书 key 数组（可选：idCard/diploma/degree/other）
+       fileNames    {key: '自定义文件名.pdf'}，未给的用默认名
+       fileOrder    证书 key 数组，决定附件顺序（未列出的排在后面）
+       zip          {enabled:boolean, name?:string}；开启后邮件只附一个 ZIP，
+                    内含 PDF 简历 + 已备好的证书，名字缺省按 年份_岗位_应聘材料_姓名.zip
      OPTIONS → 204
 
    环境变量（Cloudflare Pages → Settings → Variables）：
@@ -39,8 +44,9 @@
 
 import {
   CERT_SLOTS, RESUME_PDF_NAME, RESUME_PDF_PATH,
-  buildDeliveryEmail, buildSubject,
+  buildDeliveryEmail, buildSubject, defaultZipName,
 } from '../lib/deliver-content.js';
+import { createZip } from '../lib/zip.js';
 
 const JSON_HEADERS = { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' };
 
@@ -71,7 +77,21 @@ const DEFAULT_ORIGINS = [
 const MAX_RECIPIENT = 40;
 const MAX_JD = 4000;
 const MAX_ATTACH_BYTES = 12 * 1024 * 1024; // 单附件上限，远低于 Resend 40MB/封
+const MAX_FILE_NAME = 100;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
+/* 文件名清洗：去控制字符与路径分隔符，强制扩展名，挡住 ../ 之类的穿越尝试 */
+function cleanFileName(raw, fallback, ext) {
+  let s = String(raw == null ? '' : raw)
+    .replace(/[\u0000-\u001f\u007f]/g, '')
+    .replace(/[\\/:*?"<>|]/g, '_')
+    .replace(/\s+/g, ' ')
+    .replace(/^\s+|\s+$/g, '')
+    .slice(0, MAX_FILE_NAME);
+  if (!s) s = fallback;
+  if (ext && s.toLowerCase().slice(-ext.length) !== ext) s += ext;
+  return s;
+}
 
 export function allowedOrigins(env) {
   return String(env.ALLOWED_ORIGINS || DEFAULT_ORIGINS.join(','))
@@ -162,24 +182,30 @@ function toBase64(buf) {
   return btoa(bin);
 }
 
-/* 从本站静态资源取一个附件；取不到返回 null（不阻塞发信） */
-async function fetchAttachment(request, path, filename, withData = true) {
+/* 从本站静态资源取一个附件字节；取不到返回 null（不阻塞发信） */
+async function fetchAttachmentBytes(request, path) {
   try {
     const url = new URL(path, request.url);
     const resp = await fetch(url);
     if (!resp.ok) return null;
     const buf = await resp.arrayBuffer();
     if (!buf.byteLength || buf.byteLength > MAX_ATTACH_BYTES) return null;
-    return withData ? { filename, content: toBase64(buf) } : { filename };
+    return new Uint8Array(buf);
   } catch (e) {
     return null;
   }
 }
 
-/* 解析勾选的证书 key：只认白名单内的，去重 */
-function parseCertKeys(raw) {
-  if (!Array.isArray(raw)) return [];
-  return Array.from(new Set(raw.map((k) => String(k).trim()).filter((k) => k in CERT_SLOTS)));
+/* 解析勾选的证书 key：只认白名单内的、去重；fileOrder 决定顺序，未列出的追加在后 */
+function parseCertKeys(raw, order) {
+  const picked = [];
+  const add = (k) => {
+    const key = String(k == null ? '' : k).trim();
+    if (key in CERT_SLOTS && picked.indexOf(key) < 0) picked.push(key);
+  };
+  if (Array.isArray(order)) order.forEach(add);
+  if (Array.isArray(raw)) raw.forEach(add);
+  return picked;
 }
 
 /* 请求体归一化：发信与预览共用，保证预览所见即实际所发 */
@@ -194,6 +220,15 @@ export function parseDelivery(body) {
   }
   if (parsed.error === 'invalid') return { error: 'bad_request', message: '收件人邮箱格式不正确' };
 
+  const fileNames = {};
+  const rawNames = body.fileNames && typeof body.fileNames === 'object' ? body.fileNames : {};
+  for (const key of Object.keys(CERT_SLOTS)) {
+    if (Object.prototype.hasOwnProperty.call(rawNames, key)) {
+      fileNames[key] = cleanFileName(rawNames[key], CERT_SLOTS[key].filename, '.pdf');
+    }
+  }
+  const zip = body.zip && typeof body.zip === 'object' ? body.zip : {};
+
   const d = {
     to: parsed.list,
     recipient: clean(body.recipient, MAX_RECIPIENT),
@@ -201,7 +236,11 @@ export function parseDelivery(body) {
     email: clean(body.email, 120).toLowerCase(),
     note: clean(body.note, MAX_NOTE),
     jd: clean(body.jd, MAX_JD),
-    certs: parseCertKeys(body.attachments),
+    certs: parseCertKeys(body.attachments, body.fileOrder),
+    fileNames,
+    zipEnabled: !!zip.enabled,
+    zipName: cleanFileName(zip.name, defaultZipName(clean(body.jd, MAX_JD), ''), '.zip'),
+    zipEntries: [],
     attachedLabels: [],
     pendingLabels: [],
   };
@@ -211,20 +250,43 @@ export function parseDelivery(body) {
   return { d };
 }
 
-/* 探测实际会随信附上的文件。withData=false 只取文件名，供预览使用（不转 base64）。 */
+/* 探测实际会随信附上的文件。withData=false 只取文件名，供预览使用（不转 base64）。
+   开启 zip 时把 PDF + 已备好的证书打成一个包，邮件只挂这一个附件。 */
 export async function probeAttachments(request, d, withData = true) {
-  const attachments = [];
-  const names = [];
+  const files = [];
   /* PDF 是固定附件，不在正文「另申请」清单里重复列一次 */
-  const pdf = await fetchAttachment(request, RESUME_PDF_PATH, RESUME_PDF_NAME, withData);
-  if (pdf) { attachments.push(pdf); names.push(pdf.filename); }
+  const pdfBytes = await fetchAttachmentBytes(request, RESUME_PDF_PATH);
+  if (pdfBytes) files.push({ name: RESUME_PDF_NAME, bytes: pdfBytes });
+
   for (const key of d.certs) {
     const slot = CERT_SLOTS[key];
-    const file = await fetchAttachment(request, slot.path, slot.filename, withData);
-    if (file) { attachments.push(file); names.push(file.filename); d.attachedLabels.push(slot.label); }
-    else d.pendingLabels.push(slot.label);
+    const bytes = await fetchAttachmentBytes(request, slot.path);
+    if (bytes) {
+      const name = (d.fileNames && d.fileNames[key]) || slot.filename;
+      files.push({ name, bytes });
+      d.attachedLabels.push(name);
+    } else {
+      d.pendingLabels.push(slot.label);
+    }
   }
-  return { attachments, names };
+
+  if (d.zipEnabled && files.length) {
+    d.zipEntries = files.map((f) => f.name);
+    return {
+      attachments: [withData
+        ? { filename: d.zipName, content: toBase64(createZip(files)) }
+        : { filename: d.zipName }],
+      names: [d.zipName],
+    };
+  }
+  /* 没有可打包的文件时不要声称附了 ZIP */
+  d.zipName = '';
+  return {
+    attachments: files.map((f) => withData
+      ? { filename: f.name, content: toBase64(f.bytes) }
+      : { filename: f.name }),
+    names: files.map((f) => f.name),
+  };
 }
 
 export async function onRequestOptions({ request, env }) {

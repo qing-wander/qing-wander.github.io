@@ -91,8 +91,18 @@ if (stripped === html) {
 }
 
 const dir = mkdtempSync(join(tmpdir(), 'pv-src-'));
-const tmpHtml = join(dir, 'resume.html');
+/* 打印源必须留在项目根目录：resume.html 依赖相对路径的
+   css/company-profile.css 与 js/company-profile.js——「档案速览」行的
+   ▸ 前缀来自前者、quickStats 文本由后者运行时填充。放到系统临时目录会让
+   这些资源 404，PDF 里整行速览就消失了。文件名以下划线开头，
+   pages-build.sh 的独立页采集会跳过它，打印结束立即删除。 */
+const tmpHtml = join(ROOT, '_print-preview-src.html');
 const pdf = join(dir, 'resume.pdf');
+/* process.exit() 不会执行 finally，用 exit 钩子保证任何退出路径都清理干净 */
+process.on('exit', () => {
+  rmSync(tmpHtml, { force: true });
+  rmSync(dir, { recursive: true, force: true });
+});
 try {
   writeFileSync(tmpHtml, stripped, 'utf8');
   const r = spawnSync(chrome, [
@@ -129,5 +139,6 @@ try {
   console.log(`✓ 邮件附件 PDF 同步更新：${ATTACH_PDF}`);
   process.exit(check());
 } finally {
+  rmSync(tmpHtml, { force: true });
   rmSync(dir, { recursive: true, force: true });
 }

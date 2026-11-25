@@ -1,23 +1,23 @@
 {
   "source": "resume.html",
-  "source_sha256": "01ab90ac1d56f36c6fc3d879afc0d6a10f02ced0d51ceced94826d5b67aa680e",
+  "source_sha256": "5ab9b027d61e2a23da0af6d62eb92c5ef4c20907d76463e96e5ddec2c4d60fd2",
   "pdf_pages": 2,
   "width": 1190,
   "pages": [
     {
       "width": 1190,
       "height": 1684,
-      "color_bytes": 871762,
-      "bw_bytes": 347183
+      "color_bytes": 936712,
+      "bw_bytes": 371693
     },
     {
       "width": 1190,
       "height": 1684,
-      "color_bytes": 1005335,
-      "bw_bytes": 403294
+      "color_bytes": 1006963,
+      "bw_bytes": 404250
     }
   ],
-  "generated_at": "2026-11-25T04:03:47+00:00",
+  "generated_at": "2026-11-25T05:05:49+00:00",
   "method": "Chrome printToPDF -> per-page raster -> pixel grayscale",
   "note": "彩色版是真实导出 PDF 的原样栅格；黑白版是对其像素灰度化，模拟黑白打印。"
 }

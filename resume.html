@@ -434,6 +434,32 @@ body {
 }
 .dl-check input { accent-color: var(--orange); width: 16px; height: 16px; flex-shrink: 0; margin-top: 1px; }
 .dl-check small { display: block; font-size: 10px; color: var(--ink-soft); }
+/* 附件：逐项重命名 + ↑↓ 调整发送顺序 + 打包开关 */
+.dl-att-list { display: flex; flex-direction: column; gap: 8px; }
+.dl-att-row {
+  display: flex; flex-direction: column; gap: 6px;
+  padding: 8px 9px; border: 1px solid rgba(20,19,17,.28); background: var(--paper);
+}
+.dl-att-row.is-off { opacity: .55; }
+.dl-att-row .dl-check { font-weight: 700; }
+.dl-att-ops { display: flex; align-items: center; gap: 5px; padding-left: 24px; }
+.dl-att-name {
+  flex: 1 1 auto; min-width: 0; font: 12px/1.4 inherit; color: var(--ink);
+  border: 1px solid rgba(20,19,17,.45); background: #fff; padding: 5px 7px;
+}
+.dl-att-name:focus { outline: 2px solid var(--orange); outline-offset: 1px; }
+.dl-att-move {
+  flex: 0 0 auto; width: 26px; height: 26px; padding: 0; cursor: pointer;
+  border: 1px solid var(--ink); background: var(--paper); color: var(--ink);
+  font: bold 13px/1 monospace;
+}
+.dl-att-move:hover:not(:disabled) { background: var(--orange); color: #fff; }
+.dl-att-move:disabled { opacity: .3; cursor: default; }
+.dl-zip {
+  margin-top: 11px; padding-top: 10px;
+  border-top: 1px dashed rgba(20,19,17,.35);
+  display: flex; flex-direction: column; gap: 7px;
+}
 /* 提交区：常驻弹窗底部，只有表单字段区滚动，按钮任何屏幕尺寸都可见 */
 .dl-foot {
   display: flex;
@@ -961,13 +987,46 @@ body.pv-open { overflow: hidden; }
       </label>
       <div class="dl-group">
         <div class="dl-group-title">ATTACHMENTS / 附加材料（默认不选）</div>
-        <div class="dl-checks">
-          <label class="dl-check"><input type="checkbox" id="dlAttId" value="idCard"><span>身份证复印件<small>文件待提供</small></span></label>
-          <label class="dl-check"><input type="checkbox" id="dlAttDip" value="diploma"><span>学历证书<small>文件待提供</small></span></label>
-          <label class="dl-check"><input type="checkbox" id="dlAttDeg" value="degree"><span>学位证书<small>文件待提供</small></span></label>
-          <label class="dl-check"><input type="checkbox" id="dlAttOther" value="other"><span>其他资质证书<small>文件待提供</small></span></label>
+        <div class="dl-att-list" id="dlAttList">
+          <div class="dl-att-row is-off" data-att-key="idCard">
+            <label class="dl-check"><input type="checkbox" id="dlAttId" value="idCard"><span>身份证复印件<small>文件待提供 · 可重命名与调整顺序</small></span></label>
+            <div class="dl-att-ops">
+              <input class="dl-att-name" id="dlAttIdName" type="text" maxlength="100" aria-label="身份证复印件 附件文件名" data-att-name="idCard">
+              <button type="button" class="dl-att-move" data-att-move="up" data-att-key="idCard" aria-label="上移身份证复印件">↑</button>
+              <button type="button" class="dl-att-move" data-att-move="down" data-att-key="idCard" aria-label="下移身份证复印件">↓</button>
+            </div>
+          </div>
+          <div class="dl-att-row is-off" data-att-key="diploma">
+            <label class="dl-check"><input type="checkbox" id="dlAttDip" value="diploma"><span>学历证书<small>文件待提供 · 可重命名与调整顺序</small></span></label>
+            <div class="dl-att-ops">
+              <input class="dl-att-name" id="dlAttDipName" type="text" maxlength="100" aria-label="学历证书 附件文件名" data-att-name="diploma">
+              <button type="button" class="dl-att-move" data-att-move="up" data-att-key="diploma" aria-label="上移学历证书">↑</button>
+              <button type="button" class="dl-att-move" data-att-move="down" data-att-key="diploma" aria-label="下移学历证书">↓</button>
+            </div>
+          </div>
+          <div class="dl-att-row is-off" data-att-key="degree">
+            <label class="dl-check"><input type="checkbox" id="dlAttDeg" value="degree"><span>学位证书<small>文件待提供 · 可重命名与调整顺序</small></span></label>
+            <div class="dl-att-ops">
+              <input class="dl-att-name" id="dlAttDegName" type="text" maxlength="100" aria-label="学位证书 附件文件名" data-att-name="degree">
+              <button type="button" class="dl-att-move" data-att-move="up" data-att-key="degree" aria-label="上移学位证书">↑</button>
+              <button type="button" class="dl-att-move" data-att-move="down" data-att-key="degree" aria-label="下移学位证书">↓</button>
+            </div>
+          </div>
+          <div class="dl-att-row is-off" data-att-key="other">
+            <label class="dl-check"><input type="checkbox" id="dlAttOther" value="other"><span>其他资质证书<small>文件待提供 · 可重命名与调整顺序</small></span></label>
+            <div class="dl-att-ops">
+              <input class="dl-att-name" id="dlAttOtherName" type="text" maxlength="100" aria-label="其他资质证书 附件文件名" data-att-name="other">
+              <button type="button" class="dl-att-move" data-att-move="up" data-att-key="other" aria-label="上移其他资质证书">↑</button>
+              <button type="button" class="dl-att-move" data-att-move="down" data-att-key="other" aria-label="下移其他资质证书">↓</button>
+            </div>
+          </div>
         </div>
-        <span class="dl-hint">勾选后若文件已备好会随信附上；暂未提供的会在邮件正文标注「待补充」。</span>
+        <span class="dl-hint">勾选后若文件已备好会随信附上；暂未提供的会在邮件正文标注「待补充」。用 ↑ ↓ 调整附件的发送顺序。</span>
+        <div class="dl-zip">
+          <label class="dl-check"><input type="checkbox" id="dlZipOn"><span>打包为 ZIP 压缩包<small>邮件只附这一个包：内含 PDF 简历 + 已备好的勾选文件</small></span></label>
+          <input class="dl-att-name" id="dlZipName" type="text" maxlength="120" aria-label="压缩包文件名" placeholder="2026_岗位名称_应聘材料_陈培胜.zip">
+          <span class="dl-hint">默认命名：年份_岗位名称_应聘材料_姓名.zip；未填 JD 时为 年份_应聘材料_姓名.zip。可自行修改。<button type="button" class="dl-tpl-btn" id="dlZipReset">恢复默认名</button></span>
+        </div>
       </div>
       <label class="dl-field">
         <span class="dl-label">附言（可选）</span>
@@ -1023,6 +1082,12 @@ var DL_JD_TEMPLATE = [
   '1. ',
   '2. '
 ].join('\n');
+var DL_ATT_DEFS = [
+  { key: 'idCard', box: 'dlAttId', name: 'dlAttIdName', label: '身份证复印件' },
+  { key: 'diploma', box: 'dlAttDip', name: 'dlAttDipName', label: '学历证书' },
+  { key: 'degree', box: 'dlAttDeg', name: 'dlAttDegName', label: '学位证书' },
+  { key: 'other', box: 'dlAttOther', name: 'dlAttOtherName', label: '其他资质证书' }
+];
 
 /* 默认投递人 = 当前简历本人：姓名读页面标题（改数据自动跟随），邮箱用简历联系邮箱 */
 function dlResumeIdentity() {
@@ -1050,11 +1115,74 @@ function dlRecipients() {
   return uniq;
 }
 
+/* 勾选顺序 = DOM 里的上下顺序，服务端按这个顺序放附件 */
 function dlAttachments() {
-  return ['dlAttId', 'dlAttDip', 'dlAttDeg', 'dlAttOther'].filter(function (id) {
-    var el = document.getElementById(id);
-    return el && el.checked;
-  }).map(function (id) { return document.getElementById(id).value; });
+  var rows = document.querySelectorAll('#dlAttList .dl-att-row');
+  var out = [];
+  for (var i = 0; i < rows.length; i++) {
+    var box = rows[i].querySelector('input[type=checkbox]');
+    if (box && box.checked) out.push(rows[i].getAttribute('data-att-key'));
+  }
+  return out;
+}
+function dlFileNames() {
+  var out = {};
+  DL_ATT_DEFS.forEach(function (a) {
+    var el = document.getElementById(a.name);
+    if (el) out[a.key] = el.value.trim();
+  });
+  return out;
+}
+/* 默认文件名：附件名_本人姓名.pdf */
+function dlSyncAttDefaults(force) {
+  var who = dlResumeIdentity().name;
+  DL_ATT_DEFS.forEach(function (a) {
+    var el = document.getElementById(a.name);
+    if (el && (force || !el.value.trim())) el.value = a.label + '_' + who + '.pdf';
+  });
+}
+function dlRefreshAttRows() {
+  var rows = document.querySelectorAll('#dlAttList .dl-att-row');
+  for (var i = 0; i < rows.length; i++) {
+    var row = rows[i];
+    var box = row.querySelector('input[type=checkbox]');
+    if (box) row.classList.toggle('is-off', !box.checked);
+    var btns = row.querySelectorAll('[data-att-move]');
+    for (var j = 0; j < btns.length; j++) {
+      var dir = btns[j].getAttribute('data-att-move');
+      btns[j].disabled = (dir === 'up' && i === 0) || (dir === 'down' && i === rows.length - 1);
+    }
+  }
+}
+function dlMoveAtt(key, dir) {
+  var list = document.getElementById('dlAttList');
+  var row = list.querySelector('[data-att-key="' + key + '"]');
+  if (!row) return;
+  var sib = dir === 'up' ? row.previousElementSibling : row.nextElementSibling;
+  if (!sib || sib.nodeType !== 1) return;
+  if (dir === 'up') list.insertBefore(row, sib);
+  else list.insertBefore(sib, row);
+  dlRefreshAttRows();
+}
+/* JD 首行的「岗位名称：xxx」拿来拼压缩包默认名，与服务端同一套规则 */
+function dlRoleFromJd(jd) {
+  var text = String(jd || '');
+  var lines = text.split(/\r?\n/).map(function (s) { return s.trim(); });
+  var first = '';
+  for (var i = 0; i < lines.length; i++) { if (lines[i]) { first = lines[i]; break; } }
+  var re = /^(?:岗位名称|职位名称|招聘岗位|应聘岗位|岗位|职位)\s*[:：]\s*(.+)$/;
+  var m = first.match(re) || text.match(/(?:岗位名称|职位名称|招聘岗位|应聘岗位|岗位|职位)\s*[:：]\s*([^\r\n]{1,60})/);
+  if (!m) return '';
+  return m[1].replace(/[\\/:*?"<>|]/g, '_').replace(/\s+/g, ' ').trim().slice(0, 24);
+}
+function dlDefaultZipName() {
+  var year = new Date(Date.now() + 8 * 3600 * 1000).getUTCFullYear();
+  var parts = [year, dlRoleFromJd(document.getElementById('dlJd').value), '应聘材料', dlResumeIdentity().name];
+  return parts.filter(Boolean).join('_') + '.zip';
+}
+function dlSyncZipName(force) {
+  var el = document.getElementById('dlZipName');
+  if (el && (force || !DL_STATE.zipNameTouched)) el.value = dlDefaultZipName();
 }
 
 function openDeliver() {
@@ -1067,6 +1195,9 @@ function openDeliver() {
   var em = document.getElementById('dlEmail');
   if (n && !n.value.trim()) n.value = who.name;
   if (em && !em.value.trim()) em.value = who.email;
+  dlSyncAttDefaults(false);
+  dlRefreshAttRows();
+  dlSyncZipName(false);
   setTimeout(function () { document.getElementById('dlRecipient').focus(); }, 60);
 }
 function closeDeliver() {
@@ -1092,8 +1223,34 @@ function closeDeliver() {
     if (!jd) return;
     if (jd.value.trim() && !window.confirm('填入模板会覆盖当前 JD 内容，继续？')) return;
     jd.value = DL_JD_TEMPLATE;
+    dlSyncZipName(false);
     jd.focus();
   });
+  /* 附件勾选 / ↑↓ 排序 / 重命名 / 压缩包命名 */
+  DL_ATT_DEFS.forEach(function (a) {
+    var box = document.getElementById(a.box);
+    if (box) box.addEventListener('change', dlRefreshAttRows);
+  });
+  var attList = document.getElementById('dlAttList');
+  if (attList) attList.addEventListener('click', function (e) {
+    var t = e.target;
+    while (t && t !== attList) {
+      if (t.getAttribute && t.getAttribute('data-att-move')) {
+        dlMoveAtt(t.getAttribute('data-att-key'), t.getAttribute('data-att-move'));
+        return;
+      }
+      t = t.parentNode;
+    }
+  });
+  var zipName = document.getElementById('dlZipName');
+  if (zipName) zipName.addEventListener('input', function () { DL_STATE.zipNameTouched = true; });
+  var zipReset = document.getElementById('dlZipReset');
+  if (zipReset) zipReset.addEventListener('click', function () {
+    DL_STATE.zipNameTouched = false;
+    dlSyncZipName(true);
+  });
+  var jdInput = document.getElementById('dlJd');
+  if (jdInput) jdInput.addEventListener('input', function () { dlSyncZipName(false); });
 })();
 
 function buildMailtoLines() {
@@ -1115,6 +1272,21 @@ function buildMailtoLines() {
   ];
   if (jd) lines = lines.concat(['', '—— 岗位 JD ——', jd]);
   if (note) lines = lines.concat(['', '—— 投递附言 ——', note]);
+  var keys = dlAttachments();
+  if (keys.length) {
+    var names = keys.map(function (key) {
+      var def = DL_ATT_DEFS.filter(function (a) { return a.key === key; })[0];
+      var el = def && document.getElementById(def.name);
+      return (el && el.value.trim()) || (def ? def.label + '.pdf' : key);
+    });
+    var all = ['陈培胜-简历-2026.pdf'].concat(names);
+    lines = lines.concat(['', '—— 附件（用邮箱客户端发送时需手动添加）——']);
+    if (document.getElementById('dlZipOn').checked) {
+      lines.push((document.getElementById('dlZipName').value.trim() || dlDefaultZipName()) + '（内含：' + all.join('、') + '）');
+    } else {
+      lines = lines.concat(all);
+    }
+  }
   if (name || email) lines = lines.concat(['', '投递人：' + [name, email].filter(Boolean).join(' / ')]);
   return lines;
 }
@@ -1152,6 +1324,7 @@ function apiFetch(path, opts) {
 
 /* ── 发送前真实预览：先拿服务端用同一套逻辑生成的邮件，确认后才投递 ── */
 function dlPayload() {
+  var order = dlAttachments();
   return {
     to: document.getElementById('dlTo').value.trim(),
     recipient: document.getElementById('dlRecipient').value.trim(),
@@ -1159,7 +1332,13 @@ function dlPayload() {
     email: document.getElementById('dlEmail').value.trim(),
     note: document.getElementById('dlNote').value.trim(),
     jd: document.getElementById('dlJd').value.trim(),
-    attachments: dlAttachments()
+    attachments: order,
+    fileNames: dlFileNames(),
+    fileOrder: order,
+    zip: {
+      enabled: document.getElementById('dlZipOn').checked,
+      name: document.getElementById('dlZipName').value.trim()
+    }
   };
 }
 function dlHtmlText(s) {
@@ -1193,6 +1372,10 @@ function openPreview(payload) {
     if (res.ok && res.body && res.body.ok && res.body.html) {
       var d = res.body;
       var att = (d.attachments || []).length ? d.attachments.join('、') : '仅 PDF 简历';
+      if (d.zipName) {
+        var inner = (d.zipEntries || []).join('、');
+        att = d.zipName + (inner ? '（内含：' + inner + '）' : '');
+      }
       var pend = (d.pending || []).length ? ' · 待补充：' + d.pending.join('、') : '';
       document.getElementById('dlpMeta').innerHTML =
         '<b>收件人：</b>' + dlHtmlText((d.to || []).join('、')) +
@@ -1259,7 +1442,8 @@ function sendDelivery(payload) {
         var sentTo = (res.body.to || to).join('、');
         dlTrack('resume_deliver_result', { status: 'success', recipients: to.length });
         closeDeliver();
-        alert('已投递 ✉\n简历已发到：' + sentTo + '\n邮件含 PDF 附件与在线简历入口，请提醒收件人留意。');
+        var zipped = !!(payload.zip && payload.zip.enabled);
+        alert('已投递 ✉\n简历已发到：' + sentTo + '\n邮件含' + (zipped ? ' ZIP 压缩包' : ' PDF 附件') + '与在线简历入口，请提醒收件人留意。');
       } else if (res.body && (res.body.error === 'resend_not_configured' || res.body.error === 'recipient_not_verified')) {
         showMailtoFallback(res.body.message || '自动发信暂不可用，请用邮箱客户端发送');
       } else if (res.body && res.body.error === 'rate_limited') {

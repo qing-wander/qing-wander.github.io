@@ -5,7 +5,8 @@
    因此预览里看到的就是点击「确认投递」后实际发出的内容。
 
    POST {同 /api/deliver 的 payload}
-     → {ok:true, to, subject, html, text, attachments, replyTo, pending}
+     → {ok:true, to, subject, html, text, attachments, replyTo, pending,
+        zipName, zipEntries}
    只读预览：不调用 Resend、不消耗发信限额、不需要 RESEND_API_KEY。
    OPTIONS → 204（CORS 预检）
    ────────────────────────────────────────────────────────────────────── */
@@ -48,6 +49,8 @@ export async function onRequestPost({ request, env }) {
     html: mail.html,
     text: mail.text,
     attachments: names,
+    zipName: d.zipName || '',
+    zipEntries: d.zipEntries || [],
     pending: d.pendingLabels,
     replyTo: d.email || '',
   }, cors, 200);

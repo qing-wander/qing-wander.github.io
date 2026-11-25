@@ -78,6 +78,33 @@ export function resumeDigest() {
   };
 }
 
+/* 压缩包默认命名：年份_岗位名_应聘材料_姓名.zip；无岗位则省略岗位段。
+   「应聘材料」比「个人资料」更贴合招聘场景，也更不容易被误解成隐私信息。 */
+function cleanZipPart(s, max) {
+  return String(s == null ? '' : s)
+    .replace(/[\u0000-\u001f\u007f]/g, '')
+    .replace(/[\\/:*?"<>|]/g, '_')
+    .replace(/\s+/g, ' ')
+    .replace(/^\s+|\s+$/g, '')
+    .slice(0, max);
+}
+
+export function roleFromJd(jd) {
+  const text = String(jd == null ? '' : jd);
+  const first = text.split(/\r?\n/).map((s) => s.trim()).find(Boolean) || '';
+  let m = first.match(/^(?:岗位名称|职位名称|招聘岗位|应聘岗位|岗位|职位)\s*[:：]\s*(.+)$/);
+  if (!m) m = text.match(/(?:岗位名称|职位名称|招聘岗位|应聘岗位|岗位|职位)\s*[:：]\s*([^\r\n]{1,60})/);
+  return m ? cleanZipPart(m[1], 24) : '';
+}
+
+export function defaultZipName(jd, personName) {
+  const who = cleanZipPart(personName, 24) || resumeDigest().name;
+  /* 与前端统一用北京时间取年份，避免跨年时区边界差一年 */
+  const year = new Date(Date.now() + 8 * 3600 * 1000).getUTCFullYear();
+  const parts = [String(year), roleFromJd(jd), '应聘材料', who];
+  return parts.filter(Boolean).join('_') + '.zip';
+}
+
 /* 称呼：填写了投递对象就带上，否则泛化问候「您好」 */
 export function greetingOf(recipient) {
   const who = plain(recipient).slice(0, 40);
@@ -125,14 +152,18 @@ export function buildDeliveryEmail(d) {
       esc(note).replace(/\n/g, '<br>') + '</td></tr></table></td></tr>'
     : '';
 
-  /* 附件提示行：正文明确告知随信附件有哪些，缺文件的占位项标注「待补充」 */
+  /* 附件提示行：正文明确告知随信附件有哪些，缺文件的占位项标注「待补充」。
+     打包时只显示 ZIP 名 + 内含清单（文件名已按用户重命名 / 排序）。 */
   const attached = (d.attachedLabels || []).filter(Boolean);
   const pending = (d.pendingLabels || []).filter(Boolean);
+  const zipName = plain(d.zipName);
+  const zipEntries = (d.zipEntries || []).filter(Boolean);
+  const attachmentText = zipName
+    ? zipName + (zipEntries.length ? '（内含：' + zipEntries.join('、') + '）' : '')
+    : RESUME_PDF_NAME + (attached.length ? '、' + attached.join('、') : '');
   const attachmentLine =
     '<tr><td style="padding:14px 16px;background:#FFF4E5;border:3px solid #141311;border-top:none;font:12.5px/1.8 \'PingFang SC\',\'Microsoft YaHei\',sans-serif;color:#141311;">' +
-      '<b>附件清单：</b>' +
-      esc(RESUME_PDF_NAME) +
-      (attached.length ? '、' + esc(attached.join('、')) : '') +
+      '<b>附件清单：</b>' + esc(attachmentText) +
       (pending.length ? '（另申请：' + esc(pending.join('、')) + '，文件待补充，本次未随信附上）' : '') +
       '</td></tr>';
 
@@ -209,8 +240,8 @@ attachmentLine +
   ];
   if (jd) textLines.push('岗位 JD：', jd, '', '（网页版可展开 / 收起查看）', '');
   if (note) textLines.push('投递附言：', note, '');
-  if (attached.length || pending.length) {
-    textLines.push('附件：' + RESUME_PDF_NAME + (attached.length ? '、' + attached.join('、') : ''), '');
+  if (attached.length || pending.length || zipName) {
+    textLines.push('附件：' + attachmentText, '');
     if (pending.length) textLines.push('另申请：' + pending.join('、') + '（文件待补充，本次未附上）', '');
   }
   textLines.push('简历作者邮箱：hi@chenpeisheng.cn');
