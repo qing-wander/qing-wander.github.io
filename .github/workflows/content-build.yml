@@ -27,6 +27,10 @@ on:
       - 'templates/resume.template.html'
       - 'scripts/validate_content.mjs'
       - 'scripts/sync_site_data.py'
+      - 'scripts/render_print_previews.mjs'
+      - 'scripts/rasterize_print_preview.py'
+      - 'js/print-preview.js'
+      - 'assets/print-preview/**'
       - 'data/work-details.json'
       - 'data/people.json'
       - 'scripts/sync_people.py'
@@ -45,6 +49,10 @@ on:
       - 'templates/resume.template.html'
       - 'scripts/validate_content.mjs'
       - 'scripts/check_resume_pages.mjs'
+      - 'scripts/render_print_previews.mjs'
+      - 'scripts/rasterize_print_preview.py'
+      - 'js/print-preview.js'
+      - 'assets/print-preview/**'
       - 'data/work-details.json'
       - 'data/people.json'
       - 'scripts/sync_people.py'
@@ -99,6 +107,11 @@ jobs:
             export CHROME_PATH=$(command -v google-chrome-stable || command -v google-chrome || command -v chromium || true)
           fi
           node scripts/check_resume_pages.mjs
+
+      # 预览图由真实导出的 PDF 栅格化而来，resume.html 一变就必须重生成。
+      # --check 只比对 sha256 与文件存在性，不需要浏览器/栅格化工具。
+      - name: 打印预览图是否最新
+        run: node scripts/render_print_previews.mjs --check
 
       - name: JS 快照是否最新
         run: |

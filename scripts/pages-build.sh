@@ -75,7 +75,10 @@ rm -rf "$OUT/functions/tencent"
 echo "=== ⑤ 独立页硬校验：缺一个就让构建失败，别等线上被 fallback 吞掉"
 for f in index.html resume.html jd.html company.html school.html 404.html \
          css/jd-match.css css/school-profile.css js/jd-match.js js/school-profile.js \
-         data/school-profiles.js functions/api/wall.js; do
+         data/school-profiles.js functions/api/wall.js \
+         assets/print-preview/manifest.json assets/print-preview/color-1.png \
+         assets/print-preview/bw-1.png assets/print-preview/color-2.png \
+         assets/print-preview/bw-2.png; do
   if [ ! -f "$OUT/$f" ]; then
     echo "✗ dist 缺少 $f，独立页会变成 404 / 首页 fallback"
     exit 1

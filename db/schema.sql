@@ -138,3 +138,24 @@ CREATE TABLE IF NOT EXISTS company_comment_likes (
   created_at   INTEGER NOT NULL,
   PRIMARY KEY (comment_id, visitor_hash)
 );
+
+-- ══ 学历核验访问授权（2026-11-25）══════════════════════════════════════════
+-- 访客提交申请 → 本人点邮件里的签名链接批准/拒绝 → 访客页面轮询到状态后解锁。
+-- id 是 128-bit 随机串，既作为申请记录的键，也作为访客轮询凭据；不落明文 IP。
+-- 审批链接另带 HMAC 签名 + 过期时间，见 functions/lib/verify-access-token.js。
+CREATE TABLE IF NOT EXISTS verify_access_requests (
+  id           TEXT PRIMARY KEY,
+  school_id    TEXT NOT NULL DEFAULT 'xinhua',
+  name         TEXT NOT NULL,
+  identity     TEXT NOT NULL,
+  org          TEXT,
+  contact      TEXT,
+  purpose      TEXT NOT NULL,
+  reason       TEXT NOT NULL,
+  meta         TEXT,
+  device_hash  TEXT,
+  created_at   INTEGER NOT NULL,
+  status       TEXT NOT NULL DEFAULT 'pending',   -- pending | approved | rejected
+  approved_at  INTEGER
+);
+CREATE INDEX IF NOT EXISTS idx_verify_access_status ON verify_access_requests (status, created_at);

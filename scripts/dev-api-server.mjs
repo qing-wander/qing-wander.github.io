@@ -12,6 +12,8 @@ import { onRequestGet as wallGet, onRequestPost as wallPost, onRequestDelete as 
 import { onRequestGet as visitsGet, onRequestPost as visitsPost, onRequestOptions as visitsOpt } from '../functions/api/visits.js';
 import { onRequestPost as deliverPost, onRequestOptions as deliverOpt } from '../functions/api/deliver.js';
 import { onRequestGet as socialGet, onRequestPost as socialPost, onRequestOptions as socialOpt } from '../functions/api/company-social.js';
+import { onRequestGet as verifyAccessGet, onRequestPost as verifyAccessPost, onRequestOptions as verifyAccessOpt } from '../functions/api/verify-access.js';
+import { onRequestGet as verifyApproveGet, onRequestPost as verifyApprovePost } from '../functions/api/verify-access-approve.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const PORT = Number(process.env.PORT || 8877);
@@ -106,6 +108,7 @@ const ENV = {
   WALL_ADMIN_TOKEN: process.env.WALL_ADMIN_TOKEN || 'local-admin-token',
   /* 设备哈希盐：本地与线上必须各自配置；这里给的默认值只够本地联调 */
   DEVICE_HASH_PEPPER: PEPPER,
+  VERIFY_ACCESS_SECRET: process.env.VERIFY_ACCESS_SECRET || '',
   /* 人机校验：默认不配 → 走正常额度（与线上未配置 secret 时一致）。
      想验严格档就 TURNSTILE_SECRET=test 起服务，此时不带 token 的 POST 会降到每 IP 每小时 1 条。 */
   TURNSTILE_SECRET: process.env.TURNSTILE_SECRET || '',
@@ -162,6 +165,17 @@ http.createServer(async (req, res) => {
       const r = req.method === 'GET' ? await handler(socialGet, req)
         : req.method === 'POST' ? await handler(socialPost, req)
         : await handler(socialOpt, req);
+      return send(res, r);
+    }
+    if (p === '/api/verify-access') {
+      const r = req.method === 'POST' ? await handler(verifyAccessPost, req)
+        : req.method === 'GET' ? await handler(verifyAccessGet, req)
+        : await handler(verifyAccessOpt, req);
+      return send(res, r);
+    }
+    if (p === '/api/verify-access-approve') {
+      const r = req.method === 'POST' ? await handler(verifyApprovePost, req)
+        : await handler(verifyApproveGet, req);
       return send(res, r);
     }
     let file = p === '/' ? '/index.html' : p;
