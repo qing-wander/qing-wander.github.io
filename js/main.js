@@ -171,7 +171,7 @@
        与公司档案同款；链接用相对路径，本地预览与线上同域都可达。 */
     var ed = d.education || {}, em = ed.main || {};
     var schoolUrl = em.profileId ? 'school.html?c=' + encodeURIComponent(em.profileId) : '';
-    var schoolTitle = '学校档案：学校概况 / 在校经历 / 课程表 / 获奖证书 / 相册';
+    var schoolTitle = '学校档案：学校概况 / 在校经历 / 课程表 / 获奖证书 / 学历验证';
     var schoolName = schoolUrl
       ? '<a class="edu-school-link" href="' + schoolUrl + '" title="' + schoolTitle + '">' + esc(em.school) + '<span class="edu-school-go">↗</span></a>'
       : esc(em.school);

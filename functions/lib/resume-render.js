@@ -157,7 +157,7 @@ function skillsSection(r) {
 function schoolNameLink(e) {
   if (!e.profileId) return esc(e.school);
   const id = esc(e.profileId);
-  return `<a class="sp-name-link" data-sp="${id}" href="https://chenpeisheng.cn/school.html?c=${id}" title="学校档案：学校概况 / 在校经历 / 课程表 / 获奖证书 / 相册">${esc(e.school)}</a>`;
+  return `<a class="sp-name-link" data-sp="${id}" href="https://chenpeisheng.cn/school.html?c=${id}" title="学校档案：学校概况 / 在校经历 / 课程表 / 获奖证书 / 学历验证">${esc(e.school)}</a>`;
 }
 
 function educationSection(r) {
@@ -169,14 +169,8 @@ function educationSection(r) {
     `        <span class="item-time">${esc(e.period)}</span>`,
     '      </div>',
     ...bullets(e.bullets),
-    '      <div class="edu-verify">',
-    '        <div class="edu-verify-text">',
-    `          <p class="edu-verify-label">${esc(e.verify.label)}</p>`,
-    `          <p class="edu-verify-code">${esc(e.verify.code)}</p>`,
-    `          <p class="edu-verify-tip">${esc(e.verify.tip)}</p>`,
-    '        </div>',
-    `        <img class="edu-verify-qr" src="${esc(e.verify.qrImage)}" alt="${esc(e.verify.qrAlt)}">`,
-    '      </div>',
+    /* 学历验证码不在简历正文展示：改由学校档案页的「学历核验」承载，
+       数据仍保留在 data/site-data.json（校验与知识库要读），这里只去掉版面。 */
     '    </div>',
   ];
   return section('教育经历', '05', '教育经历', inner);

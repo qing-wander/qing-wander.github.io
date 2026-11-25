@@ -1131,7 +1131,7 @@
       {
         "id": "skill-05",
         "name": "开发语言",
-        "main": "<b>Python</b><small>（Agent 层主力）</small> · <em>Java</em><small>（主干 3 年）</small> · <b>TypeScript / Node</b><small>（服务与工具链）</small> · <b>Golang</b><small>（网关类服务）</small>",
+        "main": "<b>Python</b><small>（Agent 层主力）</small> · <em>Java</em><small>（主干 3 年 · 母语）</small> · <b>TypeScript / Node</b><small>（服务与工具链）</small> · <b>Golang</b><small>（网关类服务）</small>",
         "sub": "Agent 服务的接口设计、鉴权与限流、异步任务与消息驱动编排 · Java 生态 5 年工程基本功支撑高并发服务落地"
       }
     ],

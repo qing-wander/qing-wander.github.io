@@ -139,8 +139,9 @@ body {
   color: var(--blue) !important;
   border-bottom-color: var(--blue);
 }
-/* 学校档案入口：沿用公司名同款链接，右侧补一个可跳转提示箭头（打印时隐藏） */
-.sp-name-link::after {
+/* 名称链接统一标识：公司名 / 项目名 / 学校名右侧加 ↗，提示此处可点击跳转。
+   PDF 里的链接注释同样可点，打印时保留箭头，避免读者误以为是纯文本。 */
+.item-title a::after {
   content: ' ↗';
   font-size: .62em;
   font-weight: 700;
@@ -150,7 +151,6 @@ body {
 @media print {
   .head-meta .link { color: inherit; border-bottom: none; text-decoration: none; }
   .item-title a, .pts a { color: inherit; border-bottom: none; text-decoration: none; }
-  .sp-name-link::after { content: ''; }
 }
 .file-no {
   font-family: var(--font-mono);
@@ -220,27 +220,6 @@ body {
 .pts li::before { content: '▪'; position: absolute; left: 2px; color: var(--orange); }
 .pts strong { color: var(--ink); }
 
-/* ── 学信网学历验证码区块 ── */
-.edu-verify {
-  display: flex;
-  gap: 14px;
-  align-items: center;
-  margin-top: 10px;
-  padding: 8px 12px;
-  border: 2px dashed var(--ink);
-  background: var(--paper);
-}
-.edu-verify-text { flex: 1; min-width: 0; }
-.edu-verify-label { font-size: 11px; font-weight: 700; color: var(--ink-soft); }
-.edu-verify-code { font-family: var(--font-mono); font-size: 12.5px; font-weight: 700; letter-spacing: .04em; }
-.edu-verify-tip { font-family: var(--font-mono); font-size: 10px; color: var(--ink-soft); }
-.edu-verify-qr {
-  width: 72px; height: 72px;
-  flex-shrink: 0;
-  border: 2px solid var(--ink);
-  background: #fff;
-  image-rendering: pixelated;
-}
 .kv { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px 24px; }
 .kv li { list-style: none; font-size: 14px; }
 .kv b { color: var(--blue); font-family: var(--font-mono); font-size: 12px; margin-right: 6px; }
@@ -561,8 +540,6 @@ body {
   .skill-row-main { line-height: 1.6; font-size: 12.3px; letter-spacing: -0.02em; }
   .skill-row-main small { font-size: 9.5px; }
   .skill-row-sub { line-height: 1.45; font-size: 10.8px; margin-top: 0; }
-  .edu-verify { padding: 4px 10px; gap: 10px; }
-  .edu-verify-qr { width: 60px; height: 60px; }
 
   /* ── 合并后的 PDF：只保留「彩色版」这一套版式（米白底 / 粗边框 / 彩色强调），
         并把原先黑白正式版里三处更克制的处理并进来 —— 一个按钮即最终稿。 ──
@@ -589,7 +566,6 @@ body {
   .sec { padding: 18px 20px; }
   .skill-cat { grid-template-columns: 1fr; gap: 2px; }
   .skill-cat-name { padding-top: 0; }
-  .edu-verify { flex-direction: column; align-items: flex-start; }
 }
 </style>
 

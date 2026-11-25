@@ -142,8 +142,9 @@ body {
   color: var(--blue) !important;
   border-bottom-color: var(--blue);
 }
-/* 学校档案入口：沿用公司名同款链接，右侧补一个可跳转提示箭头（打印时隐藏） */
-.sp-name-link::after {
+/* 名称链接统一标识：公司名 / 项目名 / 学校名右侧加 ↗，提示此处可点击跳转。
+   PDF 里的链接注释同样可点，打印时保留箭头，避免读者误以为是纯文本。 */
+.item-title a::after {
   content: ' ↗';
   font-size: .62em;
   font-weight: 700;
@@ -153,7 +154,6 @@ body {
 @media print {
   .head-meta .link { color: inherit; border-bottom: none; text-decoration: none; }
   .item-title a, .pts a { color: inherit; border-bottom: none; text-decoration: none; }
-  .sp-name-link::after { content: ''; }
 }
 .file-no {
   font-family: var(--font-mono);
@@ -223,27 +223,6 @@ body {
 .pts li::before { content: '▪'; position: absolute; left: 2px; color: var(--orange); }
 .pts strong { color: var(--ink); }
 
-/* ── 学信网学历验证码区块 ── */
-.edu-verify {
-  display: flex;
-  gap: 14px;
-  align-items: center;
-  margin-top: 10px;
-  padding: 8px 12px;
-  border: 2px dashed var(--ink);
-  background: var(--paper);
-}
-.edu-verify-text { flex: 1; min-width: 0; }
-.edu-verify-label { font-size: 11px; font-weight: 700; color: var(--ink-soft); }
-.edu-verify-code { font-family: var(--font-mono); font-size: 12.5px; font-weight: 700; letter-spacing: .04em; }
-.edu-verify-tip { font-family: var(--font-mono); font-size: 10px; color: var(--ink-soft); }
-.edu-verify-qr {
-  width: 72px; height: 72px;
-  flex-shrink: 0;
-  border: 2px solid var(--ink);
-  background: #fff;
-  image-rendering: pixelated;
-}
 .kv { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px 24px; }
 .kv li { list-style: none; font-size: 14px; }
 .kv b { color: var(--blue); font-family: var(--font-mono); font-size: 12px; margin-right: 6px; }
@@ -564,8 +543,6 @@ body {
   .skill-row-main { line-height: 1.6; font-size: 12.3px; letter-spacing: -0.02em; }
   .skill-row-main small { font-size: 9.5px; }
   .skill-row-sub { line-height: 1.45; font-size: 10.8px; margin-top: 0; }
-  .edu-verify { padding: 4px 10px; gap: 10px; }
-  .edu-verify-qr { width: 60px; height: 60px; }
 
   /* ── 合并后的 PDF：只保留「彩色版」这一套版式（米白底 / 粗边框 / 彩色强调），
         并把原先黑白正式版里三处更克制的处理并进来 —— 一个按钮即最终稿。 ──
@@ -592,7 +569,6 @@ body {
   .sec { padding: 18px 20px; }
   .skill-cat { grid-template-columns: 1fr; gap: 2px; }
   .skill-cat-name { padding-top: 0; }
-  .edu-verify { flex-direction: column; align-items: flex-start; }
 }
 </style>
 
@@ -800,7 +776,7 @@ body {
       <div class="skill-cat">
         <p class="skill-cat-name">开发语言</p>
         <div>
-          <p class="skill-row-main"><b>Python</b><small>（Agent 层主力）</small> · <em>Java</em><small>（主干 3 年）</small> · <b>TypeScript / Node</b><small>（服务与工具链）</small> · <b>Golang</b><small>（网关类服务）</small></p>
+          <p class="skill-row-main"><b>Python</b><small>（Agent 层主力）</small> · <em>Java</em><small>（主干 3 年 · 母语）</small> · <b>TypeScript / Node</b><small>（服务与工具链）</small> · <b>Golang</b><small>（网关类服务）</small></p>
           <p class="skill-row-sub">Agent 服务的接口设计、鉴权与限流、异步任务与消息驱动编排 · Java 生态 5 年工程基本功支撑高并发服务落地</p>
         </div>
       </div>
@@ -812,21 +788,13 @@ body {
     <div class="sec-title"><span class="sec-no">05</span><h2>教育经历</h2><span class="sec-line"></span></div>
     <div class="item">
       <div class="item-head">
-        <p class="item-title"><a class="sp-name-link" data-sp="xinhua" href="https://chenpeisheng.cn/school.html?c=xinhua" title="学校档案：学校概况 / 在校经历 / 课程表 / 获奖证书 / 相册">中山大学新华学院</a> <span>全日制统招本科 · 软件工程 · 国家励志奖学金 · 校级奖学金</span></p>
+        <p class="item-title"><a class="sp-name-link" data-sp="xinhua" href="https://chenpeisheng.cn/school.html?c=xinhua" title="学校档案：学校概况 / 在校经历 / 课程表 / 获奖证书 / 学历验证">中山大学新华学院</a> <span>全日制统招本科 · 软件工程 · 国家励志奖学金 · 校级奖学金</span></p>
         <span class="item-time">2017.09 — 2021.06</span>
       </div>
       <ul class="pts">
         <li>主修 线性代数 · 数据结构与算法 · 数据库原理 · 计算机网络 · 计算机组成原理 · 软件工程导论</li>
         <li>大四实习前端，毕业后从 Java 后端起步，近两年跨栈至 Python / TypeScript 与 AI Agent 工程</li>
       </ul>
-      <div class="edu-verify">
-        <div class="edu-verify-text">
-          <p class="edu-verify-label">学历在线验证码（学信网）</p>
-          <p class="edu-verify-code">AH96NG89HCCUWMEA</p>
-          <p class="edu-verify-tip">查验 www.chsi.com.cn/xlcx/bgcx.jsp · 或学信网 App 扫码 · 有效期至 2027-04-29</p>
-        </div>
-        <img class="edu-verify-qr" src="images/edu-verify-qr.png" alt="学信网学历在线验证二维码">
-      </div>
     </div>
   </section>
 </div>
