@@ -30,6 +30,7 @@ function envOf(kv, extra) {
     WECHAT_MINI_APP_ID: 'wx3a03f69382d6bc49',
     WECHAT_MINI_APP_SECRET: 'test-mini-secret',
     WECHAT_ALLOW_OPENIDS: 'o_allowed',
+    WECHAT_MINI_LOGIN_ENABLED: '1',
     ADMIN_SESSION_SECRET: 'test-mini-session-secret',
   }, extra || {});
 }
@@ -76,6 +77,15 @@ test('miniConfig 只从 env 读，缺 Secret / KV 时不可用', () => {
   assert.equal(miniEnabled(envOf()), true);
   assert.equal(miniEnabled(envOf(fakeKv(), { WECHAT_MINI_APP_SECRET: '' })), false);
   assert.equal(miniEnabled(envOf(null, { SITE_KV: null })), false);
+});
+
+test('扫码入口默认关闭：不开显式开关，密钥配齐也不露出', () => {
+  // 线上密钥已配但小程序未发布，必须默认隐藏，避免点了没用
+  const off = { WECHAT_MINI_LOGIN_ENABLED: '' };
+  assert.equal(miniEnabled(envOf(fakeKv(), off)), false);
+  assert.equal(miniEnabled(envOf(fakeKv(), { WECHAT_MINI_LOGIN_ENABLED: '0' })), false);
+  assert.equal(miniEnabled(envOf(fakeKv(), { WECHAT_MINI_LOGIN_ENABLED: 'yes' })), true);
+  assert.equal(miniEnabled(envOf(fakeKv(), { WECHAT_MINI_LOGIN_ENABLED: 'true' })), true);
 });
 
 test('ticket 是 32 位 hex，随机且不认非法值', () => {

@@ -29,9 +29,12 @@ export function miniConfig(env) {
   };
 }
 
+/* 显式开关：即使 AppID/Secret 已配好，也要站长主动打开才露出扫码入口。
+   默认关闭是为了小程序未备案/未发布时不给用户一个点了没用的按钮。 */
 export function miniEnabled(env) {
   const cfg = miniConfig(env);
-  return !!(cfg.appId && cfg.secret && env && env.SITE_KV);
+  const enabled = /^(1|true|on|yes)$/i.test(String((env && env.WECHAT_MINI_LOGIN_ENABLED) || ''));
+  return !!(enabled && cfg.appId && cfg.secret && env && env.SITE_KV);
 }
 
 /* ── ticket ─────────────────────────────────────────────────── */

@@ -57,6 +57,8 @@ id = "f5253a16b4d84a20a32c0cd497b1f269"
 #    ── 小程序扫码登录（个人主体唯一可用的微信登录）──
 #    WECHAT_MINI_APP_ID     小程序 AppID（个人实名注册即可，无需认证）
 #    WECHAT_MINI_APP_SECRET 小程序 AppSecret（开发管理 → 开发设置 → 生成）
+#    WECHAT_MINI_LOGIN_ENABLED  显式开关，默认关闭；设为 1/true/on/yes 才露出扫码入口。
+#                          即使上面两个密钥已配，小程序未备案/未发布时也不该显示按钮。
 #    注意：小程序 openid 与公众号/开放平台的 openid 不同，扫码者的 openid
 #          要单独加进 WECHAT_ALLOW_OPENIDS；首次未放行时登录页会显示它。
 #    小程序端源码在 miniprogram/，需上传发布；request 合法域名填 chenpeisheng.cn。
