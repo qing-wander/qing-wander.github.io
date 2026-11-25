@@ -470,7 +470,7 @@
       wall: true,
     };
     var navLinks = Array.prototype.slice.call(document.querySelectorAll('#nav a[data-sec]'));
-    var sections = Array.prototype.slice.call(document.querySelectorAll('main section[id]'));
+    var sections = Array.prototype.slice.call(document.querySelectorAll('section[id]'));
     sections.forEach(function (sec) {
       var rule = RULES[sec.id];
       if (rule === false) sec.hidden = true;
