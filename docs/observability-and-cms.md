@@ -537,3 +537,55 @@ HTML 42124 B，检索最高分 30.1，接口耗时 **0.5 s**，产出的 PDF **2
 
 **本地验证**：`node --test tests/greeting.test.mjs`（9 项），覆盖写入 → 公开读 → 试听联动、
 鉴权 / CSRF、恢复默认、非法输入不落库；浏览器端用 CDP 断言接口文案 → 页面全局 → 面板 DOM 三者一致。
+
+## 后台第七阶段：个人主体也能用的微信扫码登录（2026-11-25）
+
+### 为什么绕了一圈选小程序
+
+个人站长想给后台加「微信登录」有三条路，前两条按微信现行规则个人主体走不通：
+
+| 方案 | 个人能否做 | 卡点 |
+| --- | --- | --- |
+| 公众号网页授权 | 不能 | 个人只能注册订阅号，且个人主体不支持微信认证；网页授权只对认证服务号开放 |
+| 开放平台网站应用扫码 | 不能 | 要营业执照 + 开发者资质认证（300 元） |
+| **小程序扫码** | **能** | 个人实名注册即可，0 元；`wx.login` 不要求认证 |
+
+项目里原有的公众号网页授权代码（`api/admin/auth/wechat/*`）保留不动，
+有认证服务号时照常可用；小程序扫码是新增的第三条路，两者共用同一份
+`WECHAT_ALLOW_OPENIDS` 白名单和会话签名。
+
+### 流程与安全边界
+
+网页 `/login` 点「微信小程序扫码登录」→ 弹窗拉 `GET /api/admin/auth/mini/qr`：
+后端生成 32 位 hex 的 ticket，调 `getwxacodeunlimit` 生成带 `scene=ticket` 的小程序码，
+把 ticket 以 `pending` 存进 `SITE_KV`（5 分钟过期）。
+
+用户微信扫码 → 进入小程序 `pages/login/login` → `wx.login` 拿 code →
+`POST /api/admin/auth/mini/confirm` 回传 `{ticket, code}` → 后端 `code2session` 换 openid，
+比对白名单后把 ticket 改成 `confirmed`（命中）或 `denied`（未命中）。
+
+网页每 1.5 秒轮询 `GET /api/admin/auth/mini/poll?ticket=...`：
+`confirmed` → ticket 置 `used` 并下发与邮箱登录同款的 HttpOnly 会话 Cookie；
+`denied` → 回 openid/unionid 让站长自己配白名单；`pending` → 继续转。
+
+安全上三道闸：ticket 16 字节随机且一次性、5 分钟过期；白名单为空谁都进不来；
+openid 只回给持有 ticket 的网页，不显示在小程序界面（避免留在手机截图里）。
+
+### 上线前必须做的四件事
+
+1. 小程序完成**备案**（微信公众平台首页会提示），否则无法发布。
+2. 用微信开发者工具导入仓库里的 `miniprogram/` 目录，上传并提交审核发布。
+3. 小程序后台「开发管理 → 开发设置 → 服务器域名」把 `https://chenpeisheng.cn`
+   加进 **request 合法域名**。
+4. Cloudflare Pages → Settings → Environment variables 配
+   `WECHAT_MINI_APP_ID` / `WECHAT_MINI_APP_SECRET`（Type: Secret）；
+   首次扫码若提示未放行，登录页会显示你的小程序 openid，把它加进
+   `WECHAT_ALLOW_OPENIDS` 再试。
+
+注意小程序 openid 与公众号 openid **不同**（AppID 不同），不能沿用旧值。
+
+### 验证
+
+`node --test tests/mini-login.test.mjs`（13 项）：覆盖 ticket 格式与 TTL、
+小程序码二进制/errcode 解析、白名单命中与拒绝、会话签发与一次性消费。
+全量 `node --test tests/*.test.mjs` 233 项通过；变异测试改坏 TTL 会变红。

@@ -1,0 +1,5 @@
+page {
+  background: #F3EEE2;
+  color: #14110E;
+  font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
+}

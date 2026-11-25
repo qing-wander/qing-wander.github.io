@@ -71,6 +71,8 @@
   .btn:disabled, .btn[aria-disabled="true"] { opacity: .45; cursor: not-allowed; background: transparent; color: var(--ink); }
   .btn-wx { background: #07C160; border-color: #07C160; color: #fff; }
   .btn-wx:hover { background: #06AD56; border-color: #06AD56; color: #fff; }
+  .btn-mini { background: #07C160; border-color: #07C160; color: #fff; margin-top: 10px; }
+  .btn-mini:hover { background: #06AD56; border-color: #06AD56; color: #fff; }
   .btn-solid { background: var(--accent); border-color: var(--accent); color: #fff; }
   .btn-solid:hover { background: var(--ink); border-color: var(--ink); }
   .btn-sm { width: auto; padding: 6px 12px; font-size: 12px; font-weight: 500; }
@@ -114,6 +116,28 @@
   .foot a { color: var(--ink-2); text-decoration: none; border-bottom: 1px solid var(--line); }
   .note { font-size: 12px; color: var(--ink-2); margin: 10px 0 0; }
   [hidden] { display: none !important; }
+
+  /* 小程序扫码弹窗：CSP 只允许 data: 图片，小程序码正好走 data: URL */
+  .modal {
+    position: fixed; inset: 0; z-index: 20;
+    background: rgba(20, 17, 14, .62);
+    display: grid; place-items: center; padding: 24px;
+  }
+  .qr-card {
+    width: 100%; max-width: 340px;
+    background: var(--paper-2); border: 2px solid var(--ink);
+    padding: 22px 20px; box-shadow: 8px 8px 0 rgba(20, 17, 14, .18);
+  }
+  .qr-card h2 { font-size: 19px; margin: 0 0 4px; }
+  .qr-card .hint { margin: 0 0 14px; }
+  .qr-wrap {
+    width: 220px; height: 220px; margin: 0 auto;
+    border: 1px solid var(--line); background: #fff;
+    display: grid; place-items: center;
+  }
+  .qr-wrap img { width: 100%; height: 100%; object-fit: contain; }
+  .qr-card .msg { text-align: center; min-height: 44px; word-break: break-all; }
+  .qr-card .btn { margin-top: 8px; }
 </style>
 </head>
 <body>
@@ -123,9 +147,12 @@
   <h1>后台登录</h1>
   <p class="hint">不用密码：微信扫一下，或收一封邮箱验证码。</p>
 
-  <!-- 微信 -->
+  <!-- 微信：公众号/开放平台授权（需认证服务号或企业资质） -->
   <a class="btn btn-wx" id="wxBtn" href="/api/admin/auth/wechat?mode=qr">微信扫码登录</a>
   <p class="note" id="wxNote" hidden></p>
+
+  <!-- 微信小程序扫码（个人主体可用，默认隐藏，探测到配置才显示） -->
+  <button class="btn btn-mini" id="miniBtn" type="button" hidden>微信小程序扫码登录</button>
 
   <div class="divider">OR</div>
 
@@ -159,6 +186,18 @@
     <span id="footNote"></span>
   </p>
 </main>
+
+<!-- 小程序扫码弹窗 -->
+<div class="modal" id="qrModal" hidden>
+  <div class="qr-card">
+    <p class="tag">WECHAT LOGIN</p>
+    <h2>微信扫码登录</h2>
+    <p class="hint">用微信扫一扫，在小程序里确认一下</p>
+    <div class="qr-wrap"><img id="qrImg" alt="小程序登录二维码"></div>
+    <p class="msg" id="qrMsg" role="alert">正在生成二维码…</p>
+    <button class="btn btn-sm" id="qrClose" type="button">关闭</button>
+  </div>
+</div>
 
 <script>
 (function () {
@@ -200,6 +239,10 @@
     wechat_no_code: '微信没有回传授权码',
     wechat_token_failed: '微信换 token 失败，检查 AppID / Secret',
     wechat_network: '连不上微信接口，稍后重试',
+    mini_not_configured: '小程序登录还没配置',
+    wechat_qr_failed: '小程序码生成失败，稍后重试',
+    wechat_code_failed: '微信凭证校验失败，请重试',
+    ticket_expired: '二维码已过期，请关闭后重试',
     access_denied: '你取消了微信授权',
     email_not_allowed: '这个邮箱不在登录白名单里',
     mail_not_configured: '还没配置发信（缺 RESEND_API_KEY）',
@@ -267,11 +310,19 @@
         btn.setAttribute('aria-disabled', 'true');
         btn.removeAttribute('href');
         btn.textContent = '微信登录（未配置）';
-        note.hidden = false;
-        note.textContent = '需要 WECHAT_APP_ID / SECRET（扫码）或 WECHAT_MP_APP_ID / SECRET（微信内）';
+        if (!d.mini) {
+          note.hidden = false;
+          note.textContent = '需要小程序 AppID / Secret，或公众号 / 开放平台配置';
+        }
       } else {
         btn.href = '/api/admin/auth/wechat?mode=' + mode;
         btn.textContent = mode === 'mp' ? '微信一键登录' : '微信扫码登录';
+      }
+
+      /* 小程序扫码：个人主体可用。有它就显示，并藏掉置灰的公众号按钮 */
+      if (d.mini) {
+        $('miniBtn').hidden = false;
+        if (!mode) { btn.hidden = true; note.hidden = true; }
       }
 
       var em = d.email || {};
@@ -285,6 +336,94 @@
       }
     })
     .catch(function () { /* 方法探测失败不影响手填邮箱 */ });
+
+  /* ── 小程序扫码登录 ───────────────────────────────────────────
+     小程序码是 data: 图片（登录页 CSP 允许），ticket 5 分钟有效。
+     扫码结果由网页轮询拿，两边不在一台设备，不往小程序界面塞 openid。 */
+  var qr = { ticket: '', timer: 0, tries: 0 };
+
+  function qrSay(text, ok) {
+    var box = $('qrMsg');
+    box.textContent = text || '';
+    box.className = 'msg' + (ok ? ' is-ok' : '');
+  }
+
+  function qrShowIdentity(d) {
+    var box = $('qrMsg');
+    box.textContent = '';
+    box.className = 'msg';
+    var p = document.createElement('span');
+    p.textContent = '这个微信还没放行。把下面的 openid 配到 WECHAT_ALLOW_OPENIDS 再试：';
+    box.appendChild(p);
+    [['openid', d.openid], ['unionid', d.unionid]].forEach(function (pair) {
+      if (!pair[1]) return;
+      var row = document.createElement('div');
+      row.style.marginTop = '6px';
+      row.appendChild(document.createTextNode(pair[0] + '：'));
+      var code = document.createElement('code');
+      code.textContent = pair[1];
+      row.appendChild(code);
+      box.appendChild(row);
+    });
+  }
+
+  function qrClose() {
+    clearInterval(qr.timer);
+    qr.timer = 0;
+    qr.ticket = '';
+    $('qrModal').hidden = true;
+    $('qrImg').removeAttribute('src');
+  }
+
+  function qrPoll() {
+    if (!qr.ticket) return;
+    qr.tries += 1;
+    if (qr.tries > 40) {
+      clearInterval(qr.timer);
+      qrSay('二维码已过期，请关闭后重新打开');
+      return;
+    }
+    fetch('/api/admin/auth/mini/poll?ticket=' + encodeURIComponent(qr.ticket), { credentials: 'include' })
+      .then(function (r) { return r.json().catch(function () { return {}; }); })
+      .then(function (d) {
+        if (d && d.ok) {
+          clearInterval(qr.timer);
+          location.replace(safeNext());
+          return;
+        }
+        var s = d && d.status;
+        if (s === 'pending') return;
+        clearInterval(qr.timer);
+        if (s === 'not_allowed') { qrShowIdentity(d); return; }
+        qrSay('二维码已失效，请关闭后重新打开');
+      })
+      .catch(function () { /* 网络抖动，下一轮继续 */ });
+  }
+
+  function qrStart() {
+    $('qrModal').hidden = false;
+    $('qrImg').removeAttribute('src');
+    qr.ticket = '';
+    qr.tries = 0;
+    qrSay('正在生成二维码…');
+    fetch('/api/admin/auth/mini/qr', { credentials: 'include' })
+      .then(function (r) { return r.json().catch(function () { return {}; }); })
+      .then(function (d) {
+        if (!d || !d.ok) {
+          qrSay((d && (ERRORS[d.error] || d.message)) || '生成失败，请稍后重试');
+          return;
+        }
+        qr.ticket = d.ticket;
+        $('qrImg').src = d.image;
+        qrSay('请用微信扫码，在小程序里确认', true);
+        clearInterval(qr.timer);
+        qr.timer = setInterval(qrPoll, 1500);
+      })
+      .catch(function () { qrSay('网络异常，请重试'); });
+  }
+
+  $('miniBtn').addEventListener('click', qrStart);
+  $('qrClose').addEventListener('click', qrClose);
 
   /* ── 发验证码 ───────────────────────────────────────────────── */
   function startCooldown(sec) {

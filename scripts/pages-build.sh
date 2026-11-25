@@ -101,6 +101,9 @@ for f in index.html resume.html jd.html company.html school.html 404.html \
          functions/api/admin/auth/login.js functions/api/admin/auth/methods.js \
          functions/api/admin/auth/email/send.js functions/api/admin/auth/email/verify.js \
          functions/api/admin/auth/wechat/index.js functions/api/admin/auth/wechat/callback.js \
+         functions/lib/mini-login.js \
+         functions/api/admin/auth/mini/qr.js functions/api/admin/auth/mini/confirm.js \
+         functions/api/admin/auth/mini/poll.js \
          functions/api/admin/stats.js functions/api/admin/messages.js \
          functions/lib/tts.js functions/lib/greeting.js functions/api/voice.js \
          functions/api/greeting.js functions/api/admin/greeting.js \

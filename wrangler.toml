@@ -54,7 +54,14 @@ id = "f5253a16b4d84a20a32c0cd497b1f269"
 #    WECHAT_ALLOW_OPENIDS   允许登录的 openid，逗号分隔（白名单为空 = 微信登录不可用）
 #    WECHAT_ALLOW_UNIONIDS  可选，unionid 名单（跨应用唯一，更稳）
 #
-#  授权回调地址（在微信后台配置）：
+#    ── 小程序扫码登录（个人主体唯一可用的微信登录）──
+#    WECHAT_MINI_APP_ID     小程序 AppID（个人实名注册即可，无需认证）
+#    WECHAT_MINI_APP_SECRET 小程序 AppSecret（开发管理 → 开发设置 → 生成）
+#    注意：小程序 openid 与公众号/开放平台的 openid 不同，扫码者的 openid
+#          要单独加进 WECHAT_ALLOW_OPENIDS；首次未放行时登录页会显示它。
+#    小程序端源码在 miniprogram/，需上传发布；request 合法域名填 chenpeisheng.cn。
+#
+#  公众号授权回调地址（在微信后台配置，仅认证服务号可用）：
 #    https://chenpeisheng.cn/api/admin/auth/wechat/callback
 #  首次扫码若提示「未放行」，登录页会直接显示你的 openid，复制进白名单即可。
 #

@@ -1,0 +1,13 @@
+{
+  "pages": [
+    "pages/login/login"
+  ],
+  "window": {
+    "navigationBarTitleText": "后台登录",
+    "navigationBarBackgroundColor": "#14110E",
+    "navigationBarTextStyle": "white",
+    "backgroundColor": "#F3EEE2"
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json"
+}
