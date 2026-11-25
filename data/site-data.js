@@ -6,7 +6,7 @@ window.SITE_DATA = {
   "meta": {
     "pageTitle": "陈培胜 CHEN PEISHENG · AI Agent 工程师 · 求职作品集 2026",
     "description": "陈培胜的个人求职作品集——AI Agent 工程师，5 年研发经验，Agent 开发 / AI 工程化 / 企业 AI 基建方向。",
-    "brandMark": "CP",
+    "brandMark": "PS",
     "brandSub": "CHEN PEISHENG —<br>5年 Agent 工程师档案",
     "statusPill": "开放新机会",
     "footer": {
@@ -38,8 +38,8 @@ window.SITE_DATA = {
     "role": "AI Agent 工程师",
     "roleEn": "AI AGENT ENGINEER",
     "bio": "5 年 Java 后端 + 2 年 AI Agent 工程，主导 6 套系统从 0 到 1：潜客 CRM、品牌官网、AI 搜索引擎、海外营销平台与投研工作台。技术决策风格三原则：不停机、可回滚、最小改动。",
-    "ctaProjects": "查看作品",
-    "ctaResume": "查看简历",
+    "ctaProjects": "作品",
+    "ctaResume": "简历",
     "resumeFile": "resume.html",
     "resumeDownloadName": "陈培胜-AIAgent工程师-简历.html",
     "statusMeta": "OPEN TO WORK · 随时到岗 · 深圳 / 广州 / 远程",

@@ -123,9 +123,9 @@
     $('heroRole').innerHTML = esc(h.role || '') + ' <span class="role-slash">/</span> <span class="role-en">' + esc(h.roleEn || '').replace(/ /g, '&nbsp;') + '</span>';
     $('heroBio').textContent = h.bio || '';
     $('heroCta').innerHTML =
-      '<a class="btn btn-solid" href="#projects">' + esc(h.ctaProjects || '查看作品') + ' <span class="btn-arrow" aria-hidden="true">▶▶</span></a>' +
+      '<a class="btn btn-solid" href="#projects">' + esc(h.ctaProjects || '作品') + ' <span class="btn-arrow" aria-hidden="true">▶▶</span></a>' +
       '<a class="btn btn-ghost" href="jd.html">' + esc(h.ctaJd || 'JD 匹配') + ' <span class="btn-arrow" aria-hidden="true">▶</span></a>' +
-      '<a class="btn btn-ghost" href="' + esc(h.resumeFile || 'resume.html') + '">' + esc(h.ctaResume || '查看简历') + ' <span class="btn-arrow" aria-hidden="true">▶</span></a>';
+      '<a class="btn btn-ghost" href="' + esc(h.resumeFile || 'resume.html') + '">' + esc(h.ctaResume || '简历') + ' <span class="btn-arrow" aria-hidden="true">▶</span></a>';
     $('heroStatus').textContent = h.statusMeta || '';
     var ic = h.idcard || {};
     $('idcardPhoto').src = ic.photo || '';
@@ -869,7 +869,7 @@
       wrap.className = 'ai-msg ai-msg-' + who;
       /* 消息归属哪个模式：问答历史与 JD 结果分栏，切换时互不干扰 */
       wrap.setAttribute('data-mode', mode || aiMode || 'qa');
-      wrap.innerHTML = '<span class="ai-msg-name">' + (who === 'bot' ? '陈培胜 · 数字分身' : 'YOU') + '</span>' +
+      wrap.innerHTML = '<span class="ai-msg-name">' + (who === 'bot' ? '陈培胜 · AI数字分身' : 'YOU') + '</span>' +
         '<div class="ai-bubble">' + html + '</div>';
       aiBody.appendChild(wrap);
       aiScroll();

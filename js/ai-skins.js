@@ -40,7 +40,7 @@
       '<path d="M50 69Q60 75 70 69" style="fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round"/>' +
       '<rect x="34" y="88" width="52" height="42" rx="4" class="sk-card sk-line"/>' +
       '<rect x="42" y="96" width="36" height="17" class="sk-paper sk-line-thin"/>' +
-      '<text x="60" y="108" text-anchor="middle" class="sk-ink" style="font:700 9px monospace;letter-spacing:.06em">CP.ME</text>' +
+      '<text x="60" y="108" text-anchor="middle" class="sk-ink" style="font:700 9px monospace;letter-spacing:.06em">AI.ME</text>' +
       '<circle cx="76" cy="121" r="4" class="sk-green sk-cpbot-lamp"/>' +
       '<path class="sk-line" d="M45 130v10M75 130v10"/>' +
     '</g></svg>';
@@ -127,7 +127,7 @@
         '<rect x="65" y="66" width="9" height="13" rx="3" class="sk-ink"/></g>' +
         '<path d="M52 90q8 7 16 0" class="sk-line-thin"/>' +
         '<path d="M60 30V18" class="sk-line"/><circle cx="60" cy="15" r="5" class="sk-orange sk-line"/>' +
-        '<text x="60" y="80" text-anchor="middle" style="font:700 8px monospace;fill:var(--ink);opacity:.35">CP</text>' +
+        '<text x="60" y="80" text-anchor="middle" style="font:700 8px monospace;fill:var(--ink);opacity:.35">PS</text>' +
       '</g>' +
     '</g></svg>';
 
