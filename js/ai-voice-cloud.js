@@ -52,6 +52,59 @@
       'https://resume-ai-d9g7zghnxda2ee2cb-1307508155.ap-shanghai.app.tcloudbase.com/chat';
   }
 
+  /* ── 音色（后台 /admin「AI 语音」里切换）─────────────────────────
+     读 /api/voice 拿当前音色；缓存 10 分钟，够快也不至于让站长改完等太久。
+     拿不到就发 0 —— 服务端按自己的默认音色合成，功能不受影响。 */
+  var VOICE_STORE = 'cpai_voice_id_v1';
+  var VOICE_TTL = 10 * 60 * 1000;
+  var voiceId = 0;
+  var voicePromise = null;
+
+  function voiceApi() {
+    var m = String(endpoint()).match(/^(.*)\/api\/chat$/);
+    return m ? m[1] + '/api/voice' : '';
+  }
+
+  function voiceCache(fresh) {
+    try {
+      var o = JSON.parse(localStorage.getItem(VOICE_STORE) || 'null');
+      if (!o || typeof o.id !== 'number' || typeof o.at !== 'number') return 0;
+      if (!fresh) return o.id;
+      return Date.now() - o.at < VOICE_TTL ? o.id : 0;
+    } catch (e) { return 0; }
+  }
+
+  function loadVoice() {
+    if (voicePromise) return voicePromise;
+    var done = function (id) {
+      if (id > 0) voiceId = id;
+      return voiceId;
+    };
+    var cached = voiceCache(true);
+    if (cached > 0) { voicePromise = Promise.resolve(done(cached)); return voicePromise; }
+    var url = voiceApi();
+    if (!url) { voicePromise = Promise.resolve(done(0)); return voicePromise; }
+    voicePromise = fetch(url, { cache: 'no-store' }).then(function (r) {
+      return r.ok ? r.json() : null;
+    }).then(function (j) {
+      var id = j && j.ok ? Number(j.voice) || 0 : 0;
+      if (id > 0) {
+        try { localStorage.setItem(VOICE_STORE, JSON.stringify({ id: id, at: Date.now() })); } catch (e) {}
+      }
+      return done(id || voiceCache(false));
+    }).catch(function () {
+      return done(voiceCache(false));   // 网络抖了就用手上旧的，别退回默认音色
+    });
+    return voicePromise;
+  }
+
+  /* 站长在后台换了音色，这里最多 10 分钟才跟上；?voice=flush 可强制重取 */
+  try {
+    if (/[?&]voice=flush(?:&|$)/.test(location.search)) {
+      try { localStorage.removeItem(VOICE_STORE); } catch (e) {}
+    }
+  } catch (e) {}
+
   function cachePut(key, src) {
     if (cache[key] === undefined) cacheOrder.push(key);
     cache[key] = src;
@@ -74,7 +127,7 @@
     var opts = {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ mode: 'tts', text: text, kind: kind || 'answer' }),
+      body: JSON.stringify({ mode: 'tts', text: text, kind: kind || 'answer', voice: voiceId || 0 }),
       cache: 'no-store'
     };
     if (ctrl) opts.signal = ctrl.signal;
@@ -141,12 +194,14 @@
     reason = msg || '';
   }
 
-  /** 探测全链路：合成两字，成功才把 provider 交给语音模块 */
+  /** 探测全链路：先取音色，再合成两字，成功才把 provider 交给语音模块 */
   function probe(force) {
     if (!enabled) { setState('off', '云端通道已关闭'); voice.setProvider(null); return Promise.resolve(false); }
     if (probeDone && !force && state !== 'checking') return Promise.resolve(state === 'cloud');
     setState('checking');
-    return provider.synth(PROBE_TEXT, { kind: 'answer' }).then(function () {
+    return loadVoice().then(function () {
+      return provider.synth(PROBE_TEXT, { kind: 'answer' });
+    }).then(function () {
       probeDone = true;
       setState('cloud');
       voice.setProvider(provider);
@@ -189,6 +244,7 @@
         state: state,
         reason: reason,
         enabled: enabled,
+        voice: voiceId,
         endpoint: endpoint(),
         cached: cacheOrder.length,
         active: !!(voice.getStatus && voice.getStatus().provider === 'cloud')

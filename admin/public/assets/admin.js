@@ -480,6 +480,121 @@
 
   $('configReload').addEventListener('click', function () { loadConfig(); loadTheme(); toast('已重新读取'); });
 
+  /* ── AI 语音：音色切换 + 试听 ────────────────────────────────────
+     切换写 /api/admin/voice（存 D1 admin_config.ai_voice），公开站 /api/voice 读；
+     试听走 /api/admin/voice/preview —— 同源代理到云函数，不落库、不改设置。 */
+  var VOICE = { list: [], cur: 0, name: '', maxChars: 150, isDefault: true };
+  var voiceAudio = null;
+  var voiceBusy = false;
+
+  function voiceStat(text, kind) {
+    var el = $('voiceStat');
+    el.textContent = text;
+    el.className = 'pill' + (kind ? ' ' + kind : '');
+  }
+
+  function stopVoice() {
+    if (voiceAudio) {
+      try { voiceAudio.pause(); } catch (e) {}
+      try { voiceAudio.src = ''; } catch (e) {}
+      voiceAudio = null;
+    }
+    $('voiceStop').disabled = true;
+  }
+
+  function voiceName(id) {
+    var hit = VOICE.list.filter(function (v) { return v.id === id; })[0];
+    return hit ? hit.name : String(id);
+  }
+
+  function renderVoice() {
+    var cur = VOICE.cur;
+    $('voiceCur').textContent = VOICE.isDefault
+      ? '默认 · ' + voiceName(cur)
+      : voiceName(cur) + ' · ' + cur;
+    var html = VOICE.list.map(function (v) {
+      var on = (!VOICE.isDefault && v.id === cur) ? ' is-on' : '';
+      return '<div class="voice-chip' + on + '">' +
+        '<button class="voice-pick" type="button" data-act="pick" data-voice="' + v.id + '">' +
+          '<strong>' + esc(v.name) + '</strong>' +
+          '<small>' + esc(v.note) + '</small>' +
+          '<em>' + esc(v.type) + ' · ' + v.id + '</em>' +
+        '</button>' +
+        '<button class="voice-try" type="button" data-act="try" data-voice="' + v.id + '">试听</button>' +
+      '</div>';
+    }).join('');
+    html += '<div class="voice-chip' + (VOICE.isDefault ? ' is-on' : '') + '">' +
+      '<button class="voice-pick" type="button" data-act="pick" data-voice="0">' +
+        '<strong>恢复默认</strong><small>用服务端默认音色</small><em>DEFAULT</em>' +
+      '</button></div>';
+    $('voiceChips').innerHTML = html;
+  }
+
+  function loadVoice() {
+    return api('/api/admin/voice').then(function (d) {
+      VOICE.list = d.voices || [];
+      VOICE.cur = d.voice;
+      VOICE.name = d.name || '';
+      VOICE.maxChars = d.max_chars || 150;
+      VOICE.isDefault = !!d.is_default;
+      $('voiceUpstream').textContent = d.upstream || '—';
+      $('voiceMeta').textContent = d.is_default
+        ? '当前是默认音色'
+        : '上次切换：' + fmt(d.updated_at);
+      renderVoice();
+    }).catch(function (err) {
+      $('voiceChips').innerHTML = '<span class="empty">' + esc(err.message || '读取失败') + '</span>';
+    });
+  }
+
+  function previewVoice(id) {
+    if (voiceBusy) return;
+    var text = String($('voiceText').value || '').trim().slice(0, VOICE.maxChars);
+    if (!text) { toast('先写点试听文本', true); return; }
+    voiceBusy = true;
+    stopVoice();
+    voiceStat('合成中…');
+    $('voicePlay').disabled = true;
+    var label = voiceName(id);
+    api('/api/admin/voice/preview', { method: 'POST', body: JSON.stringify({ voice: id, text: text }) })
+      .then(function (d) {
+        voiceAudio = new Audio('data:' + (d.mime || 'audio/mpeg') + ';base64,' + d.audio);
+        voiceAudio.onended = function () { voiceStat('播放结束', 'ok'); $('voiceStop').disabled = true; };
+        voiceAudio.onerror = function () { voiceStat('播放失败', 'bad'); $('voiceStop').disabled = true; };
+        $('voiceStop').disabled = false;
+        voiceStat('播放中 · ' + (d.name || label), 'ok');
+        $('voiceMeta').textContent = label + ' · ' + text.length + ' 字 · 仅试听，未改线上设置';
+        return voiceAudio.play();
+      })
+      .catch(function (err) {
+        voiceStat('试听失败', 'bad');
+        $('voiceMeta').textContent = err.message || '合成失败';
+        toast(err.message || '试听失败', true);
+      })
+      .then(function () { voiceBusy = false; $('voicePlay').disabled = false; });
+  }
+
+  $('voiceChips').addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-act]');
+    if (!b) return;
+    var id = Number(b.getAttribute('data-voice'));
+    if (b.getAttribute('data-act') === 'try') { previewVoice(id); return; }
+    api('/api/admin/voice', { method: 'POST', body: JSON.stringify({ voice: id }) })
+      .then(function (d) {
+        VOICE.cur = d.voice;
+        VOICE.name = d.name || '';
+        VOICE.isDefault = !!d.is_default;
+        renderVoice();
+        toast(id ? '已切换：' + (d.name || id) : '已恢复默认音色');
+        $('voiceMeta').textContent = '刚切换，公开站 1 分钟内生效（刷新页面会重新取一次音色）';
+      })
+      .catch(function (err) { toast(err.message || '切换失败', true); });
+  });
+
+  $('voicePlay').addEventListener('click', function () { previewVoice(VOICE.cur); });
+  $('voiceStop').addEventListener('click', function () { stopVoice(); voiceStat('已停止'); });
+  $('voiceReload').addEventListener('click', function () { loadVoice().then(function () { toast('已重新读取'); }); });
+
   function switchTab(name) {
     state.tab = name;
     var map = {
@@ -487,6 +602,7 @@
       messages: ['tabMessages', 'panelMessages'],
       qa: ['tabQa', 'panelQa'],
       config: ['tabConfig', 'panelConfig'],
+      voice: ['tabVoice', 'panelVoice'],
       variant: ['tabVariant', 'panelVariant'],
       anim: ['tabAnim', 'panelAnim']
     };
@@ -500,6 +616,7 @@
     else if (name === 'messages') loadMessages();
     else if (name === 'qa') loadQa();
     else if (name === 'config') { loadTheme(); loadConfig(); }
+    else if (name === 'voice') loadVoice();
     else if (name === 'anim' && window.AnimConsole) window.AnimConsole.init();
   }
   $('tabDevices').addEventListener('click', function () { switchTab('devices'); });
@@ -507,6 +624,7 @@
   $('tabQa').addEventListener('click', function () { switchTab('qa'); });
   $('tabConfig').addEventListener('click', function () { switchTab('config'); });
   $('tabVariant').addEventListener('click', function () { switchTab('variant'); });
+  $('tabVoice').addEventListener('click', function () { switchTab('voice'); });
   $('tabAnim').addEventListener('click', function () { switchTab('anim'); });
 
   /* ── 按 JD 生成变体 ─────────────────────────────────────── */
@@ -624,6 +742,7 @@
     else if (state.tab === 'messages') loadMessages();
     else if (state.tab === 'qa') loadQa();
     else if (state.tab === 'config') { loadTheme(); loadConfig(); }
+    else if (state.tab === 'voice') loadVoice();
   }
 
   /* ── 启动 ──

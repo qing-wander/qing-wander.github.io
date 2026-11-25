@@ -25,6 +25,7 @@
    ────────────────────────────────────────────────────────────────────── */
 import { retrieve } from './kb.js';
 import { matchJD } from './jd.js';
+import { synthesize } from '../lib/tts.js';
 
 const JSON_HEADERS = { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' };
 const MODEL_LABEL = '@cf/meta/llama-3.3-70b-instruct-fp8-fast';   // 推理型模型（GLM-4.7-flash 等）会把 token 烧在思维链上，别换
@@ -165,6 +166,20 @@ export async function onRequestPost({ request, env }) {
     if (jd.length < 20) return json({ ok: false, error: 'JD 太短，贴完整的岗位职责与任职要求' }, 400, request, env);
     const r = await matchJD(jd, env);
     return json(r, r.ok ? 200 : 400, request, env);
+  }
+
+  /* 语音合成：前端 js/ai-voice-cloud.js 发 { mode:'tts', text, kind, voice }。
+     音色由 /api/voice 下发，这里再按白名单校验一次 —— 否则谁都能把贵的
+     大模型音色 ID 塞进来烧字符额度。文本长度、超时都在 lib/tts.js 里管。 */
+  if (body.mode === 'tts') {
+    const r = await synthesize(env, { text: body.text, voice: body.voice, kind: body.kind });
+    if (!r.ok) {
+      return json({ ok: false, error: r.error, message: r.message, detail: r.detail }, r.status, request, env);
+    }
+    return json({
+      ok: true, audio: r.audio, mime: r.mime, voice: r.voice, chars: r.chars,
+      cached: r.cached, ai_generated: true,   // 《AI 生成合成内容标识办法》：前端据此打标
+    }, 200, request, env);
   }
 
   const q = String(body.q || body.question || '').trim().slice(0, MAX_Q);

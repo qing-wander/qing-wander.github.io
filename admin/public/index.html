@@ -47,6 +47,7 @@
     <button class="tab" id="tabMessages" type="button" role="tab" aria-selected="false">留言审核</button>
     <button class="tab" id="tabQa" type="button" role="tab" aria-selected="false">问答看板</button>
     <button class="tab" id="tabConfig" type="button" role="tab" aria-selected="false">模型与提示词</button>
+    <button class="tab" id="tabVoice" type="button" role="tab" aria-selected="false">AI 语音</button>
     <button class="tab" id="tabVariant" type="button" role="tab" aria-selected="false">生成变体</button>
     <button class="tab" id="tabAnim" type="button" role="tab" aria-selected="false">角色动画</button>
   </div>
@@ -160,6 +161,42 @@
     </article>
 
     <div class="cfg-list" id="cfgList"><p class="empty">加载中…</p></div>
+  </section>
+
+  <!-- AI 语音：切换数字分身的播报音色 + 试听 -->
+  <section class="panel" id="panelVoice" role="tabpanel" hidden>
+    <div class="toolbar">
+      <span class="toolbar-note">数字分身播报用的云端音色。选定即写进 D1，公开站 1 分钟内生效；访客浏览器不支持或云端不可用时自动回落浏览器语音。</span>
+      <button class="btn btn-ghost" id="voiceReload" type="button">重新读取</button>
+    </div>
+
+    <article class="cfg-card">
+      <div class="cfg-head"><h2>音色</h2><span class="pill" id="voiceCur">—</span></div>
+      <p class="cfg-note">点卡片 = 切成这个音色（立刻生效）；点「试听」只合成一段给你听，不改线上设置。</p>
+      <div class="voice-chips" id="voiceChips"><span class="empty">加载中…</span></div>
+    </article>
+
+    <article class="cfg-card">
+      <div class="cfg-head"><h2>试听</h2><span class="pill" id="voiceStat">待试听</span></div>
+      <p class="cfg-note">试听文本按 150 字截断；云函数只合成不缓存试听内容，同一句重复试听会重新合成一次。</p>
+      <label class="cfg-label">试听文本
+        <textarea class="cfg-textarea" id="voiceText" rows="2">你好，我是陈培胜的数字分身。他的项目经历、技术栈和协作方式，都可以直接问我。</textarea>
+      </label>
+      <div class="cfg-actions">
+        <span class="toolbar-note" id="voiceMeta">选中音色后点「试听」</span>
+        <button class="btn btn-ghost" id="voiceStop" type="button" disabled>停止</button>
+        <button class="btn" id="voicePlay" type="button">试听当前音色</button>
+      </div>
+    </article>
+
+    <article class="cfg-card">
+      <div class="cfg-head"><h2>链路</h2></div>
+      <p class="cfg-note">
+        合成链路：公开站 <span class="mono">/api/chat (mode=tts)</span> → 腾讯云函数 <span class="mono" id="voiceUpstream">—</span>。
+        音色白名单在 <span class="mono">functions/lib/tts.js</span>，前端拿不到密钥，也不允许传白名单外的 ID。
+      </p>
+      <p class="cfg-note">大模型音色（月华 / 飞镜 / 爱小芊）要先去腾讯云控制台开通，没开通时试听会直接显示腾讯云返回的错误码。</p>
+    </article>
   </section>
 
   <!-- 按 JD 生成简历变体 -->

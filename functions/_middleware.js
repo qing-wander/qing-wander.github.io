@@ -137,7 +137,12 @@ function redirectTo(location) {
 }
 
 /* ── ④ API 边缘限流 ─────────────────────────────────────────────── */
-const HEAVY_API = ['/api/chat', '/api/jd', '/api/variant', '/api/kb', '/api/deliver', '/api/deliver-preview'];const HEAVY_MIN_LIMIT = 20;
+const HEAVY_API = [
+  '/api/chat', '/api/jd', '/api/variant', '/api/kb', '/api/deliver', '/api/deliver-preview',
+  /* 试听每次都要连云函数合成，按重接口限流；/api/voice 只读一个整数，走轻桶 */
+  '/api/admin/voice/preview',
+];
+const HEAVY_MIN_LIMIT = 20;
 const HEAVY_DAY_LIMIT = 200;
 const LIGHT_MIN_LIMIT = 120;
 

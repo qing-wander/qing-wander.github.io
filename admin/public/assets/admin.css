@@ -312,6 +312,29 @@ td.act { text-align: right; white-space: nowrap; }
 .theme-chip small { display: block; font-size: 11px; color: var(--ink-2); margin-top: 3px; line-height: 1.4; }
 .theme-chip.is-on { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
 
+/* ── AI 语音：音色卡片 + 试听 ── */
+.voice-chips { display: grid; grid-template-columns: repeat(auto-fill, minmax(215px, 1fr)); gap: 10px; }
+.voice-chip {
+  display: flex; flex-direction: column; border: 1px solid var(--line); background: var(--paper);
+}
+.voice-chip.is-on { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.voice-pick {
+  flex: 1; text-align: left; padding: 10px 12px 8px; border: 0; background: none;
+  cursor: pointer; font: inherit; color: var(--ink);
+}
+.voice-pick strong { display: block; font-size: 13px; }
+.voice-pick small { display: block; font-size: 11px; color: var(--ink-2); margin-top: 3px; line-height: 1.45; }
+.voice-pick em {
+  display: block; font-style: normal; font-size: 10px; letter-spacing: .04em;
+  color: var(--ink-2); margin-top: 7px; font-family: var(--mono);
+}
+.voice-try {
+  border: 0; border-top: 1px solid var(--line); background: #fff; color: var(--ink);
+  font: inherit; font-size: 12px; padding: 6px; cursor: pointer;
+}
+.voice-try:hover { background: var(--paper-2); }
+.voice-try:active { background: var(--line); }
+
 /* ── 模型与提示词配置 ── */
 .cfg-list { display: grid; gap: 14px; margin-top: 14px; }
 .cfg-card { border: 1px solid var(--line); background: #fff; padding: 16px; }

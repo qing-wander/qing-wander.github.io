@@ -170,3 +170,12 @@ CREATE TABLE IF NOT EXISTS admin_email_codes (
   attempts   INTEGER NOT NULL DEFAULT 0,
   sent_at    INTEGER NOT NULL
 );
+
+-- ══ 后台运行时配置（2026-11-20）══════════════════════════════════════════════
+-- 与 db/migrations/2026-11-20-admin-config.sql 保持同一份 DDL。
+-- 存的是运营参数（模型 / 提示词 / 主题 / 音色），不是简历内容；简历仍以 Git 为准。
+CREATE TABLE IF NOT EXISTS admin_config (
+  key        TEXT PRIMARY KEY,
+  value      TEXT NOT NULL,
+  updated_at INTEGER NOT NULL
+);
