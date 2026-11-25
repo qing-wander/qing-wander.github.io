@@ -614,8 +614,9 @@ admin 是本次重构**单位收益最高**的部分：原生 JS 1,033 行的多
 - **空壳验证页**：/work/portfolio.html（真相源 import 装配 + 岛水合验证 + RTL 组件测试），已上线且水合验证通过。
 - **基线**：Lighthouse 线上 4 页 × 移动/桌面 8 份入 `tests/e2e/baseline/lighthouse/`——index 移动档 55 分 / LCP 25.3s / FCP 22.2s（Google Fonts 外链为主因），是 M3 的主优化对照；视觉基线 64/64（4 页 × 4 主题 × 390/680/768/1024，390 含 hasTouch）清单 + sha1 入库。
 - **顺手修复**（迁移盘点中发现的自迁站以来即存在的线上 404）：manifest.json 从未进 dist（PWA 安装断链）与 work/ 目录从未进 dist（作品卡链接 404），均已进拷贝清单 + 硬校验。
+- **遗留事故（M1 期间发现并已修复）**：M0 首次提交 pnpm-lock.yaml，而 pnpm 12 的 lockfile 为双文档 YAML（packageManagerDependencies 自管文档 + 主依赖文档），GitHub Pages 备份线的 jekyll-build-pages 只接受单文档，自 M0 起备份线连续构建失败/卡 queued，备份站停留在 1a352fc 版本。生产主站（Cloudflare Pages）全程无恙。M1 提交（6a49934）时发现，以仓库根加 `.nojekyll`（1c3e7d1）修复——站点本就纯静态直发无 Jekyll 渲染依赖，亦为 Astro 项目部署 GH Pages 的标配（`_astro` 目录同样依赖）；同 commit 起备份线恢复部署最新内容。
 
-### M1 · admin 后台 + login —— 🔄 代码完成，待提交发布（2026-11-26）
+### M1 · admin 后台 + login —— ✅ 已提交（2026-11-26，提交 6a49934；D6 双开：未入 REACT_MIGRATED_PAGES，生产仍走旧版）
 
 - **交付**：
   - `src/lib/api/admin.ts`：27 个 admin 端点 zod 契约 + 类型化 client（X-Admin-Request CSRF、401 统一跳 login），配套契约快照测试。
@@ -627,7 +628,7 @@ admin 是本次重构**单位收益最高**的部分：原生 JS 1,033 行的多
   2. 迁移中发现旧 login 真实 bug：发码接口返回的掩码邮箱（`de***@…`）被回填进 verify 请求导致 403；React 版改用原始输入修复。
   3. anim-console.js（477 行）按方案原样桥接：渲染旧版同 id/class 的 DOM 骨架，进 tab 时动态加载 `/admin/assets/anim-console.js` 调 `window.AnimConsole.init()`，M5 再定去留。
 - **验收**：单元/组件测试 11/11；Playwright E2E **24/24**（三通道登录全流、8 tab 逐项走查、保存文案写路径、退出、768/1024 平板快照）；既有 node:test 289/289 基线不回归；内容漂移链 4 项全绿（render_resume / sync_company_profiles / render_work_details / validate_content）；build/test/lint/check 四绿。
-- **未决**：admin/login 尚未加入 pages-build.sh 的 `REACT_MIGRATED_PAGES` 生产清单（待确认 D6 双开节奏：建议先双开观察一周再切）。
+- **已定（2026-11-26 用户拍板，照 D6 默认建议）**：admin/login 暂不加入 `REACT_MIGRATED_PAGES`，代码进 main 但生产 /admin /login 继续走旧版，双开观察一周后再切；期间 React 版可经本地 `pnpm build` + `node scripts/dev-api-server.mjs`（:8877）联调验收。
 
 ---
 
