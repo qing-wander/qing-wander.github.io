@@ -73,12 +73,12 @@ const MAX_JD = 4000;
 const MAX_ATTACH_BYTES = 12 * 1024 * 1024; // 单附件上限，远低于 Resend 40MB/封
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
-function allowedOrigins(env) {
+export function allowedOrigins(env) {
   return String(env.ALLOWED_ORIGINS || DEFAULT_ORIGINS.join(','))
     .split(',').map((s) => s.trim()).filter(Boolean);
 }
 
-function isAllowedOrigin(origin, allow) {
+export function isAllowedOrigin(origin, allow) {
   const o = String(origin || '').trim();
   if (!o) return false;
   const host = o.replace(/^https?:\/\//, '');
@@ -92,7 +92,7 @@ function isAllowedOrigin(origin, allow) {
   });
 }
 
-function corsHeaders(origin, allow) {
+export function corsHeaders(origin, allow) {
   const acao = isAllowedOrigin(origin, allow) ? String(origin).trim() : '';
   const h = {
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
@@ -104,7 +104,7 @@ function corsHeaders(origin, allow) {
   return h;
 }
 
-function json(body, extra, status) {
+export function json(body, extra, status) {
   return new Response(JSON.stringify(body), {
     status: status || 200,
     headers: Object.assign({}, JSON_HEADERS, extra || {}),
@@ -163,14 +163,14 @@ function toBase64(buf) {
 }
 
 /* 从本站静态资源取一个附件；取不到返回 null（不阻塞发信） */
-async function fetchAttachment(request, path, filename) {
+async function fetchAttachment(request, path, filename, withData = true) {
   try {
     const url = new URL(path, request.url);
     const resp = await fetch(url);
     if (!resp.ok) return null;
     const buf = await resp.arrayBuffer();
     if (!buf.byteLength || buf.byteLength > MAX_ATTACH_BYTES) return null;
-    return { filename, content: toBase64(buf) };
+    return withData ? { filename, content: toBase64(buf) } : { filename };
   } catch (e) {
     return null;
   }
@@ -180,6 +180,51 @@ async function fetchAttachment(request, path, filename) {
 function parseCertKeys(raw) {
   if (!Array.isArray(raw)) return [];
   return Array.from(new Set(raw.map((k) => String(k).trim()).filter((k) => k in CERT_SLOTS)));
+}
+
+/* 请求体归一化：发信与预览共用，保证预览所见即实际所发 */
+export function parseDelivery(body) {
+  if (!body || typeof body !== 'object') {
+    return { error: 'bad_request', message: '请求体不是合法 JSON' };
+  }
+  const parsed = parseRecipients(body.to);
+  if (parsed.error === 'empty') return { error: 'bad_request', message: '请填写收件人邮箱' };
+  if (parsed.error === 'too_many') {
+    return { error: 'bad_request', message: '一次最多发给 ' + MAX_RECIPIENTS + ' 个收件人' };
+  }
+  if (parsed.error === 'invalid') return { error: 'bad_request', message: '收件人邮箱格式不正确' };
+
+  const d = {
+    to: parsed.list,
+    recipient: clean(body.recipient, MAX_RECIPIENT),
+    name: clean(body.name, MAX_NAME),
+    email: clean(body.email, 120).toLowerCase(),
+    note: clean(body.note, MAX_NOTE),
+    jd: clean(body.jd, MAX_JD),
+    certs: parseCertKeys(body.attachments),
+    attachedLabels: [],
+    pendingLabels: [],
+  };
+  if (d.email && !EMAIL_RE.test(d.email)) {
+    return { error: 'bad_request', message: '你的邮箱格式不正确（可留空）' };
+  }
+  return { d };
+}
+
+/* 探测实际会随信附上的文件。withData=false 只取文件名，供预览使用（不转 base64）。 */
+export async function probeAttachments(request, d, withData = true) {
+  const attachments = [];
+  const names = [];
+  /* PDF 是固定附件，不在正文「另申请」清单里重复列一次 */
+  const pdf = await fetchAttachment(request, RESUME_PDF_PATH, RESUME_PDF_NAME, withData);
+  if (pdf) { attachments.push(pdf); names.push(pdf.filename); }
+  for (const key of d.certs) {
+    const slot = CERT_SLOTS[key];
+    const file = await fetchAttachment(request, slot.path, slot.filename, withData);
+    if (file) { attachments.push(file); names.push(file.filename); d.attachedLabels.push(slot.label); }
+    else d.pendingLabels.push(slot.label);
+  }
+  return { attachments, names };
 }
 
 export async function onRequestOptions({ request, env }) {
@@ -203,35 +248,9 @@ export async function onRequestPost({ request, env }) {
 
   let body = {};
   try { body = await request.json(); } catch (e) { body = null; }
-  if (!body || typeof body !== 'object') {
-    return json({ ok: false, error: 'bad_request', message: '请求体不是合法 JSON' }, cors, 400);
-  }
-
-  const parsed = parseRecipients(body.to);
-  if (parsed.error === 'empty') {
-    return json({ ok: false, error: 'bad_request', message: '请填写收件人邮箱' }, cors, 400);
-  }
-  if (parsed.error === 'too_many') {
-    return json({ ok: false, error: 'bad_request', message: '一次最多发给 ' + MAX_RECIPIENTS + ' 个收件人' }, cors, 400);
-  }
-  if (parsed.error === 'invalid') {
-    return json({ ok: false, error: 'bad_request', message: '收件人邮箱格式不正确' }, cors, 400);
-  }
-
-  const d = {
-    to: parsed.list,
-    recipient: clean(body.recipient, MAX_RECIPIENT),
-    name: clean(body.name, MAX_NAME),
-    email: clean(body.email, 120).toLowerCase(),
-    note: clean(body.note, MAX_NOTE),
-    jd: clean(body.jd, MAX_JD),
-    certs: parseCertKeys(body.attachments),
-    attachedLabels: [],
-    pendingLabels: [],
-  };
-  if (d.email && !EMAIL_RE.test(d.email)) {
-    return json({ ok: false, error: 'bad_request', message: '你的邮箱格式不正确（可留空）' }, cors, 400);
-  }
+  const parsed = parseDelivery(body);
+  if (parsed.error) return json({ ok: false, error: parsed.error, message: parsed.message }, cors, 400);
+  const d = parsed.d;
 
   /* 限额：每个收件人 / 每 IP / 全站（KV 未绑定则跳过，不阻塞发信） */
   const kv = env.SITE_KV;
@@ -252,15 +271,7 @@ export async function onRequestPost({ request, env }) {
   }
 
   /* 附件：PDF 简历始终附上；勾选的证书文件缺失时标注「待补充」，不阻塞发信 */
-  const attachments = [];
-  const pdf = await fetchAttachment(request, RESUME_PDF_PATH, RESUME_PDF_NAME);
-  if (pdf) attachments.push(pdf);
-  for (const key of d.certs) {
-    const slot = CERT_SLOTS[key];
-    const file = await fetchAttachment(request, slot.path, slot.filename);
-    if (file) { attachments.push(file); d.attachedLabels.push(slot.label); }
-    else d.pendingLabels.push(slot.label);
-  }
+  const { attachments } = await probeAttachments(request, d);
 
   const mail = buildDeliveryEmail(d);
   const payload = {

@@ -79,7 +79,8 @@ for f in index.html resume.html jd.html company.html school.html 404.html \
          assets/print-preview/manifest.json assets/print-preview/color-1.png \
          assets/print-preview/bw-1.png assets/print-preview/color-2.png \
          assets/print-preview/bw-2.png assets/resume/chen-peisheng-resume-2026.pdf \
-         functions/api/deliver.js functions/lib/deliver-content.js; do
+         functions/api/deliver.js functions/api/deliver-preview.js \
+         functions/lib/deliver-content.js; do
   if [ ! -f "$OUT/$f" ]; then
     echo "✗ dist 缺少 $f，独立页会变成 404 / 首页 fallback"
     exit 1

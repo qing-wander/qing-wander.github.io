@@ -400,6 +400,27 @@ body {
 .dl-field textarea { resize: vertical; min-height: 74px; line-height: 1.7; }
 .dl-required .dl-label::after { content: ' *'; color: var(--orange); }
 .dl-hint { font-size: 11px; line-height: 1.6; color: var(--ink-soft); }
+.dl-tpl-btn {
+  margin-left: 8px; padding: 0; border: 0; background: none; cursor: pointer;
+  color: var(--orange); font: bold 11px/1.6 inherit; text-decoration: underline;
+}
+/* 发送前真实预览 */
+.dlp-panel { max-width: 760px; }
+.dlp-meta {
+  margin: 12px 0 10px; padding: 10px 12px; background: #F3EEE2;
+  border: 2px solid #141311; font: 11px/1.7 'PingFang SC','Microsoft YaHei',sans-serif;
+  color: #4A463F; word-break: break-all;
+}
+.dlp-meta b { color: #141311; }
+.dlp-frame, .dlp-local {
+  width: 100%; height: 380px; background: #fff;
+  border: 2px solid #141311; box-sizing: border-box;
+}
+.dlp-local {
+  margin: 0; padding: 14px; overflow: auto; white-space: pre-wrap;
+  font: 12px/1.7 'PingFang SC','Microsoft YaHei',sans-serif; color: #141311;
+}
+.dlp-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 14px; }
 .dl-group { border: 2px dashed rgba(20,19,17,.35); padding: 12px 13px; background: var(--paper); }
 .dl-group-title {
   font-family: var(--font-mono, monospace);
@@ -929,8 +950,8 @@ body.pv-open { overflow: hidden; }
       </label>
       <label class="dl-field">
         <span class="dl-label">岗位 JD（可选）</span>
-        <textarea id="dlJd" rows="3" maxlength="4000" placeholder="粘贴招聘 JD，会放进邮件里可展开 / 收起的区块；不填则不显示…"></textarea>
-        <span class="dl-hint">邮件客户端不支持折叠时会直接展开完整 JD；「岗位匹配」入口在邮件里也保留。</span>
+        <textarea id="dlJd" rows="6" maxlength="4000" placeholder="岗位名称：AI Agent 工程师&#10;岗位职责：&#10;1. 负责企业级 Agent 应用的设计与开发&#10;2. 参与 LLM 工程化与系统集成&#10;岗位要求：&#10;1. 3 年以上后端 / AI 工程经验&#10;2. 熟悉 Python / Java 与主流 Agent 框架"></textarea>
+        <span class="dl-hint">按「岗位名称 / 岗位职责 / 岗位要求」填写；不填则不显示。邮件客户端不支持折叠时会展开完整 JD。<button type="button" class="dl-tpl-btn" id="dlJdTpl">填入示例模板</button></span>
       </label>
       <div class="dl-group">
         <div class="dl-group-title">ATTACHMENTS / 附加材料（默认不选）</div>
@@ -958,6 +979,25 @@ body.pv-open { overflow: hidden; }
   </div>
 </div>
 
+<!-- ── 发送前真实预览：正文由 /api/deliver-preview 用发信同一套逻辑生成 ── -->
+<div class="dl-overlay dlp-overlay" id="dlpOverlay" role="dialog" aria-modal="true" aria-labelledby="dlpTitle">
+  <div class="dl-panel dlp-panel">
+    <button class="dl-close" onclick="closePreview()" data-analytics="resume_deliver_preview_close" aria-label="关闭预览">×</button>
+    <div class="dl-head">
+      <span class="dl-badge">PREVIEW / 发送前确认</span>
+      <h3 id="dlpTitle">确认邮件内容</h3>
+      <p class="dl-sub">下面是系统将<strong>实际发出</strong>的邮件。确认无误后再投递；返回可继续修改。</p>
+    </div>
+    <div class="dlp-meta" id="dlpMeta">正在生成真实邮件预览…</div>
+    <iframe class="dlp-frame" id="dlpFrame" title="邮件正文预览" sandbox=""></iframe>
+    <pre class="dlp-local" id="dlpLocal" hidden></pre>
+    <div class="dlp-actions">
+      <button class="btn" type="button" id="dlpBack" data-analytics="resume_deliver_preview_back">返回修改</button>
+      <button class="btn btn-solid" type="button" id="dlpSend" data-analytics="resume_deliver_confirm">确认投递 ▶</button>
+    </div>
+  </div>
+</div>
+
 <script>
 /* ── 简历转发（Resend 经 Cloudflare Pages Function /api/deliver 发给访客指定的收件人）──
    方向：访客 → 收件人（自己 / 同事 / 指定人），不是发给站长。
@@ -967,6 +1007,29 @@ body.pv-open { overflow: hidden; }
    · 发送中防重复点击；成功后关窗 + 提示。 */
 var DL_STATE = { sending: false };
 var DL_EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+var DL_DEFAULTS = { name: '陈培胜', email: 'hi@chenpeisheng.cn' };
+var DL_JD_TEMPLATE = [
+  '岗位名称：',
+  '岗位职责：',
+  '1. ',
+  '2. ',
+  '岗位要求：',
+  '1. ',
+  '2. '
+].join('\n');
+
+/* 默认投递人 = 当前简历本人：姓名读页面标题（改数据自动跟随），邮箱用简历联系邮箱 */
+function dlResumeIdentity() {
+  var name = '';
+  var h = document.querySelector('.head-name');
+  if (h) name = (h.textContent || '').trim().replace(/\s+/g, '');
+  var a = document.querySelector('a[href^="mailto:"]');
+  var email = a ? (a.getAttribute('href') || '').replace(/^mailto:/i, '').split('?')[0].trim() : '';
+  return {
+    name: name || DL_DEFAULTS.name,
+    email: DL_EMAIL_RE.test(email) ? email : DL_DEFAULTS.email
+  };
+}
 
 /* 结果级埋点：只上报状态与数量，不上报邮箱等个人信息 */
 function dlTrack(name, data) {
@@ -992,6 +1055,12 @@ function openDeliver() {
   var o = document.getElementById('dlOverlay');
   o.classList.add('show');
   document.getElementById('dlAlt').hidden = true;
+  /* 默认填本人信息，用户可随意修改；清空后关闭再打开会恢复默认值 */
+  var who = dlResumeIdentity();
+  var n = document.getElementById('dlName');
+  var em = document.getElementById('dlEmail');
+  if (n && !n.value.trim()) n.value = who.name;
+  if (em && !em.value.trim()) em.value = who.email;
   setTimeout(function () { document.getElementById('dlRecipient').focus(); }, 60);
 }
 function closeDeliver() {
@@ -1002,19 +1071,31 @@ function closeDeliver() {
   overlay.addEventListener('click', function (e) {
     if (e.target === overlay) closeDeliver();
   });
+  var preview = document.getElementById('dlpOverlay');
+  preview.addEventListener('click', function (e) {
+    if (e.target === preview) closePreview();
+  });
   document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape' && overlay.classList.contains('show')) closeDeliver();
+    if (e.key !== 'Escape') return;
+    if (preview.classList.contains('show')) { closePreview(); return; }
+    if (overlay.classList.contains('show')) closeDeliver();
+  });
+  var tplBtn = document.getElementById('dlJdTpl');
+  if (tplBtn) tplBtn.addEventListener('click', function () {
+    var jd = document.getElementById('dlJd');
+    if (!jd) return;
+    if (jd.value.trim() && !window.confirm('填入模板会覆盖当前 JD 内容，继续？')) return;
+    jd.value = DL_JD_TEMPLATE;
+    jd.focus();
   });
 })();
 
-function buildMailto() {
-  var to = dlRecipients();
+function buildMailtoLines() {
   var recipient = document.getElementById('dlRecipient').value.trim();
   var name = document.getElementById('dlName').value.trim();
   var email = document.getElementById('dlEmail').value.trim();
   var jd = document.getElementById('dlJd').value.trim();
   var note = document.getElementById('dlNote').value.trim();
-  var subject = '陈培胜 · AI Agent 工程师 · 简历自动投递' + (recipient ? '（致 ' + recipient + '）' : '');
   var lines = [
     (recipient ? recipient + '，您好：' : '您好：'),
     '这是一封简历自动投递邮件。',
@@ -1029,7 +1110,13 @@ function buildMailto() {
   if (jd) lines = lines.concat(['', '—— 岗位 JD ——', jd]);
   if (note) lines = lines.concat(['', '—— 投递附言 ——', note]);
   if (name || email) lines = lines.concat(['', '投递人：' + [name, email].filter(Boolean).join(' / ')]);
-  return 'mailto:' + encodeURIComponent(to.join(',')) + '?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(lines.join('\n'));
+  return lines;
+}
+function buildMailto() {
+  var to = dlRecipients();
+  var recipient = document.getElementById('dlRecipient').value.trim();
+  var subject = '陈培胜 · AI Agent 工程师 · 简历自动投递' + (recipient ? '（致 ' + recipient + '）' : '');
+  return 'mailto:' + encodeURIComponent(to.join(',')) + '?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(buildMailtoLines().join('\n'));
 }
 
 /* API 双线路：GitHub Pages 无 Functions，自动改打 Cloudflare Pages（已把 github.io 列入来源白名单）；
@@ -1057,6 +1144,67 @@ function apiFetch(path, opts) {
   return next();
 }
 
+/* ── 发送前真实预览：先拿服务端用同一套逻辑生成的邮件，确认后才投递 ── */
+function dlPayload() {
+  return {
+    to: document.getElementById('dlTo').value.trim(),
+    recipient: document.getElementById('dlRecipient').value.trim(),
+    name: document.getElementById('dlName').value.trim(),
+    email: document.getElementById('dlEmail').value.trim(),
+    note: document.getElementById('dlNote').value.trim(),
+    jd: document.getElementById('dlJd').value.trim(),
+    attachments: dlAttachments()
+  };
+}
+function dlHtmlText(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+function showLocalPreview(note) {
+  var frame = document.getElementById('dlpFrame');
+  var local = document.getElementById('dlpLocal');
+  frame.hidden = true;
+  local.hidden = false;
+  document.getElementById('dlpMeta').innerHTML =
+    '<b>简化预览：</b>服务器真实预览暂不可用，下面显示将要发送的文本内容。';
+  local.textContent = (note ? '提示：' + note + '\n\n' : '') + buildMailtoLines().join('\n');
+}
+function openPreview(payload) {
+  DL_STATE.payload = payload;
+  var frame = document.getElementById('dlpFrame');
+  var local = document.getElementById('dlpLocal');
+  frame.hidden = false;
+  local.hidden = true;
+  frame.removeAttribute('srcdoc');
+  document.getElementById('dlpMeta').textContent = '正在生成真实邮件预览…';
+  document.getElementById('dlpOverlay').classList.add('show');
+  if (/^file:/.test(location.protocol)) { showLocalPreview('本地文件模式不会自动发信'); return; }
+  apiFetch('/api/deliver-preview', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  }).then(function (res) {
+    if (res.ok && res.body && res.body.ok && res.body.html) {
+      var d = res.body;
+      var att = (d.attachments || []).length ? d.attachments.join('、') : '仅 PDF 简历';
+      var pend = (d.pending || []).length ? ' · 待补充：' + d.pending.join('、') : '';
+      document.getElementById('dlpMeta').innerHTML =
+        '<b>收件人：</b>' + dlHtmlText((d.to || []).join('、')) +
+        '<br><b>主题：</b>' + dlHtmlText(d.subject || '') +
+        '<br><b>附件：</b>' + dlHtmlText(att) + dlHtmlText(pend) +
+        (d.replyTo ? '<br><b>回复地址：</b>' + dlHtmlText(d.replyTo) : '');
+      frame.srcdoc = d.html;
+    } else {
+      showLocalPreview((res.body && res.body.message) || '服务未返回预览');
+    }
+  }).catch(function () {
+    showLocalPreview('网络异常');
+  });
+}
+function closePreview() {
+  document.getElementById('dlpOverlay').classList.remove('show');
+}
+
 document.getElementById('dlForm').addEventListener('submit', function (e) {
   e.preventDefault();
   if (DL_STATE.sending) return;
@@ -1064,22 +1212,27 @@ document.getElementById('dlForm').addEventListener('submit', function (e) {
   var to = dlRecipients();
   var email = document.getElementById('dlEmail').value.trim();
   var bad = to.filter(function (x) { return !DL_EMAIL_RE.test(x); });
-
   function fail(msg, focusId) {
     tip.textContent = msg;
     tip.style.color = '#C62828';
     var el = document.getElementById(focusId);
     if (el) el.focus();
   }
-
   if (!to.length) { fail('请填写收件人邮箱——简历会发到这个地址', 'dlTo'); return; }
   if (to.length > 3) { fail('一次最多发给 3 个收件人，请减少一些', 'dlTo'); return; }
   if (bad.length) { fail('收件人邮箱格式不正确：' + bad[0], 'dlTo'); return; }
   if (email && !DL_EMAIL_RE.test(email)) { fail('你的邮箱格式不正确（可留空）', 'dlEmail'); return; }
-
   tip.textContent = '邮件由系统发送，含 PDF 简历附件与在线简历入口';
   tip.style.color = '';
+  /* 不再直接发送：先展示服务端生成的真实邮件，确认后才投递 */
+  openPreview(dlPayload());
+});
 
+function sendDelivery(payload) {
+  var tip = document.getElementById('dlTip');
+  var btn = document.getElementById('dlSend');
+  var to = String(payload.to || '').split(/[,;，；\s]+/).filter(Boolean);
+  function fail(msg) { tip.textContent = msg; tip.style.color = '#C62828'; }
   function showMailtoFallback(msg) {
     dlTrack('resume_deliver_result', { status: 'fallback' });
     var a = document.getElementById('dlMailto');
@@ -1087,28 +1240,13 @@ document.getElementById('dlForm').addEventListener('submit', function (e) {
     document.getElementById('dlAlt').hidden = false;
     tip.textContent = msg;
   }
-
-  if (/^file:/.test(location.protocol)) {
-    showMailtoFallback('本地文件模式：请用邮箱客户端发送');
-    return;
-  }
-
-  var btn = document.getElementById('dlSend');
   DL_STATE.sending = true;
   btn.disabled = true;
   btn.textContent = '发送中…';
   apiFetch('/api/deliver', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      to: to.join(','),
-      recipient: document.getElementById('dlRecipient').value.trim(),
-      name: document.getElementById('dlName').value.trim(),
-      email: email,
-      note: document.getElementById('dlNote').value.trim(),
-      jd: document.getElementById('dlJd').value.trim(),
-      attachments: dlAttachments()
-    })
+    body: JSON.stringify(payload)
   })
     .then(function (res) {
       if (res.ok && res.body && res.body.ok) {
@@ -1120,10 +1258,10 @@ document.getElementById('dlForm').addEventListener('submit', function (e) {
         showMailtoFallback(res.body.message || '自动发信暂不可用，请用邮箱客户端发送');
       } else if (res.body && res.body.error === 'rate_limited') {
         dlTrack('resume_deliver_result', { status: 'rate_limited' });
-        fail(res.body.message || '操作过于频繁，请稍后再试', 'dlTo');
+        fail(res.body.message || '操作过于频繁，请稍后再试');
       } else {
         dlTrack('resume_deliver_result', { status: 'error' });
-        fail((res.body && res.body.message) || '发送失败，请稍后再试', 'dlTo');
+        fail((res.body && res.body.message) || '发送失败，请稍后再试');
       }
     })
     .catch(function () {
@@ -1134,6 +1272,14 @@ document.getElementById('dlForm').addEventListener('submit', function (e) {
       btn.disabled = false;
       btn.textContent = '自动投递 ▶';
     });
+}
+
+document.getElementById('dlpBack').addEventListener('click', closePreview);
+document.getElementById('dlpSend').addEventListener('click', function () {
+  var p = DL_STATE.payload;
+  if (!p || DL_STATE.sending) return;
+  closePreview();
+  sendDelivery(p);
 });
 
 /* PDF 只有一套：导出仍是 window.print()；「保存/打印为 PDF」按钮先打开

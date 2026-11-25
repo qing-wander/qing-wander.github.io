@@ -3,6 +3,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { onRequestPost, onRequestOptions } from '../functions/api/deliver.js';
+import { onRequestPost as previewPost, onRequestOptions as previewOpt } from '../functions/api/deliver-preview.js';
 import {
   buildDeliveryEmail, buildSubject, greetingOf, resumeDigest,
   CERT_SLOTS, RESUME_PDF_NAME,
@@ -217,5 +218,78 @@ test('Resend 403/422 → recipient_not_verified（前端走 mailto 兜底）', a
     assert.equal((await res.json()).error, 'recipient_not_verified');
   } finally {
     globalThis.fetch = orig;
+  }
+});
+
+/* ── 发送前真实预览 ────────────────────────────────────────────── */
+
+function preview(body, env = envOf(), headers = {}) {
+  return previewPost({
+    env,
+    request: new Request(ORIGIN + '/api/deliver-preview', {
+      method: 'POST',
+      headers: Object.assign({ 'Content-Type': 'application/json', Origin: ORIGIN }, headers),
+      body: JSON.stringify(body),
+    }),
+  });
+}
+
+test('预览返回真实正文与附件清单，且不调用 Resend、不消耗限额', async () => {
+  const net = mockNet();
+  const kvGet = [];
+  const env = envOf({ SITE_KV: {
+    async get(k) { kvGet.push(k); return null; },
+    async put() {},
+  } });
+  try {
+    const res = await preview({
+      ...BASE, recipient: '王经理', jd: '岗位名称：Agent 工程师', attachments: ['idCard'],
+    }, env);
+    assert.equal(res.status, 200);
+    const d = await res.json();
+    assert.equal(d.ok, true);
+    assert.deepEqual(d.to, ['hr@example.com']);
+    assert.match(d.subject, /致 王经理/);
+    assert.match(d.html, /王经理，您好/);
+    assert.match(d.html, /TARGET JD/);
+    assert.match(d.html, /身份证复印件.*待补充/);
+    assert.deepEqual(d.attachments, [RESUME_PDF_NAME]);
+    assert.deepEqual(d.pending, ['身份证复印件']);
+    assert.equal(net.calls.resend, null);
+    assert.equal(kvGet.length, 0);
+  } finally {
+    net.restore();
+  }
+});
+
+test('预览内容与实发邮件逐字一致', async () => {
+  const net = mockNet();
+  try {
+    const payload = { ...BASE, recipient: '李 HR', jd: '岗位要求：5 年', note: '请查收' };
+    const pv = await (await preview(payload)).json();
+    assert.equal((await post(payload)).status, 201);
+    const sent = net.calls.resend.body;
+    assert.equal(pv.subject, sent.subject);
+    assert.equal(pv.html, sent.html);
+    assert.equal(pv.text, sent.text);
+    assert.deepEqual(pv.attachments, sent.attachments.map((a) => a.filename));
+  } finally {
+    net.restore();
+  }
+});
+
+test('预览接口：未配置 Resend 仍可预览；来源白名单与 OPTIONS', async () => {
+  const net = mockNet();
+  try {
+    assert.equal((await preview(BASE, envOf({ RESEND_API_KEY: '' }))).status, 200);
+    assert.equal((await preview(BASE, envOf(), { Origin: 'https://evil.example' })).status, 403);
+    const res = await previewOpt({
+      env: envOf(),
+      request: new Request(ORIGIN + '/api/deliver-preview', { method: 'OPTIONS', headers: { Origin: ORIGIN } }),
+    });
+    assert.equal(res.status, 204);
+    assert.match(res.headers.get('Access-Control-Allow-Methods'), /POST/);
+  } finally {
+    net.restore();
   }
 });

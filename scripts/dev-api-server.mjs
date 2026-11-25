@@ -11,6 +11,7 @@ import { createHmac } from 'node:crypto';
 import { onRequestGet as wallGet, onRequestPost as wallPost, onRequestDelete as wallDel, onRequestOptions as wallOpt } from '../functions/api/wall.js';
 import { onRequestGet as visitsGet, onRequestPost as visitsPost, onRequestOptions as visitsOpt } from '../functions/api/visits.js';
 import { onRequestPost as deliverPost, onRequestOptions as deliverOpt } from '../functions/api/deliver.js';
+import { onRequestPost as deliverPreviewPost, onRequestOptions as deliverPreviewOpt } from '../functions/api/deliver-preview.js';
 import { onRequestGet as socialGet, onRequestPost as socialPost, onRequestOptions as socialOpt } from '../functions/api/company-social.js';
 import { onRequestGet as verifyAccessGet, onRequestPost as verifyAccessPost, onRequestOptions as verifyAccessOpt } from '../functions/api/verify-access.js';
 import { onRequestGet as verifyApproveGet, onRequestPost as verifyApprovePost } from '../functions/api/verify-access-approve.js';
@@ -159,6 +160,10 @@ http.createServer(async (req, res) => {
     }
     if (p === '/api/deliver') {
       const r = req.method === 'POST' ? await handler(deliverPost, req) : await handler(deliverOpt, req);
+      return send(res, r);
+    }
+    if (p === '/api/deliver-preview') {
+      const r = req.method === 'POST' ? await handler(deliverPreviewPost, req) : await handler(deliverPreviewOpt, req);
       return send(res, r);
     }
     if (p === '/api/company-social') {
