@@ -568,7 +568,9 @@
       method: 'POST',
       body: JSON.stringify({ key: key, text: text })
     }).then(function () {
-      toast('已保存：' + (CONTENT_LABEL[key] || key));
+      toast(key === 'site-data'
+        ? '已保存，知识库在后台自动重建'
+        : '已保存：' + (CONTENT_LABEL[key] || key));
       return loadContentList(key);
     }).catch(function (err) { toast(err.message || '保存失败', true); })
       .then(function () { $('contentSave').disabled = false; });
@@ -601,12 +603,57 @@
     loadContentList().then(function () { toast('已重新读取'); });
   });
 
+  /* ── 知识库：状态 + 手动重建 ──────────────────────────────────
+     切片与向量由 worker/kb 的 /rebuild 在云端生成（AI/Vectorize 绑定在那里）。
+     保存 site-data 后服务端会自动触发一次；这里给一个可见的手动入口。 */
+  function loadKb() {
+    var stat = $('kbStat');
+    if (!stat) return;
+    stat.textContent = '读取中…';
+    return api('/api/admin/kb').then(function (d) {
+      stat.textContent = d.count ? (d.kb_version || '已建立') : '未建';
+      stat.className = 'pill' + (d.stale ? ' warn' : '');
+      var bits = [d.count + ' 片', d.terms + ' 词', '更新于 ' + fmt(d.updated_at)];
+      if (d.stale) bits.push('已落后于站点数据，建议重建');
+      if (!d.worker_ready) bits.push('未配置 KB_WORKER_URL');
+      $('kbMeta').textContent = d.count ? bits.join(' · ') : '知识库还没建，点右侧「重建知识库」';
+    }).catch(function (err) {
+      stat.textContent = '不可用';
+      $('kbMeta').textContent = err.message || '读取失败';
+    });
+  }
+
+  function rebuildKb() {
+    var btn = $('kbRebuild');
+    btn.disabled = true;
+    $('kbMeta').textContent = '正在重建（约 5–20 秒）…';
+    api('/api/admin/kb', { method: 'POST' })
+      .then(function (d) {
+        toast('已重建：' + d.count + ' 片 · ' + d.kb_version);
+        return loadKb();
+      })
+      .catch(function (err) {
+        $('kbMeta').textContent = err.message || '重建失败';
+        toast(err.message || '重建失败', true);
+      })
+      .then(function () { btn.disabled = false; });
+  }
+
+  $('kbReload').addEventListener('click', function () { loadKb(); });
+  $('kbRebuild').addEventListener('click', rebuildKb);
+  $('tabContent').addEventListener('click', function () { setTimeout(loadKb, 0); });
+
   /* ── AI 语音：音色切换 + 招呼文案 + 试听 ────────────────────────
      音色写 /api/admin/voice（D1 admin_config.ai_voice），公开站 /api/voice 读；
      招呼文案写 /api/admin/greeting（D1 admin_config.ai_greeting），公开站
      /api/greeting 读，首页面板欢迎语 + 语音招呼语都吃这一份；
      试听走 /api/admin/voice/preview —— 同源代理到云函数，不落库、不改设置。 */
-  var VOICE = { list: [], cur: 0, name: '', maxChars: 150, isDefault: true };
+  var VOICE = {
+    list: [], gender: 'female', maxChars: 150, name: '',
+    defaults: { female: 101001, male: 101013 },
+    cur: { female: 101001, male: 101013 },
+    isDefault: { female: true, male: true }
+  };
   var voiceAudio = null;
   var voiceBusy = false;
   /* 试听框是否已被站长手动改过：改过就不再被招呼文案覆盖，便于临时试别的句子 */
@@ -634,12 +681,18 @@
   }
 
   function renderVoice() {
-    var cur = VOICE.cur;
-    $('voiceCur').textContent = VOICE.isDefault
-      ? '默认 · ' + voiceName(cur)
-      : voiceName(cur) + ' · ' + cur;
-    var html = VOICE.list.map(function (v) {
-      var on = (!VOICE.isDefault && v.id === cur) ? ' is-on' : '';
+    var g = VOICE.gender;
+    var cur = VOICE.cur[g];
+    var isDefault = !!VOICE.isDefault[g];
+    $('voiceCur').textContent = (g === 'female' ? '女版 · ' : '男版 · ') +
+      (isDefault ? '默认 · ' : '') + voiceName(cur);
+    var chips = $('voiceGender').querySelectorAll('button[data-gender]');
+    for (var i = 0; i < chips.length; i++) {
+      chips[i].classList.toggle('is-on', chips[i].getAttribute('data-gender') === g);
+    }
+    var list = VOICE.list.filter(function (v) { return v.gender === g; });
+    var html = list.map(function (v) {
+      var on = (!isDefault && v.id === cur) ? ' is-on' : '';
       return '<div class="voice-chip' + on + '">' +
         '<button class="voice-pick" type="button" data-act="pick" data-voice="' + v.id + '">' +
           '<strong>' + esc(v.name) + '</strong>' +
@@ -649,7 +702,7 @@
         '<button class="voice-try" type="button" data-act="try" data-voice="' + v.id + '">试听</button>' +
       '</div>';
     }).join('');
-    html += '<div class="voice-chip' + (VOICE.isDefault ? ' is-on' : '') + '">' +
+    html += '<div class="voice-chip' + (isDefault ? ' is-on' : '') + '">' +
       '<button class="voice-pick" type="button" data-act="pick" data-voice="0">' +
         '<strong>恢复默认</strong><small>用服务端默认音色</small><em>DEFAULT</em>' +
       '</button></div>';
@@ -659,14 +712,17 @@
   function loadVoice() {
     return api('/api/admin/voice').then(function (d) {
       VOICE.list = d.voices || [];
-      VOICE.cur = d.voice;
+      VOICE.defaults.female = d.default_female_voice || 101001;
+      VOICE.defaults.male = d.default_male_voice || 101013;
+      VOICE.cur.female = d.female_voice || VOICE.defaults.female;
+      VOICE.cur.male = d.male_voice || VOICE.defaults.male;
+      VOICE.isDefault.female = !!d.female_is_default;
+      VOICE.isDefault.male = !!d.male_is_default;
       VOICE.name = d.name || '';
       VOICE.maxChars = d.max_chars || 150;
-      VOICE.isDefault = !!d.is_default;
       $('voiceUpstream').textContent = d.upstream || '—';
-      $('voiceMeta').textContent = d.is_default
-        ? '当前是默认音色'
-        : '上次切换：' + fmt(d.updated_at);
+      $('voiceMeta').textContent = '女版：' + voiceName(VOICE.cur.female) +
+        ' · 男版：' + voiceName(VOICE.cur.male);
       renderVoice();
     }).catch(function (err) {
       $('voiceChips').innerHTML = '<span class="empty">' + esc(err.message || '读取失败') + '</span>';
@@ -746,19 +802,29 @@
     if (!b) return;
     var id = Number(b.getAttribute('data-voice'));
     if (b.getAttribute('data-act') === 'try') { previewVoice(id); return; }
-    api('/api/admin/voice', { method: 'POST', body: JSON.stringify({ voice: id }) })
+    var g = VOICE.gender;
+    api('/api/admin/voice', { method: 'POST', body: JSON.stringify({ voice: id, gender: g }) })
       .then(function (d) {
-        VOICE.cur = d.voice;
+        VOICE.cur[g] = d.voice;
         VOICE.name = d.name || '';
-        VOICE.isDefault = !!d.is_default;
+        VOICE.isDefault[g] = !!d.is_default;
         renderVoice();
-        toast(id ? '已切换：' + (d.name || id) : '已恢复默认音色');
-        $('voiceMeta').textContent = '刚切换，公开站 1 分钟内生效（刷新页面会重新取一次音色）';
+        toast((g === 'female' ? '女版' : '男版') + (id ? '已切换：' + (d.name || id) : '已恢复默认音色'));
+        $('voiceMeta').textContent = '刚切换，公开站 1 分钟内生效（访客切换性别即时生效）';
       })
       .catch(function (err) { toast(err.message || '切换失败', true); });
   });
 
-  $('voicePlay').addEventListener('click', function () { previewVoice(VOICE.cur); });
+  $('voiceGender').addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-gender]');
+    if (!b) return;
+    var g = b.getAttribute('data-gender');
+    if (g !== 'female' && g !== 'male') return;
+    VOICE.gender = g;
+    renderVoice();
+  });
+
+  $('voicePlay').addEventListener('click', function () { previewVoice(VOICE.cur[VOICE.gender]); });
   $('voiceStop').addEventListener('click', function () { stopVoice(); voiceStat('已停止'); });
   $('voiceReload').addEventListener('click', function () { loadVoice(); loadGreeting(); toast('已重新读取'); });
 

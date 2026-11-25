@@ -27,6 +27,8 @@ const MODEL = '@cf/baai/bge-m3';
 const DEFAULT_CHAT_MODEL = '@cf/meta/llama-3.3-70b-instruct-fp8-fast';
 const RERANK_MODEL = '@cf/baai/bge-reranker-base';
 
+import { rebuildKb, kbStatus } from './rebuild.mjs';
+
 const json = (data, status = 200) => new Response(JSON.stringify(data), { status, headers: JSON_HEADERS });
 
 export default {
@@ -46,6 +48,17 @@ export default {
 
     let body;
     try { body = await request.json(); } catch { return json({ ok: false, error: 'bad json' }, 400); }
+
+    if (url.pathname === '/status') {
+      return json(await kbStatus(env));
+    }
+
+    /* 按 D1 真相源重建知识库（后台保存站点数据后自动调用，也可手动触发）。
+       幂等：内容没变就只做一次原地 upsert，不会产生重复切片。 */
+    if (url.pathname === '/rebuild') {
+      const r = await rebuildKb(env);
+      return json(r, r.ok ? 200 : 500);
+    }
 
     if (url.pathname === '/embed') {
       const texts = Array.isArray(body.texts) ? body.texts.slice(0, 50) : [];

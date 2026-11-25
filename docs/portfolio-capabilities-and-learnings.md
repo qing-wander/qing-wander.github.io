@@ -1,5 +1,11 @@
 # 作品集站 · 功能全景、收获与经验沉淀
 
+> **数据口径（2026-11-25）**：本文的量化快照采集于 **2026-11-18**，用于横向对比「做了什么、值多少」，
+> 不是实时指标；代码规模、切片数、后端形态请以仓库与 [`docs/README.md`](README.md) 为准。
+> 已知变化：后端主力已从「一台 CloudBase 云函数三路由」迁到 **Pages Functions + D1 + Vectorize**；
+> 知识库从 TF-IDF 37 段改为 **RAG 42 片 / 7,202 字**（`scripts/build_rag_chunks.mjs`）；
+> 3D 皮肤从 9 款收敛为 **`self3d` + `female3d`** 两套。
+
 > 文档定位：前面七份文档管「怎么做」（RAG、皮肤、语音、JD、投递、观测、部署），这一份管三件事：
 > **① 现在到底做成了什么；② 这些功能全部做完，能换回什么；③ 真正沉淀下来的经验是什么。**
 >
@@ -34,9 +40,9 @@
 | 站点体积 | **37 MB**（演示视频 9.8 MB、图片 3.3 MB、3D 与皮肤资产 1.8 MB、知识库 156 KB） | `du -sh` |
 | 页面 | 主页（10 板块，含 `#jd`）+ 简历页（ATS 友好）+ 404 | `index.html` / `resume.html` |
 | 内容真源 | `data/site-data.json`：5 个项目、6 个作品（3 个 upcoming）、4 段经历 → 派生快照 `site-data.js` | JSON 实测 |
-| 知识库 | **37 段切片 / 8,346 字**，char-bigram TF-IDF，**1,200 维**，int8 对称量化（scale 218.1），隐私字段 `TEL` 生成期拦截 | `knowledge/kb-meta.json` |
-| AI 能力 | 问答（RAG）+ 9 款皮肤 + 语音（浏览器 / 腾讯云 TTS 双通道）+ JD 匹配（页面区块 + 面板内模式） | `js/*.js`、`functions/tencent/` |
-| 后端 | **一台云函数三路由**（`/chat` 问答、`mode:"jd"`、`mode:"tts"`）+ 2 个 Pages Functions（`/api/wall`、`/api/deliver`）+ 可选 Worker 计数 | `functions/` |
+| 知识库 | **RAG 42 片 / 7,202 字**（切片 ID 回链简历条目），D1 FTS5 + Vectorize 双路召回；脱敏在生成期拦截 `TEL` | `scripts/build_rag_chunks.mjs` → D1 |
+| AI 能力 | 问答（混合检索 RAG）+ `self3d`/`female3d` 两套形象 + 语音（浏览器 / 腾讯云 TTS 双通道）+ JD 匹配（页面 + 面板内模式） | `js/*.js`、`functions/api/`、`functions/tencent/` |
+| 后端 | **Pages Functions 为主**（chat/kb/jd/wall/visits/deliver/verify-access/company-social/admin）+ CloudBase 云函数负责 TTS 与兜底 | `functions/` |
 | 限流 | 问答 20 次/分 · 200 次/天；JD 4 次/10 分钟 · 20 次/天；TTS 40 段/分 · 400 段/天 | `index.js` 常量 |
 | 上限 | 问题 ≤200 字、回答 ≤700 字、JD 30–1500 字、TTS ≤150 字、JD 表 ≤8 行 / 需求 ≤14 条 / 上下文 6 段 | 同上 |
 | 成本 | **¥0 / 月**：GitHub Pages + Cloudflare Pages 免费额度 + CloudBase 体验额度 + 腾讯云 TTS 800 万字符免费包（3 个月） | 各平台免费政策 |
@@ -337,10 +343,9 @@ js/analytics.js(191) / js/visitor-count.js(156)
 functions/tencent/index.js(995)  三路由 + 限流 + 检索 + 白名单 + 日志
 functions/tencent/prompt.js(153) system prompt + JD schema + scrub
 functions/tencent/tts.js(204)    TC3 签名 + LRU + 语气分层（零依赖）
-functions/tencent/kb/            随包部署的知识库产物
 functions/api/wall.js(321) / deliver.js(328)
 data/site-data.json → data/site-data.js
-knowledge/chunks.json / vectors.json / kb-meta.json / kb.js
+.temp/rag/chunks.json（构建期生成，不入库）→ D1 kb_chunks / kb_fts
 scripts/build_kb.py(547) / dev-api-server.mjs(122) / wall-check.sh(183)
 scripts/deploy-pages.sh(117) / sync-pages-from-github.sh(126) / sync_site_data.py(76)
 docs/ai-assistant-survey.md(914) / ai-avatar-skins.md(283) / ai-voice-survey.md(345)

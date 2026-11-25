@@ -4,6 +4,10 @@
 > 实现进度、验证记录与待处理事项都在这里；后续代码迭代必须与本文对齐，冲突时先改文档再改代码。
 > 全站「还没做的事」只在 [TODO.md](TODO.md) 一处登记，本文 §5 为其概要并相互回链。
 >
+> **现状（2026-11-25 核对）**：主链路已是 Cloudflare 版——`POST /api/jd`（`functions/api/jd.js`），
+> 召回用 D1 FTS5 + Vectorize 的混合检索，判定是「每条要求字面覆盖多少个词」，模型只做结构化表达。
+> 本文记录的腾讯云 CloudBase `mode:"jd"` 通道仍在，作为兜底与历史实施记录。
+>
 > 版本：v5（2026-11-18）· 状态：**已上线，T10 / T11 全部完成；AI 助手面板内 JD 模式已上线** · 作者：陈培胜
 > 变更：v1 为初版实施说明；v2 并入调研结论、选型决策、进度与待办；v3 记录实际上线与线上验收，
 > 并更正「云函数待重新部署」这一过时结论——实测线上早已是含 JD + TTS 的合并版；
@@ -79,7 +83,7 @@ JD 逐条需求 → 对应经历 / 项目的哪条证据覆盖了它 → 哪些�
 | 资产 | 现状 | 对 JD 匹配的影响 |
 |---|---|---|
 | `functions/tencent/`（CloudBase 云函数） | 已承载问答：CORS 白名单、TF-IDF 检索、两级限流、`chat_logs` 落库、脱敏 | 加 `mode` 分流，不新增函数、不加环境变量 |
-| `knowledge/`（37 段切片） | 与函数内 `kb/` 同源，`scripts/build_kb.py` 构建 | JD 匹配直接复用；**JD 本身不进知识库**（一次性输入） |
+| 档案切片（现为 RAG 42 片） | 由 `scripts/build_rag_chunks.mjs` 从 `data/site-data.json` 生成并灌入 D1；腾讯云兜底通道用 `build_kb.py` 产物 | JD 匹配直接复用；**JD 本身不进知识库**（一次性输入） |
 | `retrieve()` | 与 `build_kb.py` 严格同口径的 char-bigram TF-IDF | 逐条需求复用同一检索，不引入第二条链路 |
 | 前端架构 | 原生 HTML / ES5 / IIFE，Neo-brutalism 设计体系（`--paper/--ink/--orange` 变量 + 四主题） | `jd-match.js`、`jd-match.css` 全部沿用既有变量与组件形态 |
 | `js/main.js` 第 11 节 | AI 问答助手，端点集中在 `AI_CONFIG.endpoint` | 端点经 `window.CP_AI_ENDPOINT` 传递，前端不重复硬编码 |
@@ -405,9 +409,11 @@ curl -s -X POST https://resume-ai-d9g7zghnxda2ee2cb-1307508155.ap-shanghai.app.t
 > 如确需再次部署，务必使用 JD + TTS 合并版代码，并全量回传环境变量
 > （漏 `AI_API_KEY` 会导致 `/chat` 失效，见 [TODO.md](TODO.md) §3.2）。
 
-1. 知识库未变，无需重建；若之后改过 `knowledge/`，先执行：
+1. 知识库未变，无需重建；若之后改了 `data/site-data.json`，重建并灌入云端：
    ```bash
-   python scripts/build_kb.py --sync-functions
+   node scripts/build_rag_chunks.mjs        # 生成切片与 D1 种子（.temp/rag）
+   bash scripts/db-init.sh remote           # 或按 build-kb.yml 的步骤灌 D1 + Vectorize
+   # 腾讯云兜底通道如需同步：KB_OUT_DIR=<函数目录>/kb python3 scripts/build_kb.py
    ```
 2. ~~重新部署云函数 `functions/tencent`（必须）~~ → **已完成**：现网函数 `mode:"jd"` 实测可用，
    环境变量保持 `AI_API_KEY` / `AI_MODEL`，HTTP 路径 `/chat`，四个 JS `node --check` 全过。

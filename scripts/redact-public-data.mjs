@@ -33,10 +33,8 @@ const TARGETS = [
   'functions/lib/site-data.js',
   'resume.html',
   'variants/agent-2026.html',
-  'rag/chunks.json',
-  'rag/kb-chunks.seed.sql',
-  'knowledge/chunks.json',
-  'functions/tencent/kb/chunks.json',
+  /* RAG / 知识库产物不再入库：它们由 data/site-data.json 现算，
+     只需保证数据源已脱敏，生成物自然不会带真实号码和验证码。 */
 ];
 
 const checkOnly = process.argv.includes('--check');

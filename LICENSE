@@ -1,0 +1,36 @@
+MIT License
+
+Copyright (c) 2026 陈培胜 (CHEN PEISHENG)
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+────────────────────────────────────────────────────────────────────────────
+补充说明：个人内容不在 MIT 授权范围内
+────────────────────────────────────────────────────────────────────────────
+
+上述 MIT 许可覆盖本仓库的**代码**（HTML / CSS / JavaScript / SQL / Shell /
+Python / Node 脚本及其配置）。以下**个人内容**保留所有权利，不随 MIT 授权，
+不得复制、修改、再分发或用于任何商业/非商业产品：
+
+1. `images/` 目录中的本人照片、证件照、获奖证书、学信网截图；
+2. `assets/skins/models/`、`assets/character-views/` 中的个人 3D 形象与骨骼数据；
+3. `assets/resume/` 中的 PDF 简历，以及 `resume.html` / `data/*.json` 中的履历文字；
+4. 姓名「陈培胜 / CHEN PEISHENG」、联系方式、教育经历、工作经历等个人身份信息。
+
+Fork 或以本项目为模板时，请将上述内容全部替换为你自己的素材与信息。

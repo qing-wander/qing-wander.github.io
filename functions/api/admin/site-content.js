@@ -11,6 +11,15 @@ import { assertCsrf, fail, json, requireAdmin } from '../../lib/admin-auth.js';
 import {
   KEY_LIST, isKey, readContent, listContent, writeContent, writeMany, deleteContent, validatePayload,
 } from '../../lib/site-content.js';
+import { syncKb } from '../../lib/kb-sync.js';
+
+/* 站点数据是知识库的真相源：保存成功后顺手重建检索索引。
+   用 waitUntil 放到响应之后跑，失败只记日志，不影响保存结果。 */
+function kickKb(context, env, keys) {
+  if (!keys || !keys.includes('site-data')) return;
+  if (!context || typeof context.waitUntil !== 'function') return;
+  context.waitUntil(syncKb(env));
+}
 
 export async function onRequestGet({ request, env }) {
   const deny = await requireAdmin(request, env);
@@ -46,7 +55,8 @@ export async function onRequestGet({ request, env }) {
   });
 }
 
-export async function onRequestPost({ request, env }) {
+export async function onRequestPost(context) {
+  const { request, env } = context;
   const deny = await requireAdmin(request, env);
   if (deny) return deny;
   const csrf = assertCsrf(request);
@@ -59,6 +69,7 @@ export async function onRequestPost({ request, env }) {
     const err = validateBatch(body.batch);
     if (err) return fail(err.error, err.message);
     const r = await writeMany(env, body.batch, 'admin');
+    kickKb(context, env, body.batch.map((x) => x.key));
     return json({ ok: true, saved: r.ok, failed: r.failed });
   }
 
@@ -80,6 +91,7 @@ export async function onRequestPost({ request, env }) {
   } catch (e) {
     return json({ ok: false, error: 'db_error', message: '写入失败' }, 500);
   }
+  kickKb(context, env, [key]);
   return json({ ok: true, key, size: body.text.length });
 }
 

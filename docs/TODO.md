@@ -67,7 +67,7 @@ Workers KV 迁到 D1（`portfolio-db`，4 张表），免费写额度从 1,000 �
 |---|---|---|---|---|---|
 | T1 | 验证 Resend 发信域名，放开任意收件人自动发信 | `已决策暂缓` | 高（唯一功能缺口） | `resume.html` 发简历到邮箱 | [resume-delivery.md §①b](resume-delivery.md) |
 | T2 | 本地 git 引用与远端 `main` 对齐 | `已完成（2026-11-17）` | — | 本机开发 | 本文 §3.2 |
-| T3 | 更新 `cloudflare-pages-deploy.md` 的过时描述 | `已完成（2026-11-18）` | 中（文档准确性） | 部署文档 | [cloudflare-pages-deploy.md](cloudflare-pages-deploy.md) |
+| T3 | 更新 `cloudflare-pages-deploy.md` 的过时描述 | `已完成（2026-11-18；2026-11-25 全文重写）` | 中（文档准确性） | 部署文档 | [cloudflare-pages-deploy.md](cloudflare-pages-deploy.md) |
 | T4 | AI 问答助手 13.8「未做」清单复核 | `待复核` | 中 | AI 问答 / README | [ai-assistant-survey.md §13.8](ai-assistant-survey.md) |
 | T5 | 预览子域 `*.pages.dev` 的 CORS 通配 | `已完成（2026-11-18）` | — | 预览部署的 AI 问答 / JD 匹配 | 本文 §3.5（含配置修复与全量回传踩坑） |
 | T6 | 可选环境变量 `DELIVER_BCC` / `WALL_ADMIN_TOKEN` | `可选` | 低 | 转发备案 / 留言删除 | [resume-delivery.md §③](resume-delivery.md) |
@@ -84,7 +84,7 @@ Workers KV 迁到 D1（`portfolio-db`，4 张表），免费写额度从 1,000 �
 | T17 | 留言墙接入 Cloudflare Turnstile 人机校验（两档额度 + fail-open） | `已完成（2026-11-19）` | — | 留言墙 POST | 本文 §3.16 / [cloudflare-free-resources.md](cloudflare-free-resources.md) §7 |
 | T18 | D1 备份脚本 `scripts/backup-d1.sh`（本机存 SQL 快照，不进仓库） | `已完成（2026-11-19）` | — | 数据安全 | 本文 §3.16 / [cloudflare-free-resources.md](cloudflare-free-resources.md) §8 |
 | T19 | 可观测双路：Cloudflare Web Analytics 与 Umami 并行采集 | `已完成（2026-11-19）` | — | 访问统计兜底 | 本文 §3.17 / [cloudflare-free-resources.md](cloudflare-free-resources.md) §9 |
-| T20 | 角色皮肤收敛为单一 `self3d`（删 11 款皮肤与资源、隐藏换肤入口） | `已完成（2026-11-19）` | — | 右下角助手 | [pet-self3d-pipeline.md §6](pet-self3d-pipeline.md) |
+| T20 | 角色皮肤收敛为 `self3d` + `female3d`（删其余皮肤与资源、隐藏换肤入口，改由性别切换控制） | `已完成（2026-11-19；11-25 补 female3d）` | — | 右下角助手 | [pet-self3d-pipeline.md §6](pet-self3d-pipeline.md) |
 | T21 | 桌宠表现力升级：眨眼 / 口型 / 首屏体积≤1.2MB / 对称正盘腿 / 启用躺平 / 坐→站过渡 | `待办` | 中 | 右下角助手 | [pet-self3d-pipeline.md §8](pet-self3d-pipeline.md) |
 | T22 | 两个域名内容不一致：pages.dev 构建失败停在旧版，看不到新 3D 模型 | `已完成` | 高 | `pages.dev` 全站 | 本文 §3.18 / [cloudflare-pages-deploy.md](cloudflare-pages-deploy.md) |
 | T23 | `assets/character-views` 原始素材归档 + 移出仓库根治构建（R2 方案废弃 → 飞书云盘） | `已完成` | 中 | 仓库体积 / Pages 构建 | 本文 §3.19 / [cloudflare-free-resources.md](cloudflare-free-resources.md) §10 |
@@ -211,7 +211,12 @@ git reset --mixed origin/main     # 只移动 refs + index，不动工作区
 
 **验收**：文档描述的部署链路与线上实测一致，且不再出现「push 不会触发构建」的误导性结论。
 
-**已完成（2026-11-18）**：`docs/cloudflare-pages-deploy.md` 的「当前实际形态」已重写为
+**已完成（2026-11-25 全文重写）**：文档已从「备用托管 + 事故通报」改成「主站托管」结构：
+部署链路（push 自动构建 / 构建产物规则 / 兜底脚本 / launchd 历史）、首次搭建与 fork、CORS、
+与 GitHub Pages 的关系、2026-11-20 构建失败复盘、排障表。旧的「当前故障」段落已降级为历史复盘。
+构建命令统一指向 `scripts/pages-build.sh`（不再摘录控制台里的旧 `cp -r` 白名单）。
+
+**第一次修订（2026-11-18）**：`docs/cloudflare-pages-deploy.md` 的「当前实际形态」已重写为
 「push 即部署为主链路（附 2026-11-17 的 `github:push` 实测证据）」，`sync-pages-from-github.sh` /
 `deploy-pages.sh` 标注为兜底通道，launchd 段落明确列为历史方案并注明「换机后无需恢复」；
 README 第 12 行同类表述同步修正，并补一句「functions 不进 `dist` 仍会被编译，自动构建不会丢 API」。

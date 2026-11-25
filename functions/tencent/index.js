@@ -14,7 +14,8 @@
  *                               返回 base64 mp3，见 tts.js / docs/ai-voice-survey.md 第 7 节
  *
  * 零第三方依赖：只用 Node 内置 https / crypto / fs。
- * 知识库随包部署在 ./kb/，由 scripts/build_kb.py --sync-functions 生成。
+ * 知识库产物不入库：本地用 KB_OUT_DIR 环境变量指向 python3 scripts/build_kb.py 的输出目录。
+ * 部署腾讯云函数时把产物放到函数目录 kb/（或从平台挂载目录读），不再从公开仓库分发。
  *
  * 环境变量：
  *   AI_API_KEY       必填，CloudBase「服务端 API Key」（只放平台环境变量，不进代码）
@@ -37,7 +38,8 @@ var path = require('path');
 var promptLib = require('./prompt.js');
 var ttsLib = require('./tts.js');
 
-var KB_DIR = path.join(__dirname, 'kb');
+var KB_DIR = process.env.KB_DIR ? path.resolve(process.env.KB_DIR)
+  : (process.env.KB_OUT_DIR ? path.resolve(process.env.KB_OUT_DIR) : path.join(__dirname, 'kb'));
 
 var AI_BASE = (process.env.AI_BASE_URL ||
   'https://resume-ai-d9g7zghnxda2ee2cb.api.tcloudbasegateway.com/v1/ai/cloudbase').replace(/\/+$/, '');

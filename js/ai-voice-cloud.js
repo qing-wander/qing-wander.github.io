@@ -60,6 +60,19 @@
   var voiceId = 0;
   var voicePromise = null;
 
+  function currentGender() {
+    if (window.CP_GENDER === 'male' || window.CP_GENDER === 'female') return window.CP_GENDER;
+    try {
+      var g = localStorage.getItem('cp_gender_v2');
+      if (g === 'male' || g === 'female') return g;
+    } catch (e) {}
+    return '';
+  }
+
+  function fallbackVoice(g) {
+    return g === 'male' ? 101013 : 101001;   // 与 lib/tts.js 的 DEFAULT_VOICE_BY_GENDER 一致
+  }
+
   function voiceApi() {
     var m = String(endpoint()).match(/^(.*)\/api\/chat$/);
     return m ? m[1] + '/api/voice' : '';
@@ -69,6 +82,10 @@
     try {
       var o = JSON.parse(localStorage.getItem(VOICE_STORE) || 'null');
       if (!o || typeof o.id !== 'number' || typeof o.at !== 'number') return 0;
+      var g = currentGender();
+      /* 旧记录没写 gender 时按女声处理（历史默认就是女声）；换性别后旧缓存必须失效。 */
+      var cachedGender = o.gender || 'female';
+      if (g && cachedGender !== g) return 0;
       if (!fresh) return o.id;
       return Date.now() - o.at < VOICE_TTL ? o.id : 0;
     } catch (e) { return 0; }
@@ -76,20 +93,23 @@
 
   function loadVoice() {
     if (voicePromise) return voicePromise;
+    var gender = currentGender();
     var done = function (id) {
-      if (id > 0) voiceId = id;
+      voiceId = id > 0 ? id : (gender ? fallbackVoice(gender) : 0);
       return voiceId;
     };
     var cached = voiceCache(true);
     if (cached > 0) { voicePromise = Promise.resolve(done(cached)); return voicePromise; }
     var url = voiceApi();
     if (!url) { voicePromise = Promise.resolve(done(0)); return voicePromise; }
-    voicePromise = fetch(url, { cache: 'no-store' }).then(function (r) {
+    voicePromise = fetch(url + (gender ? '?gender=' + encodeURIComponent(gender) : ''), { cache: 'no-store' }).then(function (r) {
       return r.ok ? r.json() : null;
     }).then(function (j) {
       var id = j && j.ok ? Number(j.voice) || 0 : 0;
       if (id > 0) {
-        try { localStorage.setItem(VOICE_STORE, JSON.stringify({ id: id, at: Date.now() })); } catch (e) {}
+        try {
+          localStorage.setItem(VOICE_STORE, JSON.stringify({ id: id, gender: gender || 'any', at: Date.now() }));
+        } catch (e) {}
       }
       return done(id || voiceCache(false));
     }).catch(function () {
@@ -229,6 +249,16 @@
       return Promise.resolve(false);
     },
     isEnabled: function () { return enabled; },
+    /** 性别套装切换后调用：丢掉旧性别的音色与音频缓存，重新取对应音色 */
+    reloadVoice: function () {
+      voicePromise = null;
+      voiceId = 0;
+      cache = Object.create(null);
+      cacheOrder = [];
+      pending = Object.create(null);
+      try { localStorage.removeItem(VOICE_STORE); } catch (e) {}
+      return probe(true);
+    },
     /** 手动验证：合成并播放一句，用来在真机上听云端音色 */
     test: function (text) {
       return provider.synth(text || '你好，这是云端音色，听起来怎么样？', { kind: 'answer' })

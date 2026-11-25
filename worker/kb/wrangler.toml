@@ -7,6 +7,8 @@
 name = "resume-kb-api"
 main = "index.mjs"
 compatibility_date = "2025-01-01"
+# rebuild.mjs 复用 scripts/lib/rag-chunks.mjs，里面用 node:crypto 算 kb_version
+compatibility_flags = ["nodejs_compat"]
 
 [ai]
 binding = "AI"
@@ -14,3 +16,9 @@ binding = "AI"
 [[vectorize]]
 binding = "VECTORIZE"
 index_name = "resume-kb"
+
+# /rebuild 直接读 D1 的 site_content（云端真相源），重建后写回 kb_chunks
+[[d1_databases]]
+binding = "DB"
+database_name = "portfolio-db"
+database_id = "022be169-a84e-4791-b2f2-ee4f9c4f17c8"

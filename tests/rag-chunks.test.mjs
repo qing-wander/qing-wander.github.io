@@ -12,18 +12,15 @@ import { tokenize } from '../scripts/lib/rag-tokenize.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const data = JSON.parse(readFileSync(resolve(ROOT, 'data/site-data.json'), 'utf8'));
-const payload = JSON.parse(readFileSync(resolve(ROOT, 'rag/chunks.json'), 'utf8'));
+/* 产物不入库：测试直接用数据源现算，不再依赖 rag/chunks.json 快照。 */
+const payload = buildChunks(data);
 const golden = JSON.parse(readFileSync(resolve(ROOT, 'tests/golden-queries.json'), 'utf8'));
 
-test('切片产物与 data/site-data.json 同源（未重建就红）', () => {
-  const fresh = buildChunks(data);
-  assert.equal(fresh.kb_version, payload.kb_version, 'kb_version 不一致，说明 rag/chunks.json 没重建');
-  assert.equal(fresh.count, payload.count);
-  assert.deepEqual(
-    fresh.chunks.map((c) => [c.id, c.text]),
-    payload.chunks.map((c) => [c.id, c.text]),
-    '切片正文与重建结果不一致',
-  );
+test('切片由 data/site-data.json 现算，版本与结构稳定', () => {
+  assert.ok(payload.count > 0, '没有切片');
+  assert.ok(/^kb-[0-9a-f]+$/.test(payload.kb_version), 'kb_version 格式异常');
+  assert.equal(payload.generated_from, 'data/site-data.json');
+  assert.deepEqual(buildChunks(data).chunks.map((c) => c.id), payload.chunks.map((c) => c.id));
 });
 
 test('经历 / 项目 bullet 都有同 id 的切片，教育 bullet 并入教育片', () => {

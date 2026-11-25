@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 安全漏洞（私下报告）
+    url: https://github.com/shenge-work/shenge-work.github.io/security/advisories/new
+    about: 请勿开公开 Issue；也可邮件 hi@chenpeisheng.cn（主题加 [SECURITY]）
+  - name: 使用与部署问题
+    url: https://github.com/shenge-work/shenge-work.github.io/blob/main/docs/README.md
+    about: 先看文档索引：部署、留言/投递、后台、RAG 都有对应文档

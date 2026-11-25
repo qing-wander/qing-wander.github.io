@@ -20,19 +20,23 @@
    "error code: 502"），前端只能拿到一个看不懂的错误。等控制台开通了再把
    ID 加回这张表即可，其余代码不用动。 */
 export const VOICES = [
-  { id: 101001, name: '智瑜', note: '情感女声 · 默认，语气最像真人', type: '精品' },
-  { id: 101026, name: '智希', note: '通用女声 · 平稳，适合长段解释', type: '精品' },
-  { id: 101027, name: '智梅', note: '通用女声 · 偏温和', type: '精品' },
-  { id: 101055, name: '智付', note: '通用女声 · 客服腔，清楚利落', type: '精品' },
-  { id: 101011, name: '智燕', note: '新闻女声 · 播报感强', type: '精品' },
-  { id: 101004, name: '智云', note: '通用男声 · 中性稳重', type: '精品' },
-  { id: 101030, name: '智柯', note: '通用男声 · 偏年轻', type: '精品' },
-  { id: 101054, name: '智友', note: '通用男声 · 对话感强', type: '精品' },
-  { id: 101013, name: '智辉', note: '新闻男声 · 低沉，读简历很有分量', type: '精品' },
-  { id: 101021, name: '智瑞', note: '新闻男声 · 清亮', type: '精品' },
+  { id: 101001, name: '智瑜', note: '情感女声 · 默认，语气最像真人', type: '精品', gender: 'female' },
+  { id: 101026, name: '智希', note: '通用女声 · 平稳，适合长段解释', type: '精品', gender: 'female' },
+  { id: 101027, name: '智梅', note: '通用女声 · 偏温和', type: '精品', gender: 'female' },
+  { id: 101055, name: '智付', note: '通用女声 · 客服腔，清楚利落', type: '精品', gender: 'female' },
+  { id: 101011, name: '智燕', note: '新闻女声 · 播报感强', type: '精品', gender: 'female' },
+  { id: 101004, name: '智云', note: '通用男声 · 中性稳重', type: '精品', gender: 'male' },
+  { id: 101030, name: '智柯', note: '通用男声 · 偏年轻', type: '精品', gender: 'male' },
+  { id: 101054, name: '智友', note: '通用男声 · 对话感强', type: '精品', gender: 'male' },
+  { id: 101013, name: '智辉', note: '新闻男声 · 低沉，读简历很有分量', type: '精品', gender: 'male' },
+  { id: 101021, name: '智瑞', note: '新闻男声 · 清亮', type: '精品', gender: 'male' },
 ];
 
+/* 套装默认音色：女版沿用历史默认，男版配低沉新闻男声。 */
 export const DEFAULT_VOICE = 101001;
+export const DEFAULT_VOICE_BY_GENDER = { female: 101001, male: 101013 };
+
+export function isGender(g) { return g === 'male' || g === 'female'; }
 export const MAX_TTS_CHARS = 150;          // 与云函数 MAX_TEXT_CHARS 一致
 const DEFAULT_TTS_ENDPOINT = 'https://resume-ai-d9g7zghnxda2ee2cb-1307508155.ap-shanghai.app.tcloudbase.com/chat';
 const TTS_TIMEOUT_MS = 12000;             // 云函数自己 8s 超时，这里留网络余量

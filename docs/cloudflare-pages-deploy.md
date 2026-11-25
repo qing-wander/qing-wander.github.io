@@ -1,121 +1,168 @@
-# Cloudflare Pages 备用托管
+# Cloudflare Pages 托管与部署（主站）
 
-GitHub Pages 之外的备用线路，同一套静态文件。当前线上地址：
+> 状态：现行 · 最后核对 2026-11-25
+> 这条线是**主站**：`chenpeisheng.cn`（自定义域）+ `shenge-work.pages.dev`（平台域）。
+> GitHub Pages（`shenge-work.github.io`）仍可访问，但只作为旧线路，不再承担正式数据与接口。
 
-- 作品集主页：https://shenge-work.pages.dev/
-- 在线简历：https://shenge-work.pages.dev/resume.html
+- 作品集主页：<https://chenpeisheng.cn/>
+- 在线简历：<https://chenpeisheng.cn/resume.html>
+- 岗位匹配：<https://chenpeisheng.cn/jd.html>
+- 管理后台：<https://chenpeisheng.cn/admin>
 
-## ⚠️ 当前故障：自动构建连续失败，`pages.dev` 停在旧版（2026-11-20）
+## 1. 这套托管由什么组成
 
-**现象**：`github.io` 已是最新版（含男女双 3D 形象），`pages.dev` 仍是 11-19 旧版，看不到新模型。
-两个域名内容不一致（登记为 [TODO.md T22](TODO.md)）。
+| 组成 | 说明 |
+|---|---|
+| 静态资源 | HTML / CSS / JS / 图片 / 视频 / GLB / 字体，构建后放 `dist/` |
+| Pages Functions | `functions/` 下所有 `/api/*`（同一仓库，构建时自动编译，不进 `dist`） |
+| D1 | `portfolio-db`：业务数据、RAG 词面索引、后台配置、问答日志 |
+| KV | `site-kv`：登录票据、少量兜底计数 |
+| Vectorize | 索引 `resume-kb`：语义检索向量 |
+| Workers AI | 查询向量化（bge-m3） |
+| 外部服务 | 腾讯云 CloudBase（TTS 合成）、Resend（邮件）、Turnstile（人机校验） |
 
-**根因**：构建命令把整个 `assets/` 拷进 `dist`，而 `assets/character-views/` 里有 27.5MiB 的
-`female.fbx` 等多个超过 **Cloudflare Pages 单文件 25MiB 上限**的原始素材。构建日志原文：
+**关键点**：Functions 不走 `dist`。即使 `dist/` 里没有 `functions/`，Pages 仍会把仓库根目录的
+`functions/` 编译成路由——所以「构建产物里没看到 functions」不等于接口会丢。
 
-```
-Executing user command: mkdir -p dist && cp -r index.html resume.html css js data images videos assets favicon-64.png favicon.png dist/
-✘ [ERROR] Error: Pages only supports files up to 25 MiB in size
-  assets/character-views/model/female/female.fbx is 27.5 MiB in size
-Failed to validate assets in the output directory with code: 1
-```
+## 2. 部署链路
 
-`wrangler pages deployment list --project-name=shenge-work` 显示自 `aedf7ac`（11-20）起
-**7 个 production 部署全部 `Failure`**；线上在跑的是 23 小时前的 `01b2e1f`（11-19）。
-GitHub Pages 不吃这条构建命令、也无 25MiB 限制，所以没受影响。
+### 2.1 主链路：push 即部署
 
-**已根治（2026-11-21）**，分两步，均不需要改 build command、不需要 R2/支付：
+Cloudflare Pages 项目 `shenge-work` 已授权 GitHub 仓库 `shenge-work/shenge-work.github.io`，
+生产分支 `main`。push 后约 3 秒触发 `github:push` 构建并上线。
 
-1. **止血**（11-20 23:50）：wrangler 直传，`deploy-pages.sh`（已排除 `character-views`）
-   产出 70 文件 / 33MB，新 production 部署 `6241af37-852a-4075-855e-e0984418b8df`。
-2. **根治**（11-21）：把 `assets/character-views/` 57 文件 / 573MB 整目录归档到飞书云盘
-   （`https://my.feishu.cn/drive/folder/BnalfpLM8lzNYLdkYu3cqH71nAc`），`git rm --cached` + `.gitignore`
-   从仓库移除并 push。build command `cp -r ... assets ... dist/` 不再碰到大文件，
-   Cloudflare 自动构建从连续 `Failure` 恢复为 `Success`。
+| 配置项 | 值 |
+|---|---|
+| Project name | `shenge-work` |
+| Git 仓库 / 分支 | `shenge-work/shenge-work.github.io` / `main` |
+| Build command | `bash scripts/pages-build.sh` |
+| Build output directory | `dist` |
+| Root directory | 仓库根（留空） |
 
-两站现均引用 `ai-skins.js?v=20261120K5`、均含 `female3d`，首页 md5 一致
-（`efe367f5521b35298ccd1c60487c89dc`）。原始素材移出后本地物理文件仍保留，
-需要可从飞书 `+pull` 拉回，详见 [TODO.md T22 / T23](TODO.md)。
-
-> 历史背景：原计划归档到 Cloudflare R2，但账号无支付方式无法启用（错误 `10042`），
-> 已改用飞书云盘；`scripts/r2-sync.sh` 保留作参考但不再使用。
-> 未做：git 历史瘦身（filter-repo 强推，破坏性），工作区已清爽但 `.git` 历史仍含旧体积。
-
-## 当前实际形态（2026-11-18 实测；构建命令缺陷见上节）
-
-项目 `shenge-work` 已配置为 GitHub 数据源（`shenge-work/shenge-work.github.io`，生产分支 `main`），
-**GitHub App 授权已生效，`push` 即触发自动构建**——这是当前主链路。
-
-2026-11-17 实测证据（推翻 2026-11-11 版文档里「push 不会触发构建」的结论）：
+2026-11-17 实测证据（推翻更早文档中「push 不会触发构建」的结论）：
 
 - 远端 commit `d5de5afe`（18:41:23Z）后 3 秒，Pages 产生 production 部署 `0a522e4f`（18:41:26Z）；
 - `deployment_trigger.type = github:push`，`commit_hash = d5de5afe…`，各 stage 全部 success；
-- 自动构建后线上 `GET /api/wall?peek=1` → `200 {"ok":true,"open":true}`；
-  `POST /api/deliver` → `400 bad_request`（正常参数校验），说明 `functions/` **没有被自动构建冲掉**，
-  仍被 Pages 编译成 Functions（虽然不进 `dist`）。
+- 构建后线上 `GET /api/wall?peek=1` → `200 {"ok":true,"open":true}`，`POST /api/deliver` → `400 bad_request`
+  （正常参数校验），说明 Functions 仍在生效。
 
-保留的两条兜底通道（自动构建正常时不需要用）：
+### 2.2 构建产物规则（`scripts/pages-build.sh`）
 
-1. **手动强制同步**（远端 main 直传，幂等）
-   ```bash
-   ./scripts/sync-pages-from-github.sh --force   # 忽略状态，立即按远端 main 部署
-   ./scripts/sync-pages-from-github.sh --check   # 只看远端有无新提交
-   ./scripts/deploy-pages.sh                     # 按本地工作区直传（紧急修复用，支持 --dry-run）
-   ```
-2. **本机 launchd 定时同步（历史方案，已不再是主链路）**
-   - 每小时跑一次 `scripts/sync-pages-from-github.sh`；commit 未变则跳过，部署后逐文件比对 md5
-   - 日志：`~/Library/Logs/pages-sync.log`、`~/Library/Logs/pages-sync.err.log`
-   - 状态：`~/.local/state/pages-sync/shenge-work.last-commit`
-   - 停用：`launchctl bootout gui/$(id -u)/com.shenge.pages-sync`
-   - 说明：该方案为「Cloudflare 未授权 GitHub App」时期的替代手段，当前机器/系统更换后无需再恢复
+构建脚本是**唯一入口**，不要在控制台另写一份 `cp -r` 白名单（历史上就是这么丢页面的）：
 
-> 结论：**改静态文件只需 push**；只有云函数（CloudBase）与 Pages 环境变量需要单独处理。
+1. **根目录 HTML 全收集**：排除 `_` 开头的本地调试探针；新增独立页不用改脚本。
+2. **静态资源**：`css js data images videos assets favicon* robots.txt sitemap.xml`。
+3. **数据兜底**：把仓库里的脱敏副本复制到 `dist/data/fallback/`，供 `/data/*` 动态路由在
+   D1 未配置时回退，避免白屏。
+4. **大文件处理**：`videos/interview-zhishu-lessie.mp4`（34MB）不进产物（走 COS 直链）；
+   `assets/character-views/`（原始 3D 素材，约 570MB）整目录排除。
+5. **Functions**：复制 `functions/` 并剔除 `functions/tencent/`（那是腾讯云函数源码，不是 Pages 路由）。
+6. **后台页面**：`admin/public/index.html` → `dist/admin/index.html`；
+   `login.html` 同时落 `dist/login.html` 与 `dist/login/index.html`（避免 308 跳转）。
+7. **硬校验**：逐项检查关键文件是否存在、单文件是否超 25MiB，缺一个就让构建失败。
 
-## 项目配置
-
-| 项 | 值 |
-|---|---|
-| 项目名 | `shenge-work` |
-| 数据源 | GitHub `shenge-work/shenge-work.github.io`，生产分支 `main` |
-| 构建命令 | `mkdir -p dist && cp -r index.html resume.html css js data images videos assets favicon-64.png favicon.png dist/` |
-| 输出目录 | `dist` |
-| 根目录 | 仓库根（留空） |
-
-仓库里的 `functions/`（腾讯云函数源码）、`worker/`、`docs/`、`scripts/` 不进构建产物，只部署前端真正要用的文件。
-
-> 注：上表的构建命令是旧版摘录。当前以 `scripts/pages-build.sh` 为准，它会把 `functions/api/`、`js/`、`css/` 等一并复制进 `dist/`（含公司档案互动接口）。
-
-## D1 新表（公司档案互动，2026-11-24）
-
-`/api/company-social` 用 D1 存浏览量、点赞、评论回复。部署代码后**必须先在远程 D1 应用一次迁移**，否则接口会返回 500 `db_error`：
+本地试跑：
 
 ```bash
-npx wrangler d1 execute portfolio-db --remote --file=db/migrations/2026-11-24-company-social.sql
+bash scripts/pages-build.sh
+ls dist/*.html
 ```
 
-迁移是幂等的（`IF NOT EXISTS`），重复执行安全。新库也可直接用 `db/schema.sql` 建全套表。
-接口的设备唯一化依赖环境变量 `DEVICE_HASH_PEPPER`（与留言墙 `functions/api/wall.js` 共用同一个值）；
-不设置时代码用默认值，只建议本地联调使用。
+### 2.3 兜底通道（自动构建异常时）
 
-## 跨域（CORS）白名单
+```bash
+./scripts/deploy-pages.sh                     # 按本地工作区直传（--dry-run 只看清单）
+./scripts/sync-pages-from-github.sh --force   # 拉远端 main 的 tar 包直传，幂等
+./scripts/sync-pages-from-github.sh --check   # 只看远端有没有新提交
+```
 
-页面的 AI 问答走腾讯云 CloudBase 函数 `resume-ai-chat`，它按 `Origin` 做白名单校验（见 `functions/tencent/index.js`），不放行就返回 403 `origin_denied`，浏览器侧报 CORS 错误。
+`deploy-pages.sh` 部署结束会打印 `/api/wall open=...` 与首页 md5，绑定漏了当场可见。
 
-- 平台环境变量 `ALLOWED_ORIGINS`（逗号分隔）**优先于代码默认值**。当前线上已配置为：
+### 2.4 历史方案：本机 launchd 定时同步
+
+「Cloudflare 未授权 GitHub App」时期，用 macOS `launchd` 每小时跑 `scripts/sync-pages-from-github.sh`。
+自动构建生效后**不再是主链路**，换机器无需恢复：
+
+- 日志：`~/Library/Logs/pages-sync.log`、`~/Library/Logs/pages-sync.err.log`
+- 状态：`~/.local/state/pages-sync/shenge-work.last-commit`
+- 停用：`launchctl bootout gui/$(id -u)/com.shenge.pages-sync`
+
+## 3. 首次搭建 / Fork 复刻
+
+1. **建 D1**：`bash scripts/db-init.sh remote`（会建库、跑 `db/schema.sql`、灌 RAG 与站点数据）。
+2. **建 Pages 项目**：连接你的 GitHub 仓库，构建命令 `bash scripts/pages-build.sh`，输出 `dist`。
+3. **绑定资源**（Settings → Bindings，Production 环境）：`DB` → D1、`SITE_KV` → KV、`AI`、`VECTORIZE`。
+4. **配环境变量**：照 [../.env.example](../.env.example)，至少 `ADMIN_SESSION_SECRET`、`ADMIN_EMAILS`、
+   `DEVICE_HASH_PEPPER`、`VERIFY_ACCESS_SECRET`、`DELIVER_CHALLENGE_SECRET`；`ALLOWED_ORIGINS`
+   改成你自己的域名。
+5. **迁表**：新库直接用 `db/schema.sql`；老库按 `db/migrations/` 顺序补，或执行单条：
+   ```bash
+   npx wrangler d1 execute portfolio-db --remote --file=db/migrations/<file>.sql
+   ```
+6. **绑自定义域**：Pages → Custom domains 添加域名；随后把 `ALLOWED_ORIGINS`、`MAIN_SITE_URL`
+   以及 HTML 里的 canonical / OG / JSON-LD 一起改掉。
+
+> 变量或绑定**修改后需要一次新部署才生效**（控制台会提示 "This change will take effect on the next deployment"）。
+
+## 4. 跨域（CORS）白名单
+
+`ALLOWED_ORIGINS`（逗号分隔，支持 `*.` 前缀通配）同时作用于本仓库的所有 Functions：
+`wall` / `visits` / `deliver` / `chat` / `jd` / `voice` / `admin`。当前线上为：
+
+```
+https://chenpeisheng.cn,https://shenge-work.pages.dev,*.shenge-work.pages.dev
+```
+
+- 代码默认值同样包含这三个来源与本地 `127.0.0.1:8877`；环境变量优先。
+- `*.shenge-work.pages.dev` 覆盖每次提交的预览部署（`https://<commit>.shenge-work.pages.dev`）。
+- 从 `github.io` 访问时，前端直接把 API 指向 `https://shenge-work.pages.dev`（见 `js/main.js` 的 `API_BASES`）。
+
+## 5. 与 GitHub Pages 的关系
+
+| 项 | Cloudflare Pages（主） | GitHub Pages（旧） |
+|---|---|---|
+| 域名 | `chenpeisheng.cn` | `shenge-work.github.io` |
+| 后端 | Functions + D1 + KV + Vectorize | 无，只能跨域打 pages.dev |
+| 数据 | D1 `site_content` 下发真人数据 | 仓库里的**脱敏副本** |
+| 构建 | `scripts/pages-build.sh` → `dist` | 直接发布仓库根目录 |
+| URL 风格 | 默认 pretty URL，`/resume.html` 会 308 到 `/resume` | 保持 `.html` |
+
+> 两站共用同一份仓库，但**不要**把 `github.io` 当正式数据源：仓库数据已脱敏（手机号、验证码已替换）。
+
+## 6. 历史故障复盘：2026-11-20 构建连续失败
+
+这是本仓库最值得记住的一次部署事故，改大文件前请先读：
+
+- **现象**：`github.io` 已更新，`pages.dev` 停在旧版，两站内容不一致。
+- **根因**：构建命令把整个 `assets/` 拷进 `dist`，而 `assets/character-views/` 里有 27.5MiB 的
+  `female.fbx`，超过 Pages 单文件 **25MiB** 上限，构建在校验阶段失败：
   ```
-  https://chenpeisheng.cn,https://shenge-work.pages.dev,*.shenge-work.pages.dev
+  ✘ [ERROR] Error: Pages only supports files up to 25 MiB in size
+    assets/character-views/model/female/female.fbx is 27.5 MiB in size
   ```
-  实测两个正式域名均回显自身 ACAO，外来域名返回 403。
-- 代码默认值同样包含 `https://chenpeisheng.cn`、`https://shenge-work.pages.dev`，以及通配规则 `*.shenge-work.pages.dev`（覆盖每个 commit 的预览部署 `https://<commit>.shenge-work.pages.dev`）。
-- **通配规则需要「新代码 + 新配置」同时到位**：旧线上包只做精确匹配，而当时环境变量也是精确列表，所以预览子域曾一直 403。
-  2026-11-18 已在控制台把 `*.shenge-work.pages.dev` 写进环境变量（保存即生效，无需重新部署代码）；
-  若某次部署后预览域又变 403，先查环境变量是否被覆盖，再查函数包是否是旧版。
+- **止血**：`deploy-pages.sh` 直传（已排除 `character-views`）让线上追平。
+- **根治**：把 `assets/character-views/` 归档到飞书云盘并从 git 移除（`.gitignore` 排除），
+  构建不再碰到大文件；自动构建恢复 success。
+- **仍未做**：git 历史瘦身（`filter-repo` 强推属破坏性操作），`.git` 体积仍包含旧素材。
 
-## 与 GitHub Pages 的关系
+**教训**：Pages 的构建是「产出 `dist` → 校验 → 上传」，任何一个超限文件都会让整站停在旧版；
+新增媒体文件前先 `find . -size +25M` 自查，或交给 `pages-build.sh` 的硬校验拦截。
 
-- 两边跑同一份仓库，**正常时**最终内容一致；**2026-11-20 起因 T22 构建失败暂时分叉**（pages.dev 旧、github.io 新）
-- 统计 / 计数 / AI 问答后端与域名无关，两边共用同一套
-- 已知差异：Pages 默认 pretty URL，`/resume.html` 会 308 跳到 `/resume`；GitHub Pages 保持 `/resume.html`
-- **发布链路差异是 T22 的根源**：GitHub Pages 直接发布仓库静态文件、无单文件大小限制；
-  Cloudflare Pages 走「build command → `dist` → 上传校验」，受 25MiB/文件上限约束，
-  所以同一份仓库里一旦出现 >25MiB 文件，只有 pages.dev 会构建失败。改大文件时务必先看这一节。
+## 7. 排障
+
+| 现象 | 可能原因 | 处理 |
+|---|---|---|
+| 构建失败，日志报 25MiB | 新增了大文件（视频 / FBX / PSD） | 移出产物或改走外部存储，见 §6 |
+| 构建成功但页面 404 | 新页面没被收集 / 被 SPA fallback 吞掉 | 确认文件名不以 `_` 开头，且 `pages-build.sh` 的硬校验列表包含它 |
+| `/api/*` 返回 405 或 HTML | 请求打到了 `github.io` 或无 Functions 的部署 | 查 `API_BASES`，确认打到 `pages.dev` / 主域 |
+| `/api/wall` 返回 `open:false` | `DB` 未绑定或迁移未执行 | 绑 `DB` → 重跑部署 → `./scripts/wall-check.sh` |
+| `/api/company-social` 500 `db_error` | 缺 `2026-11-24-company-social.sql` | 执行该迁移后重试 |
+| 后台 302 到 `/login` 循环 | `ADMIN_SESSION_SECRET` 变更或 Cookie 被拦 | 重设变量并重新部署；确认访问的是 https 主域 |
+| 预览子域 403 | `ALLOWED_ORIGINS` 被覆盖成精确列表 | 补 `*.shenge-work.pages.dev` 后重新部署 |
+| 线上还是旧内容 | 部署成功但 CDN 缓存 / 构建未触发 | 看 Deployments 的 commit hash；必要时 `?v=` 强刷 |
+
+## 8. 相关文档
+
+- 免费额度与 KV→D1 迁移：[cloudflare-free-resources.md](cloudflare-free-resources.md)
+- 留言板 / 投递配置与排障：[resume-delivery.md](resume-delivery.md)
+- 后台与 RAG 总体设计：[cloudflare-rag-admin-plan.md](cloudflare-rag-admin-plan.md)

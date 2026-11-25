@@ -1,30 +1,36 @@
 #!/usr/bin/env node
-/* 把仓库里的真人数据一次性导入 D1 site_content 表。
-   用途：脱敏仓库前先备份真人数据到云端；之后后台「站点数据」可继续编辑。
+/* 把站点 JSON 数据一次性导入 D1 site_content 表。
+   线上真相源是 D1；仓库里的 data/*.json 只是可替换的数据模板（脱敏副本）。
+   fork 后把自己的 JSON 放进 DATA_DIR，跑一次本脚本即可完成「换数据」。
 
    用法：
-     node scripts/seed-site-content.mjs            # 导入全部
-     node scripts/seed-site-content.mjs site-data  # 只导一项
+     node scripts/seed-site-content.mjs                    # 导入全部
+     node scripts/seed-site-content.mjs site-data          # 只导一项
+     DATA_DIR=/path/to/my-data D1_DB_NAME=my-db node scripts/seed-site-content.mjs
 
-   依赖 wrangler（已在本机 npx 缓存里），走 --remote 写生产 D1。 */
+   环境变量：
+     D1_DB_NAME  数据库名，默认 portfolio-db
+     D1_MODE     remote（默认）或 local
+     DATA_DIR    JSON 所在目录，默认仓库 data/
+     WRANGLER    可选，wrangler 可执行文件路径；默认走 npx wrangler */
 import { readFileSync, writeFileSync, unlinkSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
 
 const ROOT = resolve(new URL('..', import.meta.url).pathname);
-const WRANGLER = resolve(process.env.HOME,
-  '.npm/_npx/d77349f55c2be1c0/node_modules/wrangler/bin/wrangler.js');
-const DB = 'portfolio-db';
+const DB = process.env.D1_DB_NAME || 'portfolio-db';
+const MODE = process.env.D1_MODE === 'local' ? '--local' : '--remote';
+const DATA_DIR = resolve(process.env.DATA_DIR || resolve(ROOT, 'data'));
 
 const FILES = {
-  'site-data': 'data/site-data.json',
-  'company-profiles': 'data/company-profiles.json',
-  'school-profiles': 'data/school-profiles.json',
-  people: 'data/people.json',
-  contributions: 'data/contributions.json',
-  'work-details': 'data/work-details.json',
-  'asset-manifest': 'data/asset-manifest.json',
+  'site-data': 'site-data.json',
+  'company-profiles': 'company-profiles.json',
+  'school-profiles': 'school-profiles.json',
+  people: 'people.json',
+  contributions: 'contributions.json',
+  'work-details': 'work-details.json',
+  'asset-manifest': 'asset-manifest.json',
 };
 
 /* SQLite 字符串字面量：单引号翻倍即可；JSON 里不会有裸 NUL。 */
@@ -55,7 +61,7 @@ function statementsFor(key, raw) {
 }
 
 for (const key of keys) {
-  const path = resolve(ROOT, FILES[key]);
+  const path = resolve(DATA_DIR, FILES[key]);
   const raw = readFileSync(path, 'utf8');
   JSON.parse(raw); // 提前校验，坏 JSON 不要写进 D1
   const sql = statementsFor(key, raw).join('\n');
@@ -63,7 +69,11 @@ for (const key of keys) {
   const sqlFile = resolve(tmpdir(), `seed-site-${key}-${process.pid}.sql`);
   writeFileSync(sqlFile, sql);
   console.log(`[seed] ${key}: ${raw.length} chars`);
-  const r = spawnSync(process.execPath, [WRANGLER, 'd1', 'execute', DB, '--remote', '--file', sqlFile], {
+  const cmd = process.env.WRANGLER || 'npx';
+  const args = process.env.WRANGLER
+    ? ['d1', 'execute', DB, MODE, '--file', sqlFile]
+    : ['--yes', 'wrangler', 'd1', 'execute', DB, MODE, '--file', sqlFile];
+  const r = spawnSync(cmd, args, {
     cwd: ROOT,
     encoding: 'utf8',
     env: process.env,

@@ -3,13 +3,19 @@
 适用：纯静态站（GitHub Pages 或任意静态托管）。目标是在不买服务器、不接数据库的前提下，
 拿到「有多少人来、从哪来、点了什么」，并且做到「不改代码就能更新站内文案」。总成本 0。
 
+> **状态（2026-11-25 核对）**：本文是**通用教程**。本站已迁到 Cloudflare Pages + 自有域名
+> `chenpeisheng.cn`：页面统计仍用 Umami / Clarity；**访问计数已改为自建 `/api/visits`（D1）**，
+> 不再依赖 abacus；内容除了 Pages CMS，也可在 `/admin` →「站点数据」直接改 D1（最多 5 分钟生效）。
+> 文中涉及 `github.io` 的步骤按「通用静态托管」阅读，本站部署现状见
+> [cloudflare-pages-deploy.md](cloudflare-pages-deploy.md)。
+
 | 能力 | 服务 | 免费额度 | 你要做的事 |
 |---|---|---|---|
 | 访问统计 PV/UV/事件 | [Umami Cloud](https://cloud.umami.is) | 10 万事件/月、1 站点、6 个月留存 | GitHub 登录 → 建站点 → 复制 Website ID |
 | 行为录屏 / 热图 | [Microsoft Clarity](https://clarity.microsoft.com) | 不限流量 | 微软账号 → 建项目 → 复制 Project ID |
 | 网页内容管理 | [Pages CMS](https://app.pagescms.org) | 免费（GitHub App 直连） | GitHub 授权单个仓库 → 网页改 JSON |
 | 数据一致性 | GitHub Actions | 公开仓库免费 | 已配好，无需操作 |
-| 全站访客计数 | abacus（默认）/ Cloudflare Worker + KV（可选） | 免费 | 默认已生效；自建见第六节 |
+| 全站访客计数 | 自建 `/api/visits`（Pages Functions + D1）/ abacus（备选） | D1：10 万行写/天 | 已上线，无需配置；改造见 [cloudflare-free-resources.md](cloudflare-free-resources.md) |
 
 ## 目录
 
@@ -638,4 +644,33 @@ openid 只回给持有 ticket 的网页，不显示在小程序界面（避免�
 
 `node --test tests/site-content.test.mjs`（15 项）覆盖白名单、快照格式、payload 校验、
 读写删、后台鉴权 / CSRF、公开路由与回退；变异测试改坏校验会让断言变红。
-全量 `node --test tests/*.test.mjs` 249 项通过；构建把新函数和 7 份兜底副本都打进 dist。
+全量 `node --test tests/*.test.mjs` 通过；构建把新函数和 7 份兜底副本都打进 dist。
+
+## fork 复刻与云端知识库（2026-11-25）
+
+- 公开仓库只放代码 + 非个人静态资源（头像插画、GLB 模型、字体）。
+  真人数据在 D1 `site_content`，知识库在 D1 `kb_chunks`/`kb_fts`/`kb_terms` +
+  Vectorize `resume-kb`，运行时全部走 `/api/kb` 等云接口，不读仓库文件。
+- RAG 产物（`rag/`、`knowledge/`、`functions/tencent/kb/`）已从仓库移除并加入 gitignore。
+  `scripts/build_rag_chunks.mjs`、`scripts/rag_embed.mjs`、`scripts/build_kb.py`
+  默认写到 `.temp/`，只用于冷启动（`scripts/db-init.sh`）或本地排查。
+- **知识库平时由云端自己重建**：`worker/kb` 的 `POST /rebuild` 直接读 D1
+  `site_content['site-data']`，用 `scripts/lib/rag-chunks.mjs`（与本地脚本同一份算法）
+  切片、跑 bge-m3 嵌入，写回 `kb_chunks`/`kb_fts`/`kb_terms` 并 upsert Vectorize。
+  后台保存「首页 / 全站文案」后自动触发（`waitUntil`，失败不影响保存），
+  「站点数据」面板还有「重建知识库」按钮可手动补一次。
+  因此不再需要 GitHub Actions 里的 `CLOUDFLARE_API_TOKEN`，fork 也无需申请令牌。
+- `db/schema.sql` 现为完整基线（含 RAG / 问答日志 / 资源映射），
+  `bash scripts/db-init.sh remote` 一条命令建库 + 灌 DDL + 灌 RAG + 灌站点数据。
+  fork 把自己的 JSON 放进 `data/`（或设 `DATA_DIR`）即可换数据，不用改代码。
+- 部署参数与 Secrets 见 `.env.example`；域名、白名单等需在环境变量里换成自己的。
+
+## 性别套装一键配置
+
+- D1 `admin_config` 的 `ai_voice_female` / `ai_voice_male` 分别存两套音色；
+  缺省时女版 101001、男版 101013。旧的单值 `ai_voice` 仍兼容。
+- `GET /api/voice?gender=male|female` 按性别返回音色；访客在首页左下角切换时，
+  头像（`portrait.jpg` / `avatar-female.png`）、3D 模型（`self3d` / `female3d`）
+  与音色一起换，旧性别的音频缓存同时清掉。
+- 后台「AI 语音」面板先选女版 / 男版再改音色或试听；默认性别取站点数据
+  `hero.gender`，访客自己的选择优先级更高。

@@ -20,11 +20,18 @@ worker/*.log
 
 # 后台本地变量（ADMIN_PASSWORD / ADMIN_SESSION_SECRET 等，绝不入库）
 admin/.dev.vars
+.env
+.env.local
 .dev.vars
 
 # 本地调试脚本与探针（e2e / 一次性验证用，不入库）
 .temp/
 _*.html
+
+# RAG / 知识库产物：由脚本从 data/site-data.json 现算并灌云端，不入库
+rag/
+knowledge/
+functions/tencent/kb/
 
 # 3D 角色原始素材（Mixamo/混元 FBX/GLB，约 526MB）
 # 不参与线上部署、不入库：避免 Cloudflare Pages 25MiB 单文件上限导致自动构建失败。

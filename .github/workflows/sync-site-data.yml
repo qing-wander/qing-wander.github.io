@@ -24,7 +24,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: site-data-sync      # 与 build-kb.yml 同名：两条流程改同一仓库，必须串行
+  group: site-data-sync      # 知识库改由云端 Worker 重建，这里只与本站快照流程串行
   cancel-in-progress: false
 
 jobs:

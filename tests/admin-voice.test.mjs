@@ -8,7 +8,9 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { DatabaseSync } from 'node:sqlite';
 import { signSession, COOKIE, TTL } from '../functions/lib/admin-auth.js';
-import { VOICES, DEFAULT_VOICE, isKnownVoice, synthesize, ttsEndpoint } from '../functions/lib/tts.js';
+import {
+  VOICES, DEFAULT_VOICE, DEFAULT_VOICE_BY_GENDER, isGender, isKnownVoice, synthesize, ttsEndpoint,
+} from '../functions/lib/tts.js';
 import { onRequestGet as voiceGet, onRequestOptions as voiceOptions } from '../functions/api/voice.js';
 import { onRequestGet as adminVoiceGet, onRequestPost as adminVoicePost } from '../functions/api/admin/voice.js';
 import { onRequestPost as previewPost } from '../functions/api/admin/voice/preview.js';
@@ -305,4 +307,63 @@ test('/api/admin/voice/preview：一小时 60 次后限流（429）', async () =
     /* 被挡下的那次不应该再去烧云函数的字符额度 */
     assert.equal(stub.calls.length, 60);
   } finally { stub.restore(); }
+});
+
+/* ── 性别套装 ───────────────────────────────────────────────────── */
+
+test('音色清单带 gender，男女套装默认音色各自成套', () => {
+  assert.equal(VOICES.filter((v) => v.gender === 'female').length, 5);
+  assert.equal(VOICES.filter((v) => v.gender === 'male').length, 5);
+  assert.equal(DEFAULT_VOICE_BY_GENDER.female, 101001);
+  assert.equal(DEFAULT_VOICE_BY_GENDER.male, 101013);
+  assert.equal(isGender('male'), true);
+  assert.equal(isGender('other'), false);
+});
+
+test('/api/voice?gender= 按性别取音色，互不串味；后台可分别设置', async () => {
+  const env = envOf();
+  const cookie = await cookieOf(env);
+
+  let d = await (await voiceGet({ request: req('/api/voice?gender=female'), env })).json();
+  assert.equal(d.voice, 101001, '女版默认应为女声');
+  assert.equal(d.gender, 'female');
+  d = await (await voiceGet({ request: req('/api/voice?gender=male'), env })).json();
+  assert.equal(d.voice, 101013, '男版默认应为男声');
+  assert.equal(d.gender, 'male');
+
+  const set = await adminVoicePost({
+    request: req('/api/admin/voice', {
+      method: 'POST',
+      headers: { Cookie: cookie, 'Content-Type': 'application/json', 'X-Admin-Request': '1' },
+      body: JSON.stringify({ gender: 'male', voice: 101004 }),
+    }),
+    env,
+  });
+  assert.equal(set.status, 200);
+  assert.equal((await set.json()).gender, 'male');
+
+  d = await (await voiceGet({ request: req('/api/voice?gender=male'), env })).json();
+  assert.equal(d.voice, 101004);
+  d = await (await voiceGet({ request: req('/api/voice?gender=female'), env })).json();
+  assert.equal(d.voice, 101001, '改男版不能影响女版');
+
+  const admin = await (await adminVoiceGet({
+    request: req('/api/admin/voice', { headers: { Cookie: cookie } }), env,
+  })).json();
+  assert.equal(admin.male_voice, 101004);
+  assert.equal(admin.female_voice, 101001);
+  assert.equal(admin.male_is_default, false);
+  assert.equal(admin.female_is_default, true);
+
+  const back = await adminVoicePost({
+    request: req('/api/admin/voice', {
+      method: 'POST',
+      headers: { Cookie: cookie, 'Content-Type': 'application/json', 'X-Admin-Request': '1' },
+      body: JSON.stringify({ gender: 'male', voice: 0 }),
+    }),
+    env,
+  });
+  assert.equal((await back.json()).is_default, true);
+  const row = await env.DB.prepare("SELECT value FROM admin_config WHERE key = 'ai_voice_male'").first();
+  assert.equal(row, null, '恢复默认应删掉男版专属记录');
 });

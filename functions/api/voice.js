@@ -8,7 +8,7 @@
    读不到 / 没配 / 值非法 → 一律回落默认音色，前端不需要处理异常分支。
    ────────────────────────────────────────────────────────────── */
 import { corsHeaders, allowedOrigins } from '../lib/guard.js';
-import { DEFAULT_VOICE, isKnownVoice, voiceMeta } from '../lib/tts.js';
+import { DEFAULT_VOICE, DEFAULT_VOICE_BY_GENDER, isGender, isKnownVoice, voiceMeta } from '../lib/tts.js';
 
 function reply(data, request, status) {
   const origin = request && request.headers.get('Origin');
@@ -23,16 +23,32 @@ function reply(data, request, status) {
 }
 
 export async function onRequestGet({ request, env }) {
-  let voice = DEFAULT_VOICE;
-  if (env && env.DB) {
+  const genderParam = new URL(request.url).searchParams.get('gender');
+  const gender = isGender(genderParam) ? genderParam : '';
+
+  const readKey = async (key) => {
+    if (!env || !env.DB) return 0;
     try {
-      const row = await env.DB.prepare("SELECT value FROM admin_config WHERE key = 'ai_voice'").first();
+      const row = await env.DB.prepare('SELECT value FROM admin_config WHERE key = ?').bind(key).first();
       const saved = row ? JSON.parse(row.value) : null;
-      if (saved && isKnownVoice(saved.voice)) voice = Number(saved.voice);
-    } catch (e) { /* 库挂了就回默认，不把语音功能拖死 */ }
+      return saved && isKnownVoice(saved.voice) ? Number(saved.voice) : 0;
+    } catch (e) { return 0; }
+  };
+
+  let voice = 0;
+  if (gender) {
+    voice = await readKey('ai_voice_' + gender);
+    if (!voice) voice = await readKey('ai_voice');   // 兼容旧的单音色配置
+  } else {
+    voice = await readKey('ai_voice');
   }
+  if (!voice) voice = gender ? DEFAULT_VOICE_BY_GENDER[gender] : DEFAULT_VOICE;
+
   const meta = voiceMeta(voice);
-  return reply({ ok: true, voice, name: meta ? meta.name : '', note: meta ? meta.note : '' }, request);
+  return reply({
+    ok: true, voice, gender: gender || 'any',
+    name: meta ? meta.name : '', note: meta ? meta.note : '',
+  }, request);
 }
 
 export async function onRequestOptions({ request }) {

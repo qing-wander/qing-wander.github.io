@@ -4,6 +4,20 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
+import { spawnSync } from 'node:child_process';
+import { mkdtempSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { dirname, join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+/* 知识库产物不入库：测试前从 data/site-data.json 现算到临时目录。 */
+const KB_DIR = mkdtempSync(join(tmpdir(), 'cpai-kb-test-'));
+process.env.KB_OUT_DIR = KB_DIR;
+const built = spawnSync('python3', ['scripts/build_kb.py'], {
+  cwd: ROOT, env: process.env, encoding: 'utf8',
+});
+if (built.status !== 0) throw new Error('测试知识库生成失败：' + (built.stderr || built.stdout));
 
 const require = createRequire(import.meta.url);
 const { _internal } = require('../functions/tencent/index.js');

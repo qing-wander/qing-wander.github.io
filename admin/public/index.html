@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#F3EEE2">
 <title>后台 · 陈培胜作品集</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%2314110E'/%3E%3Ctext x='16' y='22' font-size='16' fill='%23F3EEE2' text-anchor='middle' font-family='monospace'%3ES%3C/text%3E%3C/svg%3E">
-<link rel="stylesheet" href="assets/admin.css">
+<link rel="stylesheet" href="assets/admin.css?v=20261125a">
 </head>
 <body>
 
@@ -173,6 +173,11 @@
 
     <article class="cfg-card">
       <div class="cfg-head"><h2>音色</h2><span class="pill" id="voiceCur">—</span></div>
+      <p class="cfg-note">先选套装，再点卡片切换该性别的音色。女版配女声 + 女头像 + 女模型，男版配男声 + 男头像 + 男模型；访客在首页左下角可一键切换。</p>
+      <div class="voice-gender" id="voiceGender">
+        <button class="btn btn-ghost is-on" type="button" data-gender="female">女版套装</button>
+        <button class="btn btn-ghost" type="button" data-gender="male">男版套装</button>
+      </div>
       <p class="cfg-note">点卡片 = 切成这个音色（立刻生效）；点「试听」只合成一段给你听，不改线上设置。</p>
       <div class="voice-chips" id="voiceChips"><span class="empty">加载中…</span></div>
     </article>
@@ -236,6 +241,16 @@
         <span class="toolbar-note" id="contentHint">云端已配置的项目会标「已配置」</span>
         <button class="btn btn-ghost" id="contentReset" type="button" disabled>恢复默认</button>
         <button class="btn" id="contentSave" type="button" disabled>保存</button>
+      </div>
+    </article>
+
+    <article class="cfg-card">
+      <div class="cfg-head"><h2>知识库</h2><span class="pill" id="kbStat">—</span></div>
+      <p class="cfg-note">AI 问答的检索索引（切片 + 向量）。保存「首页 / 全站文案」后会自动重建；失败或想强制刷新时，手动点一次。</p>
+      <div class="cfg-actions">
+        <span class="toolbar-note" id="kbMeta">—</span>
+        <button class="btn btn-ghost" id="kbReload" type="button">查看状态</button>
+        <button class="btn" id="kbRebuild" type="button">重建知识库</button>
       </div>
     </article>
   </section>
@@ -333,7 +348,7 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-<script src="assets/admin.js"></script>
+<script src="assets/admin.js?v=20261125a"></script>
 <script src="assets/anim-console.js"></script>
 </body>
 </html>

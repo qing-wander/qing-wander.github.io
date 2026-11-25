@@ -7,7 +7,9 @@ on:
   push:
     paths:
       - 'functions/**'
+      - 'worker/**'
       - 'scripts/build_kb.py'
+      - 'scripts/lib/**'
       - 'tests/**'
       - '.github/workflows/test.yml'
   pull_request:
@@ -25,7 +27,7 @@ jobs:
 
       - name: 语法检查（前端与会话脚本 / 后台 Functions）
         run: |
-          for f in js/*.js functions/tencent/*.js functions/api/*.js worker/index.mjs scripts/*.mjs; do
+          for f in js/*.js functions/tencent/*.js functions/api/*.js worker/index.mjs worker/kb/*.mjs scripts/*.mjs scripts/lib/*.mjs; do
             node --check "$f" || { echo "::error::$f 语法错误"; exit 1; }
           done
           find admin -name '*.js' -not -path '*/node_modules/*' -print0 | xargs -0 -n1 -I{} sh -c 'node --check "{}" || { echo "::error::{} 语法错误"; exit 1; }'

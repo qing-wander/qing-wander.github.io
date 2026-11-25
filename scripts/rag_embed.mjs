@@ -2,8 +2,8 @@
 /* ──────────────────────────────────────────────────────────────────────
    向量化 · rag_embed.mjs
    ──────────────────────────────────────────────────────────────────────
-   把 rag/chunks.json 的 42 片向量化（@cf/baai/bge-m3，1024 维），
-   产出 `rag/vectors.ndjson`（Vectorize 规定的 NDJSON），并可 --upload 直接灌库。
+   把 RAG_OUT_DIR/chunks.json（默认 .temp/rag）的切片向量化（@cf/baai/bge-m3，1024 维），
+   产出同目录的 vectors.ndjson（Vectorize 规定的 NDJSON），并可 --upload 直接灌库。产物不入库。
 
    凭证：优先环境变量 CF_API_TOKEN（长期，CI 用）；缺省时回退 wrangler
          OAuth 登录态（本地开发用，约 24 小时过期，过期后重跑 `wrangler login`）。
@@ -20,10 +20,11 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const CHUNKS = resolve(ROOT, 'rag/chunks.json');
-const OUT = resolve(ROOT, 'rag/vectors.ndjson');
+const RAG_DIR = resolve(process.env.RAG_OUT_DIR || resolve(ROOT, '.temp/rag'));
+const CHUNKS = resolve(RAG_DIR, 'chunks.json');
+const OUT = resolve(RAG_DIR, 'vectors.ndjson');
 
-const ACCOUNT = 'ead07d9f00f8e2ac69055a81cc198382';
+const ACCOUNT = process.env.CF_ACCOUNT_ID || 'ead07d9f00f8e2ac69055a81cc198382';
 const MODEL = '@cf/baai/bge-m3';
 const INDEX = 'resume-kb';
 const BATCH = 10; // 单请求条数：小批量更好排错，42 片也只需 5 次调用
@@ -77,11 +78,11 @@ async function build() {
     process.stdout.write(`  ${Math.min(i + BATCH, payload.chunks.length)}/${payload.chunks.length}\r`);
   }
   writeFileSync(OUT, lines.join('\n') + '\n');
-  console.log(`✓ ${lines.length} 条向量 → rag/vectors.ndjson（${MODEL}，1024 维，${payload.kb_version}）`);
+  console.log(`✓ ${lines.length} 条向量 → ${OUT}（${MODEL}，1024 维，${payload.kb_version}）`);
 }
 
 function upload() {
-  execFileSync('npx', ['--yes', 'wrangler', 'vectorize', 'insert', INDEX, '--file=rag/vectors.ndjson'], {
+  execFileSync('npx', ['--yes', 'wrangler', 'vectorize', 'insert', INDEX, `--file=${OUT}`], {
     cwd: ROOT, stdio: 'inherit',
   });
 }

@@ -1,15 +1,16 @@
 /* 变体生成接口 —— 离线契约测试
    ──────────────────────────────────────────────────────────────
-   用 rag/chunks.json 伪装 D1，直接调 onRequestPost，
+   用数据源现算的切片伪装 D1（产物不入库），直接调 onRequestPost，
    验证：选材上限、L0 不变、返回的 HTML 与正式简历同一模板骨架。
    ────────────────────────────────────────────────────────────── */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { onRequestPost } from '../functions/api/variant.js';
+import { buildChunks } from '../scripts/build_rag_chunks.mjs';
 
-const chunks = JSON.parse(readFileSync(new URL('../rag/chunks.json', import.meta.url), 'utf8')).chunks;
 const siteData = JSON.parse(readFileSync(new URL('../data/site-data.json', import.meta.url), 'utf8'));
+const chunks = buildChunks(siteData).chunks;
 
 const env = {
   DB: {

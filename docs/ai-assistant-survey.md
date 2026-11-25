@@ -2,7 +2,18 @@
 
 > 文档定位：本文件是 `chenpeisheng.cn` 接入 AI 问答助手的**单一设计依据**。调研结论、实测数据、架构决策、接口契约、验收清单都在这里；后续所有代码实现必须与本文对齐，冲突时先改文档再改代码。
 >
-> 版本：v1（2026-11-07）· 状态：待实施 · 作者：陈培胜
+> 版本：v1（2026-11-07）· 状态：**历史设计依据**（v1 已上线，主链路已于 2026-11-19 起迁移到 Cloudflare 原生 RAG）· 作者：陈培胜
+
+> **⚠️ 现状（2026-11-25 核对）**
+> 线上问答已换成 Cloudflare 原生链路：
+> `POST /api/chat`（`functions/api/chat.js`）→ `/api/kb`（D1 FTS5 BM25 + Vectorize，RRF 融合）
+> → Worker `resume-kb-api`（GLM-4.7-flash）。腾讯云 CloudBase 云函数仍在用，但只承担
+> **TTS 合成**（`mode=tts`）与兜底问答。
+>
+> 本文保留 v1（TF-IDF + CloudBase + hy3）的调研数据、验收清单与踩坑记录，**不要照本文新建链路**。
+> 现行总体设计见 [cloudflare-rag-admin-plan.md](cloudflare-rag-admin-plan.md)；文中出现的
+> `knowledge/`、`js/ai-chat.js` 等路径已不存在——切片改由 `scripts/build_rag_chunks.mjs` 生成并灌入 D1，
+> 聊天组件在 `js/main.js` 第 11 节。
 
 ---
 

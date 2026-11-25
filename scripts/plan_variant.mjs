@@ -21,7 +21,8 @@ import { fileURLToPath } from 'node:url';
 import { search } from './rag_query.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const CHUNKS = resolve(ROOT, 'rag/chunks.json');
+const RAG_DIR = resolve(process.env.RAG_OUT_DIR || resolve(ROOT, '.temp/rag'));
+const CHUNKS = resolve(RAG_DIR, 'chunks.json');
 const DATA = resolve(ROOT, 'data/site-data.json');
 const OUT_DIR = resolve(ROOT, 'variants');
 

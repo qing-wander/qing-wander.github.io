@@ -1,0 +1,44 @@
+name: Bug 报告
+description: 页面显示异常、接口报错、构建/部署失败
+title: "[bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢反馈。请先确认：
+        - 安全漏洞**不要**在这里报告，请按 [SECURITY.md](https://github.com/shenge-work/shenge-work.github.io/blob/main/SECURITY.md) 私信；
+        - 提交前请勿粘贴真实手机号、验证码、API Key 或他人留言内容。
+  - type: input
+    id: url
+    attributes:
+      label: 出问题的页面 / 接口
+      placeholder: https://chenpeisheng.cn/resume.html 或 GET /api/wall
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: 现象
+      description: 实际看到什么，期望是什么
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: 复现步骤
+      placeholder: |
+        1. 打开 ...
+        2. 点击 ...
+        3. 看到 ...
+  - type: input
+    id: env
+    attributes:
+      label: 环境
+      placeholder: macOS 15 / Chrome 131 / 移动端 390px
+  - type: textarea
+    id: evidence
+    attributes:
+      label: 截图、控制台报错或响应
+      description: 请隐去个人信息；接口问题请贴状态码与返回体（可脱敏）
+      render: shell

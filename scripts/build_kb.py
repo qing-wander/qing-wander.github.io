@@ -12,11 +12,11 @@ build_kb.py — 由 data/site-data.json 生成 AI 简历助手的知识库（M1�
   5. --check 幂等校验：重建结果与磁盘产物不一致则退出码 1，用于 CI 卡住「忘了重建」。
 
 用法
-  python3 scripts/build_kb.py                # 生成 knowledge/*
-  python3 scripts/build_kb.py --check        # 只校验，不写盘
+  python3 scripts/build_kb.py                # 生成 .temp/kb/*（不入库）
+  KB_OUT_DIR=/path/to/out python3 scripts/build_kb.py
+  python3 scripts/build_kb.py --check        # 产物存在时比对，否则只做数据源自检
   python3 scripts/build_kb.py --report       # 打印切片清单
   python3 scripts/build_kb.py --provider zhipu --dim 1024
-  python3 scripts/build_kb.py --sync-functions   # 同步一份到 functions/tencent/kb/
 """
 
 import argparse
@@ -34,7 +34,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 SRC = ROOT / "data" / "site-data.json"
-KB_DIR = ROOT / "knowledge"
+# 产物不入库：默认写到 .temp/kb（已 gitignore）；部署腾讯云函数时用 KB_DIR 指向产物目录。
+KB_DIR = Path(os.environ.get("KB_OUT_DIR", str(ROOT / ".temp" / "kb"))).resolve()
 
 MAX_CHUNK_CHARS = 300      # 单块正文上限（含标题前缀）
 MAX_VOCAB = 1200           # tfidf 词表上限（稀疏存储，JSON 增量很小，宁多勿少）
@@ -478,8 +479,6 @@ def main():
     ap.add_argument("--report", action="store_true", help="打印切片清单")
     ap.add_argument("--query", default=None, help="检索自测：输入一句话，打印 Top-K 命中")
     ap.add_argument("--topk", type=int, default=5)
-    ap.add_argument("--sync-functions", action="store_true",
-                    help="同步知识库到 functions/tencent/kb/")
     args = ap.parse_args()
 
     if not SRC.exists():
@@ -504,8 +503,12 @@ def main():
                                      KB_DIR / "kb-meta.json", KB_DIR / "kb.js")
 
     if args.check:
+        if not c_path.exists():
+            print("知识库产物不入库，已按数据源现算通过（%d 块 / 维度 %s）"
+                  % (len(chunks), meta["dim"]))
+            return 0
         bad = []
-        if not c_path.exists() or json.loads(c_path.read_text(encoding="utf-8")) != chunks:
+        if json.loads(c_path.read_text(encoding="utf-8")) != chunks:
             bad.append("chunks.json")
         if not v_path.exists() or json.loads(v_path.read_text(encoding="utf-8")) != vec_doc:
             bad.append("vectors.json")
@@ -529,17 +532,9 @@ def main():
     dump_json(m_path, meta)
     j_path.write_text(kb_js(chunks, meta), encoding="utf-8")
 
-    if args.sync_functions:
-        dst = ROOT / "functions" / "tencent" / "kb"
-        dst.mkdir(parents=True, exist_ok=True)
-        for f in (c_path, v_path, m_path):
-            (dst / f.name).write_bytes(f.read_bytes())
-
-    print("已生成：chunks=%d / vectors=%d / dim=%s / provider=%s"
-          % (len(chunks), len(vec_doc["items"]), meta["dim"], meta["provider"]))
+    print("已生成：%s（chunks=%d / vectors=%d / dim=%s / provider=%s）"
+          % (KB_DIR, len(chunks), len(vec_doc["items"]), meta["dim"], meta["provider"]))
     print("私隐：已排除字段 -> %s" % (meta["blocked_fields"] or "无"))
-    if args.sync_functions:
-        print("已同步到 functions/tencent/kb/")
     return 0
 
 

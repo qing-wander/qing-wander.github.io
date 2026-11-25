@@ -470,3 +470,6 @@ td.act { text-align: right; white-space: nowrap; }
   .anim-stage { height: 380px; }
   .anim-mini { width: 240px; height: 309px; }
 }
+
+.voice-gender { display: flex; gap: 8px; margin: 10px 0 4px; }
+.voice-gender .btn.is-on { background: var(--ink); color: var(--paper); }

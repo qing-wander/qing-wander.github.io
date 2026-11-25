@@ -4,6 +4,10 @@
 --  用途：把原先压在 Workers KV 上的三类数据搬到 D1，解决 KV 免费额度
 --        1,000 写/天的天花板（D1 免费额度是 100,000 行写/天）。
 --
+--  本文件是新库的完整基线：包含运营表 + RAG（kb_chunks/kb_fts/kb_terms）
+--  + 问答日志 + 静态资源映射。旧库继续可以重复执行本文件（全部 IF NOT EXISTS）。
+--  fork 复刻请用 scripts/db-init.sh 一条命令建库 + 灌全部数据，不要手动逐条跑迁移。
+--
 --  执行：
 --    npx wrangler d1 execute portfolio-db --remote --file=db/schema.sql
 --  本地：
@@ -191,3 +195,70 @@ CREATE TABLE IF NOT EXISTS site_content (
   updated_at INTEGER NOT NULL,
   updated_by TEXT
 );
+
+-- ══ RAG 知识库（2026-11-19）══════════════════════════════════════════════
+-- 线上检索入口 functions/api/kb.js 同时用这张表和 Vectorize：
+--   kb_chunks 存切片正文，kb_fts 存中文 bigram 词面索引，kb_terms 存 IDF 词频。
+-- 种子由 scripts/build_rag_chunks.mjs 云端生成，不再随仓库分发。
+CREATE TABLE IF NOT EXISTS kb_chunks (
+  id          TEXT PRIMARY KEY,
+  kind        TEXT NOT NULL,
+  section     TEXT NOT NULL,
+  entity_id   TEXT,
+  entity_type TEXT,
+  title       TEXT,
+  text        TEXT NOT NULL,
+  url         TEXT,
+  tags        TEXT,
+  visibility  TEXT NOT NULL DEFAULT 'public',
+  lang        TEXT NOT NULL DEFAULT 'zh',
+  kb_version  TEXT NOT NULL,
+  source_path TEXT,
+  updated_at  INTEGER
+);
+CREATE INDEX IF NOT EXISTS idx_kb_chunks_section ON kb_chunks (section);
+CREATE INDEX IF NOT EXISTS idx_kb_chunks_entity ON kb_chunks (entity_id);
+
+-- 词面索引：写入端已把中文切成 bigram，这里只按空格切，不赌分词器
+CREATE VIRTUAL TABLE IF NOT EXISTS kb_fts USING fts5(
+  chunk_id UNINDEXED,
+  tokens,
+  tokenize='unicode61'
+);
+
+CREATE TABLE IF NOT EXISTS kb_terms (
+  term   TEXT PRIMARY KEY,
+  df     INTEGER NOT NULL,
+  n_docs INTEGER NOT NULL
+);
+
+-- 问答日志：限流 + 后台「用户都在问什么」（2026-11-19）
+CREATE TABLE IF NOT EXISTS qa_logs (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  ts          INTEGER NOT NULL,
+  query       TEXT NOT NULL,
+  answer      TEXT,
+  hit_ids     TEXT,
+  hit_count   INTEGER NOT NULL DEFAULT 0,
+  empty       INTEGER NOT NULL DEFAULT 0,
+  model       TEXT,
+  ms          INTEGER,
+  ip_hash     TEXT,
+  device_hash TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_qa_logs_ts ON qa_logs (ts);
+CREATE INDEX IF NOT EXISTS idx_qa_logs_ip ON qa_logs (ip_hash, ts);
+
+-- ══ 静态资源外链映射（2026-11-22）═══════════════════════════════════════
+-- file_key → CDN URL；前端 data/asset-map.js 由这张表导出。
+CREATE TABLE IF NOT EXISTS asset_links (
+  file_key     TEXT PRIMARY KEY,   -- 相对路径，如 images/portrait.jpg
+  url          TEXT NOT NULL,
+  source       TEXT NOT NULL DEFAULT 'cloudbase-cos',  -- cloudbase-cos | cloudflare-r2 | local
+  bucket       TEXT,
+  content_type TEXT,
+  size_bytes   INTEGER,
+  uploaded_at  INTEGER,
+  updated_at   INTEGER
+);
+CREATE INDEX IF NOT EXISTS idx_asset_links_source ON asset_links (source);

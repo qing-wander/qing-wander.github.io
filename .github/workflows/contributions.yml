@@ -18,7 +18,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: site-data-sync      # 与 sync-site-data / build-kb 同组串行，避免改同一仓库撞车
+  group: site-data-sync      # 与 sync-site-data 同组串行，避免两条流程改同一仓库撞车
   cancel-in-progress: false
 
 jobs:
