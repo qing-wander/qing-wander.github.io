@@ -63,6 +63,7 @@
   }
 
   function renderSite(d) {
+    window.__SITE_DATA__ = d;
     /* ── 全局 meta ── */
     if (d.meta) {
       if (d.meta.pageTitle) document.title = d.meta.pageTitle;
@@ -82,27 +83,34 @@
         $('footerCoord').textContent = d.meta.footer.coord || '';
       }
 
-      /* ── 页脚推荐的人（data/people.js）：名单为空时整节保持隐藏 ── */
+      /* ── 页脚推荐的人：快照 data/people.js 先渲染，再用云端 /data/people.json 覆盖；
+             云端名单为空就整节收起，绝不显示旧快照 ── */
       (function renderPeople() {
         var box = $('footerPeople');
         var grid = $('peopleGrid');
         if (!box || !grid) return;
-        var P = window.PEOPLE || {};
-        var list = (P.people || []).filter(function (p) { return p && p.name && p.site; });
-        if (!list.length) { box.hidden = true; return; }
-        var max = (P.meta && P.meta.footerCount) || 4;
-        grid.innerHTML = list.slice(0, max).map(function (p, i) {
-          var initial = String(p.initial || p.name).slice(0, 1).toUpperCase();
-          return '<a class="fp-card" href="' + esc(p.site) + '" target="_blank" rel="noopener noreferrer"' +
-            ' aria-label="' + esc(p.name + '：' + (p.reason || '推荐的个人站')) + '">' +
-            '<span class="fp-ava fp-c' + (i % 3) + '" aria-hidden="true">' + esc(initial) + '</span>' +
-            '<span class="fp-body">' +
-              '<span class="fp-name">' + esc(p.name) + '<i class="fp-arrow" aria-hidden="true">↗</i></span>' +
-              '<span class="fp-role">' + esc(p.role || '') + '</span>' +
-              '<span class="fp-reason" title="' + esc(p.reason || '') + '">' + esc(p.reason || '') + '</span>' +
-            '</span></a>';
-        }).join('');
-        box.hidden = false;
+        function paint(P) {
+          var list = ((P && P.people) || []).filter(function (p) { return p && p.name && p.site; });
+          if (!list.length) { box.hidden = true; grid.innerHTML = ''; return; }
+          var max = (P.meta && P.meta.footerCount) || 4;
+          grid.innerHTML = list.slice(0, max).map(function (p, i) {
+            var initial = String(p.initial || p.name).slice(0, 1).toUpperCase();
+            return '<a class="fp-card" href="' + esc(p.site) + '" target="_blank" rel="noopener noreferrer"' +
+              ' aria-label="' + esc(p.name + '：' + (p.reason || '推荐的个人站')) + '">' +
+              '<span class="fp-ava fp-c' + (i % 3) + '" aria-hidden="true">' + esc(initial) + '</span>' +
+              '<span class="fp-body">' +
+                '<span class="fp-name">' + esc(p.name) + '<i class="fp-arrow" aria-hidden="true">↗</i></span>' +
+                '<span class="fp-role">' + esc(p.role || '') + '</span>' +
+                '<span class="fp-reason" title="' + esc(p.reason || '') + '">' + esc(p.reason || '') + '</span>' +
+              '</span></a>';
+          }).join('');
+          box.hidden = false;
+        }
+        paint(window.PEOPLE || {});
+        fetch('data/people.json?v=' + Date.now(), { cache: 'no-cache', credentials: 'same-origin' })
+          .then(function (res) { if (!res.ok) throw new Error('HTTP ' + res.status); return res.json(); })
+          .then(paint)
+          .catch(function () { /* 云端拿不到就保留快照结果 */ });
       })();
     }
 
@@ -381,12 +389,13 @@
      SVG，共享同一 viewBox 坐标系，缩放时永远对齐。
      统计行另取 data/contributions.json（Actions 每日用 GraphQL 拉取，前端
      不碰 token）；拿不到就只隐藏统计，不影响图。 */
-  function renderGhSkeleton(box) {
+  function renderGhSkeleton(box, username) {
+    var user = String(username || 'shenge-work');
     box.innerHTML =
       '<div class="gh-head">' +
         '<span class="gh-label">GITHUB ACTIVITY · 近一年提交</span>' +
-        '<a class="gh-link" href="https://github.com/shenge-work"' +
-        ' target="_blank" rel="noopener noreferrer">github.com/shenge-work ↗</a>' +
+        '<a class="gh-link" href="https://github.com/' + esc(user) + '"' +
+        ' target="_blank" rel="noopener noreferrer">github.com/' + esc(user) + ' ↗</a>' +
       '</div>' +
       '<div class="gh-stats" hidden></div>' +
       '<div class="gh-snake">' +
@@ -424,19 +433,68 @@
   function initContributions() {
     var box = $('ghActivity');
     if (!box) return;
-    /* 蛇图（含坐标轴）先出，统计等 JSON，两者互不影响 */
-    renderGhSkeleton(box);
-    fetch('data/contributions.json?v=' + Date.now(), { cache: 'no-cache' })
+    /* 云端数据优先：data/contributions.json 才是真相源；total=0 或无数据时整块隐藏，
+       不展示别人的蛇图 / 旧快照。 */
+    fetch('data/contributions.json?v=' + Date.now(), { cache: 'no-cache', credentials: 'same-origin' })
       .then(function (res) {
         if (!res.ok) throw new Error('HTTP ' + res.status);
         return res.json();
       })
       .then(function (data) {
-        if (data) renderGhStats(box, data);
+        var total = Number(data && data.total) || 0;
+        var days = data && Array.isArray(data.days) ? data.days.length : 0;
+        if (!data || total <= 0 || !days) { box.hidden = true; box.innerHTML = ''; return; }
+        renderGhSkeleton(box, data.username);
+        renderGhStats(box, data);
       })
       .catch(function () {
-        /* 统计拿不到就保持隐藏，不影响图 */
+        box.hidden = true; box.innerHTML = '';
       });
+  }
+
+  /* ══════════════ 板块可见性 & 索引自适应 ══════════════
+     数据为空就不摆空架子：整节隐藏、导航同步收起，剩下板块的
+     SEC.xx 与导航编号按 DOM 顺序重排，避免出现 SEC.01/03/05 的断档。 */
+  function syncSectionLayout(d) {
+    var len = function (arr) { return Array.isArray(arr) ? arr.length : 0; };
+    var RULES = {
+      about: true,
+      experience: len(d.experience) > 0,
+      projects: len(d.projects) > 0,
+      works: len(d.works) > 0,
+      skills: len(d.skills && d.skills.rows) > 0,
+      education: !!(d.education && d.education.main && d.education.main.school),
+      awards: len(d.awards && d.awards.certs) + len(d.awards && d.awards.list) > 0,
+      objective: len(d.objective && d.objective.cards) > 0,
+      contact: len(d.contact && d.contact.cards) > 0,
+      wall: true,
+    };
+    var navLinks = Array.prototype.slice.call(document.querySelectorAll('#nav a[data-sec]'));
+    var sections = Array.prototype.slice.call(document.querySelectorAll('main section[id]'));
+    sections.forEach(function (sec) {
+      var rule = RULES[sec.id];
+      if (rule === false) sec.hidden = true;
+      else if (rule === true) sec.hidden = false;
+    });
+    navLinks.forEach(function (a) {
+      var rule = RULES[a.getAttribute('data-sec')];
+      if (rule === false) a.hidden = true;
+      else a.hidden = false;
+    });
+    /* 重排导航编号 + SEC 编号（只算真正可见的板块） */
+    var seq = 0;
+    var visibleSecs = sections.filter(function (s) { return !s.hidden; });
+    visibleSecs.forEach(function (sec) {
+      seq++;
+      var no = (seq < 10 ? '0' : '') + seq;
+      var label = sec.querySelector('.section-no');
+      if (label) label.textContent = 'SEC.' + no;
+      var link = navLinks.filter(function (a) { return a.getAttribute('data-sec') === sec.id; })[0];
+      if (link) {
+        var navNo = link.querySelector('.nav-no');
+        if (navNo) navNo.textContent = no;
+      }
+    });
   }
 
   /* ══════════════ 交互层（渲染完成后初始化） ══════════════ */
@@ -722,25 +780,133 @@
       try { history.replaceState(null, '', location.pathname); } catch (e) {}
     });
 
-    /* ── 10. 作品集分享卡（静态宣传图：竖版 / 方形，预览 + 下载） ── */
-    /* 预览走 1080px 轻量 WebP（约 88KB/64KB，显示尺寸下与原图无可见差异），
-       避免直拉 2160px 原图（591KB/395KB）在慢链路下拖长加载；
-       WebP 加载失败（极旧浏览器或网络抖动）自动回退 256 色 PNG 预览；
-       下载仍给 2160px 原图 PNG，保证分享场景最高清晰度。 */
-    var SHARE_CARDS = [
-      {
-        file: 'images/陈培胜-作品集-分享卡-竖版.png',
-        name: '陈培胜-作品集-分享卡-竖版.png',
-        preview: 'images/陈培胜-作品集-分享卡-竖版-预览.webp',
-        fallback: 'images/陈培胜-作品集-分享卡-竖版-预览.png'
-      },
-      {
-        file: 'images/陈培胜-作品集-分享卡-方形.png',
-        name: '陈培胜-作品集-分享卡-方形.png',
-        preview: 'images/陈培胜-作品集-分享卡-方形-预览.webp',
-        fallback: 'images/陈培胜-作品集-分享卡-方形-预览.png'
+    /* ── 10. 作品集分享卡（按当前 site-data 实时绘制，竖版 / 方形） ── */
+    /* 不再依赖仓库里的静态宣传图：文案、联系方式、标签全部取自 data/site-data，
+       换人 / 改数据后分享卡自动跟着变，也不会出现“数据没有、图却还在”的假象。 */
+    var SHARE_CARDS = [];
+
+    function drawShareCard(w, h, d) {
+      var cv = document.createElement('canvas');
+      cv.width = w; cv.height = h;
+      var g = cv.getContext('2d');
+      if (!g) return null;
+      var meta = d.meta || {};
+      var hero = d.hero || {};
+      var name = String(hero.nameCn || '') || String(meta.brandMark || '');
+      if (!name) return null;
+      var role = String(hero.role || '');
+      var roleEn = String(hero.roleEn || '');
+      var tags = (hero.tags || []).map(function (t) { return String(t.text || t); }).filter(Boolean).slice(0, 3);
+      var contact = d.contact || {};
+      var tel = ''; var mail = '';
+      (contact.cards || []).forEach(function (x) {
+        var href = String(x.href || '');
+        if (!tel && href.indexOf('tel:') === 0) tel = String(x.value || href.slice(4));
+        if (!mail && href.indexOf('mailto:') === 0) mail = String(x.value || href.slice(7));
+      });
+      var url = String((d.meta && d.meta.siteUrl) || '');
+      var pad = Math.round(w * 0.075);
+
+      g.fillStyle = '#0d0d0f'; g.fillRect(0, 0, w, h);
+      g.strokeStyle = 'rgba(255,255,255,0.06)'; g.lineWidth = 1;
+      for (var x = pad; x < w; x += 90) { g.beginPath(); g.moveTo(x, 0); g.lineTo(x, h); g.stroke(); }
+      for (var y = pad; y < h; y += 90) { g.beginPath(); g.moveTo(0, y); g.lineTo(w, y); g.stroke(); }
+      g.fillStyle = '#ff5a1e'; g.fillRect(pad, pad, Math.round(w * 0.11), 10);
+
+      g.fillStyle = 'rgba(255,255,255,0.62)';
+      g.font = '600 ' + Math.round(w * 0.026) + 'px "Noto Sans SC","Microsoft YaHei",sans-serif';
+      g.fillText('PORTFOLIO · ' + new Date().getFullYear(), pad, pad + Math.round(w * 0.078));
+      g.textAlign = 'right';
+      g.fillText(String(meta.brandMark || '') + '.', w - pad, pad + Math.round(w * 0.078));
+      g.textAlign = 'left';
+
+      var nameSize = Math.round(w * (name.length > 5 ? 0.125 : 0.165));
+      g.fillStyle = '#ffffff';
+      g.font = '800 ' + nameSize + 'px "Noto Sans SC","Microsoft YaHei",sans-serif';
+      g.fillText(name, pad, Math.round(h * 0.30));
+
+      g.fillStyle = '#ff5a1e';
+      g.font = '600 ' + Math.round(w * 0.052) + 'px "Noto Sans SC","Microsoft YaHei",sans-serif';
+      g.fillText(role, pad, Math.round(h * 0.30) + Math.round(nameSize * 1.12));
+      if (roleEn) {
+        g.fillStyle = 'rgba(255,255,255,0.55)';
+        g.font = '500 ' + Math.round(w * 0.026) + 'px "JetBrains Mono","Consolas",monospace';
+        g.fillText(roleEn.toUpperCase(), pad, Math.round(h * 0.30) + Math.round(nameSize * 1.12) + Math.round(w * 0.05));
       }
-    ];
+
+      var ty = h > w
+        ? Math.round(h * 0.30) + Math.round(nameSize * 1.12) + Math.round(w * 0.125)
+        : Math.round(h * 0.50);
+      tags.forEach(function (t, i) {
+        g.font = '600 ' + Math.round(w * 0.03) + 'px "Noto Sans SC","Microsoft YaHei",sans-serif';
+        var tw = g.measureText(t).width + Math.round(w * 0.055);
+        var th = Math.round(w * 0.062);
+        var yy = ty + i * Math.round(h * 0.075) - th / 2;
+        g.fillStyle = 'rgba(255,90,30,0.14)'; g.fillRect(pad, yy, tw, th);
+        g.fillStyle = '#ff5a1e'; g.fillRect(pad, yy, 4, th);
+        g.fillStyle = '#f3f3f3';
+        g.fillText(t, pad + Math.round(w * 0.024), yy + th * 0.72);
+      });
+
+      if (h > w) {
+        var bio = String(hero.bio || '').trim();
+        if (bio) {
+          var bioSize = Math.round(w * 0.026);
+          var bioLh = Math.round(bioSize * 1.7);
+          var maxW = w - pad * 2;
+          var line = '';
+          var lines = [];
+          for (var ci = 0; ci < bio.length; ci++) {
+            var ch = bio.charAt(ci);
+            if (g.measureText(line + ch).width > maxW) {
+              lines.push(line);
+              line = ch;
+              if (lines.length === 2) break;
+            } else line += ch;
+          }
+          if (lines.length < 2 && line) lines.push(line);
+          g.fillStyle = 'rgba(255,255,255,0.60)';
+          g.font = '400 ' + bioSize + 'px "Noto Sans SC","Microsoft YaHei",sans-serif';
+          var by = Math.round(ty + Math.round(h * 0.075) * tags.length + w * 0.07);
+          lines.forEach(function (s, i) { g.fillText(s, pad, by + i * bioLh); });
+        }
+      }
+
+      var ly = Math.round(h * (h > w ? 0.80 : 0.735));
+      g.strokeStyle = 'rgba(255,255,255,0.16)';
+      g.beginPath(); g.moveTo(pad, ly); g.lineTo(w - pad, ly); g.stroke();
+      g.fillStyle = 'rgba(255,255,255,0.78)';
+      g.font = '500 ' + Math.round(w * 0.026) + 'px "Noto Sans SC","Microsoft YaHei",sans-serif';
+      var lines2 = [];
+      if (mail) lines2.push(mail);
+      if (tel) lines2.push(tel);
+      if (url) lines2.push(url);
+      lines2.forEach(function (s, i) { g.fillText(s, pad, ly + Math.round(w * 0.055) * (i + 1)); });
+      if (url) {
+        g.fillStyle = 'rgba(255,255,255,0.38)';
+        g.font = '500 ' + Math.round(w * 0.022) + 'px "Noto Sans SC","Microsoft YaHei",sans-serif';
+        g.fillText('作品集：' + url, pad, h - Math.round(pad * 0.45));
+      }
+      return cv;
+    }
+
+    function buildShareCards() {
+      var d = window.__SITE_DATA__;
+      if (!d) return;
+      SHARE_CARDS = [];
+      try {
+        [{ w: 1080, h: 1440, label: '竖版' }, { w: 1080, h: 1080, label: '方形' }].forEach(function (s) {
+          var cv = drawShareCard(s.w, s.h, d);
+          if (!cv) return;
+          SHARE_CARDS.push({
+            src: cv.toDataURL('image/png'),
+            name: String((d.hero || {}).nameCn || 'portfolio') + '-作品集分享卡-' + s.label + '.png',
+            label: s.label,
+          });
+        });
+      } catch (e) { SHARE_CARDS = []; }
+    }
+
     var shareBtn = $('shareBtn');
     var shareOverlay = $('shareOverlay');
     var shareImg = $('shareImg');
@@ -748,14 +914,12 @@
     var shareCur = 0;
 
     function setShareCard(i) {
+      if (!SHARE_CARDS.length) return;
       shareCur = ((i % SHARE_CARDS.length) + SHARE_CARDS.length) % SHARE_CARDS.length;
       var c = SHARE_CARDS[shareCur];
-      /* 预览失败 → 回退 PNG 预览（只回退一次，防循环） */
-      shareImg.onerror = function () {
-        if (shareImg.getAttribute('src') === c.preview) { shareImg.src = c.fallback; }
-      };
-      shareImg.src = c.preview;
-      shareImg.alt = '陈培胜作品集分享卡' + (shareCur === 0 ? '（竖版）' : '（方形）');
+      shareImg.onerror = null;
+      shareImg.src = c.src;
+      shareImg.alt = String(((window.__SITE_DATA__ || {}).hero || {}).nameCn || '作品集') + '分享卡（' + c.label + '）';
       document.querySelectorAll('.share-tab').forEach(function (t, idx) {
         t.classList.toggle('on', idx === shareCur);
         t.setAttribute('aria-selected', idx === shareCur ? 'true' : 'false');
@@ -770,7 +934,10 @@
     }
 
     if (shareBtn) {
+      buildShareCards();
+      if (SHARE_CARDS.length) shareBtn.hidden = false;
       shareBtn.addEventListener('click', function () {
+        if (!SHARE_CARDS.length) return;
         setShareCard(0);
         shareOverlay.hidden = false;
         document.body.style.overflow = 'hidden';
@@ -779,13 +946,14 @@
     if (shareDownload) {
       shareDownload.addEventListener('click', function () {
         var c = SHARE_CARDS[shareCur];
+        if (!c) return;
         var a = document.createElement('a');
-        a.href = c.file;
+        a.href = c.src;
         a.download = c.name;
         document.body.appendChild(a);
         a.click();
         a.remove();
-        showToast('正在下载「' + (shareCur === 0 ? '竖版' : '方形') + '」分享卡');
+        showToast('正在下载「' + c.label + '」分享卡');
       });
     }
     if (shareOverlay) {
@@ -2063,6 +2231,7 @@
     if (!data) { showDataError(); return; }
     try {
       renderSite(data);
+      syncSectionLayout(data);
       initInteractions();
       initWall();
       initContributions();
