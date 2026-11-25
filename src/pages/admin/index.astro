@@ -1,0 +1,30 @@
+---
+// /admin —— React 版控制台（M1，docs/react-refactor-plan.md §6-M1）
+//
+// CSP 决策：middleware 对 /admin 的 script-src 不含 'unsafe-inline'，Astro 岛的
+// 内联 bootstraps 会被拦 —— 本页不用 client:* 指令，改为 body 内模块 script 引导 SPA
+// （Astro 会把它打包成外链 hash 文件，满足 'self'）。
+// 样式直接引用旧资产 /admin/assets/admin.css（双开期共用，类名零改动；M5 收口时迁入 src/styles）。
+const favicon = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%2314110E'/%3E%3Ctext x='16' y='22' font-size='16' fill='%23F3EEE2' text-anchor='middle' font-family='monospace'%3ES%3C/text%3E%3C/svg%3E";
+---
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="theme-color" content="#F3EEE2" />
+    <title>后台 · 陈培胜作品集</title>
+    <link rel="icon" href={favicon} />
+    <link rel="stylesheet" href="/admin/assets/admin.css" />
+  </head>
+  <body>
+    <div id="root">
+      {/* 无 JS / JS 加载失败兜底：服务端守卫已确认登录，这里只兜断网 */}
+      <noscript><p style="padding:40px;text-align:center;font-family:system-ui">后台需要 JavaScript 才能工作。</p></noscript>
+    </div>
+    <script>
+      import '../../features/admin/main';
+    </script>
+  </body>
+</html>

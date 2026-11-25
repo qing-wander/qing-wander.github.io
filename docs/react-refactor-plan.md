@@ -1,9 +1,9 @@
 # 前端 React 化重构 · 落地方案
 
-> 版本：v1.1（2026-11-25）
-> 状态：**待评审** —— 文档面向「整个站点前端用 React 框架重构」这一目标，含现状盘点、技术选型评估、目标架构、分阶段迁移计划、风险与可维护性评估。
-> 评审通过后按 [M0 脚手架](#m0脚手架与基线) 启动；任何`决策点清单`中的开放项需在启动前拍板。
-> 变更记录：v1.1 新增 §5.8 移动端与触屏适配策略（现状盘点落表、测试矩阵细化到各里程碑验收）、风险 R11/R12、附录 A.7 移动端专项清单，估算含真机走查电池。
+> 版本：v1.2（2026-11-26）
+> 状态：**执行中** —— M0 已上线（提交 7478ee7），M1 代码完成待发布；各阶段实况见文末[里程碑日志](#里程碑日志)。
+> 评审已通过并启动执行；决策点 D1–D9 均按默认建议拍板；执行中按方案推进，任何方向性变更须更新估算并注明版本。
+> 变更记录：v1.2 新增里程碑日志（M0/M1 实况）；v1.1 新增 §5.8 移动端与触屏适配策略（现状盘点落表、测试矩阵细化到各里程碑验收）、风险 R11/R12、附录 A.7 移动端专项清单，估算含真机走查电池。
 ---
 
 ## 目录
@@ -20,6 +20,7 @@
 10. [决策点清单](#10-决策点清单)
 11. [附录 A：功能迁移对照清单](#附录-a功能迁移对照清单)
 12. [附录 B：技术选型速查版本表](#附录-b技术选型速查版本表)
+13. [里程碑日志](#里程碑日志)
 
 ---
 
@@ -599,6 +600,34 @@ admin 是本次重构**单位收益最高**的部分：原生 JS 1,033 行的多
 | Playwright | 最新稳定 | E2E/视觉回归 | 快照对比 N1 验收载体 |
 | model-viewer | 现有 vendor 版本 | 3D | 保持 vendor 不 npm 化 |
 | html2canvas | 现有 vendor 版本 | 分享卡 | 保持 vendor |
+
+---
+
+## 里程碑日志
+
+> 执行实况追加区：每阶段完成后记录交付物、与方案的偏差（含原因）、验收数据与遗留项。日期均为自然日。
+
+### M0 · 脚手架与基线 —— ✅ 已完成上线（2026-11-26，提交 7478ee7）
+
+- **交付**：Astro 6.4.8 + React 19.3.1 + TS strict 全开（含 noUncheckedIndexedAccess）+ ESLint 9 可移植边界规则（`src/{components,features,lib}` 禁止 import astro，给 §4.4 纯 Vite 备选留退路）+ Vitest/RTL；build/test/lint/check 四绿。
+- **混排机制**：pages-build.sh 新增 `REACT_MIGRATED_PAGES` 段，清单可逐页追加；`none` 一键回退旧行为；岛资源引用完整性硬校验。
+- **空壳验证页**：/work/portfolio.html（真相源 import 装配 + 岛水合验证 + RTL 组件测试），已上线且水合验证通过。
+- **基线**：Lighthouse 线上 4 页 × 移动/桌面 8 份入 `tests/e2e/baseline/lighthouse/`——index 移动档 55 分 / LCP 25.3s / FCP 22.2s（Google Fonts 外链为主因），是 M3 的主优化对照；视觉基线 64/64（4 页 × 4 主题 × 390/680/768/1024，390 含 hasTouch）清单 + sha1 入库。
+- **顺手修复**（迁移盘点中发现的自迁站以来即存在的线上 404）：manifest.json 从未进 dist（PWA 安装断链）与 work/ 目录从未进 dist（作品卡链接 404），均已进拷贝清单 + 硬校验。
+
+### M1 · admin 后台 + login —— 🔄 代码完成，待提交发布（2026-11-26）
+
+- **交付**：
+  - `src/lib/api/admin.ts`：27 个 admin 端点 zod 契约 + 类型化 client（X-Admin-Request CSRF、401 统一跳 login），配套契约快照测试。
+  - `src/features/admin/`：AdminApp 壳（统计 9 卡 + 8 tab + 刷新/退出 + `?focus=` 邮件直达）与 8 个 tab（设备封禁/留言审核含行内回复+⌘Enter/问答看板含趋势柱/主题+套装+模块配置/语音套装+音色+试听/站点数据 JSON 编辑器+KB 重建/变体生成/动画台）+ queries.ts（全部 hooks，写操作精确 invalidate）+ toast（含 `window.__adminToast` 兼容）。
+  - `src/features/login/`：三通道（邮箱验证码两步流含冷却倒计时 / 微信扫码或公众号 / 小程序码 1.5s×40 轮询）、错误文案表逐字迁移、safeNext 防开放重定向、openid 引导提示。
+  - `scripts/pages-build.sh`：`react_src()` 路径映射 + login 双副本；`scripts/dev-api-server.mjs`：补齐 27 个 admin 路由（接线上同套 handlers）与静态映射。
+- **与方案的偏差（已定案）**：
+  1. §5.7 原定的「admin 走 Astro 岛」不可行——`functions/_middleware.js` 对 /admin 的 CSP `script-src 'self'` 禁内联，而岛水合需要内联 bootstrap。改用页面 body 内 `<script>`（Astro 打包为 hash 外链文件）引导 SPA：产物 0 内联脚本，CSP 合规，login 同样处理。
+  2. 迁移中发现旧 login 真实 bug：发码接口返回的掩码邮箱（`de***@…`）被回填进 verify 请求导致 403；React 版改用原始输入修复。
+  3. anim-console.js（477 行）按方案原样桥接：渲染旧版同 id/class 的 DOM 骨架，进 tab 时动态加载 `/admin/assets/anim-console.js` 调 `window.AnimConsole.init()`，M5 再定去留。
+- **验收**：单元/组件测试 11/11；Playwright E2E **24/24**（三通道登录全流、8 tab 逐项走查、保存文案写路径、退出、768/1024 平板快照）；既有 node:test 289/289 基线不回归；内容漂移链 4 项全绿（render_resume / sync_company_profiles / render_work_details / validate_content）；build/test/lint/check 四绿。
+- **未决**：admin/login 尚未加入 pages-build.sh 的 `REACT_MIGRATED_PAGES` 生产清单（待确认 D6 双开节奏：建议先双开观察一周再切）。
 
 ---
 

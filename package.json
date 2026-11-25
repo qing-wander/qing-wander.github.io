@@ -20,8 +20,10 @@
     "e2e:perf-baseline": "node tests/e2e/perf-baseline.mjs"
   },
   "dependencies": {
+    "@tanstack/react-query": "^5.108.4",
     "react": "^19.2.0",
-    "react-dom": "^19.2.0"
+    "react-dom": "^19.2.0",
+    "zod": "^4.6.7"
   },
   "pnpm": {
     "onlyBuiltDependencies": [

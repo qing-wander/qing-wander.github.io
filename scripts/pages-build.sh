@@ -133,7 +133,9 @@ done
 
 echo "=== ⑦ React 迁移页面混排（docs/react-refactor-plan.md §6 / M0 起）"
 # 已迁移到 Astro 6 + React 19 的页面清单（相对 dist 根的 URL 路径）。
-#   M0:work/portfolio.html（管道验证壳）→ M1 admin → M2 jd/company/school → M3 index → M4 resume
+#   M0: work/portfolio.html（管道验证，已上线）
+#   M1: admin/index.html login.html（本地/dev 验证通过后，经用户确认再纳入此清单切换生产）
+#   M2 → …
 # 清单为空或 REACT_MIGRATED_PAGES=none 时本段跳过，构建行为与迁移前完全一致；
 # 混排只替换 dist 内对应 URL 的产物，未迁移页面继续走旧静态文件（渐进迁移 / N3 约束）。
 REACT_MIGRATED_PAGES="${REACT_MIGRATED_PAGES:-work/portfolio.html}"
@@ -146,23 +148,45 @@ if [ -n "$REACT_MIGRATED_PAGES" ] && [ "$REACT_MIGRATED_PAGES" != "none" ]; then
   command -v pnpm >/dev/null 2>&1 || { echo "✗ pnpm 不可用（需要 Node >= 22 自带 corepack）"; exit 1; }
   pnpm install --frozen-lockfile --prefer-offline || { echo "✗ pnpm install 失败"; exit 1; }
   pnpm build || { echo "✗ astro build 失败"; exit 1; }
+
+  # dist-react 源解析：Astro build.format='file' 输出 foo.html；
+  # 目录式 URL（X/index.html）对应桶内源文件 X.html，这里做一次映射。
+  react_src() { # $1=目标 URL 路径 → 输出 dist-react 源文件（无则输出空）
+    local target="$1" src=""
+    [ -f "dist-react/$target" ] && { echo "dist-react/$target"; return; }
+    case "$target" in
+      */index.html)
+        local up="${target%/index.html}.html"
+        [ -f "dist-react/$up" ] && src="dist-react/$up" ;;
+    esac
+    [ -f "dist-react/${target%.html}" ] && src="dist-react/${target%.html}"
+    echo "$src"
+  }
+
   for p in $REACT_MIGRATED_PAGES; do
-    if [ ! -f "dist-react/$p" ]; then
-      echo "✗ dist-react 缺少已迁移页 $p （src/pages 与清单不同步？）"
+    src="$(react_src "$p")"
+    if [ -z "$src" ] || [ ! -f "$src" ]; then
+      echo "✗ dist-react 缺少已迁移页 $p 的源（src/pages 与清单不同步？）"
       exit 1
     fi
     mkdir -p "$OUT/$(dirname "$p")"
-    cp "dist-react/$p" "$OUT/$p"
-    echo "   · 混排 $p ← dist-react（替代旧生成器产物）"
+    cp "$src" "$OUT/$p"
+    echo "   · 混排 $p ← $src（替代旧产物）"
+    # login 双副本（旧构建即如此：/login 直接 200，/login/ 兜住带斜杠老链接）
+    if [ "$p" = "login.html" ]; then
+      mkdir -p "$OUT/login"
+      cp "$src" "$OUT/login/index.html"
+      echo "   · 混排 login/index.html ← $src（二副本）"
+    fi
   done
-  # 岛脚本/样式 hash 产物：页面引用 /_astro/**，整体拷入（与旧站 js/ css/ 目录互不冲突）
+  # React bundle（hash 产物）：页面引用 /_astro/**，整体拷入（与旧站 js/ css/ 目录互不冲突）
   if [ -d dist-react/_astro ]; then cp -R dist-react/_astro "$OUT/_astro"; fi
-  # 岛引用完整性：产物 HTML 里每个 /_astro/* 资源都必须存在，缺了就是线上 404
-  # （岛资源文件名只含 [hash].js/.css，字符集收敛可避开引号转义）
+  # 引用完整性：产物 HTML 里每个 /_astro/* 资源都必须存在，缺了就是线上 404
+  # （资源文件名只含 [hash].js/.css，字符集收敛可避开引号转义）
   for p in $REACT_MIGRATED_PAGES; do
     while IFS= read -r asset; do
       if [ ! -f "$OUT/$asset" ]; then
-        echo "✗ $p 引用的 $asset 不在产物中（岛构建不完整）"
+        echo "✗ $p 引用的 $asset 不在产物中（构建不完整）"
         exit 1
       fi
     done < <(grep -oE '/_astro/[A-Za-z0-9._-]+' "$OUT/$p" || true)

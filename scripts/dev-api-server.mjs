@@ -19,6 +19,66 @@ import { onRequestGet as secureAssetGet } from '../functions/api/secure-asset.js
 import { onRequestGet as challengeGet, onRequestOptions as challengeOpt } from '../functions/api/challenge.js';
 import { onRequestGet as greetingGet, onRequestOptions as greetingOpt } from '../functions/api/greeting.js';
 
+/* ── /api/admin/**（M1 起本地联调后台，与线上同一套 handlers/SQL）── */
+import * as admStats from '../functions/api/admin/stats.js';
+import * as admDevices from '../functions/api/admin/devices.js';
+import * as admDevicesBlock from '../functions/api/admin/devices/block.js';
+import * as admExport from '../functions/api/admin/export.js';
+import * as admMessages from '../functions/api/admin/messages.js';
+import * as admReply from '../functions/api/admin/messages/reply.js';
+import * as admMsgStatus from '../functions/api/admin/messages/status.js';
+import * as admQa from '../functions/api/admin/qa.js';
+import * as admQaTopics from '../functions/api/admin/qa/topics.js';
+import * as admQaTrend from '../functions/api/admin/qa/trend.js';
+import * as admConfig from '../functions/api/admin/config.js';
+import * as admTheme from '../functions/api/admin/theme.js';
+import * as admGender from '../functions/api/admin/gender.js';
+import * as admVoice from '../functions/api/admin/voice.js';
+import * as admVoicePreview from '../functions/api/admin/voice/preview.js';
+import * as admGreeting from '../functions/api/admin/greeting.js';
+import * as admContent from '../functions/api/admin/site-content.js';
+import * as admKb from '../functions/api/admin/kb.js';
+import * as admVariant from '../functions/api/admin/variant.js';
+import * as admAuthLogout from '../functions/api/admin/auth/logout.js';
+import * as admAuthMe from '../functions/api/admin/auth/me.js';
+import * as admAuthMethods from '../functions/api/admin/auth/methods.js';
+import * as admAuthEmailSend from '../functions/api/admin/auth/email/send.js';
+import * as admAuthEmailVerify from '../functions/api/admin/auth/email/verify.js';
+import * as admAuthMiniQr from '../functions/api/admin/auth/mini/qr.js';
+import * as admAuthMiniPoll from '../functions/api/admin/auth/mini/poll.js';
+import * as admAuthMiniConfirm from '../functions/api/admin/auth/mini/confirm.js';
+
+const ADM_ROUTES = [
+  ['/api/admin/stats', admStats],
+  ['/api/admin/devices', admDevices],
+  ['/api/admin/devices/block', admDevicesBlock],
+  ['/api/admin/export', admExport],
+  ['/api/admin/messages', admMessages],
+  ['/api/admin/messages/reply', admReply],
+  ['/api/admin/messages/status', admMsgStatus],
+  ['/api/admin/qa', admQa],
+  ['/api/admin/qa/topics', admQaTopics],
+  ['/api/admin/qa/trend', admQaTrend],
+  ['/api/admin/config', admConfig],
+  ['/api/admin/theme', admTheme],
+  ['/api/admin/gender', admGender],
+  ['/api/admin/voice', admVoice],
+  ['/api/admin/voice/preview', admVoicePreview],
+  ['/api/admin/greeting', admGreeting],
+  ['/api/admin/site-content', admContent],
+  ['/api/admin/kb', admKb],
+  ['/api/admin/variant', admVariant],
+  ['/api/admin/auth/logout', admAuthLogout],
+  ['/api/admin/auth/me', admAuthMe],
+  ['/api/admin/auth/methods', admAuthMethods],
+  ['/api/admin/auth/email/send', admAuthEmailSend],
+  ['/api/admin/auth/email/verify', admAuthEmailVerify],
+  ['/api/admin/auth/mini/qr', admAuthMiniQr],
+  ['/api/admin/auth/mini/poll', admAuthMiniPoll],
+  ['/api/admin/auth/mini/confirm', admAuthMiniConfirm],
+];
+const METHOD_KEY = { GET: 'onRequestGet', POST: 'onRequestPost', DELETE: 'onRequestDelete', PUT: 'onRequestPut', OPTIONS: 'onRequestOptions' };
+
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const PORT = Number(process.env.PORT || 8877);
 
@@ -134,6 +194,9 @@ const ENV = {
   /* 人机校验：默认不配 → 走正常额度（与线上未配置 secret 时一致）。
      想验严格档就 TURNSTILE_SECRET=test 起服务，此时不带 token 的 POST 会降到每 IP 每小时 1 条。 */
   TURNSTILE_SECRET: process.env.TURNSTILE_SECRET || '',
+  /* 后台登录（M1 本地联调）：会话盐 + 邮箱白名单，验证码邮件走 mock resend（终端打印） */
+  ADMIN_SESSION_SECRET: process.env.ADMIN_SESSION_SECRET || 'dev-session-secret-0123456789abcdef',
+  ADMIN_EMAILS: process.env.ADMIN_EMAILS || 'dev@local.test',
 };
 if (MOCK !== 'nokey') ENV.RESEND_API_KEY = 're_local_test';
 /* WALL_NO_DB=1 模拟「Pages 里忘了绑定 D1」的线上形态，用来验收关闭态 */
@@ -215,9 +278,39 @@ http.createServer(async (req, res) => {
     if (p === '/api/secure-asset') {
       return send(res, await handler(secureAssetGet, req));
     }
+
+    /* ── /api/admin/**（M1）：同源同 handler，会话/限流/SQL 与线上同套 ── */
+    if (p.indexOf('/api/admin/') === 0) {
+      const mod = ADM_ROUTES.find(([route]) => p === route)?.[1];
+      if (!mod) { res.writeHead(404).end('not found'); return; }
+      const fn = mod[METHOD_KEY[req.method || 'GET'] || 'onRequestGet'];
+      if (!fn) { res.writeHead(405).end('method not allowed'); return; }
+      return send(res, await handler(fn, req));
+    }
+
     let file = p === '/' ? '/index.html' : p;
-    const abs = path.join(ROOT, decodeURIComponent(file));
-    if (!abs.startsWith(ROOT)) { res.writeHead(403).end('forbidden'); return; }
+    /* M1：React 版后台页面与 bundle 住在 dist-react/（pnpm build 产物）。
+       路径映射：/admin(.html|/) → admin.html；/login → login.html；
+       /_astro/** → dist-react/_astro/**；/admin/assets/** → admin/public/assets/**。 */
+    const DIST = path.join(ROOT, 'dist-react');
+    let abs = null;
+    if (p === '/admin' || p === '/admin/' || p === '/admin/index.html' || p === '/admin.html') {
+      abs = path.join(DIST, 'admin.html');
+    } else if (p === '/login' || p === '/login/' || p === '/login/index.html') {
+      abs = path.join(DIST, 'login.html');
+    } else if (p.indexOf('/_astro/') === 0) {
+      const cand = path.join(DIST, decodeURIComponent(p));
+      if (!cand.startsWith(DIST)) { res.writeHead(403).end('forbidden'); return; }
+      abs = cand;
+    } else if (p.indexOf('/admin/assets/') === 0) {
+      const cand = path.join(ROOT, 'admin', 'public', decodeURIComponent(p).replace(/^\/admin\//, ''));
+      if (!cand.startsWith(path.join(ROOT, 'admin', 'public'))) { res.writeHead(403).end('forbidden'); return; }
+      abs = cand;
+    }
+    if (!abs) {
+      abs = path.join(ROOT, decodeURIComponent(file));
+      if (!abs.startsWith(ROOT)) { res.writeHead(403).end('forbidden'); return; }
+    }
     const data = await fs.readFile(abs);
     res.writeHead(200, { 'Content-Type': MIME[path.extname(abs)] || 'application/octet-stream' });
     res.end(data);
