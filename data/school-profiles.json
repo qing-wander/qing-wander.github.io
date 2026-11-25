@@ -117,7 +117,7 @@
       },
       "verify": {
         "label": "学历在线验证码（学信网）",
-        "code": "AH96NG89HCCUWMEA",
+        "code": "REDACTED_VERIFY_CODE",
         "tip": "查验 www.chsi.com.cn/xlcx/bgcx.jsp · 或学信网 App 扫码 · 有效期至 2027-04-29",
         "qrImage": "images/edu-verify-qr.png",
         "qrAlt": "学信网学历在线验证二维码",
@@ -127,7 +127,7 @@
         "note": "学校维度采用官网 / 章程 / 招生网公开口径并标注来源；在校经历、课程与获奖为本人自述，未经第三方逐项核验；学历本身可由学信网在线验证码独立核验。",
         "items": [
           { "label": "学校公开信息", "level": "官网口径", "detail": "学校简介 / 章程 / 招生网，见下方资料来源" },
-          { "label": "学历与就读时间", "level": "可独立核验", "detail": "学信网在线验证码 AH96NG89HCCUWMEA" },
+          { "label": "学历与就读时间", "level": "可独立核验", "detail": "学信网在线验证码 REDACTED_VERIFY_CODE" },
           { "label": "课程清单", "level": "本人自述", "detail": "简历 / 作品集明确记载 + 同课程群参考科目" },
           { "label": "获奖证书", "level": "本人自述", "detail": "配图为示意插画，非证书扫描件" },
           { "label": "校园实拍照片", "level": "暂无", "detail": "未公开展示，相册中如实标注「待补充」" }

@@ -461,7 +461,7 @@ window.SCHOOL_PROFILES = {
       },
       "verify": {
         "label": "学历在线验证码（学信网）",
-        "code": "AH96NG89HCCUWMEA",
+        "code": "REDACTED_VERIFY_CODE",
         "tip": "查验 www.chsi.com.cn/xlcx/bgcx.jsp · 或学信网 App 扫码 · 有效期至 2027-04-29",
         "qrImage": "images/edu-verify-qr.png",
         "qrAlt": "学信网学历在线验证二维码",
@@ -478,7 +478,7 @@ window.SCHOOL_PROFILES = {
           {
             "label": "学历与就读时间",
             "level": "可独立核验",
-            "detail": "学信网在线验证码 AH96NG89HCCUWMEA"
+            "detail": "学信网在线验证码 REDACTED_VERIFY_CODE"
           },
           {
             "label": "课程清单",

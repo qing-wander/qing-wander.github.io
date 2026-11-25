@@ -589,3 +589,53 @@ openid 只回给持有 ticket 的网页，不显示在小程序界面（避免�
 `node --test tests/mini-login.test.mjs`（13 项）：覆盖 ticket 格式与 TTL、
 小程序码二进制/errcode 解析、白名单命中与拒绝、会话签发与一次性消费。
 全量 `node --test tests/*.test.mjs` 233 项通过；变异测试改坏 TTL 会变红。
+
+## 后台第八阶段：数据上云，公开仓库只留脱敏副本（2026-11-25）
+
+### 为什么要搬
+
+仓库是公开的，任何人 fork 都能拿走 `data/*.json` 里的全部内容——包括手机号、学信网验证码这些隐私。
+以前「改数据 → 重新生成 → commit」的链路很完整，但也意味着真人数据必须进 Git 才能上线。
+
+现在把真相源搬到云端 D1：**仓库里的 `data/*.json` 只是脱敏占位副本**，给 CI / 本地预览用；
+线上访客请求 `/data/*.js` / `/data/*.json` 时，由 Pages Function 从 D1 读真人数据返回。
+访客看到的内容完全不变，fork 者拿不到真人数据。
+
+### 架构
+
+```
+后台「站点数据」→ POST /api/admin/site-content → D1.site_content（真人数据，唯一真相源）
+                                                      ↓
+访客 /data/site-data.js → functions/data/[file].js 拦截 → 读 D1 → window.SITE_DATA = {...}
+                                                      ↓
+                                       未配置的 key → data/fallback/<file>（仓库脱敏副本）
+```
+
+- D1 新表 `site_content(key TEXT PRIMARY KEY, payload TEXT, updated_at, updated_by)`，
+  迁移文件 `db/migrations/2026-11-25-site-content.sql`。
+- 7 个固定 key（`functions/lib/site-content.js` 白名单）：site-data / company-profiles /
+  school-profiles / people / contributions / work-details / asset-manifest。外部塞不进别的 key。
+- 后台接口 `GET/POST/DELETE /api/admin/site-content`：列表不传正文，单条才给；
+  保存进 D1，删除即回退仓库副本；`requireAdmin` + CSRF + JSON 语法校验 + 2MB 上限。
+- 公开拦截路由 `functions/data/[file].js`：`Cache-Control: max-age=300`，
+  加 `?v=时间戳` 可立即刷新；D1 异常或未配置时回退 `data/fallback/`，不会白屏。
+
+### 脱敏边界
+
+`scripts/redact-public-data.mjs` 只替换**手机号**与**学信网验证码**，改名与邮箱保留——
+本站就是求职作品集，姓名和联系邮箱本来就要给访客看。
+脱敏同时覆盖 JSON 源、JS 快照、生成的 HTML 和 RAG 切片，用同一套等值替换，
+所以 CI 的「JSON → 生成物逐字一致」校验仍然全绿。
+跑 `node scripts/redact-public-data.mjs --check` 可确认没有漏网。
+
+### 初次迁移 / 后续导入
+
+`node scripts/seed-site-content.mjs` 把仓库 JSON 导入 D1（会在脱敏前跑一次）。
+大文件走 8KB 分片拼接（D1 对单条 SQL 有长度限制）。
+以后想从本地批量覆盖：`POST /api/admin/site-content` 带 `{ batch: [{key, text}] }`。
+
+### 验证
+
+`node --test tests/site-content.test.mjs`（15 项）覆盖白名单、快照格式、payload 校验、
+读写删、后台鉴权 / CSRF、公开路由与回退；变异测试改坏校验会让断言变红。
+全量 `node --test tests/*.test.mjs` 249 项通过；构建把新函数和 7 份兜底副本都打进 dist。

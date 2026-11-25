@@ -823,9 +823,9 @@ export default {
       },
       {
         "label": "TEL / 电话·微信",
-        "value": "+86 180 2283 4605",
+        "value": "+86 138 0000 0000",
         "mini": "微信同号",
-        "href": "tel:+8618022834605"
+        "href": "tel:+8613800000000"
       },
       {
         "label": "BLOG / 博客",
@@ -867,7 +867,7 @@ export default {
         [
           {
             "icon": ["phone", "wechat"],
-            "value": "180 2283 4605"
+            "value": "138 0000 0000"
           },
           {
             "label": "邮箱",
@@ -1155,7 +1155,7 @@ export default {
       ],
       "verify": {
         "label": "学历在线验证码（学信网）",
-        "code": "AH96NG89HCCUWMEA",
+        "code": "REDACTED_VERIFY_CODE",
         "tip": "查验 www.chsi.com.cn/xlcx/bgcx.jsp · 或学信网 App 扫码 · 有效期至 2027-04-29",
         "qrImage": "images/edu-verify-qr.png",
         "qrAlt": "学信网学历在线验证二维码"

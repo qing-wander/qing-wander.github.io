@@ -179,3 +179,15 @@ CREATE TABLE IF NOT EXISTS admin_config (
   value      TEXT NOT NULL,
   updated_at INTEGER NOT NULL
 );
+
+-- ══ 站点内容云端真相源（2026-11-25）═══════════════════════════════════════
+-- 公开仓库会被 fork，真人数据不再放 data/*.json；那份只是给 CI / 本地预览
+-- 用的脱敏占位副本。云端这张表才是展示数据的真相源：后台「站点数据」编辑，
+-- Pages Function 拦截 /data/* 从这里读，访客看到的仍是完整内容。
+-- key 白名单在 functions/lib/site-content.js，避免外部塞任意 key。
+CREATE TABLE IF NOT EXISTS site_content (
+  key        TEXT PRIMARY KEY,
+  payload    TEXT NOT NULL,       -- 完整 JSON 字符串（数组/对象原样）
+  updated_at INTEGER NOT NULL,
+  updated_by TEXT
+);

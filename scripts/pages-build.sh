@@ -46,6 +46,13 @@ for item in css js data images videos favicon-64.png favicon.png robots.txt site
   fi
   cp -R "$item" "$OUT/"
 done
+# 云端真相源兜底：/data/<file> 由 Functions 动态路由从 D1 读真人数据；
+# 未配置的 key 回退到这里（仓库里的脱敏副本），避免站点白屏。
+mkdir -p "$OUT/data/fallback"
+for f in site-data.js company-profiles.js school-profiles.js people.js contributions.json work-details.json asset-manifest.json; do
+  [ -f "$OUT/data/$f" ] && cp "$OUT/data/$f" "$OUT/data/fallback/$f"
+done
+echo "   · data/fallback/ 已放入 $(ls "$OUT/data/fallback" | wc -l | tr -d ' ') 份脱敏兜底副本"
 # 访谈视频 34MB > Cloudflare Pages 单文件 25MiB 上限：媒体已上传到腾讯云 COS，
 # asset-manifest/asset-map 会把相对路径改写成 COS 直链；仓库 videos/ 仍保留原件便于重传。
 # 这里从产物中剔除，避免构建失败（本地 file:// 预览仍能读仓库根目录 videos/）。
@@ -108,6 +115,8 @@ for f in index.html resume.html jd.html company.html school.html 404.html \
          functions/lib/tts.js functions/lib/greeting.js functions/api/voice.js \
          functions/api/greeting.js functions/api/admin/greeting.js \
          functions/api/admin/voice.js functions/api/admin/voice/preview.js \
+         functions/lib/site-content.js functions/api/admin/site-content.js \
+         'functions/data/[file].js' data/fallback/site-data.js data/fallback/people.js \
          functions/_middleware.js robots.txt; do
   if [ ! -f "$OUT/$f" ]; then
     echo "✗ dist 缺少 $f，独立页会变成 404 / 首页 fallback"

@@ -480,6 +480,127 @@
 
   $('configReload').addEventListener('click', function () { loadConfig(); loadTheme(); toast('已重新读取'); });
 
+  /* ── 站点数据：云端真相源（仓库 JSON 只是脱敏占位副本）─────────
+     GET /api/admin/site-content 列表 / ?key= 正文；POST 保存；DELETE 恢复默认。
+     大文件（company-profiles 100KB+）只在选中时才拉，列表接口不传正文。 */
+  var CONTENT = { items: [], cur: '', dirty: false };
+  var CONTENT_LABEL = {
+    'site-data': '首页 / 全站文案',
+    'company-profiles': '公司档案',
+    'school-profiles': '学校档案',
+    people: '页脚推荐的人',
+    contributions: 'GitHub 贡献',
+    'work-details': '作品案例',
+    'asset-manifest': '资源 CDN 映射'
+  };
+
+  function contentStat(text, kind) {
+    var el = $('contentStat');
+    el.textContent = text;
+    el.className = 'pill' + (kind ? ' ' + kind : '');
+  }
+
+  function renderContentChips() {
+    var box = $('contentChips');
+    if (!CONTENT.items.length) { box.innerHTML = '<span class="empty">没有数据项</span>'; return; }
+    box.innerHTML = CONTENT.items.map(function (it) {
+      var on = it.key === CONTENT.cur;
+      var name = CONTENT_LABEL[it.key] || it.key;
+      var size = it.configured ? (it.size > 1024 ? Math.round(it.size / 1024) + 'KB' : it.size + 'B') : '默认';
+      return '<button type="button" class="voice-chip' + (on ? ' is-on' : '') + '" data-key="' + esc(it.key) + '">' +
+        esc(name) + ' <small>' + esc(size) + '</small></button>';
+    }).join('');
+  }
+
+  function loadContentList(keepCur) {
+    return api('/api/admin/site-content').then(function (d) {
+      CONTENT.items = d.keys || [];
+      var cur = keepCur || CONTENT.cur;
+      if (!cur && CONTENT.items.length) cur = CONTENT.items[0].key;
+      CONTENT.cur = cur;
+      renderContentChips();
+      var n = CONTENT.items.filter(function (x) { return x.configured; }).length;
+      contentStat(n + '/' + CONTENT.items.length + ' 已配置');
+      return loadContentOne(cur);
+    }).catch(function (err) {
+      $('contentChips').innerHTML = '<span class="empty">' + esc(err.message || '读取失败') + '</span>';
+    });
+  }
+
+  function loadContentOne(key) {
+    if (!key) return Promise.resolve();
+    CONTENT.cur = key;
+    CONTENT.dirty = false;
+    renderContentChips();
+    $('contentLabel').firstChild.nodeValue = (CONTENT_LABEL[key] || key) + ' ';
+    $('contentText').disabled = true;
+    $('contentText').value = '加载中…';
+    $('contentMeta').textContent = '读取中';
+    $('contentReset').disabled = true;
+    $('contentSave').disabled = true;
+    return api('/api/admin/site-content?key=' + encodeURIComponent(key)).then(function (d) {
+      $('contentText').value = d.text || '';
+      $('contentText').disabled = false;
+      $('contentSave').disabled = false;
+      $('contentReset').disabled = !d.configured;
+      $('contentMeta').textContent = d.configured
+        ? '已配置 · ' + fmt(d.updated_at) + ' · ' + (d.text || '').length + ' 字符'
+        : '未配置 · 使用仓库脱敏副本';
+      CONTENT.dirty = false;
+    }).catch(function (err) {
+      $('contentText').value = '';
+      $('contentMeta').textContent = err.message || '读取失败';
+    });
+  }
+
+  function saveContent() {
+    var key = CONTENT.cur;
+    if (!key) return;
+    var text = $('contentText').value;
+    var parsed;
+    try { parsed = JSON.parse(text); }
+    catch (e) { toast('不是合法 JSON：' + e.message, true); return; }
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+      toast('顶层必须是 JSON 对象', true); return;
+    }
+    $('contentSave').disabled = true;
+    api('/api/admin/site-content', {
+      method: 'POST',
+      body: JSON.stringify({ key: key, text: text })
+    }).then(function () {
+      toast('已保存：' + (CONTENT_LABEL[key] || key));
+      return loadContentList(key);
+    }).catch(function (err) { toast(err.message || '保存失败', true); })
+      .then(function () { $('contentSave').disabled = false; });
+  }
+
+  function resetContent() {
+    var key = CONTENT.cur;
+    if (!key) return;
+    if (!window.confirm('恢复默认会删除云端这份数据，访客端回退到仓库脱敏副本。确定？')) return;
+    $('contentReset').disabled = true;
+    api('/api/admin/site-content?key=' + encodeURIComponent(key), { method: 'DELETE' })
+      .then(function () {
+        toast('已恢复默认');
+        return loadContentList(key);
+      })
+      .catch(function (err) { toast(err.message || '恢复失败', true); })
+      .then(function () { $('contentReset').disabled = false; });
+  }
+
+  $('contentChips').addEventListener('click', function (e) {
+    var btn = e.target.closest ? e.target.closest('[data-key]') : null;
+    if (!btn) return;
+    if (CONTENT.dirty && !window.confirm('当前内容未保存，确定切换？')) return;
+    loadContentOne(btn.getAttribute('data-key'));
+  });
+  $('contentText').addEventListener('input', function () { CONTENT.dirty = true; });
+  $('contentSave').addEventListener('click', saveContent);
+  $('contentReset').addEventListener('click', resetContent);
+  $('contentReload').addEventListener('click', function () {
+    loadContentList().then(function () { toast('已重新读取'); });
+  });
+
   /* ── AI 语音：音色切换 + 招呼文案 + 试听 ────────────────────────
      音色写 /api/admin/voice（D1 admin_config.ai_voice），公开站 /api/voice 读；
      招呼文案写 /api/admin/greeting（D1 admin_config.ai_greeting），公开站
@@ -649,6 +770,7 @@
       qa: ['tabQa', 'panelQa'],
       config: ['tabConfig', 'panelConfig'],
       voice: ['tabVoice', 'panelVoice'],
+      content: ['tabContent', 'panelContent'],
       variant: ['tabVariant', 'panelVariant'],
       anim: ['tabAnim', 'panelAnim']
     };
@@ -663,6 +785,7 @@
     else if (name === 'qa') loadQa();
     else if (name === 'config') { loadTheme(); loadConfig(); }
     else if (name === 'voice') { loadVoice(); loadGreeting(); }
+    else if (name === 'content') loadContentList();
     else if (name === 'anim' && window.AnimConsole) window.AnimConsole.init();
   }
   $('tabDevices').addEventListener('click', function () { switchTab('devices'); });
@@ -671,6 +794,7 @@
   $('tabConfig').addEventListener('click', function () { switchTab('config'); });
   $('tabVariant').addEventListener('click', function () { switchTab('variant'); });
   $('tabVoice').addEventListener('click', function () { switchTab('voice'); });
+  $('tabContent').addEventListener('click', function () { switchTab('content'); });
   $('tabAnim').addEventListener('click', function () { switchTab('anim'); });
 
   /* ── 按 JD 生成变体 ─────────────────────────────────────── */
@@ -789,6 +913,7 @@
     else if (state.tab === 'qa') loadQa();
     else if (state.tab === 'config') { loadTheme(); loadConfig(); }
     else if (state.tab === 'voice') { loadVoice(); loadGreeting(); }
+    else if (state.tab === 'content') loadContentList();
   }
 
   /* ── 启动 ──

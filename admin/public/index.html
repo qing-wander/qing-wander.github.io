@@ -48,6 +48,7 @@
     <button class="tab" id="tabQa" type="button" role="tab" aria-selected="false">问答看板</button>
     <button class="tab" id="tabConfig" type="button" role="tab" aria-selected="false">模型与提示词</button>
     <button class="tab" id="tabVoice" type="button" role="tab" aria-selected="false">AI 语音</button>
+    <button class="tab" id="tabContent" type="button" role="tab" aria-selected="false">站点数据</button>
     <button class="tab" id="tabVariant" type="button" role="tab" aria-selected="false">生成变体</button>
     <button class="tab" id="tabAnim" type="button" role="tab" aria-selected="false">角色动画</button>
   </div>
@@ -209,6 +210,33 @@
         音色白名单在 <span class="mono">functions/lib/tts.js</span>，前端拿不到密钥，也不允许传白名单外的 ID。
       </p>
       <p class="cfg-note">清单里只有 10 个精品音色（腾讯云免费额度覆盖）。大模型音色（月华 / 飞镜 / 爱小芊）实测未开通时会让云函数直接 502，所以没放进来；等控制台开通后把 ID 加回 <span class="mono">functions/lib/tts.js</span> 的 VOICES 即可。</p>
+    </article>
+  </section>
+
+  <!-- 站点数据：云端真相源，仓库里的 JSON 只是脱敏占位副本 -->
+  <section class="panel" id="panelContent" role="tabpanel" hidden>
+    <div class="toolbar">
+      <span class="toolbar-note">公开仓库会被 fork，真人数据只存云端 D1；仓库里的 data/*.json 是脱敏占位副本。这里改完，访客端最多 5 分钟生效（带 <span class="mono">?v=</span> 可立刻刷新）。</span>
+      <button class="btn btn-ghost" id="contentReload" type="button">重新读取</button>
+    </div>
+
+    <article class="cfg-card">
+      <div class="cfg-head"><h2>数据项</h2><span class="pill" id="contentStat">—</span></div>
+      <p class="cfg-note">选一项编辑。留空并「恢复默认」会删掉云端记录，访客端回退到仓库脱敏副本。</p>
+      <div class="voice-chips" id="contentChips"><span class="empty">加载中…</span></div>
+    </article>
+
+    <article class="cfg-card">
+      <div class="cfg-head"><h2>内容（JSON）</h2><span class="pill" id="contentMeta">—</span></div>
+      <p class="cfg-note">必须是合法 JSON，顶层为对象；最大 2MB。保存前会先做语法校验，不合法不会写库。</p>
+      <label class="cfg-label" id="contentLabel">未选择数据项
+        <textarea class="cfg-textarea" id="contentText" rows="14" spellcheck="false" disabled>请先从上方选择一个数据项</textarea>
+      </label>
+      <div class="cfg-actions">
+        <span class="toolbar-note" id="contentHint">云端已配置的项目会标「已配置」</span>
+        <button class="btn btn-ghost" id="contentReset" type="button" disabled>恢复默认</button>
+        <button class="btn" id="contentSave" type="button" disabled>保存</button>
+      </div>
     </article>
   </section>
 
