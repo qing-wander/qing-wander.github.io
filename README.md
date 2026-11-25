@@ -48,7 +48,7 @@
 | 数据 | `data/site-data.json` 是内容唯一真相源；线上真人数据存 D1 `site_content`，仓库只放脱敏副本      |
 | AI | 混合检索（D1 FTS5 BM25 + Vectorize 向量，RRF 融合）→ 受约束生成；关键词兜底不断线               |
 | 部署 | `git push` → Cloudflare Pages 自动构建；`scripts/pages-build.sh` 产出 `dist/` |
-| 质量 | 4 条 GitHub Actions + 26 个 `node:test` 测试文件 + 内容漂移闸门（生成物必须与数据逐字一致）        |
+| 质量 | 4 条 GitHub Actions + 28 个 `node:test` 测试文件 + 内容漂移闸门（生成物必须与数据逐字一致）        |
 
 **它不只是简历页面。** 除展示外还包括：AI 数字分身问答、JD 岗位匹配、AI 语音播报、3D 桌宠、按设备隔离的留言板、简历自动投递（含 PDF/证书附件与发送前预览）、学历核验加锁审批、公司/学校档案页、访问统计与管理后台。
 
@@ -71,7 +71,7 @@
 | 数字分身问答 | 右下角 3D 角色 → 面板          | `POST /api/chat`：混合检索 → 受约束提示词 → Worker `resume-kb-api`（llama-3.3-70b） |
 | 岗位匹配   | `jd.html` / 助手面板「JD 匹配」 | `POST /api/jd`：JD 拆条 → 逐条字面覆盖核算（不靠模型打分）→ 覆盖/部分/缺口 + 证据 + 追问点           |
 | 语音播报   | 面板喇叭按钮                  | 浏览器 `SpeechSynthesis` 优先；云端 TTS（`/api/chat` mode=tts）探测成功才切，失败无感回落     |
-| 3D 桌宠  | 右下角常驻                   | `<model-viewer>` + 本地 GLB（个人形象 / 温柔形象，性别切换联动头像与音色）                     |
+| 3D 桌宠  | 右下角常驻                   | `<model-viewer>` + 本地 GLB（个人形象 / 温柔形象，后台展示套装联动头像与音色）                 |
 
 ### 交互与后台
 
@@ -173,7 +173,7 @@ python3 scripts/sync_site_data.py --check
 **4）跑测试 / 构建产物**
 
 ```bash
-node --test tests/*.test.mjs     # 26 个测试文件，零外部依赖
+node --test tests/*.test.mjs     # 28 个测试文件，零外部依赖
 bash scripts/pages-build.sh      # 产出 dist/，缺文件或超 25MiB 会直接失败
 ```
 
@@ -302,7 +302,7 @@ npx wrangler d1 execute portfolio-db --remote --file=db/migrations/<file>.sql
 ├── miniprogram/             # 微信小程序扫码登录端
 ├── scripts/                 # 生成链、构建、部署、联调、备份、自检
 ├── templates/               # 简历与案例页模板
-├── tests/                   # node:test 单测（26 个文件）
+├── tests/                   # node:test 单测（28 个文件）
 ├── tools/ variants/ work/   # 桌宠制作脚本、简历变体、作品案例页
 ├── worker/
 │   ├── kb/                  # 语义层 Worker resume-kb-api（embed / query / rerank / rebuild）

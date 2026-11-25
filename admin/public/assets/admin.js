@@ -478,7 +478,36 @@
       .catch(function (err) { toast(err.message || '设置失败', true); });
   });
 
-  $('configReload').addEventListener('click', function () { loadConfig(); loadTheme(); toast('已重新读取'); });
+  /* ── 公开站展示套装（留空 = 跟随站点数据 hero.gender）── */
+  function loadGender() {
+    return api('/api/admin/gender').then(function (d) {
+      var cur = d.gender || '';
+      $('genderCur').textContent = cur
+        ? (cur === 'female' ? '女版套装' : '男版套装')
+        : '跟随站点默认（男版）';
+      var list = d.genders || [];
+      $('genderChips').innerHTML = list.map(function (g) {
+        var on = g.id === cur ? ' is-on' : '';
+        return '<button class="theme-chip' + on + '" type="button" data-gender-id="' + esc(g.id) + '">' +
+          '<strong>' + esc(g.name) + '</strong><small>' + esc(g.note) + '</small></button>';
+      }).join('') + '<button class="theme-chip' + (cur ? '' : ' is-on') + '" type="button" data-gender-id="">' +
+        '<strong>跟随默认</strong><small>按站点数据 hero.gender 展示</small></button>';
+    });
+  }
+
+  $('genderChips').addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-gender-id]');
+    if (!b) return;
+    var gender = b.getAttribute('data-gender-id');
+    api('/api/admin/gender', { method: 'POST', body: JSON.stringify({ gender: gender }) })
+      .then(function () {
+        toast(gender ? '已切到：' + (gender === 'female' ? '女版套装' : '男版套装') : '已恢复跟随站点默认');
+        loadGender();
+      })
+      .catch(function (err) { toast(err.message || '设置失败', true); });
+  });
+
+  $('configReload').addEventListener('click', function () { loadConfig(); loadTheme(); loadGender(); toast('已重新读取'); });
 
   /* ── 站点数据：云端真相源（仓库 JSON 只是脱敏占位副本）─────────
      GET /api/admin/site-content 列表 / ?key= 正文；POST 保存；DELETE 恢复默认。
@@ -849,7 +878,7 @@
     if (name === 'devices') loadDevices();
     else if (name === 'messages') loadMessages();
     else if (name === 'qa') loadQa();
-    else if (name === 'config') { loadTheme(); loadConfig(); }
+    else if (name === 'config') { loadTheme(); loadGender(); loadConfig(); }
     else if (name === 'voice') { loadVoice(); loadGreeting(); }
     else if (name === 'content') loadContentList();
     else if (name === 'anim' && window.AnimConsole) window.AnimConsole.init();
@@ -977,7 +1006,7 @@
     if (state.tab === 'devices') loadDevices();
     else if (state.tab === 'messages') loadMessages();
     else if (state.tab === 'qa') loadQa();
-    else if (state.tab === 'config') { loadTheme(); loadConfig(); }
+    else if (state.tab === 'config') { loadTheme(); loadGender(); loadConfig(); }
     else if (state.tab === 'voice') { loadVoice(); loadGreeting(); }
     else if (state.tab === 'content') loadContentList();
   }

@@ -599,7 +599,7 @@ WRANGLER_BIN=~/.npm/_npx/3ab751a803c3c994/node_modules/wrangler/bin/wrangler.js 
 - `curl -sL https://shenge-work.pages.dev/js/ai-skins.js?v=20261120K5 | grep -c female3d` ≥ 1；
 - `pages.dev/index.html` 的脚本引用与 `github.io` 一致（`ai-skins.js?v=20261120K5`）；
 - 两个 `GLB` 从 pages.dev 取回应为 `model/gltf-binary` 而非 `text/html`；
-- 浏览器打开 pages.dev 能看到男/女 3D 形象并可用 G 键 / 左下角透明按钮切换。
+- 浏览器打开 pages.dev 能看到男/女 3D 形象；~~G 键 / 左下角透明按钮切换~~（2026-11-25 起移除，套装改由后台「展示套装」开关控制，访客端不可自行切换）。
 
 ---
 

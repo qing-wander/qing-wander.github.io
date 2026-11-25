@@ -61,12 +61,7 @@
   var voicePromise = null;
 
   function currentGender() {
-    if (window.CP_GENDER === 'male' || window.CP_GENDER === 'female') return window.CP_GENDER;
-    try {
-      var g = localStorage.getItem('cp_gender_v2');
-      if (g === 'male' || g === 'female') return g;
-    } catch (e) {}
-    return '';
+    return (window.CP_GENDER === 'male' || window.CP_GENDER === 'female') ? window.CP_GENDER : '';
   }
 
   function fallbackVoice(g) {

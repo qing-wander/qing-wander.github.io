@@ -680,15 +680,17 @@ openid 只回给持有 ticket 的网页，不显示在小程序界面（避免�
 - **投放**：仓库里的 `assets/resume/chen-peisheng-resume-2026.pdf` 仍是脱敏副本，
   只作为兜底与打印预览用；真实版不进 Git。
 
-## 性别套装一键配置
+## 展示套装配置（男版 / 女版）
 
-- D1 `admin_config` 的 `ai_voice_female` / `ai_voice_male` 分别存两套音色；
-  缺省时女版 101001、男版 101013。旧的单值 `ai_voice` 仍兼容。
-- `GET /api/voice?gender=male|female` 按性别返回音色；访客在首页左下角切换时，
-  头像（`portrait.jpg` / `avatar-female.png`）、3D 模型（`self3d` / `female3d`）
-  与音色一起换，旧性别的音频缓存同时清掉。
-- 后台「AI 语音」面板先选女版 / 男版再改音色或试听；默认性别取站点数据
-  `hero.gender`，访客自己的选择优先级更高。
+- D1 `admin_config` 的 `gender` 存公开站展示套装（`male` / `female`，留空跟随站点
+  数据 `hero.gender`）；`ai_voice_female` / `ai_voice_male` 分别存两套音色，缺省时
+  女版 101001、男版 101013。旧的单值 `ai_voice` 仍兼容。
+- `GET /api/gender` 只读返回后台选定的套装；`GET /api/voice?gender=male|female` 按
+  性别返回音色。整套形象（头像 `portrait.jpg` / `avatar-female.png`、3D 模型
+  `self3d` / `female3d`、音色）随后台套装一起呈现；访客端不可自行切换，不写本地
+  缓存，旧性别的音频缓存同时清掉。
+- 后台「配置」面板的「展示套装」卡片一键切男版 / 女版；「AI 语音」面板先选女版 /
+  男版再改音色或试听。`?gender=` 仅作预览参数，不写入线上配置。
 
 ## 预览环境：独立沙箱（2026-11-25）
 
