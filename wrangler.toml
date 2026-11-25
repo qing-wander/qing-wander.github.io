@@ -24,6 +24,34 @@ binding = "SITE_KV"
 id = "f5253a16b4d84a20a32c0cd497b1f269"
 
 # ──────────────────────────────────────────────────────────────────────
+#  预览环境（非 main 分支 / 本地直接上传）—— 独立沙箱
+# ──────────────────────────────────────────────────────────────────────
+#  没有这一段时，预览部署会退回到顶层的生产绑定，等于让预览站
+#  直接读写线上数据（实测过：预览页注入了真实手机号）。
+#
+#  这里指向另建的 D1 与 KV，数据由
+#    D1_DB_NAME=portfolio-db-preview bash scripts/db-init.sh remote
+#  灌入仓库里的脱敏副本，所以预览永远碰不到生产数据。
+#
+#  预览刻意不配这些密钥：RESEND_API_KEY / TURNSTILE_SECRET / 微信相关 /
+#  KB_WORKER_URL —— 预览不需要真发信、真发码、真写向量库，缺了代码会降级，
+#  也避免误操作打到生产（例如在预览里点“重建知识库”）。
+#  只保留：ADMIN_EMAILS（明文）、ADMIN_SESSION_SECRET / DEVICE_HASH_PEPPER /
+#  VERIFY_ACCESS_SECRET（预览专用随机值，由控制台或 API 配）。
+# ──────────────────────────────────────────────────────────────────────
+[env.preview]
+compatibility_date = "2025-01-01"
+
+[[env.preview.d1_databases]]
+binding = "DB"
+database_name = "portfolio-db-preview"
+database_id = "853951d9-3d14-404b-b8ac-e51fba8673ff"
+
+[[env.preview.kv_namespaces]]
+binding = "SITE_KV"
+id = "f10c006844234aa7ae963020fff2e1c2"
+
+# ──────────────────────────────────────────────────────────────────────
 #  管理后台已经并入本站：/admin 控制台 + /login 登录页（免密登录）
 # ──────────────────────────────────────────────────────────────────────
 #  页面：admin/public/index.html（控制台）、admin/public/login.html（登录页）

@@ -1,14 +1,19 @@
 # 陈培胜 · AI Agent 工程师求职作品集
 
-[![在线站点](https://img.shields.io/badge/在线-chenpeisheng.cn-FF5A1E?style=flat-square)](https://chenpeisheng.cn/)
-[![HTML5](https://img.shields.io/badge/HTML5-%2BCSS-%2BVanilla%20JS-E34F26?style=flat-square&logo=html5&logoColor=white)](https://developer.mozilla.org/zh-CN/docs/Web)
-[![Cloudflare Pages](https://img.shields.io/badge/Deploy-Cloudflare%20Pages-F38020?style=flat-square&logo=cloudflare&logoColor=white)](https://pages.cloudflare.com/)
-[![Node](https://img.shields.io/badge/Node.js-22-339933?style=flat-square&logo=node.js&logoColor=white)](https://nodejs.org/)
-[![CI](https://img.shields.io/badge/CI-tests%20%7C%20content%20build%20%7C%20RAG-2B4BE0?style=flat-square&logo=githubactions&logoColor=white)](.github/workflows)
-[![License](https://img.shields.io/badge/License-MIT-1FA658?style=flat-square)](LICENSE)
+![在线站点](https://img.shields.io/badge/在线-chenpeisheng.cn-FF5A1E?style=flat-square)
 
-> 一个**没有前端框架**的静态求职站，长出了一套跑在边缘上的后端：
-> Cloudflare Pages Functions + D1 + Vectorize + Workers AI，外加腾讯云 TTS。
+![HTML5](https://img.shields.io/badge/HTML5-%2BCSS-%2BVanilla%20JS-E34F26?style=flat-square\&logo=html5\&logoColor=white)
+
+![Cloudflare Pages](https://img.shields.io/badge/Deploy-Cloudflare%20Pages-F38020?style=flat-square\&logo=cloudflare\&logoColor=white)
+
+![Node](https://img.shields.io/badge/Node.js-22-339933?style=flat-square\&logo=node.js\&logoColor=white)
+
+![CI](https://img.shields.io/badge/CI-tests%20%7C%20content%20build%20%7C%20RAG-2B4BE0?style=flat-square\&logo=githubactions\&logoColor=white)
+
+![License](https://img.shields.io/badge/License-MIT-1FA658?style=flat-square)
+
+> 一个**没有前端框架**的静态求职站，长出了一套跑在边缘上的后端：  
+> Cloudflare Pages Functions + D1 + Vectorize + Workers AI，外加腾讯云 TTS。  
 > 所有展示内容由 `data/site-data.json` 单一真相源生成，线上真人数据存放于 D1。
 
 - **线上站点**：<https://chenpeisheng.cn/> · [在线简历](https://chenpeisheng.cn/resume.html) · [JD 岗位匹配](https://chenpeisheng.cn/jd.html)
@@ -41,14 +46,14 @@
 
 一个**真实在用**的求职作品集，也是一次「把静态站做成产品」的工程练习：
 
-| 维度 | 做法 |
-|---|---|
-| 前端 | 原生 HTML / CSS / JS（ES5 兼容 IIFE），零框架、零构建步骤，首屏不依赖 JS 框架运行时 |
-| 后端 | Cloudflare Pages Functions（`functions/`）承载全部 `/api/*`，无独立服务器 |
-| 数据 | `data/site-data.json` 是内容唯一真相源；线上真人数据存 D1 `site_content`，仓库只放脱敏副本 |
-| AI | 混合检索（D1 FTS5 BM25 + Vectorize 向量，RRF 融合）→ 受约束生成；关键词兜底不断线 |
+| 维度 | 做法                                                                     |
+| -- | ---------------------------------------------------------------------- |
+| 前端 | 原生 HTML / CSS / JS（ES5 兼容 IIFE），零框架、零构建步骤，首屏不依赖 JS 框架运行时               |
+| 后端 | Cloudflare Pages Functions（`functions/`）承载全部 `/api/*`，无独立服务器           |
+| 数据 | `data/site-data.json` 是内容唯一真相源；线上真人数据存 D1 `site_content`，仓库只放脱敏副本      |
+| AI | 混合检索（D1 FTS5 BM25 + Vectorize 向量，RRF 融合）→ 受约束生成；关键词兜底不断线               |
 | 部署 | `git push` → Cloudflare Pages 自动构建；`scripts/pages-build.sh` 产出 `dist/` |
-| 质量 | 4 条 GitHub Actions + 23 个 `node:test` 单测 + 内容漂移闸门（生成物必须与数据逐字一致） |
+| 质量 | 4 条 GitHub Actions + 23 个 `node:test` 单测 + 内容漂移闸门（生成物必须与数据逐字一致）        |
 
 **它不只是简历页面。** 除展示外还包括：AI 数字分身问答、JD 岗位匹配、AI 语音播报、3D 桌宠、按设备隔离的留言板、简历自动投递（含 PDF/证书附件与发送前预览）、学历核验加锁审批、公司/学校档案页、访问统计与管理后台。
 
@@ -66,12 +71,12 @@
 
 ### AI 能力
 
-| 能力 | 入口 | 实现 |
-|---|---|---|
-| 数字分身问答 | 右下角 3D 角色 → 面板 | `POST /api/chat`：混合检索 → 受约束提示词 → Worker `resume-kb-api`（llama-3.3-70b） |
-| 岗位匹配 | `jd.html` / 助手面板「JD 匹配」 | `POST /api/jd`：JD 拆条 → 逐条字面覆盖核算（不靠模型打分）→ 覆盖/部分/缺口 + 证据 + 追问点 |
-| 语音播报 | 面板喇叭按钮 | 浏览器 `SpeechSynthesis` 优先；云端 TTS（`/api/chat` mode=tts）探测成功才切，失败无感回落 |
-| 3D 桌宠 | 右下角常驻 | `<model-viewer>` + 本地 GLB（个人形象 / 温柔形象，性别切换联动头像与音色） |
+| 能力     | 入口                      | 实现                                                                     |
+| ------ | ----------------------- | ---------------------------------------------------------------------- |
+| 数字分身问答 | 右下角 3D 角色 → 面板          | `POST /api/chat`：混合检索 → 受约束提示词 → Worker `resume-kb-api`（llama-3.3-70b） |
+| 岗位匹配   | `jd.html` / 助手面板「JD 匹配」 | `POST /api/jd`：JD 拆条 → 逐条字面覆盖核算（不靠模型打分）→ 覆盖/部分/缺口 + 证据 + 追问点           |
+| 语音播报   | 面板喇叭按钮                  | 浏览器 `SpeechSynthesis` 优先；云端 TTS（`/api/chat` mode=tts）探测成功才切，失败无感回落     |
+| 3D 桌宠  | 右下角常驻                   | `<model-viewer>` + 本地 GLB（个人形象 / 温柔形象，性别切换联动头像与音色）                     |
 
 ### 交互与后台
 
@@ -114,17 +119,17 @@
 
 ## 技术栈
 
-| 层 | 选型 |
-|---|---|
-| 前端 | 原生 HTML5 / CSS3 / ES5 兼容 JavaScript；`<model-viewer>`、html2canvas 本地 vendor |
-| 边缘 | Cloudflare Pages + Pages Functions（ES Module Worker 运行时） |
-| 存储 | D1（SQLite）：`site_content` / `wall_*` / `kb_*` / `qa_logs` / `rate_limits` / `counters` 等；KV 仅存登录票据与少量兜底计数 |
-| 检索 | D1 FTS5 + Vectorize（bge-m3）+ Workers AI；混合检索在 Worker `worker/kb/` 内完成 |
-| 生成 | Worker `resume-kb-api` → `@cf/meta/llama-3.3-70b-instruct-fp8-fast`（受约束提示词，模型可在后台切换） |
-| 语音 | 浏览器 SpeechSynthesis；云端 TTS 经 `/api/chat (mode=tts)` 转发腾讯云（TC3 签名，密钥只在云函数） |
-| 邮件 | Resend（验证码、留言通知、简历投递、核验审批） |
-| 生成链 | Node 22 脚本（渲染简历 / 案例页 / 分享卡 / 打印预览）+ Python 3（JSON→JS 快照、知识库） |
-| CI/CD | GitHub Actions（测试 / 内容漂移 / RAG 灌库 / 快照同步 / 贡献图）+ Cloudflare Pages 自动构建 |
+| 层     | 选型                                                                                                        |
+| ----- | --------------------------------------------------------------------------------------------------------- |
+| 前端    | 原生 HTML5 / CSS3 / ES5 兼容 JavaScript；`<model-viewer>`、html2canvas 本地 vendor                                |
+| 边缘    | Cloudflare Pages + Pages Functions（ES Module Worker 运行时）                                                  |
+| 存储    | D1（SQLite）：`site_content` / `wall_*` / `kb_*` / `qa_logs` / `rate_limits` / `counters` 等；KV 仅存登录票据与少量兜底计数 |
+| 检索    | D1 FTS5 + Vectorize（bge-m3）+ Workers AI；混合检索在 Worker `worker/kb/` 内完成                                     |
+| 生成    | Worker `resume-kb-api` → `@cf/meta/llama-3.3-70b-instruct-fp8-fast`（受约束提示词，模型可在后台切换）                      |
+| 语音    | 浏览器 SpeechSynthesis；云端 TTS 经 `/api/chat (mode=tts)` 转发腾讯云（TC3 签名，密钥只在云函数）                                 |
+| 邮件    | Resend（验证码、留言通知、简历投递、核验审批）                                                                                |
+| 生成链   | Node 22 脚本（渲染简历 / 案例页 / 分享卡 / 打印预览）+ Python 3（JSON→JS 快照、知识库）                                             |
+| CI/CD | GitHub Actions（测试 / 内容漂移 / RAG 灌库 / 快照同步 / 贡献图）+ Cloudflare Pages 自动构建                                    |
 
 ## 快速开始
 
@@ -178,18 +183,18 @@ bash scripts/pages-build.sh      # 产出 dist/，缺文件或超 25MiB 会直�
 
 ## 配置项
 
-完整变量名与注释见 [`.env.example`](.env.example) 与 [`wrangler.toml`](wrangler.toml) 顶部；线上在
+完整变量名与注释见 [`.env.example`](.env.example) 与 [`wrangler.toml`](wrangler.toml) 顶部；线上在  
 Cloudflare Pages → Settings → Variables and Secrets 配置（Secret 类型加密存储）。
 
 **必填**
 
-| 变量 | 作用 |
-|---|---|
-| `ADMIN_SESSION_SECRET` | 后台会话签名盐（32 字节以上） |
-| `ADMIN_EMAILS` | 允许登录后台的邮箱，逗号分隔 |
-| `DEVICE_HASH_PEPPER` | 设备指纹 HMAC 盐（留言板 / 点赞 / 核验共用） |
-| `VERIFY_ACCESS_SECRET` | 学历核验审批链接签名 |
-| `DELIVER_CHALLENGE_SECRET` | 投递凭证签名 |
+| 变量                         | 作用                           |
+| -------------------------- | ---------------------------- |
+| `ADMIN_SESSION_SECRET`     | 后台会话签名盐（32 字节以上）             |
+| `ADMIN_EMAILS`             | 允许登录后台的邮箱，逗号分隔               |
+| `DEVICE_HASH_PEPPER`       | 设备指纹 HMAC 盐（留言板 / 点赞 / 核验共用） |
+| `VERIFY_ACCESS_SECRET`     | 学历核验审批链接签名                   |
+| `DELIVER_CHALLENGE_SECRET` | 投递凭证签名                       |
 
 **常用可选**
 
@@ -199,20 +204,20 @@ Cloudflare Pages → Settings → Variables and Secrets 配置（Secret 类型�
 
 **Pages 项目**
 
-| 绑定 | 资源 | 用途 |
-|---|---|---|
-| `DB` | D1 `portfolio-db` | 全部业务数据、RAG 词面索引、后台配置 |
-| `SITE_KV` | KV `site-kv` | 登录票据、少量兜底计数 |
+| 绑定        | 资源                | 用途                   |
+| --------- | ----------------- | -------------------- |
+| `DB`      | D1 `portfolio-db` | 全部业务数据、RAG 词面索引、后台配置 |
+| `SITE_KV` | KV `site-kv`      | 登录票据、少量兜底计数          |
 
 **语义层 Worker**（`worker/kb/`，名字 `resume-kb-api`）
 
-| 绑定 | 资源 | 用途 |
-|---|---|---|
-| `AI` | Workers AI | 查询向量化（`@cf/baai/bge-m3`）与重排 |
-| `VECTORIZE` | Vectorize `resume-kb` | 语义向量索引（1024 维） |
-| `DB` | D1 `portfolio-db` | `/rebuild` 从 `site_content` 重建切片 |
+| 绑定          | 资源                    | 用途                               |
+| ----------- | --------------------- | -------------------------------- |
+| `AI`        | Workers AI            | 查询向量化（`@cf/baai/bge-m3`）与重排      |
+| `VECTORIZE` | Vectorize `resume-kb` | 语义向量索引（1024 维）                   |
+| `DB`        | D1 `portfolio-db`     | `/rebuild` 从 `site_content` 重建切片 |
 
-> `AI` 与 `VECTORIZE` 放在 Worker 而不是 Pages，是因为 Pages 的 `deployment_configs` 不支持这两类绑定；
+> `AI` 与 `VECTORIZE` 放在 Worker 而不是 Pages，是因为 Pages 的 `deployment_configs` 不支持这两类绑定；  
 > 部署：`cd worker/kb && npx wrangler deploy`，再用 `npx wrangler secret put KB_TOKEN` 写入共享令牌。
 
 > 密钥只放平台环境变量，仓库内不含任何真实密钥；本地用 `.dev.vars` / `.secrets.local`（均已 gitignore）。
@@ -247,12 +252,12 @@ data/site-data.json ──┬─▶ scripts/render_resume.mjs ────▶ re
 
 Cloudflare Pages 项目 `shenge-work` 已授权本仓库，`main` 分支 push 后自动构建：
 
-| 配置项 | 值 |
-|---|---|
-| Build command | `bash scripts/pages-build.sh` |
-| Build output directory | `dist` |
-| Root directory | 仓库根（留空） |
-| 自定义域 | `chenpeisheng.cn`（主）+ `shenge-work.pages.dev`（备） |
+| 配置项                    | 值                                                |
+| ---------------------- | ------------------------------------------------ |
+| Build command          | `bash scripts/pages-build.sh`                    |
+| Build output directory | `dist`                                           |
+| Root directory         | 仓库根（留空）                                          |
+| 自定义域                   | `chenpeisheng.cn`（主）+ `shenge-work.pages.dev`（备） |
 
 `functions/` 不进 `dist` 也会被 Pages 编译成 Functions；`scripts/pages-build.sh` 会收集根目录所有 HTML（排除 `_` 开头的本地探针）、复制静态资源、注入后台页面、剔除超限大文件，并在缺文件时**让构建失败**而不是静默上线一个 404 站点。
 
@@ -279,6 +284,7 @@ npx wrangler d1 execute portfolio-db --remote --file=db/migrations/<file>.sql
 - 仓库数据已脱敏，**不要**把 GitHub Pages 当作正式数据源。
 
 细节与历史故障复盘见 [docs/cloudflare-pages-deploy.md](docs/cloudflare-pages-deploy.md)。
+
 
 ## 目录结构
 
@@ -316,12 +322,12 @@ npx wrangler d1 execute portfolio-db --remote --file=db/migrations/<file>.sql
 
 ## 测试与 CI
 
-| Workflow | 触发 | 作用 |
-|---|---|---|
-| [`test.yml`](.github/workflows/test.yml) | `functions/**`、`tests/**`、PR | 语法检查 + `node --test` + 兜底知识库/快照幂等 |
-| [`content-build.yml`](.github/workflows/content-build.yml) | 数据 / 模板 / 生成物变更 | 生成物与数据逐字一致、结构校验、两页预算 |
-| [`sync-site-data.yml`](.github/workflows/sync-site-data.yml) | `site-data.json` 变更 | 重建 `data/site-data.js` 快照 |
-| [`contributions.yml`](.github/workflows/contributions.yml) | 定时 | 更新页脚 GitHub 贡献热力图数据 |
+| Workflow                                                     | 触发                           | 作用                                |
+| ------------------------------------------------------------ | ---------------------------- | --------------------------------- |
+| [`test.yml`](.github/workflows/test.yml)                     | `functions/**`、`tests/**`、PR | 语法检查 + `node --test` + 兜底知识库/快照幂等 |
+| [`content-build.yml`](.github/workflows/content-build.yml)   | 数据 / 模板 / 生成物变更              | 生成物与数据逐字一致、结构校验、两页预算              |
+| [`sync-site-data.yml`](.github/workflows/sync-site-data.yml) | `site-data.json` 变更          | 重建 `data/site-data.js` 快照         |
+| [`contributions.yml`](.github/workflows/contributions.yml)   | 定时                           | 更新页脚 GitHub 贡献热力图数据               |
 
 本地等价命令：
 
@@ -348,6 +354,21 @@ python3 scripts/sync_site_data.py --check
 10. **手机号与 PDF**：仓库里的简历页/PDF 只有占位号。`/resume` 由中间件从 D1 注入真号码；投递用的真实 PDF 用 `node scripts/make-cloud-pdf.mjs --put` 生成并上传 KV（键 `resume:pdf`），`/api/resume-pdf` 下发、`/api/deliver` 发信时优先用它。
 
 完整步骤与表结构说明见 [docs/cloudflare-rag-admin-plan.md](docs/cloudflare-rag-admin-plan.md)。
+
+### 预览环境（可选但建议）
+
+`[env.preview]` 不配的话，**非 main 分支 / 本地直接上传的预览部署会退回到顶层的生产绑定**，等于让预览站读写线上数据（真实手机号会出现在预览页上）。所以 `wrangler.toml` 里单独给预览留了一段：
+
+```bash
+npx wrangler d1 create portfolio-db-preview        # 独立 D1
+npx wrangler kv namespace create site-kv-preview   # 独立 KV
+# 把上面两个 id 填进 wrangler.toml 的 [env.preview]
+D1_DB_NAME=portfolio-db-preview bash scripts/db-init.sh remote   # 灌脱敏数据
+npx wrangler pages deploy dist --branch=preview-check            # 发一个预览
+```
+
+预览环境只配 `ADMIN_EMAILS` 与三个自签随机密钥（`ADMIN_SESSION_SECRET` / `DEVICE_HASH_PEPPER` / `VERIFY_ACCESS_SECRET`），**刻意不配** `RESEND_API_KEY` / `TURNSTILE_SECRET` / 微信 / `KB_WORKER_URL`：预览不需要真发信、真发码、真写向量库，缺了会自动降级，也避免在预览里点「重建知识库」误打到生产索引。
+
 
 ## 文档索引
 
@@ -380,5 +401,5 @@ python3 scripts/sync_site_data.py --check
 
 - 站点：<https://chenpeisheng.cn>
 - GitHub：<https://github.com/shenge-work>
-- 邮箱：hi@chenpeisheng.cn
+- 邮箱：<hi@chenpeisheng.cn>
 - 博客：<https://blog.chenpeisheng.cn>

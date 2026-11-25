@@ -689,3 +689,61 @@ openid 只回给持有 ticket 的网页，不显示在小程序界面（避免�
   与音色一起换，旧性别的音频缓存同时清掉。
 - 后台「AI 语音」面板先选女版 / 男版再改音色或试听；默认性别取站点数据
   `hero.gender`，访客自己的选择优先级更高。
+
+## 预览环境：独立沙箱（2026-11-25）
+
+### 发现的隐患
+
+Pages 项目原来只有 production 一套配置，`deployment_configs.preview` 的
+`d1_databases` / `kv_namespaces` / `env_vars` 全是空的，而 `wrangler.toml` 里
+也只有顶层绑定。实测直接上传一个预览部署后：`/data/site-data.js` 返回
+`X-Content-Source: cloud` 且带着**真实手机号**，`/resume` 也注入真号码——
+说明预览部署退回到了**生产 D1**。任何分支推送产生的预览站都会是同一结果。
+
+根因不是「忘了点保存」，而是 `wrangler.toml` 缺 `[env.preview]`：顶层的
+`[[d1_databases]]` 会被预览上传当成默认绑定。
+
+### 现在的结构
+
+| 资源 | 生产 | 预览 |
+| --- | --- | --- |
+| D1 | `portfolio-db`（`022be169…`，真人数据） | `portfolio-db-preview`（`853951d9…`，脱敏副本） |
+| KV | `site-kv`（`f5253a16…`） | `site-kv-preview`（`f10c0068…`） |
+| env vars | 14 个（含 Resend / 微信 / KB_TOKEN） | 4 个：`ADMIN_EMAILS` + 三个自签随机密钥 |
+
+`wrangler.toml` 新增 `[env.preview]` 段落声明预览绑定；预览的 secrets 由
+控制台/API 配置（TOML 里不写密钥）。
+
+### 初始化与发布
+
+```bash
+npx wrangler d1 create portfolio-db-preview
+npx wrangler kv namespace create site-kv-preview
+# 把两个 id 填进 wrangler.toml 的 [env.preview]
+D1_DB_NAME=portfolio-db-preview bash scripts/db-init.sh remote
+npx wrangler pages deploy dist --branch=preview-check
+```
+
+`db-init.sh` 在预览库上完整跑通（7 份 `site_content` / 42 个 `kb_chunks` /
+2 条 `asset_links`），等于把 fork 复刻链路在真实云端演练了一遍。
+
+### 预览刻意不配的东西
+
+`RESEND_API_KEY`、`TURNSTILE_SECRET`、微信 AppID/Secret、`KB_WORKER_URL`
+都不配：预览不该真发信、真发码，也不该写生产向量库（否则在预览里点
+「重建知识库」会打到生产的 `resume-kb` 索引）。缺这些时代码全部走降级。
+
+### 验证结果（preview-check.shenge-work.pages.dev）
+
+| 检查 | 结果 |
+| --- | --- |
+| `/` | 200 |
+| `/data/site-data.js` | `cloud`，手机号为占位 `138 0000 0000`，`tel:+8613800000000` |
+| `/resume` | 注入占位号，无真实号码 |
+| `/api/kb?q=他会 Kubernetes 吗` | `semantic:false`、`empty:true`（D1 词面，不误召回） |
+| `/api/kb?q=他在哪些公司工作过` | 命中 3 条 `exp-lessie-*` |
+| `/api/voice?gender=male` | 101013 智辉（读预览库的默认值） |
+| `/admin/` | 302 → `/login?next=/admin/` |
+
+生产侧回归：`/data/site-data.js` 仍是真实号码、`/resume` 仍注入真号码，
+配置未被这次改动影响（PATCH 前已确认 production 的 D1/KV/14 个密钥仍在）。
