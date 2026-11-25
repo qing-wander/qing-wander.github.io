@@ -80,12 +80,16 @@ fi
 mkdir -p "$OUT/admin" "$OUT/login"
 cp admin/public/index.html "$OUT/admin/index.html"
 cp -R admin/public/assets "$OUT/admin/assets"
-# 登录页独立成 /login/index.html：不带斜杠的 /login 也能被 Pages 解析
+# 登录页两份同一源：
+#   login.html      → 请求 /login 直接 200（Pages 优先匹配 .html，不会再 308 到 /login/）
+#   login/index.html→ 兜住已经带斜杠的老链接 /login/
+# 只放目录版会被 Pages 308 一次（/login → /login/），多一跳，登录页不值得。
+cp admin/public/login.html "$OUT/login.html"
 cp admin/public/login.html "$OUT/login/index.html"
 
 echo "=== ⑥ 独立页硬校验：缺一个就让构建失败，别等线上被 fallback 吞掉"
 for f in index.html resume.html jd.html company.html school.html 404.html \
-         admin/index.html admin/assets/admin.js admin/assets/admin.css login/index.html \
+         admin/index.html admin/assets/admin.js admin/assets/admin.css login.html login/index.html \
          css/jd-match.css css/school-profile.css js/jd-match.js js/school-profile.js \
          data/school-profiles.js functions/api/wall.js \
          assets/print-preview/manifest.json assets/print-preview/color-1.png \
