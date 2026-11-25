@@ -5,13 +5,13 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { DatabaseSync } from 'node:sqlite';
-import { onRequestPost, onRequestDelete } from '../admin/functions/api/messages/reply.js';
-import { onRequestGet } from '../admin/functions/api/messages.js';
-import { onRequestGet as statsGet } from '../admin/functions/api/stats.js';
+import { onRequestPost, onRequestDelete } from '../functions/api/admin/messages/reply.js';
+import { onRequestGet } from '../functions/api/admin/messages.js';
+import { onRequestGet as statsGet } from '../functions/api/admin/stats.js';
 import { onRequestPost as wallPost } from '../functions/api/wall.js';
 
 const SCHEMA = readFileSync(new URL('../db/schema.sql', import.meta.url), 'utf8');
-const ADMIN = 'https://shenge-work-admin.pages.dev';
+const ADMIN = 'https://chenpeisheng.cn';   // 主站已接管后台，接口与页面同源
 const SITE = 'http://127.0.0.1:8877';
 const TOKEN = 'test-admin-token';
 

@@ -3,7 +3,9 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import { onRequestPost, onRequestOptions } from '../functions/api/deliver.js';
+import { issueProof } from '../functions/lib/guard.js';
 import { onRequestPost as previewPost, onRequestOptions as previewOpt } from '../functions/api/deliver-preview.js';
 import {
   buildDeliveryEmail, buildSubject, greetingOf, resumeDigest,
@@ -41,13 +43,32 @@ function mockNet(availablePaths = ['/assets/resume/chen-peisheng-resume-2026.pdf
   return { calls, restore: () => { globalThis.fetch = orig; } };
 }
 
-function post(body, env = envOf(), headers = {}) {
+/* 投递接口要求凭证：测试里按同一算法现取现解，模拟真实页面行为 */
+async function proofOf(env) {
+  const p = await issueProof(env, new Request(ORIGIN + '/api/challenge', { headers: { Origin: ORIGIN } }), 'deliver');
+  let nonce = '';
+  if (p.difficulty > 0) {
+    const prefix = '0'.repeat(p.difficulty);
+    for (let i = 0; i < 500000; i++) {
+      const n = i.toString(36);
+      if (createHash('sha256').update(p.token + ':' + n).digest('hex').startsWith(prefix)) { nonce = n; break; }
+    }
+  }
+  return { token: p.token, nonce };
+}
+async function withProof(body, env) {
+  if (body && Object.prototype.hasOwnProperty.call(body, 'verify')) return body;
+  return Object.assign({}, body, { verify: await proofOf(env) });
+}
+
+async function post(body, env = envOf(), headers = {}) {
+  const payload = await withProof(body, env);
   return onRequestPost({
     env,
     request: new Request(ORIGIN + '/api/deliver', {
       method: 'POST',
       headers: Object.assign({ 'Content-Type': 'application/json', Origin: ORIGIN }, headers),
-      body: JSON.stringify(body),
+      body: JSON.stringify(payload),
     }),
   });
 }
@@ -62,9 +83,10 @@ test('称呼：填写则「某某，您好」，留空则泛化「您好」', ()
   assert.equal(greetingOf('张经理'), '张经理，您好');
 });
 
-test('主题随称呼动态变化', () => {
-  assert.equal(buildSubject({ recipient: '' }), '陈培胜 · AI Agent 工程师 · 简历自动投递');
+test('主题写法与真人投递一致，不带「自动」痕迹', () => {
+  assert.equal(buildSubject({ recipient: '' }), '应聘 AI Agent 工程师 · 陈培胜');
   assert.match(buildSubject({ recipient: '李 HR' }), /致 李 HR/);
+  assert.ok(!buildSubject({ recipient: '李 HR' }).includes('自动'));
 });
 
 test('简历提炼信息来自数据源，含姓名/能力/项目', () => {
@@ -224,13 +246,14 @@ test('Resend 403/422 → recipient_not_verified（前端走 mailto 兜底）', a
 
 /* ── 发送前真实预览 ────────────────────────────────────────────── */
 
-function preview(body, env = envOf(), headers = {}) {
+async function preview(body, env = envOf(), headers = {}) {
+  const payload = await withProof(body, env);
   return previewPost({
     env,
     request: new Request(ORIGIN + '/api/deliver-preview', {
       method: 'POST',
       headers: Object.assign({ 'Content-Type': 'application/json', Origin: ORIGIN }, headers),
-      body: JSON.stringify(body),
+      body: JSON.stringify(payload),
     }),
   });
 }
@@ -257,7 +280,7 @@ test('预览返回真实正文与附件清单，且不调用 Resend、不消耗�
     assert.deepEqual(d.attachments, [RESUME_PDF_NAME]);
     assert.deepEqual(d.pending, ['身份证复印件']);
     assert.equal(net.calls.resend, null);
-    assert.equal(kvGet.length, 0);
+    assert.equal(kvGet.filter((k) => k.indexOf('deliver:') === 0).length, 0, '预览不得消耗发信额度');
   } finally {
     net.restore();
   }
@@ -410,6 +433,101 @@ test('fileNames 里的未勾选项不会被误附上', async () => {
     const res = await post({ ...BASE, attachments: [], fileNames: { idCard: '不要附上.pdf' } });
     assert.equal(res.status, 201);
     assert.deepEqual(net.calls.resend.body.attachments.map((a) => a.filename), [RESUME_PDF_NAME]);
+  } finally {
+    net.restore();
+  }
+});
+
+/* ── 防刷：凭证与请求体 ─────────────────────────────────────────── */
+
+test('不带凭证直接 POST → 403 verification_required（脚本刷不进）', async () => {
+  const net = mockNet();
+  try {
+    const res = await post({ ...BASE, verify: null }, envOf(), {});
+    assert.equal(res.status, 403);
+    assert.equal((await res.json()).error, 'verification_required');
+    assert.equal(net.calls.resend, null, '未通过验证绝不能触达 Resend');
+  } finally {
+    net.restore();
+  }
+});
+
+test('伪造 / 篡改凭证 → 403 verification_failed', async () => {
+  const net = mockNet();
+  try {
+    const p = await proofOf(envOf());
+    const parts = p.token.split('.');
+    const forged = await post({
+      ...BASE,
+      verify: { token: parts.slice(0, 4).join('.') + '.00000000000000000000000000000000', nonce: p.nonce },
+    });
+    assert.equal(forged.status, 403);
+    assert.equal((await forged.json()).error, 'verification_failed');
+
+    const noPow = await post({ ...BASE, verify: { token: p.token, nonce: '' } });
+    assert.equal(noPow.status, 403);
+    assert.equal(net.calls.resend, null);
+  } finally {
+    net.restore();
+  }
+});
+
+test('预览同样要凭证，缺了直接 403', async () => {
+  const net = mockNet();
+  try {
+    const res = await preview({ ...BASE, verify: null });
+    assert.equal(res.status, 403);
+    assert.equal((await res.json()).error, 'verification_required');
+  } finally {
+    net.restore();
+  }
+});
+
+test('请求体超过 64KB → 413', async () => {
+  const res = await onRequestPost({
+    env: envOf(),
+    request: new Request(ORIGIN + '/api/deliver', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Origin: ORIGIN, 'Content-Length': '70000' },
+      body: JSON.stringify(BASE),
+    }),
+  });
+  assert.equal(res.status, 413);
+  assert.equal((await res.json()).error, 'payload_too_large');
+});
+
+test('邮件正文与纯文本都不出现「自动投递 / AUTO DELIVERY」', async () => {
+  const net = mockNet();
+  try {
+    const res = await post({ ...BASE, recipient: '王经理', jd: '岗位名称：Agent 工程师', note: '盼复' });
+    assert.equal(res.status, 201);
+    const sent = net.calls.resend.body;
+    for (const field of [sent.subject, sent.html, sent.text]) {
+      assert.ok(!/自动投递/.test(field), '不能出现「自动投递」');
+      assert.ok(!/AUTO\s*DELIVERY/i.test(field), '不能出现 AUTO DELIVERY');
+    }
+    assert.match(sent.subject, /^应聘 /);
+    assert.match(sent.html, /APPLICATION/);
+    assert.match(sent.html, /感谢您抽出时间阅读我的简历/);
+    assert.match(sent.html, /求职申请/);
+  } finally {
+    net.restore();
+  }
+});
+
+test('JD 与附言的换行穿过接口层仍保留（邮件里分段，不被压成一行）', async () => {
+  const net = mockNet();
+  try {
+    const res = await post({
+      ...BASE,
+      jd: '岗位名称：AI Agent 工程师\n岗位职责：\n1. 负责 Agent 应用开发',
+      note: '第一行\n第二行',
+    });
+    assert.equal(res.status, 201);
+    const html = net.calls.resend.body.html;
+    assert.match(html, /岗位名称：AI Agent 工程师<br>岗位职责：<br>1\. 负责 Agent 应用开发/);
+    assert.match(html, /第一行<br>第二行/);
+    assert.match(net.calls.resend.body.text, /岗位名称：AI Agent 工程师\n岗位职责：/);
   } finally {
     net.restore();
   }

@@ -11,26 +11,9 @@
 </head>
 <body>
 
-<!-- ── 登录 ── -->
-<section class="login" id="login" hidden>
-  <div class="login-card">
-    <p class="login-tag">PRIVATE CONSOLE</p>
-    <h1 class="login-title">后台登录</h1>
-    <p class="login-hint">只有站长本人能进。会话 12 小时，关浏览器即失效。</p>
-    <form id="loginForm" autocomplete="off">
-      <label class="field">
-        <span class="field-label">口令</span>
-        <input id="password" type="password" required autofocus autocomplete="current-password" placeholder="输入 ADMIN_PASSWORD">
-      </label>
-      <button class="btn btn-solid" type="submit" id="loginBtn">进入控制台</button>
-      <a class="btn btn-ghost login-oauth" id="oauthBtn" href="/api/auth/oauth">用 GitHub 账号登录 ↗</a>
-      <p class="login-error" id="loginError" role="alert"></p>
-    </form>
-    <p class="login-foot"><a href="https://chenpeisheng.cn" target="_blank" rel="noopener">← 返回公开站</a></p>
-  </div>
-</section>
-
-<!-- ── 控制台 ── -->
+<!-- ── 控制台 ──
+     登录已独立到 /login：本页所有路由由 functions/_middleware.js 守卫，
+     没有有效会话直接 302 到 /login?next=…，页面里不再有登录表单。 -->
 <main class="dash" id="dash" hidden>
   <header class="dash-head">
     <div class="brand">

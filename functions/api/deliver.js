@@ -14,7 +14,7 @@
 
    接口：
      POST /api/deliver { to, recipient?, name?, email?, note?, jd?, attachments?,
-                         fileNames?, fileOrder?, zip? }
+                         fileNames?, fileOrder?, zip?, verify }
        to           收件人邮箱，逗号 / 分号 / 空格分隔多个（最多 3 个）
        recipient    投递对象称呼（可选，如「张经理」；留空正文显示「您好」）
        name         投递人称呼（可选，如「张 HR / 某某公司」）
@@ -26,6 +26,8 @@
        fileOrder    证书 key 数组，决定附件顺序（未列出的排在后面）
        zip          {enabled:boolean, name?:string}；开启后邮件只附一个 ZIP，
                     内含 PDF 简历 + 已备好的证书，名字缺省按 年份_岗位_应聘材料_姓名.zip
+       verify       {token, nonce}，由 GET /api/challenge 签发并本地解出 PoW；
+                    缺失 / 过期 / 被篡改 / 换 IP 一律拒绝（防脚本直接刷发信）
      OPTIONS → 204
 
    环境变量（Cloudflare Pages → Settings → Variables）：
@@ -36,10 +38,14 @@
 
    绑定：SITE_KV（与留言墙共用；未绑定时跳过限额，不阻塞发信）
 
-   限额（KV，防被当成发垃圾邮件的跳板）：
-     每个收件人每日 2 封（deliver:to:<邮箱>:<yyyymmdd>）
-     每个 IP 每日 5 封（deliver:ip:<ip>:<yyyymmdd>）
-     全站每日 30 封（deliver:day:<yyyymmdd>）
+   防护（详见 functions/lib/guard.js）：
+     · 来源白名单：只接受本站 / 白名单来源的 Origin
+     · 签名凭证：必须先用 /api/challenge 取证并解出 PoW，凭证绑定 IP、15 分钟过期
+     · 限流（优先 D1 rate_limits，无 D1 退 KV）：
+         每 IP 每小时 3 封、每日 5 封
+         全站每小时 12 封、每日 30 封
+         每个收件人每日 2 封
+     · 请求体上限 64KB（JD 最长 4000 字，正常投递远低于此）
    ────────────────────────────────────────────────────────────────────── */
 
 import {
@@ -47,8 +53,13 @@ import {
   buildDeliveryEmail, buildSubject, defaultZipName,
 } from '../lib/deliver-content.js';
 import { createZip } from '../lib/zip.js';
+import {
+  allowedOrigins, corsHeaders, isAllowedOrigin, json,
+  certToken, dayKey, hourKey, ipTag, limit, tooLarge, verifyProof,
+} from '../lib/guard.js';
 
-const JSON_HEADERS = { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' };
+/* 预览接口与投递接口共用同一套来源 / CORS 规则，从这里再导出一次 */
+export { allowedOrigins, corsHeaders, isAllowedOrigin, json };
 
 const RESEND_URL = 'https://api.resend.com/emails';
 const DEFAULT_FROM = 'Portfolio Resume <onboarding@resend.dev>';
@@ -57,22 +68,12 @@ const MAX_NAME = 24;
 const MAX_NOTE = 500;
 const MAX_RECIPIENTS = 3;
 const TO_DAY_LIMIT = 2;
+const IP_HOUR_LIMIT = 3;
 const IP_DAY_LIMIT = 5;
+const HOUR_LIMIT = 12;
 const DAY_LIMIT = 30;
+const HOUR_TTL = 4200;
 const DAY_TTL = 172800;
-
-const DEFAULT_ORIGINS = [
-  'https://chenpeisheng.cn',
-  'https://shenge-work.pages.dev',
-  '*.shenge-work.pages.dev',
-  'http://localhost:8000',
-  'http://127.0.0.1:8000',
-  'http://localhost:8080',
-  'http://127.0.0.1:8080',
-  /* 本地联调服务器 scripts/dev-api-server.mjs 的默认端口，与 wall.js 保持一致 */
-  'http://localhost:8877',
-  'http://127.0.0.1:8877',
-];
 
 const MAX_RECIPIENT = 40;
 const MAX_JD = 4000;
@@ -93,42 +94,16 @@ function cleanFileName(raw, fallback, ext) {
   return s;
 }
 
-export function allowedOrigins(env) {
-  return String(env.ALLOWED_ORIGINS || DEFAULT_ORIGINS.join(','))
-    .split(',').map((s) => s.trim()).filter(Boolean);
-}
+/* 来源白名单 / CORS / JSON 响应统一由 functions/lib/guard.js 提供 */
 
-export function isAllowedOrigin(origin, allow) {
-  const o = String(origin || '').trim();
-  if (!o) return false;
-  const host = o.replace(/^https?:\/\//, '');
-  return allow.some((rule) => {
-    if (rule === o) return true;
-    if (rule.indexOf('*.') === 0) {
-      const suffix = rule.slice(1);
-      return host.length > suffix.length && host.slice(-suffix.length) === suffix;
-    }
-    return false;
-  });
-}
-
-export function corsHeaders(origin, allow) {
-  const acao = isAllowedOrigin(origin, allow) ? String(origin).trim() : '';
-  const h = {
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type',
-    'Access-Control-Max-Age': '86400',
-    Vary: 'Origin',
-  };
-  if (acao) h['Access-Control-Allow-Origin'] = acao;
-  return h;
-}
-
-export function json(body, extra, status) {
-  return new Response(JSON.stringify(body), {
-    status: status || 200,
-    headers: Object.assign({}, JSON_HEADERS, extra || {}),
-  });
+/* 多行文本清洗：保留换行（JD / 附言要靠它分段），其余控制字符照旧剔除 */
+function cleanMultiline(s, max) {
+  return String(s == null ? '' : s)
+    .replace(/\r\n?/g, '\n')
+    .replace(/[\u0000-\u0009\u000b-\u001f\u007f]/g, '')
+    .replace(/\n{3,}/g, '\n\n')
+    .replace(/^\s+|\s+$/g, '')
+    .slice(0, max);
 }
 
 function clean(s, max) {
@@ -138,22 +113,6 @@ function clean(s, max) {
     .slice(0, max);
 }
 
-function ipOf(request) {
-  const xff = request.headers.get('CF-Connecting-IP') || request.headers.get('X-Forwarded-For') || '';
-  return (xff.split(',')[0] || 'unknown').trim();
-}
-
-async function bump(kv, key, ttl) {
-  if (!kv) return null;
-  try {
-    const cur = Number(await kv.get(key)) || 0;
-    const next = cur + 1;
-    await kv.put(key, String(next), { expirationTtl: ttl });
-    return next;
-  } catch (e) {
-    return null;
-  }
-}
 
 /* 解析收件人：支持逗号 / 分号 / 空格分隔；去重、小写、逐个校验 */
 function parseRecipients(raw) {
@@ -182,11 +141,17 @@ function toBase64(buf) {
   return btoa(bin);
 }
 
-/* 从本站静态资源取一个附件字节；取不到返回 null（不阻塞发信） */
-async function fetchAttachmentBytes(request, path) {
+/* 从本站静态资源取一个附件字节；取不到返回 null（不阻塞发信）。
+   证书目录受中间件保护，服务端读取时必须带上签名头，否则会被当直连盗取拦掉。 */
+async function fetchAttachmentBytes(request, path, env) {
   try {
     const url = new URL(path, request.url);
-    const resp = await fetch(url);
+    const headers = {};
+    if (path.indexOf('/assets/resume/certificates/') === 0) {
+      const token = await certToken(env, path);
+      if (token) headers['X-Cert-Token'] = token;
+    }
+    const resp = await fetch(url, { headers });
     if (!resp.ok) return null;
     const buf = await resp.arrayBuffer();
     if (!buf.byteLength || buf.byteLength > MAX_ATTACH_BYTES) return null;
@@ -234,8 +199,8 @@ export function parseDelivery(body) {
     recipient: clean(body.recipient, MAX_RECIPIENT),
     name: clean(body.name, MAX_NAME),
     email: clean(body.email, 120).toLowerCase(),
-    note: clean(body.note, MAX_NOTE),
-    jd: clean(body.jd, MAX_JD),
+    note: cleanMultiline(body.note, MAX_NOTE),
+    jd: cleanMultiline(body.jd, MAX_JD),
     certs: parseCertKeys(body.attachments, body.fileOrder),
     fileNames,
     zipEnabled: !!zip.enabled,
@@ -252,15 +217,15 @@ export function parseDelivery(body) {
 
 /* 探测实际会随信附上的文件。withData=false 只取文件名，供预览使用（不转 base64）。
    开启 zip 时把 PDF + 已备好的证书打成一个包，邮件只挂这一个附件。 */
-export async function probeAttachments(request, d, withData = true) {
+export async function probeAttachments(request, d, withData = true, env) {
   const files = [];
   /* PDF 是固定附件，不在正文「另申请」清单里重复列一次 */
-  const pdfBytes = await fetchAttachmentBytes(request, RESUME_PDF_PATH);
+  const pdfBytes = await fetchAttachmentBytes(request, RESUME_PDF_PATH, env);
   if (pdfBytes) files.push({ name: RESUME_PDF_NAME, bytes: pdfBytes });
 
   for (const key of d.certs) {
     const slot = CERT_SLOTS[key];
-    const bytes = await fetchAttachmentBytes(request, slot.path);
+    const bytes = await fetchAttachmentBytes(request, slot.path, env);
     if (bytes) {
       const name = (d.fileNames && d.fileNames[key]) || slot.filename;
       files.push({ name, bytes });
@@ -302,6 +267,11 @@ export async function onRequestPost({ request, env }) {
   }
   const cors = corsHeaders(origin, allow);
 
+  /* 请求体上限：先看 Content-Length，别把超大 JSON 读进内存 */
+  if (tooLarge(request)) {
+    return json({ ok: false, error: 'payload_too_large', message: '提交内容过大，请精简后再试' }, cors, 413);
+  }
+
   /* Resend 未配置：引导前端走 mailto 兜底 */
   const apiKey = env.RESEND_API_KEY;
   if (!apiKey) {
@@ -310,30 +280,46 @@ export async function onRequestPost({ request, env }) {
 
   let body = {};
   try { body = await request.json(); } catch (e) { body = null; }
+  if (!body || typeof body !== 'object') {
+    return json({ ok: false, error: 'bad_request', message: '请求体不是合法 JSON' }, cors, 400);
+  }
+
+  /* 凭证校验：必须是本站在 15 分钟内签发、绑定当前 IP 且解出 PoW 的凭证 */
+  const proof = await verifyProof(env, request, body.verify, 'deliver');
+  if (!proof.ok) {
+    return json({
+      ok: false,
+      error: proof.error,
+      message: proof.error === 'verification_expired'
+        ? '验证已过期，请重新点击投递'
+        : '验证未通过，请刷新页面后重试',
+    }, cors, 403);
+  }
+
   const parsed = parseDelivery(body);
   if (parsed.error) return json({ ok: false, error: parsed.error, message: parsed.message }, cors, 400);
   const d = parsed.d;
 
-  /* 限额：每个收件人 / 每 IP / 全站（KV 未绑定则跳过，不阻塞发信） */
-  const kv = env.SITE_KV;
-  const today = new Date().toISOString().slice(0, 10);
-  for (const addr of d.to) {
-    const cnt = await bump(kv, 'deliver:to:' + addr + ':' + today, DAY_TTL);
-    if (cnt != null && cnt > TO_DAY_LIMIT) {
-      return json({ ok: false, error: 'rate_limited', message: '该邮箱今天已收到多封同样邮件，换个邮箱或明天再试' }, cors, 429);
-    }
-  }
-  const day = await bump(kv, 'deliver:day:' + today, DAY_TTL);
-  if (day != null && day > DAY_LIMIT) {
-    return json({ ok: false, error: 'rate_limited', message: '今日转发已达上限，请明日再试或直接邮件联系' }, cors, 429);
-  }
-  const ipCnt = await bump(kv, 'deliver:ip:' + ipOf(request) + ':' + today, DAY_TTL);
-  if (ipCnt != null && ipCnt > IP_DAY_LIMIT) {
-    return json({ ok: false, error: 'rate_limited', message: '你今天已转发多次，请直接邮件联系' }, cors, 429);
+  /* 限流：收件人 / IP（小时 + 日）/ 全站（小时 + 日），任一超限即拒 */
+  const iph = await ipTag(request, env, 12);
+  const hit = await limit(env, [].concat(
+    d.to.map((addr) => ({ bucket: 'deliver:to:' + addr, window: dayKey(), limit: TO_DAY_LIMIT, ttl: DAY_TTL })),
+    [
+      { bucket: 'deliver:ip:h:' + iph, window: hourKey(), limit: IP_HOUR_LIMIT, ttl: HOUR_TTL },
+      { bucket: 'deliver:ip:d:' + iph, window: dayKey(), limit: IP_DAY_LIMIT, ttl: DAY_TTL },
+      { bucket: 'deliver:h', window: hourKey(), limit: HOUR_LIMIT, ttl: HOUR_TTL },
+      { bucket: 'deliver:d', window: dayKey(), limit: DAY_LIMIT, ttl: DAY_TTL },
+    ],
+  ));
+  if (hit) {
+    let message = '今日转发已达上限，请明日再试或直接邮件联系';
+    if (hit.bucket.indexOf('deliver:to:') === 0) message = '该邮箱今天已收到多封同样邮件，换个邮箱或明天再试';
+    else if (hit.bucket.indexOf('deliver:ip:') === 0) message = '你今天已转发多次，请直接邮件联系';
+    return json({ ok: false, error: 'rate_limited', message }, cors, 429);
   }
 
   /* 附件：PDF 简历始终附上；勾选的证书文件缺失时标注「待补充」，不阻塞发信 */
-  const { attachments } = await probeAttachments(request, d);
+  const { attachments } = await probeAttachments(request, d, true, env);
 
   const mail = buildDeliveryEmail(d);
   const payload = {

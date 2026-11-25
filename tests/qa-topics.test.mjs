@@ -1,7 +1,7 @@
 /* 问题聚类：同义问法要合、不同话题不能串 */
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { normalize, bigrams, jaccard, cluster } from '../admin/lib/topics.js';
+import { normalize, bigrams, jaccard, cluster } from '../functions/lib/admin-topics.js';
 
 test('同义词归一：k8s / kubernetes 视为同一个词', () => {
   assert.match(normalize('他会 Kubernetes 吗'), /kubernetes/);

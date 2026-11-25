@@ -161,7 +161,11 @@ python3 -m http.server 8000
 
 按设备隔离的私密留言本：匿名访客写的内容只在这台设备可见，后端是 Cloudflare Pages Function + D1；正式站 `chenpeisheng.cn` 与 API 同源，旧 `github.io` 访问时自动走备用站 `pages.dev`。
 
-- **回复与评论**：站长在独立后台 `shenge-work-admin.pages.dev` 的「留言审核 → 回复」里写的内容，会直接贴到访客那条留言下面；访客也可以点留言下的「评论 / 追问」继续聊。两者同存 `wall_replies`（`author=owner|visitor`），依旧只对原设备可见。站长回复不改留言 id，靠 `GET /api/wall?peek=1` 的 `latestReply` 触发「站长回复了你」提示；访客追问会发邮件给站长，邮件里的「打开后台直接回复」用 `?focus=<留言 id>` 直达那一条。后台另有「待回复」筛选与统计卡。
+- **回复与评论**：站长在后台 [`chenpeisheng.cn/admin`](https://chenpeisheng.cn/admin) 的「留言审核 → 回复」里写的内容，会直接贴到访客那条留言下面；访客也可以点留言下的「评论 / 追问」继续聊。两者同存 `wall_replies`（`author=owner|visitor`），依旧只对原设备可见。站长回复不改留言 id，靠 `GET /api/wall?peek=1` 的 `latestReply` 触发「站长回复了你」提示；访客追问会发邮件给站长，邮件里的「打开后台直接回复」用 `?focus=<留言 id>` 直达那一条。后台另有「待回复」筛选与统计卡。
+
+后台入口只有 `/admin`（控制台）与 `/login`（登录页）。`/admin` 下所有路由都由 `functions/_middleware.js` 守卫：没有有效会话一律 302 到 `/login?next=…`，静态资源则直接 404，不会把后台 HTML 漏给未登录的人。接口层 `/api/admin/**` 另有 `requireAdmin`，两层互不依赖。
+
+登录不需要密码：微信扫码（开放平台）或微信内授权（公众号），以及任意邮箱的验证码登录（Gmail / QQ / 163 都行，但必须在 `ADMIN_EMAILS` 白名单里）。会话是 HMAC 签名的 HttpOnly Cookie，12 小时过期。配置项见仓库根 `wrangler.toml` 顶部注释；邮箱验证码表由 `db/migrations/2026-11-25-admin-email-login.sql` 建，上线前先执行一次。
 
 - **人机校验**：表单底部接 Cloudflare Turnstile（widget `shenge-work-portfolio`）。校验通过走正常额度（每 IP 10 分钟 3 条、每日 50 条）；未通过或脚本加载失败降到严格档（每 IP 每小时 1 条、每日 10 条）——**脚本被墙也不影响留言，只是额度收紧**。`GET /api/wall` 的 `turnstile` 字段可自查是否已配置密钥。
 - **线上自检**：`./scripts/wall-check.sh`（默认只读）。2026-11-19 迁到 D1（`portfolio-db`）后 11/11 全过；绑定/环境变量变更需重新部署才生效，见 [docs/resume-delivery.md](docs/resume-delivery.md) ②。

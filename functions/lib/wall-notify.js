@@ -20,7 +20,8 @@
 const RESEND_URL = 'https://api.resend.com/emails';
 const DEFAULT_TO = 'hi@chenpeisheng.cn';
 const DEFAULT_FROM = 'Portfolio Wall <onboarding@resend.dev>';
-const ADMIN_URL = 'https://shenge-work-admin.pages.dev';
+/* 后台已并入主站：/admin 由 functions/_middleware.js 守卫，未登录会跳 /login */
+const ADMIN_URL = 'https://chenpeisheng.cn/admin';
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
 /* 邮件正文是 HTML：访客可控的 name / text 必须转义，正文换行用 pre-wrap 保留 */

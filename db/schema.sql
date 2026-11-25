@@ -159,3 +159,14 @@ CREATE TABLE IF NOT EXISTS verify_access_requests (
   approved_at  INTEGER
 );
 CREATE INDEX IF NOT EXISTS idx_verify_access_status ON verify_access_requests (status, created_at);
+
+-- ══ 后台免密登录（2026-11-25）══════════════════════════════════════════════
+-- 邮箱验证码登录：只存 HMAC 后的码，不存明文；一行一个邮箱，重新发送即覆盖。
+-- attempts 用于「同一验证码最多试 5 次」，防暴力猜 6 位数字。
+CREATE TABLE IF NOT EXISTS admin_email_codes (
+  email      TEXT PRIMARY KEY,
+  code_hash  TEXT NOT NULL,
+  expires_at INTEGER NOT NULL,
+  attempts   INTEGER NOT NULL DEFAULT 0,
+  sent_at    INTEGER NOT NULL
+);

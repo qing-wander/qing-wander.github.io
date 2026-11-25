@@ -1,0 +1,17 @@
+{
+  "rules": [
+    {
+      "allowed": {
+        "origins": [
+          "https://chenpeisheng.cn",
+          "https://www.chenpeisheng.cn",
+          "https://shenge-work.pages.dev",
+          "http://localhost:8080",
+          "http://localhost:8000"
+        ],
+        "methods": ["GET", "HEAD"]
+      },
+      "maxAgeSeconds": 3600
+    }
+  ]
+}

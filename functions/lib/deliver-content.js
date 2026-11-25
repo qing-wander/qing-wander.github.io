@@ -111,9 +111,13 @@ export function greetingOf(recipient) {
   return who ? esc(who) + '，您好' : '您好';
 }
 
+/* 主题写法与真人投递一致：应聘 <岗位> · 姓名（致 收件人）。
+   刻意不出现「自动投递 / 系统发送」之类字样，收件人看到的是一封普通求职邮件。 */
 export function buildSubject(d) {
   const who = plain(d.recipient).slice(0, 40);
-  return '陈培胜 · AI Agent 工程师 · 简历自动投递' + (who ? '（致 ' + who + '）' : '');
+  const g = resumeDigest();
+  const role = String(g.role).split('/')[0].trim() || 'AI Agent 工程师';
+  return '应聘 ' + role + ' · ' + g.name + (who ? '（致 ' + who + '）' : '');
 }
 
 function row(k, v) {
@@ -133,7 +137,7 @@ export function buildDeliveryEmail(d) {
   const jdBlock = jd
     ? '<tr><td style="padding:14px 0 0;">' +
       '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:3px solid #141311;background:#FFFDF7;">' +
-      '<tr><td style="padding:11px 16px;background:#2B4BE0;color:#FFFCF4;font:bold 11px/1 \'Courier New\',monospace;letter-spacing:.12em;">TARGET JD / 本次投递岗位</td></tr>' +
+      '<tr><td style="padding:11px 16px;background:#2B4BE0;color:#FFFCF4;font:bold 11px/1 \'Courier New\',monospace;letter-spacing:.12em;">TARGET JD / 应聘岗位</td></tr>' +
       '<tr><td style="padding:14px 16px;">' +
       '<details>' +
       '<summary style="cursor:pointer;font:bold 13px/1.6 \'PingFang SC\',\'Microsoft YaHei\',sans-serif;color:#2B4BE0;">▸ 展开 / 收起岗位 JD（完整描述）</summary>' +
@@ -144,7 +148,8 @@ export function buildDeliveryEmail(d) {
       '</td></tr></table></td></tr>'
     : '';
 
-  const note = plain(d.note).slice(0, 500);
+  /* 附言同样保留换行：plain() 会把换行压成空格，分段就没了 */
+  const note = plainLines(d.note, 500);
   const noteBlock = note
     ? '<tr><td style="padding:14px 0 0;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0">' +
       '<tr><td colspan="2" style="padding:14px 16px;background:#FFFCF4;border:3px solid #141311;font:14px/1.8 \'PingFang SC\',\'Microsoft YaHei\',sans-serif;color:#141311;">' +
@@ -181,18 +186,18 @@ export function buildDeliveryEmail(d) {
 
   const html = '' +
 '<!DOCTYPE html><html><body style="margin:0;padding:0;background:#F3EEE2;">' +
-'<div style="display:none;max-height:0;overflow:hidden;">陈培胜的简历自动投递：AI Agent 工程师，5 年经验，附 PDF 简历与在线简历链接。</div>' +
+'<div style="display:none;max-height:0;overflow:hidden;">' + esc(digest.name) + '应聘 ' + esc(String(digest.role).split('/')[0].trim()) + '：5 年研发，附 PDF 简历与在线简历。' + '</div>' +
 '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F3EEE2;padding:28px 12px;"><tr><td align="center">' +
 '<table role="presentation" width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;">' +
 
 '<tr><td style="background:#141311;color:#FFFCF4;padding:16px 18px;border:4px solid #141311;">' +
-'<span style="font:bold 11px/1 \'Courier New\',monospace;letter-spacing:.18em;color:#FF5A1E;">AUTO&nbsp;DELIVERY&nbsp;/&nbsp;自动投递</span>' +
+'<span style="font:bold 11px/1 \'Courier New\',monospace;letter-spacing:.18em;color:#FF5A1E;">APPLICATION&nbsp;/&nbsp;求职申请</span>' +
 '<div style="font:900 22px/1.2 \'PingFang SC\',\'Microsoft YaHei\',sans-serif;margin-top:7px;">' + esc(digest.name) + ' · ' + esc(digest.role) + '</div>' +
 '<div style="font:13px/1.6 \'PingFang SC\',\'Microsoft YaHei\',sans-serif;color:#CFC7B6;margin-top:4px;">5 年研发 · Agent 开发 / AI 工程化 / 企业 AI 基建</div>' +
 '</td></tr>' +
 
 '<tr><td style="border:4px solid #141311;border-top:none;background:#FFFCF4;padding:20px 22px 12px;">' +
-'<p style="margin:0 0 14px;font:14px/1.9 \'PingFang SC\',\'Microsoft YaHei\',sans-serif;color:#141311;"><b>' + greeting + '：</b><br>这是一封简历自动投递邮件。我整理了简历要点放在下方，完整内容可看在线简历或打开随信 PDF 附件。</p>' +
+'<p style="margin:0 0 14px;font:14px/1.9 \'PingFang SC\',\'Microsoft YaHei\',sans-serif;color:#141311;"><b>' + greeting + '：</b><br>感谢您抽出时间阅读我的简历。下面是我与这个岗位相关的要点，完整内容可以看在线简历，也可以打开随信 PDF。</p>' +
 '<table role="presentation" width="100%" cellpadding="0" cellspacing="0">' + senderRows + '</table>' +
 '</td></tr>' +
 
@@ -221,14 +226,14 @@ attachmentLine +
 '</td></tr>' +
 
 '<tr><td style="padding:16px 4px 0;text-align:center;">' +
-'<span style="font:11px/1.6 \'Courier New\',monospace;color:#4A463F;">来自 chenpeisheng.cn 简历自动投递 · ' + time + '</span>' +
+'<span style="font:11px/1.6 \'Courier New\',monospace;color:#4A463F;">' + esc(digest.name) + ' · chenpeisheng.cn · ' + time + '</span>' +
 '</td></tr>' +
 
 '</table></td></tr></table></body></html>';
 
   const textLines = [
     greeting + '：',
-    '这是一封简历自动投递邮件。',
+    '感谢您抽出时间阅读我的简历。',
     '',
     digest.name + ' · ' + digest.role,
     digest.summary,

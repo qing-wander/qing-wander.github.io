@@ -1,5 +1,89 @@
+# chenpeisheng.cn · robots.txt
+# 公开页面欢迎搜索引擎收录（见 sitemap）；接口、数据文件、证书、源码与后台一律不开放抓取。
+
 User-agent: *
 Allow: /
+Disallow: /api/
+Disallow: /admin
+Disallow: /login
+Disallow: /data/
 Disallow: /docs/
+Disallow: /knowledge/
+Disallow: /rag/
+Disallow: /functions/
+Disallow: /db/
+Disallow: /scripts/
+Disallow: /assets/resume/certificates/
+
+# ── 明确拒绝 AI 训练 / 语料采集爬虫（robots 只是声明，边缘中间件会同步拦截） ──
+User-agent: GPTBot
+Disallow: /
+
+User-agent: ChatGPT-User
+Disallow: /
+
+User-agent: OAI-SearchBot
+Disallow: /
+
+User-agent: CCBot
+Disallow: /
+
+User-agent: ClaudeBot
+Disallow: /
+
+User-agent: Claude-Web
+Disallow: /
+
+User-agent: Google-Extended
+Disallow: /
+
+User-agent: Bytespider
+Disallow: /
+
+User-agent: PetalBot
+Disallow: /
+
+User-agent: Amazonbot
+Disallow: /
+
+User-agent: Applebot-Extended
+Disallow: /
+
+User-agent: cohere-ai
+Disallow: /
+
+User-agent: Diffbot
+Disallow: /
+
+User-agent: FacebookBot
+Disallow: /
+
+User-agent: ImagesiftBot
+Disallow: /
+
+User-agent: Omgilibot
+Disallow: /
+
+User-agent: YouBot
+Disallow: /
+
+# ── 商业 SEO / 数据转售类爬虫 ──
+User-agent: AhrefsBot
+Disallow: /
+
+User-agent: SemrushBot
+Disallow: /
+
+User-agent: MJ12bot
+Disallow: /
+
+User-agent: DotBot
+Disallow: /
+
+User-agent: BLEXBot
+Disallow: /
+
+User-agent: DataForSeoBot
+Disallow: /
 
 Sitemap: https://chenpeisheng.cn/sitemap.xml

@@ -15,6 +15,7 @@ import { onRequestPost as deliverPreviewPost, onRequestOptions as deliverPreview
 import { onRequestGet as socialGet, onRequestPost as socialPost, onRequestOptions as socialOpt } from '../functions/api/company-social.js';
 import { onRequestGet as verifyAccessGet, onRequestPost as verifyAccessPost, onRequestOptions as verifyAccessOpt } from '../functions/api/verify-access.js';
 import { onRequestGet as verifyApproveGet, onRequestPost as verifyApprovePost } from '../functions/api/verify-access-approve.js';
+import { onRequestGet as challengeGet, onRequestOptions as challengeOpt } from '../functions/api/challenge.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const PORT = Number(process.env.PORT || 8877);
@@ -156,6 +157,10 @@ http.createServer(async (req, res) => {
       const r = req.method === 'POST' ? await handler(visitsPost, req)
         : req.method === 'GET' ? await handler(visitsGet, req)
         : await handler(visitsOpt, req);
+      return send(res, r);
+    }
+    if (p === '/api/challenge') {
+      const r = req.method === 'GET' ? await handler(challengeGet, req) : await handler(challengeOpt, req);
       return send(res, r);
     }
     if (p === '/api/deliver') {

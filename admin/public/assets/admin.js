@@ -51,7 +51,7 @@
     return fetch(path, Object.assign({}, opts, { headers: headers, credentials: 'include' }))
       .then(function (r) {
         if (r.status === 401) {
-          showLogin();
+          toLogin();
           throw new Error('unauthorized');
         }
         return r.json().catch(function () { return {}; }).then(function (d) {
@@ -65,44 +65,18 @@
       });
   }
 
-  /* ── 登录 ── */
-  function showLogin() {
-    $('login').hidden = false;
-    $('dash').hidden = true;
-    var pw = $('password');
-    if (pw) setTimeout(function () { pw.focus(); }, 30);
+  /* ── 登录 ──
+     登录页独立在 /login，本页由服务端中间件守卫：没会话直接 302 过去。
+     这里只保留兜底——接口返回 401（会话过期 / 被清 cookie）时再跳一次。 */
+  function toLogin() {
+    var next = location.pathname + location.search;
+    location.replace('/login?next=' + encodeURIComponent(next));
   }
-
-  function showDash() {
-    $('login').hidden = true;
-    $('dash').hidden = false;
-  }
-
-  $('loginForm').addEventListener('submit', function (e) {
-    e.preventDefault();
-    var btn = $('loginBtn');
-    var err = $('loginError');
-    err.textContent = '';
-    btn.disabled = true;
-    api('/api/auth/login', { method: 'POST', body: JSON.stringify({ password: $('password').value }) })
-      .then(function () {
-        $('password').value = '';
-        showDash();
-        loadAll();
-        toast('已登录');
-      })
-      .catch(function (e) {
-        err.textContent = e.message === 'bad_password' ? '口令不对' :
-          (e.status === 429 ? '尝试太频繁，15 分钟后再试' : (e.message || '登录失败'));
-      })
-      .then(function () { btn.disabled = false; });
-  });
 
   $('logoutBtn').addEventListener('click', function () {
-    api('/api/auth/logout', { method: 'POST' }).then(function () {
-      showLogin();
-      toast('已退出');
-    }).catch(function () { showLogin(); });
+    api('/api/admin/auth/logout', { method: 'POST' }).then(function () {
+      location.replace('/login?logout=1');
+    }).catch(function () { location.replace('/login'); });
   });
 
   $('refreshBtn').addEventListener('click', function () {
@@ -112,7 +86,7 @@
 
   /* ── 概览 ── */
   function loadStats() {
-    return api('/api/stats').then(function (d) {
+    return api('/api/admin/stats').then(function (d) {
       var s = d.stats || {};
       $('stPv').textContent = s.pv == null ? '—' : s.pv;
       $('stUv').textContent = s.uv == null ? '—' : s.uv;
@@ -129,7 +103,7 @@
   /* ── 设备台账 ── */
   function loadDevices() {
     var q = state.dev.q ? '&q=' + encodeURIComponent(state.dev.q) : '';
-    return api('/api/devices?limit=' + state.dev.limit + '&offset=' + state.dev.offset + q).then(function (d) {
+    return api('/api/admin/devices?limit=' + state.dev.limit + '&offset=' + state.dev.offset + q).then(function (d) {
       state.dev.total = d.total || 0;
       state.dev.legacy = d.legacyMessages || 0;
       var rows = d.devices || [];
@@ -226,7 +200,7 @@
     if (state.msg.focus) p.push('focus=' + encodeURIComponent(state.msg.focus));
     p.push('limit=' + state.msg.limit);
     p.push('offset=' + state.msg.offset);
-    return api('/api/messages?' + p.join('&')).then(function (d) {
+    return api('/api/admin/messages?' + p.join('&')).then(function (d) {
       state.msg.total = d.total || 0;
       var rows = d.messages || [];
       state.msg.replies = {};
@@ -288,7 +262,7 @@
     }
     var blocked = b.getAttribute('data-blocked') === '1';
     b.disabled = true;
-    api('/api/devices/block', { method: 'POST', body: JSON.stringify({ device_hash: hash, blocked: blocked }) })
+    api('/api/admin/devices/block', { method: 'POST', body: JSON.stringify({ device_hash: hash, blocked: blocked }) })
       .then(function () {
         toast(blocked ? '已拉黑这台设备' : '已解封');
         loadDevices(); loadStats();
@@ -305,7 +279,7 @@
       var id = b.getAttribute('data-id');
       var status = b.getAttribute('data-status');
       b.disabled = true;
-      api('/api/messages/status', { method: 'POST', body: JSON.stringify({ id: id, status: status }) })
+      api('/api/admin/messages/status', { method: 'POST', body: JSON.stringify({ id: id, status: status }) })
         .then(function () {
           toast(status === 'hidden' ? '已隐藏，公开端看不到' : '已恢复公开');
           loadMessages(); loadStats();
@@ -332,7 +306,7 @@
       if (Array.from(text).length < 2) { toast('再多写两个字吧（至少 2 个字）', true); input.focus(); return; }
       b.disabled = true;
       b.textContent = '发送中…';
-      api('/api/messages/reply', { method: 'POST', body: JSON.stringify({ messageId: msgId, text: text }) })
+      api('/api/admin/messages/reply', { method: 'POST', body: JSON.stringify({ messageId: msgId, text: text }) })
         .then(function (d) {
           state.msg.replies[msgId] = d.replies || [];
           state.msg.open = msgId;
@@ -350,7 +324,7 @@
       var rid = b.getAttribute('data-id');
       var forMsg = b.getAttribute('data-msg');
       b.disabled = true;
-      api('/api/messages/reply', { method: 'DELETE', body: JSON.stringify({ id: rid }) })
+      api('/api/admin/messages/reply', { method: 'DELETE', body: JSON.stringify({ id: rid }) })
         .then(function () {
           toast('已删除这条回复');
           state.msg.open = forMsg;
@@ -373,7 +347,7 @@
   /* ── 标签页 / 筛选 / 分页 ── */
   /* ── 问答埋点看板 ── */
   function loadQa() {
-    return api('/api/qa').then(function (d) {
+    return api('/api/admin/qa').then(function (d) {
       var t = d.totals || {};
       $('qaTotal').textContent = t.total == null ? '—' : t.total;
       $('qaLast7').textContent = t.last7 == null ? '—' : t.last7;
@@ -391,7 +365,7 @@
         return '<li><span class="qa-q mono">' + esc(r.id) + '</span><span class="qa-n">' + r.n + ' 次</span></li>';
       }).join('') : '<li class="empty">还没有命中记录</li>';
 
-      api('/api/qa/trend?days=14').then(function (d2) {
+      api('/api/admin/qa/trend?days=14').then(function (d2) {
         var series = (d2 && d2.series) || [];
         var max = Math.max.apply(null, series.map(function (x) { return x.total; }).concat([1]));
         $('qaTrend').innerHTML = series.length ? series.map(function (x) {
@@ -408,7 +382,7 @@
         }).join('') : '<span class="empty">还没有数据</span>';
       }).catch(function () { $('qaTrend').innerHTML = '<span class="empty">趋势接口不可用</span>'; });
 
-      api('/api/qa/topics?limit=200').then(function (t) {
+      api('/api/admin/qa/topics?limit=200').then(function (t) {
         var topics = (t && t.topics) || [];
         $('qaTopics').innerHTML = topics.length ? topics.map(function (x) {
           var badge = x.empty_rate >= 50 && x.count >= 2
@@ -444,7 +418,7 @@
 
   /* ── 模型与提示词配置 ── */
   function loadConfig() {
-    return api('/api/config').then(function (d) {
+    return api('/api/admin/config').then(function (d) {
       var mods = d.modules || [];
       $('cfgList').innerHTML = mods.map(function (m) {
         return '<article class="cfg-card" data-key="' + esc(m.key) + '">' +
@@ -468,7 +442,7 @@
     var model = card.querySelector('[data-field="model"]').value.trim();
     var prompt = card.querySelector('[data-field="prompt"]').value.trim();
     b.disabled = true;
-    api('/api/config', { method: 'POST', body: JSON.stringify({ key: key, model: model, prompt: prompt }) })
+    api('/api/admin/config', { method: 'POST', body: JSON.stringify({ key: key, model: model, prompt: prompt }) })
       .then(function () {
         toast('已保存：' + key);
         card.querySelector('[data-role="meta"]').textContent = '刚保存';
@@ -479,7 +453,7 @@
 
   /* ── 站点默认主题（每日自动轮换已暂停，留空 = 默认橙色 ARCHIVE）── */
   function loadTheme() {
-    return api('/api/theme').then(function (d) {
+    return api('/api/admin/theme').then(function (d) {
       var cur = d.theme || '';
       $('themeCur').textContent = cur ? cur : '默认橙色（ARCHIVE）';
       var list = d.themes || [];
@@ -496,7 +470,7 @@
     var b = e.target.closest('button[data-theme-id]');
     if (!b) return;
     var theme = b.getAttribute('data-theme-id');
-    api('/api/theme', { method: 'POST', body: JSON.stringify({ theme: theme }) })
+    api('/api/admin/theme', { method: 'POST', body: JSON.stringify({ theme: theme }) })
       .then(function () {
         toast(theme ? '已切到：' + theme : '已恢复默认橙色（ARCHIVE）');
         loadTheme();
@@ -549,7 +523,7 @@
     $('variantBtn').disabled = true;
     $('variantMeta').textContent = '生成中…（检索 + 选材 + 渲染）';
     var t0 = Date.now();
-    api('/api/variant', { method: 'POST', body: JSON.stringify({ jd: jd, rewrite: $('variantRewrite').checked }) })
+    api('/api/admin/variant', { method: 'POST', body: JSON.stringify({ jd: jd, rewrite: $('variantRewrite').checked }) })
       .then(function (d) {
         variantHtml = d.html || '';
         var s = d.stats || {};
@@ -641,7 +615,7 @@
   });
 
   $('exportBtn').addEventListener('click', function () {
-    location.href = '/api/export';
+    location.href = '/api/admin/export';
   });
 
   function loadAll() {
@@ -652,25 +626,8 @@
     else if (state.tab === 'config') { loadTheme(); loadConfig(); }
   }
 
-  /* ── 启动 ── */
-  /* GitHub 登录回跳会带 ?login=xxx，把失败原因说人话（比静默回到登录页好排查） */
-  (function () {
-    var code = new URLSearchParams(location.search).get('login');
-    if (!code) return;
-    var map = {
-      not_allowed: '这个 GitHub 账号不在放行名单里（ADMIN_GITHUB_USERS）',
-      bad_state: '登录状态校验失败，请重试',
-      not_configured: '后台还没配 GITHUB_CLIENT_ID / SECRET',
-      token_failed: 'GitHub 换 token 失败，检查 client secret',
-      access_denied: '你取消了 GitHub 授权',
-      no_code: 'GitHub 没有回传 code',
-      exception: '登录过程出错，稍后重试',
-    };
-    var el = $('loginError');
-    if (el) el.textContent = map[code] || ('登录失败：' + code);
-    history.replaceState(null, '', '/');
-  })();
-
+  /* ── 启动 ──
+     服务端已确认登录态，直接渲染；me 只作二次保险（例如 cookie 刚好过期）。 */
   /* 邮件里的「打开后台直接回复」带 ?focus=<留言 id>：
      跳过设备台账，直接切到留言审核、只加载这一条并自动展开回复面板。 */
   var focusId = new URLSearchParams(location.search).get('focus') || '';
@@ -680,16 +637,12 @@
     $('msgStatus').value = '';
   }
 
-  api('/api/auth/me').then(function (d) {
-    if (d.authed) {
-      showDash();
-      if (focusId) {
-        state.tab = 'messages';
-        switchTab('messages');  /* 内部 loadMessages 会带 focus 并展开面板 */
-        loadStats();
-      } else {
-        loadAll();
-      }
-    } else { showLogin(); }
-  }).catch(function () { showLogin(); });
+  $('dash').hidden = false;
+  if (focusId) {
+    state.tab = 'messages';
+    switchTab('messages');   /* 内部 loadMessages 会带 focus 并展开面板 */
+    loadStats();
+  } else {
+    loadAll();
+  }
 })();

@@ -34,10 +34,21 @@ on:
       - 'assets/resume/**'
       - 'functions/api/deliver.js'
       - 'functions/api/deliver-preview.js'
+      - 'functions/api/challenge.js'
+      - 'functions/_middleware.js'
       - 'functions/lib/deliver-content.js'
+      - 'functions/lib/guard.js'
       - 'functions/lib/zip.js'
+      - 'admin/public/**'
+      - 'functions/api/admin/**'
+      - 'functions/lib/admin-auth.js'
+      - 'functions/lib/admin-topics.js'
+      - 'tests/admin-routes.test.mjs'
+      - 'robots.txt'
       - 'tests/deliver.test.mjs'
       - 'tests/zip.test.mjs'
+      - 'tests/security-guard.test.mjs'
+      - 'tests/middleware-security.test.mjs'
       - 'data/work-details.json'
       - 'data/people.json'
       - 'scripts/sync_people.py'
@@ -63,10 +74,21 @@ on:
       - 'assets/resume/**'
       - 'functions/api/deliver.js'
       - 'functions/api/deliver-preview.js'
+      - 'functions/api/challenge.js'
+      - 'functions/_middleware.js'
       - 'functions/lib/deliver-content.js'
+      - 'functions/lib/guard.js'
       - 'functions/lib/zip.js'
+      - 'admin/public/**'
+      - 'functions/api/admin/**'
+      - 'functions/lib/admin-auth.js'
+      - 'functions/lib/admin-topics.js'
+      - 'tests/admin-routes.test.mjs'
+      - 'robots.txt'
       - 'tests/deliver.test.mjs'
       - 'tests/zip.test.mjs'
+      - 'tests/security-guard.test.mjs'
+      - 'tests/middleware-security.test.mjs'
       - 'data/work-details.json'
       - 'data/people.json'
       - 'scripts/sync_people.py'
@@ -132,3 +154,7 @@ jobs:
           python3 scripts/sync_site_data.py --check
           python3 scripts/sync_company_profiles.py --check
           python3 scripts/sync_people.py --check
+
+      # 含投递凭证、限流、防爬虫中间件的回归用例
+      - name: 单元测试
+        run: node --test tests/*.test.mjs

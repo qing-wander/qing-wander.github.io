@@ -897,7 +897,7 @@ body.pv-open { overflow: hidden; }
    · API key 只在 Cloudflare 环境变量里，前端永不接触；
    · file:// 、函数未配置（503）或域名未验证（recipient_not_verified）→ 自动展示 mailto 兜底；
    · 发送中防重复点击；成功后关窗 + 提示。 */
-var DL_STATE = { sending: false };
+var DL_STATE = { sending: false, proof: null, proofExp: 0 };
 var DL_EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 var DL_DEFAULTS = { name: '陈培胜', email: 'hi@chenpeisheng.cn' };
 var DL_JD_TEMPLATE = [
@@ -1025,6 +1025,8 @@ function openDeliver() {
   dlSyncAttDefaults(false);
   dlRefreshAttRows();
   dlSyncZipName(false);
+  /* 先悄悄取一张投递凭证，用户填表时基本已经算好；失败就等提交时再取 */
+  dlEnsureProof(false);
   setTimeout(function () { document.getElementById('dlRecipient').focus(); }, 60);
 }
 function closeDeliver() {
@@ -1088,7 +1090,7 @@ function buildMailtoLines() {
   var note = document.getElementById('dlNote').value.trim();
   var lines = [
     (recipient ? recipient + '，您好：' : '您好：'),
-    '这是一封简历自动投递邮件。',
+    '感谢您抽出时间阅读我的简历。',
     '',
     '简历地址：https://chenpeisheng.cn/resume.html',
     '备用地址：https://shenge-work.pages.dev/resume.html',
@@ -1120,7 +1122,7 @@ function buildMailtoLines() {
 function buildMailto() {
   var to = dlRecipients();
   var recipient = document.getElementById('dlRecipient').value.trim();
-  var subject = '陈培胜 · AI Agent 工程师 · 简历自动投递' + (recipient ? '（致 ' + recipient + '）' : '');
+  var subject = '应聘 AI Agent 工程师 · 陈培胜' + (recipient ? '（致 ' + recipient + '）' : '');
   return 'mailto:' + encodeURIComponent(to.join(',')) + '?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(buildMailtoLines().join('\n'));
 }
 
@@ -1147,6 +1149,58 @@ function apiFetch(path, opts) {
     }, function () { return next(); });
   }
   return next();
+}
+
+/* ── 投递凭证：打开弹窗先取证，本地解出工作量证明（PoW），POST 时一并提交 ──
+   目的：只有真正执行 JS 的页面才拿得到有效凭证，脚本直接 POST 会被 403 拒掉；
+   凭证绑定当前 IP、15 分钟过期，换网络或超时会自动重取一次。 */
+function dlSolveProof(ch) {
+  var diff = Number(ch.difficulty) || 0;
+  var token = ch.token;
+  var out = { token: token, nonce: '', expiresAt: ch.expiresAt || 0 };
+  if (!diff || !window.crypto || !window.crypto.subtle || !window.TextEncoder) return Promise.resolve(out);
+  var prefix = new Array(diff + 1).join('0');
+  var enc = new TextEncoder();
+  function hex(buf) {
+    var b = new Uint8Array(buf), s = '';
+    for (var i = 0; i < b.length; i++) s += ('0' + b[i].toString(16)).slice(-2);
+    return s;
+  }
+  function attempt(i) {
+    if (i > 400000) return Promise.resolve(out);
+    var nonce = i.toString(36);
+    return crypto.subtle.digest('SHA-256', enc.encode(token + ':' + nonce)).then(function (buf) {
+      if (hex(buf).indexOf(prefix) === 0) { out.nonce = nonce; return out; }
+      return attempt(i + 1);
+    });
+  }
+  return attempt(0);
+}
+function dlFetchProof() {
+  return apiFetch('/api/challenge', {
+    method: 'GET',
+    headers: { 'Accept': 'application/json' },
+    credentials: 'omit',
+    cache: 'no-store'
+  }).then(function (res) {
+    if (!res.ok || !res.body || !res.body.ok || !res.body.token) return null;
+    return dlSolveProof(res.body);
+  }, function () { return null; });
+}
+function dlEnsureProof(force) {
+  if (!force && DL_STATE.proof && Date.now() < DL_STATE.proofExp - 60000) {
+    return Promise.resolve(DL_STATE.proof);
+  }
+  return dlFetchProof().then(function (p) {
+    if (p) {
+      DL_STATE.proof = p;
+      DL_STATE.proofExp = p.expiresAt || (Date.now() + 600000);
+    }
+    return p;
+  });
+}
+function dlProofField(p) {
+  return p ? { verify: { token: p.token, nonce: p.nonce } } : {};
 }
 
 /* ── 发送前真实预览：先拿服务端用同一套逻辑生成的邮件，确认后才投递 ── */
@@ -1185,6 +1239,8 @@ function openPreview(payload) {
   DL_STATE.payload = payload;
   var frame = document.getElementById('dlpFrame');
   var local = document.getElementById('dlpLocal');
+  var tip = document.getElementById('dlTip');
+  if (tip) { tip.textContent = ''; tip.style.color = ''; }
   frame.hidden = false;
   local.hidden = true;
   frame.removeAttribute('srcdoc');
@@ -1210,6 +1266,14 @@ function openPreview(payload) {
         '<br><b>附件：</b>' + dlHtmlText(att) + dlHtmlText(pend) +
         (d.replyTo ? '<br><b>回复地址：</b>' + dlHtmlText(d.replyTo) : '');
       frame.srcdoc = d.html;
+    } else if (res.body && String(res.body.error || '').indexOf('verification_') === 0 && !DL_STATE.previewRetried) {
+      /* 凭证过期或 IP 变了：重取一次再预览，不让用户看到失败 */
+      DL_STATE.previewRetried = true;
+      dlEnsureProof(true).then(function (proof) {
+        if (!proof) { showLocalPreview('验证未通过，请刷新页面后重试'); return; }
+        var again = Object.assign({}, payload, { verify: { token: proof.token, nonce: proof.nonce } });
+        openPreview(again);
+      });
     } else {
       showLocalPreview((res.body && res.body.message) || '服务未返回预览');
     }
@@ -1238,16 +1302,22 @@ document.getElementById('dlForm').addEventListener('submit', function (e) {
   if (to.length > 3) { fail('一次最多发给 3 个收件人，请减少一些', 'dlTo'); return; }
   if (bad.length) { fail('收件人邮箱格式不正确：' + bad[0], 'dlTo'); return; }
   if (email && !DL_EMAIL_RE.test(email)) { fail('你的邮箱格式不正确（可留空）', 'dlEmail'); return; }
-  tip.textContent = '邮件由系统发送，含 PDF 简历附件与在线简历入口';
+  tip.textContent = '正在生成邮件预览…';
   tip.style.color = '';
   /* 不再直接发送：先展示服务端生成的真实邮件，确认后才投递 */
-  openPreview(dlPayload());
+  dlEnsureProof(false).then(function (proof) {
+    var payload = dlPayload();
+    var extra = dlProofField(proof);
+    if (extra.verify) payload.verify = extra.verify;
+    openPreview(payload);
+  });
 });
 
-function sendDelivery(payload) {
+function sendDelivery(payload, isRetry) {
   var tip = document.getElementById('dlTip');
   var btn = document.getElementById('dlSend');
   var to = String(payload.to || '').split(/[,;，；\s]+/).filter(Boolean);
+  var retry = false;
   function fail(msg) { tip.textContent = msg; tip.style.color = '#C62828'; }
   function showMailtoFallback(msg) {
     dlTrack('resume_deliver_result', { status: 'fallback' });
@@ -1276,6 +1346,10 @@ function sendDelivery(payload) {
       } else if (res.body && res.body.error === 'rate_limited') {
         dlTrack('resume_deliver_result', { status: 'rate_limited' });
         fail(res.body.message || '操作过于频繁，请稍后再试');
+      } else if (res.body && String(res.body.error || '').indexOf('verification_') === 0) {
+        dlTrack('resume_deliver_result', { status: 'verify_failed' });
+        if (!isRetry) retry = true;
+        else fail(res.body.message || '验证未通过，请刷新页面后重试');
       } else {
         dlTrack('resume_deliver_result', { status: 'error' });
         fail((res.body && res.body.message) || '发送失败，请稍后再试');
@@ -1288,6 +1362,13 @@ function sendDelivery(payload) {
       DL_STATE.sending = false;
       btn.disabled = false;
       btn.textContent = '自动投递 ▶';
+      if (retry) {
+        dlEnsureProof(true).then(function (proof) {
+          if (!proof) { fail('验证失败，请刷新页面后重试'); return; }
+          payload.verify = { token: proof.token, nonce: proof.nonce };
+          sendDelivery(payload, true);
+        });
+      }
     });
 }
 

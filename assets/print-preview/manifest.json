@@ -1,6 +1,6 @@
 {
   "source": "resume.html",
-  "source_sha256": "5ab9b027d61e2a23da0af6d62eb92c5ef4c20907d76463e96e5ddec2c4d60fd2",
+  "source_sha256": "eb7db963f03b5f542b5eb8126e04b6cf46c41d48c4021b70cc832498fca7ba47",
   "pdf_pages": 2,
   "width": 1190,
   "pages": [
@@ -17,7 +17,7 @@
       "bw_bytes": 404250
     }
   ],
-  "generated_at": "2026-11-25T05:05:49+00:00",
+  "generated_at": "2026-11-25T05:21:23+00:00",
   "method": "Chrome printToPDF -> per-page raster -> pixel grayscale",
   "note": "彩色版是真实导出 PDF 的原样栅格；黑白版是对其像素灰度化，模拟黑白打印。"
 }

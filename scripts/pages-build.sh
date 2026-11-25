@@ -72,22 +72,40 @@ echo "=== ④ Pages Functions（/api/*）；腾讯云函数源码不是 Pages �
 cp -R functions "$OUT/"
 rm -rf "$OUT/functions/tencent"
 
-echo "=== ⑤ 独立页硬校验：缺一个就让构建失败，别等线上被 fallback 吞掉"
+echo "=== ⑤ 管理后台：/admin 控制台 + /login 登录页（前端源在 admin/public/）"
+if [ ! -f admin/public/index.html ] || [ ! -f admin/public/login.html ]; then
+  echo "✗ 缺少 admin/public/index.html 或 login.html"
+  exit 1
+fi
+mkdir -p "$OUT/admin" "$OUT/login"
+cp admin/public/index.html "$OUT/admin/index.html"
+cp -R admin/public/assets "$OUT/admin/assets"
+# 登录页独立成 /login/index.html：不带斜杠的 /login 也能被 Pages 解析
+cp admin/public/login.html "$OUT/login/index.html"
+
+echo "=== ⑥ 独立页硬校验：缺一个就让构建失败，别等线上被 fallback 吞掉"
 for f in index.html resume.html jd.html company.html school.html 404.html \
+         admin/index.html admin/assets/admin.js admin/assets/admin.css login/index.html \
          css/jd-match.css css/school-profile.css js/jd-match.js js/school-profile.js \
          data/school-profiles.js functions/api/wall.js \
          assets/print-preview/manifest.json assets/print-preview/color-1.png \
          assets/print-preview/bw-1.png assets/print-preview/color-2.png \
-         assets/print-preview/bw-2.png assets/resume/chen-peisheng-resume-2026.pdf \
-         functions/api/deliver.js functions/api/deliver-preview.js \
-         functions/lib/deliver-content.js functions/lib/zip.js; do
+         assets/print-preview/bw-2.png          assets/resume/chen-peisheng-resume-2026.pdf \
+         functions/api/deliver.js functions/api/deliver-preview.js functions/api/challenge.js \
+         functions/lib/deliver-content.js functions/lib/zip.js functions/lib/guard.js \
+         functions/lib/admin-auth.js functions/lib/admin-login.js \
+         functions/api/admin/auth/login.js functions/api/admin/auth/methods.js \
+         functions/api/admin/auth/email/send.js functions/api/admin/auth/email/verify.js \
+         functions/api/admin/auth/wechat/index.js functions/api/admin/auth/wechat/callback.js \
+         functions/api/admin/stats.js functions/api/admin/messages.js \
+         functions/_middleware.js robots.txt; do
   if [ ! -f "$OUT/$f" ]; then
     echo "✗ dist 缺少 $f，独立页会变成 404 / 首页 fallback"
     exit 1
   fi
 done
 
-echo "=== ⑥ 单文件上限 25MiB"
+echo "=== ⑦ 单文件上限 25MiB"
 BIG="$(find "$OUT" -type f -size +25M 2>/dev/null || true)"
 if [ -n "$BIG" ]; then
   echo "✗ 以下文件超过 Cloudflare Pages 单文件 25MiB 上限："

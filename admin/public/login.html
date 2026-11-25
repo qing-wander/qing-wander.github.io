@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#F3EEE2">
+<title>登录 · 后台</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%2314110E'/%3E%3Ctext x='16' y='22' font-size='16' fill='%23F3EEE2' text-anchor='middle' font-family='monospace'%3ES%3C/text%3E%3C/svg%3E">
+<style>
+  /* 登录页自带样式：未登录时 /admin/assets/* 在守卫之后，不能依赖后台资源 */
+  :root {
+    --paper: #F3EEE2;
+    --paper-2: #FBF8F1;
+    --ink: #14110E;
+    --ink-2: #4A423A;
+    --line: #D8CFBF;
+    --accent: #E8501E;
+    --ok: #1F7A4C;
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+    --sans: "Noto Sans SC", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    min-height: 100vh;
+    display: grid;
+    place-items: center;
+    padding: 24px;
+    background:
+      repeating-linear-gradient(90deg, rgba(20, 17, 14, .035) 0 1px, transparent 1px 6px),
+      var(--paper);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 14px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  .card {
+    width: 100%;
+    max-width: 400px;
+    background: var(--paper-2);
+    border: 2px solid var(--ink);
+    padding: 28px 26px;
+    box-shadow: 8px 8px 0 rgba(20, 17, 14, .12);
+  }
+  .tag {
+    margin: 0 0 14px;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: .18em;
+    color: var(--accent);
+  }
+  h1 { font-size: 25px; margin: 0 0 6px; letter-spacing: -.02em; }
+  .hint { color: var(--ink-2); font-size: 13px; margin: 0 0 22px; }
+
+  .btn {
+    display: block;
+    width: 100%;
+    padding: 11px 14px;
+    border: 2px solid var(--ink);
+    background: transparent;
+    color: var(--ink);
+    font: inherit;
+    font-weight: 600;
+    text-align: center;
+    text-decoration: none;
+    cursor: pointer;
+  }
+  .btn:hover { background: var(--ink); color: var(--paper); }
+  .btn:disabled, .btn[aria-disabled="true"] { opacity: .45; cursor: not-allowed; background: transparent; color: var(--ink); }
+  .btn-wx { background: #07C160; border-color: #07C160; color: #fff; }
+  .btn-wx:hover { background: #06AD56; border-color: #06AD56; color: #fff; }
+  .btn-solid { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .btn-solid:hover { background: var(--ink); border-color: var(--ink); }
+  .btn-sm { width: auto; padding: 6px 12px; font-size: 12px; font-weight: 500; }
+
+  .divider {
+    display: flex; align-items: center; gap: 10px;
+    margin: 20px 0;
+    font-family: var(--mono); font-size: 11px; letter-spacing: .1em; color: var(--ink-2);
+  }
+  .divider::before, .divider::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+
+  label { display: block; }
+  .field-label {
+    display: block;
+    margin-bottom: 6px;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: .08em;
+    color: var(--ink-2);
+  }
+  input {
+    width: 100%;
+    padding: 11px 12px;
+    background: #fff;
+    border: 2px solid var(--ink);
+    font: inherit;
+    color: var(--ink);
+    outline: none;
+  }
+  input:focus { box-shadow: 0 0 0 3px rgba(232, 80, 30, .22); }
+  input[inputmode="numeric"] { font-family: var(--mono); font-size: 20px; letter-spacing: .28em; text-align: center; }
+
+  .row { display: flex; gap: 8px; align-items: stretch; }
+  .row .btn { margin-top: 14px; }
+  .row .btn-sm { flex: none; }
+
+  .msg { font-size: 13px; margin: 12px 0 0; min-height: 20px; color: var(--accent); }
+  .msg.is-ok { color: var(--ok); }
+  .msg code { font-family: var(--mono); font-size: 12px; background: #fff; border: 1px solid var(--line); padding: 1px 5px; }
+  .foot { margin: 18px 0 0; font-size: 13px; color: var(--ink-2); display: flex; justify-content: space-between; gap: 10px; }
+  .foot a { color: var(--ink-2); text-decoration: none; border-bottom: 1px solid var(--line); }
+  .note { font-size: 12px; color: var(--ink-2); margin: 10px 0 0; }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+
+<main class="card">
+  <p class="tag">PRIVATE CONSOLE</p>
+  <h1>后台登录</h1>
+  <p class="hint">不用密码：微信扫一下，或收一封邮箱验证码。</p>
+
+  <!-- 微信 -->
+  <a class="btn btn-wx" id="wxBtn" href="/api/admin/auth/wechat?mode=qr">微信扫码登录</a>
+  <p class="note" id="wxNote" hidden></p>
+
+  <div class="divider">OR</div>
+
+  <!-- 邮箱验证码 -->
+  <form id="emailForm" autocomplete="on">
+    <div id="stepEmail">
+      <label class="field">
+        <span class="field-label">邮箱</span>
+        <input id="email" type="email" required autocomplete="email" placeholder="you@gmail.com / you@qq.com">
+      </label>
+      <button class="btn" type="submit" id="sendBtn">发验证码</button>
+    </div>
+
+    <div id="stepCode" hidden>
+      <label class="field">
+        <span class="field-label" id="codeLabel">验证码</span>
+        <input id="code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="000000">
+      </label>
+      <div class="row">
+        <button class="btn btn-solid" type="submit" id="verifyBtn">登录</button>
+        <button class="btn btn-sm" type="button" id="resendBtn">重发</button>
+      </div>
+      <p class="note"><a href="#" id="changeEmail">换一个邮箱</a></p>
+    </div>
+
+    <p class="msg" id="msg" role="alert"></p>
+  </form>
+
+  <p class="foot">
+    <a href="https://chenpeisheng.cn">← 返回公开站</a>
+    <span id="footNote"></span>
+  </p>
+</main>
+
+<script>
+(function () {
+  'use strict';
+  var $ = function (id) { return document.getElementById(id); };
+  var params = new URLSearchParams(location.search);
+  var msg = $('msg');
+  var state = { email: '', cooldown: 0, timer: 0 };
+
+  function say(text, ok) {
+    msg.textContent = text || '';
+    msg.className = 'msg' + (ok ? ' is-ok' : '');
+  }
+
+  /* 只允许回跳站内后台路径，杜绝开放重定向 */
+  function safeNext() {
+    var n = params.get('next') || '';
+    if (!n || n.charAt(0) !== '/') return '/admin/';
+    if (n === '/login' || n.indexOf('/login?') === 0) return '/admin/';
+    if (n !== '/admin' && n.indexOf('/admin/') !== 0 && n.indexOf('/admin?') !== 0) return '/admin/';
+    return n;
+  }
+
+  function post(path, body) {
+    return fetch(path, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Admin-Request': '1' },
+      credentials: 'include',
+      body: JSON.stringify(body || {}),
+    }).then(function (r) {
+      return r.json().catch(function () { return {}; }).then(function (d) { return { r: r, d: d }; });
+    });
+  }
+
+  var ERRORS = {
+    bad_state: '登录状态校验失败，请重试',
+    wechat_not_configured: '微信登录还没配置 AppID / Secret',
+    wechat_allowlist_empty: '微信登录白名单为空，先把 openid 填进 WECHAT_ALLOW_OPENIDS',
+    wechat_no_code: '微信没有回传授权码',
+    wechat_token_failed: '微信换 token 失败，检查 AppID / Secret',
+    wechat_network: '连不上微信接口，稍后重试',
+    access_denied: '你取消了微信授权',
+    email_not_allowed: '这个邮箱不在登录白名单里',
+    mail_not_configured: '还没配置发信（缺 RESEND_API_KEY）',
+    mail_rejected: '发信被拒，检查发件域名是否已在 Resend 验证',
+    mail_network: '发信服务连不上，稍后重试',
+    rate_limited: '尝试太频繁，稍后再试',
+    cooldown: '刚发过，等倒计时结束再发',
+    code_expired: '验证码过期了，重新发一封',
+    code_not_found: '没有待验证的验证码，先发一封',
+    too_many_attempts: '错误次数太多，重新发一封',
+    bad_code: '验证码不对',
+    bad_input: '邮箱或验证码格式不对',
+    bad_email: '邮箱格式不对'
+  };
+
+  /* 首次配微信时会带着 openid 回来：直接告诉站长该把它填到哪 */
+  function renderQuery() {
+    var err = params.get('error');
+    if (!err) {
+      if (params.get('logout')) say('已退出登录', true);
+      return;
+    }
+    if (err === 'wechat_not_allowed') {
+      var openid = params.get('openid') || '';
+      var unionid = params.get('unionid') || '';
+      msg.innerHTML = '';
+      var p = document.createElement('span');
+      p.textContent = '这个微信账号还没放行。把下面的 openid 填进环境变量 WECHAT_ALLOW_OPENIDS 再试：';
+      msg.appendChild(p);
+      if (openid) {
+        var a = document.createElement('div');
+        a.style.marginTop = '6px';
+        a.innerHTML = 'openid：<code></code>';
+        a.querySelector('code').textContent = openid;
+        msg.appendChild(a);
+      }
+      if (unionid) {
+        var b = document.createElement('div');
+        b.innerHTML = 'unionid：<code></code>';
+        b.querySelector('code').textContent = unionid;
+        msg.appendChild(b);
+      }
+      return;
+    }
+    /* 微信返回的 errcode 直出，方便对照官方文档 */
+    if (err.indexOf('wechat_') === 0 && !ERRORS[err]) {
+      say('微信授权失败：' + err);
+      return;
+    }
+    say(ERRORS[err] || ('登录失败：' + err));
+  }
+
+  /* ── 可用登录方式 ───────────────────────────────────────────── */
+  fetch('/api/admin/auth/methods', { credentials: 'include' })
+    .then(function (r) { return r.json(); })
+    .then(function (d) {
+      if (!d || !d.ok) return;
+      var wx = d.wechat || {};
+      var inWx = !!d.inWechat;
+      var mode = inWx && wx.mp ? 'mp' : (wx.qr ? 'qr' : (wx.mp ? 'mp' : ''));
+      var btn = $('wxBtn');
+      var note = $('wxNote');
+
+      if (!mode) {
+        btn.setAttribute('aria-disabled', 'true');
+        btn.removeAttribute('href');
+        btn.textContent = '微信登录（未配置）';
+        note.hidden = false;
+        note.textContent = '需要 WECHAT_APP_ID / SECRET（扫码）或 WECHAT_MP_APP_ID / SECRET（微信内）';
+      } else {
+        btn.href = '/api/admin/auth/wechat?mode=' + mode;
+        btn.textContent = mode === 'mp' ? '微信一键登录' : '微信扫码登录';
+      }
+
+      var em = d.email || {};
+      if (!em.enabled) {
+        $('sendBtn').disabled = true;
+        $('email').disabled = true;
+        say('邮箱登录不可用：需要 RESEND_API_KEY 与 ADMIN_EMAILS');
+      } else if (em.hint) {
+        $('footNote').textContent = '白名单 ' + em.count + ' 个 · ' + em.hint;
+        $('email').placeholder = em.hint.replace(/\*\*\*/, '…');
+      }
+    })
+    .catch(function () { /* 方法探测失败不影响手填邮箱 */ });
+
+  /* ── 发验证码 ───────────────────────────────────────────────── */
+  function startCooldown(sec) {
+    state.cooldown = sec;
+    clearInterval(state.timer);
+    var btn = $('resendBtn');
+    btn.disabled = true;
+    btn.textContent = sec + 's';
+    state.timer = setInterval(function () {
+      state.cooldown -= 1;
+      if (state.cooldown <= 0) {
+        clearInterval(state.timer);
+        btn.disabled = false;
+        btn.textContent = '重发';
+        return;
+      }
+      btn.textContent = state.cooldown + 's';
+    }, 1000);
+  }
+
+  function sendCode() {
+    var email = ($('email').value || '').trim();
+    if (!email) { say('先填邮箱'); return; }
+    $('sendBtn').disabled = true;
+    say('发送中…', true);
+    post('/api/admin/auth/email/send', { email: email }).then(function (x) {
+      if (x.r.ok && x.d && x.d.ok !== false) {
+        state.email = email;
+        $('stepEmail').hidden = true;
+        $('stepCode').hidden = false;
+        $('codeLabel').textContent = '验证码 · 已发到 ' + (x.d.email || email);
+        say('验证码已发出，10 分钟内有效', true);
+        $('code').focus();
+        startCooldown(x.d.cooldown || 60);
+        return;
+      }
+      say(x.d && (ERRORS[x.d.error] || x.d.message) || '发送失败');
+    }).catch(function () {
+      say('网络异常，重试一次');
+    }).then(function () { $('sendBtn').disabled = false; });
+  }
+
+  $('emailForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    if ($('stepCode').hidden) { sendCode(); return; }
+
+    var code = ($('code').value || '').replace(/\D/g, '');
+    if (code.length !== 6) { say('验证码是 6 位数字'); return; }
+    var btn = $('verifyBtn');
+    btn.disabled = true;
+    say('验证中…', true);
+    post('/api/admin/auth/email/verify', { email: state.email, code: code }).then(function (x) {
+      if (x.r.ok && x.d && x.d.ok !== false) {
+        location.replace(safeNext());
+        return;
+      }
+      var d = x.d || {};
+      if (d.error === 'bad_code' && typeof d.left === 'number') {
+        say('验证码不对，还能再试 ' + d.left + ' 次');
+      } else {
+        say(ERRORS[d.error] || d.message || '登录失败');
+      }
+      $('code').select();
+    }).catch(function () {
+      say('网络异常，重试一次');
+    }).then(function () { btn.disabled = false; });
+  });
+
+  $('resendBtn').addEventListener('click', sendCode);
+
+  $('changeEmail').addEventListener('click', function (e) {
+    e.preventDefault();
+    $('stepCode').hidden = true;
+    $('stepEmail').hidden = false;
+    $('code').value = '';
+    say('');
+    $('email').focus();
+  });
+
+  renderQuery();
+})();
+</script>
+</body>
+</html>

@@ -22,3 +22,48 @@ database_id = "022be169-a84e-4791-b2f2-ee4f9c4f17c8"
 [[kv_namespaces]]
 binding = "SITE_KV"
 id = "f5253a16b4d84a20a32c0cd497b1f269"
+
+# ──────────────────────────────────────────────────────────────────────
+#  管理后台已经并入本站：/admin 控制台 + /login 登录页（免密登录）
+# ──────────────────────────────────────────────────────────────────────
+#  页面：admin/public/index.html（控制台）、admin/public/login.html（登录页）
+#        构建时分别落到 dist/admin/index.html 与 dist/login/index.html
+#  接口：functions/api/admin/**（登录 / 统计 / 设备 / 留言 / 问答 / 配置 / 导出）
+#  守卫：functions/_middleware.js —— /admin 全路由无会话即 302 /login?next=…
+#        接口层另有 requireAdmin，两层独立，不靠前端。
+#
+#  登录方式（登录页只有这两种，没有账号密码）：
+#    ① 邮箱验证码：任意邮箱（Gmail / QQ / 163 …），但必须在 ADMIN_EMAILS 里
+#    ② 微信：扫码（开放平台网站应用）或微信内授权（公众号网页授权）
+#
+#  控制台 → Settings → Environment variables（Type: Secret）：
+#    ADMIN_SESSION_SECRET   会话签名盐，32 字节以上（必填，缺了谁都进不去）
+#
+#    ── 邮箱登录 ──
+#    ADMIN_EMAILS           允许登录的邮箱，逗号分隔，默认 hi@chenpeisheng.cn
+#                           例：hi@chenpeisheng.cn,you@gmail.com,you@qq.com
+#    RESEND_API_KEY         发验证码用的 Resend Key（与自动投递共用）
+#    RESEND_FROM            可选，发件人；建议用已验证域名，否则易进垃圾箱
+#    ADMIN_EMAIL_FROM       可选，优先于 RESEND_FROM
+#
+#    ── 微信登录（两种任选其一或都配）──
+#    WECHAT_APP_ID          开放平台「网站应用」AppID（桌面扫码 snsapi_login）
+#    WECHAT_APP_SECRET
+#    WECHAT_MP_APP_ID       公众号 AppID（微信内网页授权 snsapi_base）
+#    WECHAT_MP_APP_SECRET
+#    WECHAT_ALLOW_OPENIDS   允许登录的 openid，逗号分隔（白名单为空 = 微信登录不可用）
+#    WECHAT_ALLOW_UNIONIDS  可选，unionid 名单（跨应用唯一，更稳）
+#
+#  授权回调地址（在微信后台配置）：
+#    https://chenpeisheng.cn/api/admin/auth/wechat/callback
+#  首次扫码若提示「未放行」，登录页会直接显示你的 openid，复制进白名单即可。
+#
+#  可选 / 应急：
+#    ADMIN_PASSWORD         仅用于应急口令接口（登录页不再展示）；同时可当签名盐兜底
+#    WALL_ADMIN_TOKEN       应急令牌（请求头 X-Admin-Token），脚本排查用
+#    GITHUB_CLIENT_ID / GITHUB_CLIENT_SECRET / ADMIN_GITHUB_USERS
+#                           GitHub 登录（备用，不在登录页展示）
+#
+#  数据库：需先执行 db/migrations/2026-11-25-admin-email-login.sql
+#    npx wrangler d1 execute portfolio-db --remote --file=db/migrations/2026-11-25-admin-email-login.sql
+# ──────────────────────────────────────────────────────────────────────
