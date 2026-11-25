@@ -210,11 +210,11 @@ export default {
     {
       "profileId": "comein",
       "company": "进门财经 · 深圳进门财经科技股份有限公司",
-      "companyNote": "机构金融投研 SaaS",
-      "role": "Agent 工程师",
+      "companyNote": "金融投研 SaaS",
+      "role": "Agent 工程师（AI 进宝）",
       "time": "2026.01 — 2026.07（组织架构调整）",
       "points": [
-        "主导 AI 金融投研工作台（AI 进宝）核心基建研发：Agent 基座与多租户云沙箱、MCP / Skill 扩展、AI 资源计费、五端 IM 网关，<strong>支撑 Agent 从接入到计费全链路落地</strong>"
+        "研发 AI 金融投研工作台核心基建：Agent 基座与多租户云沙箱、MCP / Skill 扩展、AI 资源计费、五端 IM 网关，<strong>支撑 Agent 从接入到计费全链路落地</strong>"
       ],
       "tags": [
         {
@@ -245,8 +245,8 @@ export default {
       "role": "Agent 工程师 · 创始团队成员（红杉投资 AI 初创）",
       "time": "2024.03 — 2025.11",
       "points": [
-        "<strong>AI 人脉搜索引擎</strong>：Supervisor / Search / Review 多层级 ReAct Multi-Agent 架构，搜索精准度提升 <strong>30%</strong>、找人成本降低 <strong>80%</strong>、定位耗时缩短 <strong>60%</strong>。",
-        "红人营销 SaaS 研发：<strong>FDE</strong> 式定制业务流程，Grok LLM + Agent 工作流串联「客户→合同→付款→结算」，实现客户到结算的全流程自动化闭环。",
+        "<strong>研发 AI 人脉搜索引擎</strong>：Supervisor / Search / Review 多层级 ReAct Multi-Agent 架构，搜索精准度提升 <strong>30%</strong>、找人成本降低 <strong>80%</strong>、定位耗时缩短 <strong>60%</strong>。",
+        "研发红人营销 SaaS：<strong>FDE</strong> 式定制业务流程，Grok LLM + Agent 工作流串联「客户→合同→付款→结算」，实现客户到结算的全流程自动化闭环。",
         "0→1 搭建海外触达体系：邮件群发系统（AWS / SendGrid / 自建 SMTP 统一驱动）+ 群控 RPA 自动注册 / 养号 / 私信群发，月均 <strong>50 万+</strong> 有效触达、替代人工规模化运营。",
         "搭建达人数据库飞轮体系：dataworks 数仓同步第三方平台达人画像与粉丝数据，合作过程人工标注 + 自动化沉淀优质达人，自动淘汰留存高质量达人，沉淀 <strong>300+ 万</strong>网红画像与视频数据日更、以高质量达人库提升合作效率。"
       ],
@@ -306,7 +306,7 @@ export default {
       "role": "Java 开发工程师 · 获评「高级程序员」职称",
       "time": "2021.09 — 2023.06",
       "points": [
-        "负责多渠道潜客 <strong>CRM 平台</strong>研发：整合大陆、港澳台线上线下销售线索，日活 <strong>10W+</strong>，销售转化率提升 <strong>70%</strong>。",
+        "研发多渠道潜客 <strong>CRM 平台</strong>：整合大陆、港澳台线上线下销售线索，日活 <strong>10W+</strong>，销售转化率提升 <strong>70%</strong>。",
         "搭建门店预约体验流程与预约限额体系，设计分地区业务分层与跨境敏感数据过滤 / 定期清除机制，预约到店率提升 <strong>40%</strong>。",
         "基于 <strong>JBPM</strong> 编排财务差异审批流程，任务自动分配并处理超时 / 驳回异常，保障财务审批全流程闭环、替代人工流转。",
         "搭建供应商 <strong>API 网关</strong>（鉴权 / 额度 / 监控）与 <strong>Redash BI</strong> 多维看板，支撑供应商管理与经营可视化。",
@@ -908,8 +908,8 @@ export default {
         "id": "exp-inmen",
         "profileId": "comein",
         "company": "深圳进门财经科技股份有限公司",
-        "companyNote": "机构金融投研 SaaS",
-        "role": "Agent 工程师",
+        "companyNote": "金融投研 SaaS",
+        "role": "Agent 工程师（AI 进宝）",
         "period": "2026.01 — 07（组织架构调整）",
         "lock": [
           "company",
@@ -921,7 +921,7 @@ export default {
         "bullets": [
           {
             "id": "exp-inmen-01",
-            "html": "主导 AI 金融投研工作台（AI 进宝）核心基建研发：Agent 基座与多租户云沙箱、MCP / Skill 扩展、AI 资源计费、五端 IM 网关，<strong>支撑 Agent 从接入到计费全链路落地</strong>"
+            "html": "研发 AI 金融投研工作台核心基建：Agent 基座与多租户云沙箱、MCP / Skill 扩展、AI 资源计费、五端 IM 网关，<strong>支撑 Agent 从接入到计费全链路落地</strong>"
           }
         ]
       },
@@ -942,11 +942,11 @@ export default {
         "bullets": [
           {
             "id": "exp-lessie-01",
-            "html": "主导 AI 人脉搜索引擎：Supervisor / Search / Review 多层级 ReAct Multi-Agent 架构，<strong>搜索精准度提升 30%、找人成本降低 80%、定位耗时缩短 60%</strong>"
+            "html": "研发 AI 人脉搜索引擎：Supervisor / Search / Review 多层级 ReAct Multi-Agent 架构，<strong>搜索精准度提升 30%、找人成本降低 80%、定位耗时缩短 60%</strong>"
           },
           {
             "id": "exp-lessie-02",
-            "html": "主导红人营销 SaaS 研发：FDE 式定制业务流程，Grok LLM + Agent 工作流串联「客户→合同→付款→结算」，<strong>实现客户到结算的全流程自动化闭环</strong>"
+            "html": "研发红人营销 SaaS：FDE 式定制业务流程，Grok LLM + Agent 工作流串联「客户→合同→付款→结算」，<strong>实现客户到结算的全流程自动化闭环</strong>"
           },
           {
             "id": "exp-lessie-03",
@@ -996,7 +996,7 @@ export default {
         "bullets": [
           {
             "id": "exp-chowsang-01",
-            "html": "负责多渠道潜客 CRM 平台研发，整合大陆、港澳台线上线下销售线索，<strong>日活 10W+、销售转化率提升 70%</strong>"
+            "html": "研发多渠道潜客 CRM 平台，整合大陆、港澳台线上线下销售线索，<strong>日活 10W+、销售转化率提升 70%</strong>"
           },
           {
             "id": "exp-chowsang-02",
