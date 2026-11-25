@@ -9,7 +9,7 @@
 
 > 一个**没有前端框架**的静态求职站，长出了一套跑在边缘上的后端：  
 > Cloudflare Pages Functions + D1 + Vectorize + Workers AI，外加腾讯云 TTS。  
-> 所有展示内容由 `data/site-data.json` 单一真相源生成，线上真人数据存放于 D1。
+> 展示内容以仓库 `data/site-data.json` 为脱敏生成源；线上真人数据存放于 D1 `site_content`（见[数据与内容模型](#数据与内容模型)分层）。
 
 - **线上站点**：<https://chenpeisheng.cn/> · [在线简历](https://chenpeisheng.cn/resume.html) · [JD 岗位匹配](https://chenpeisheng.cn/jd.html)
 - **备用线路**：<https://shenge-work.pages.dev/>（同一套构建产物）
@@ -45,7 +45,7 @@
 | -- | ---------------------------------------------------------------------- |
 | 前端 | 原生 HTML / CSS / JS（ES5 兼容 IIFE），零框架、零构建步骤，首屏不依赖 JS 框架运行时               |
 | 后端 | Cloudflare Pages Functions（`functions/`）承载全部 `/api/*`，无独立服务器           |
-| 数据 | `data/site-data.json` 是内容唯一真相源；线上真人数据存 D1 `site_content`，仓库只放脱敏副本      |
+| 数据 | 仓库 `data/site-data.json` 为脱敏生成副本；线上真人数据存 D1 `site_content`，两者字段结构一致  |
 | AI | 混合检索（D1 FTS5 BM25 + Vectorize 向量，RRF 融合）→ 受约束生成；关键词兜底不断线               |
 | 部署 | `git push` → Cloudflare Pages 自动构建；`scripts/pages-build.sh` 产出 `dist/` |
 | 质量 | 4 条 GitHub Actions + 29 个 `node:test` 测试文件 + 内容漂移闸门（生成物必须与数据逐字一致）        |
@@ -221,14 +221,19 @@ Cloudflare Pages → Settings → Variables and Secrets 配置（Secret 类型�
 
 ## 数据与内容模型
 
-**单一真相源**：`data/site-data.json` 决定简历与主页的全部文案；`resume.html`、`work/*.html`、`data/site-data.js` 都是生成物，**不要手改**——CI 会逐字比对，改错地方直接红。
+**单一数据模型**：同一份 canonical JSON 决定简历与主页的全部文案；`resume.html`、`work/*.html`、`data/site-data.js` 都是生成物，**不要手改**——CI 会逐字比对，改错地方直接红。
 
 ```text
-data/site-data.json ──┬─▶ scripts/render_resume.mjs ────▶ resume.html
-                      ├─▶ scripts/render_work_details.mjs ▶ work/*.html
-                      ├─▶ scripts/sync_site_data.py ────▶ data/site-data.js
-                      ├─▶ scripts/build_rag_chunks.mjs ─▶ D1 kb_chunks / kb_fts
-                      └─▶ scripts/redact-public-data.mjs ▶ 仓库脱敏副本
+data/site-data.json（仓库脱敏副本）
+        │
+        ├─▶ scripts/render_resume.mjs ────▶ resume.html
+        ├─▶ scripts/render_work_details.mjs ▶ work/*.html
+        ├─▶ scripts/sync_site_data.py ────▶ data/site-data.js
+        ├─▶ scripts/build_rag_chunks.mjs ─▶ .temp/rag 切片种子（本地排查 / 冷启动灌库）
+        └─▶ scripts/redact-public-data.mjs ▶ 仓库脱敏副本（手机号 / 验证码占位）
+
+线上知识库平时由 KB Worker `/rebuild` 直接读 D1 `site_content` 重建
+（`kb_chunks` / `kb_fts` / Vectorize），不依赖本脚本与 CI。
 ```
 
 **数据分层（2026-11-25 起）**
@@ -242,6 +247,7 @@ data/site-data.json ──┬─▶ scripts/render_resume.mjs ────▶ re
 1. 本地：改 `data/site-data.json` → 跑生成脚本 → 跑 `--check` 校验；
 2. 线上：进 `/admin` →「站点数据」直接编辑（写入 D1，最多 5 分钟生效，无需重新构建；保存后自动触发知识库重建）；
 3. 批量：`node scripts/seed-site-content.mjs` 或 `bash scripts/db-init.sh remote`。
+   > 直接 SQL / 种子脚本写 D1 **不会**触发知识库重建；写完需在后台点「重建知识库」，或带运维令牌 `POST /api/admin/kb`。
 
 ## 构建与部署
 
@@ -289,7 +295,7 @@ npx wrangler d1 execute portfolio-db --remote --file=db/migrations/<file>.sql
 ├── index.html / resume.html / jd.html / company.html / school.html / 404.html
 ├── css/                     # 设计系统、主题、各独立页样式、字体
 ├── js/                      # main.js（渲染与交互）、AI 面板/语音/皮肤、JD、档案、计数、埋点
-├── data/                    # 内容真相源 + 脱敏副本 + 资源映射 + 公司/学校/人物档案
+├── data/                    # 脱敏源副本 + 资源映射 + 公司/学校/人物档案
 ├── images/ videos/ assets/  # 图片、访谈视频、3D 模型与打印预览、本地 vendor
 ├── functions/
 │   ├── _middleware.js       # 全站边缘防护（爬虫、来源、安全响应头）
@@ -303,7 +309,7 @@ npx wrangler d1 execute portfolio-db --remote --file=db/migrations/<file>.sql
 ├── miniprogram/             # 微信小程序扫码登录端
 ├── scripts/                 # 生成链、构建、部署、联调、备份、自检
 ├── templates/               # 简历与案例页模板
-├── tests/                   # node:test 单测（28 个文件）
+├── tests/                   # node:test 单测（29 个文件）
 ├── tools/ variants/ work/   # 桌宠制作脚本、简历变体、作品案例页
 ├── worker/
 │   ├── kb/                  # 语义层 Worker resume-kb-api（embed / query / rerank / rebuild）

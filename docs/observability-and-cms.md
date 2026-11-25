@@ -308,7 +308,8 @@ api: 'https://portfolio-visits.xxx.workers.dev',
 
 ## 后台第二阶段：问答看板 + 模型/提示词配置（2026-11-20 已上线）
 
-**为什么提示词存 D1 而不是 Git**：提示词是运营参数，改完要立刻对线上生效；简历内容才是 Git 真相源。
+**为什么提示词存 D1 而不是 Git**：提示词是运营参数，改完要立刻对线上生效；简历 / 主页内容走独立的
+`site_content` 内容表（线上权威源在 D1，仓库 JSON 为脱敏副本，见 README「数据与内容模型」）。
 所以 `admin_config(key, value, updated_at)` 只放运行期配置，不进内容流水线。
 
 **接口**
@@ -381,9 +382,9 @@ api: 'https://portfolio-visits.xxx.workers.dev',
 ## 后台第六阶段：GitHub OAuth 登录（2026-11-20 已上线）
 
 **App**：`shenge-work-admin`（创建于 GitHub → Settings → Developer settings → OAuth Apps），
-回调 `https://shenge-work-admin.pages.dev/api/auth/callback`，scope 只要 `read:user`。
+回调随访问主站 origin 生成：`https://chenpeisheng.cn/api/admin/auth/callback`（代码见 `functions/api/admin/auth/oauth.js`），scope 只要 `read:user`。
 
-**流程**：`GET /api/auth/oauth` → 302 到 GitHub 授权页 → 回调 `/api/auth/callback`
+**流程**：`GET /api/admin/auth/oauth` → 302 到 GitHub 授权页 → 回调 `/api/admin/auth/callback`
 → code 换 token → 拉 `/user` → 校验登录名在放行名单 → 签发原有 HMAC 会话 cookie（12h）→ 回 `/`。
 
 **state 防 CSRF**：`ts.nonce.HMAC(secret, "state|ts|nonce")`，10 分钟有效。
@@ -395,7 +396,7 @@ GitHub 回跳若失败会带 `?login=xxx`，前端把错误码翻译成人话（
 **踩到的坑**：GitHub 授权页的「Authorize」按钮对新应用**一直是 disabled**
 （页面上写着 `Created less than a day ago`），常规点击点不动；
 提交后跳的是 `github.com/login/oauth/authorize` 的「OAuth application authorized」提示页而不是回调地址，
-再访问一次 `/api/auth/oauth`（此时用户已授权该 App）才会正常走 302 → 回调 → 登录态。
+再访问一次 `/api/admin/auth/oauth`（此时用户已授权该 App）才会正常走 302 → 回调 → 登录态。
 所以**新建 OAuth App 后第一次授权要多走一次**，不是配置错了。
 
 **实测**：授权后控制台直接进入，`login_hidden=true / dash_hidden=false`，

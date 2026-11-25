@@ -5,6 +5,12 @@
 > 定位：把「在线简历 + AI 问答 + JD 匹配 + 动态简历 + 管理后台 + 可观测」收敛成一套可落地的架构，
 > 并回答「Cloudflare 免费资源够不够」。
 > 现状基线以仓库当前代码为准；额度以 2026-11-19 官方文档核对为准，上线前建议再复核一次。
+>
+> **落地后变更（2026-11-25，优先于下文早期方案）**：
+> ① 管理后台已并入主站 `chenpeisheng.cn`（`/admin`、`/login`、`/api/admin/**`），独立 Pages 项目
+> `shenge-work-admin.pages.dev` 仅作回滚；② `site-data` 真人内容的线上权威源迁到 D1 `site_content`，
+> 仓库 `data/*.json` 为脱敏兜底副本（分层见 README「数据与内容模型」）。下文「独立后台」「Git 是内容真相源」
+> 相关段落属历史规划，现状以 README 与 `functions/lib/site-content.js` 为准。
 > 相关既有文档：
 >
 > [cloudflare-free-resources.md](cloudflare-free-resources.md)
@@ -396,6 +402,10 @@ data/site-data.json（唯一手写源）
 > 在 P0 里顺手改视觉、改文案风格或重写简历。P0 的目标是 “等价迁移”，不是 “顺便美化”。
 
 ### 4.6 数据分层：Git 是内容真相源，D1 是运行时状态
+
+> ⚠️ **本节为早期规划结论，2026-11-25 已被数据上云方案替代**：`site-data` 真人内容线上权威源在 D1
+> `site_content`，仓库 JSON 是脱敏副本；下表中「简历 / 主页内容 → Git 权威源」一行不再成立。
+> 留言 / 计数 / 日志 / KB 切片等运行时状态仍在 D1 的结论不变。现状分层以 README「数据与内容模型」为准。
 
 “唯一真相源”是**逻辑概念**，不是“所有数据都塞进一个数据库”。每类数据只有一个权威副本，
 D1 / Vectorize / R2 里的是派生索引或运行状态：
@@ -856,6 +866,9 @@ JD 原文（≤1500 字，前端截断）
 * **未来**：有域名后加 Cloudflare Access（50 用户内免费），OAuth 仍保留为第二层。
 
 ### 7.4 发布链（Git 是真相源）
+
+> ⚠️ 早期规划：后台发布走 GitHub Contents API 回写 Git。现状（2026-11-25）后台「站点数据」直接写 D1
+> `site_content`，保存后自动触发 KB Worker `/rebuild`；Git 仓库只保留脱敏副本。
 
 
 
@@ -1599,8 +1612,8 @@ ai/gateway/       AI Gateway 缓存/限流/日志/fallback
 | 是否保留 `site-data.json` 文件名 | 保留，扩展 `resume` 块                       | 避免迁移期两份文件；以后可再改名 `career.json`           |
 | LLM 默认                    | Workers AI GLM-4.7-flash               | 免费版可用；中文 / 上下文 / 工具调用均衡                  |
 | 迁移期 fallback              | 保留现有腾讯云 `hy3`                          | 先双跑 2–4 周，按评测与可达性再下线                     |
-| Admin 托管                  | **已定：独立 `shenge-work-admin.pages.dev`** | 同一仓库、两个 Pages 项目；共享 D1；不采用同站 `/admin` |
-| 发布方式                      | GitHub Contents API + fine-grained PAT | 若担心写权限，先做只读 / 导出                         |
+| Admin 托管                  | ~~独立 `shenge-work-admin.pages.dev`~~ **已改：并入主站 `/admin`**（2026-11-25） | 原规划同一仓库两个 Pages 项目；现状同站 `/admin`，独立项目仅回滚 |
+| 发布方式                      | ~~GitHub Contents API + fine-grained PAT~~ **已改：后台直写 D1 `site_content`**（2026-11-25） | 原规划回写 Git；现状保存即写 D1 并触发 KB 重建 |
 | 公共简历电话                    | 暂时保留                                   | 公开简历留电话便于 HR；后续可改 “点击显示 / 二维码” 降爬取       |
 | 域名                        | 继续暂缓                                   | 不影响本期；有域名后再接 Access/Email Routing/R2 公开域 |
 | 预算                        | 目标 $0/月；预留 $5 / 月                      | 只有触发 CPU / 请求 / 模型限制才升级                  |

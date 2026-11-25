@@ -456,6 +456,8 @@ POST /accounts/<id>/rum/site_info       → 10000 Authentication error
 - 静态资源**维持 GitHub Pages + Cloudflare Pages 托管**，不引入 CloudBase 云存储。
 - 数据侧维持既有分层：**Git 为内容真相源，D1 `portfolio-db` 存运行时状态**（留言/计数/限流/RAG），
   不把内容 JSON 迁进 D1。
+  > 修订（2026-11-25）：`site-data` 真人内容后续已迁到 D1 `site_content`，仓库 JSON 改为脱敏兜底副本；
+  > 本条「内容 JSON 不进 D1」被数据上云方案替代，静态资源托管结论不变。
 - 后续若确有图床/大文件分发需求，优先评估**带支付方式的 Cloudflare R2**（出站免费、可绑自有域名），
   而非用体验版资源点扛公开流量。
 - 执行凭据现状：本机有 Cloudflare wrangler 登录态（`hi@chenpeisheng.cn`），

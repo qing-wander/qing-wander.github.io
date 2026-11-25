@@ -60,7 +60,7 @@ bash scripts/pages-build.sh          # 可选，但改了 HTML/构建相关务�
 
 ### 数据与内容
 
-- 内容只改 `data/site-data.json`（或后台「站点数据」），**不要手改生成物**：
+- 内容只改本地脱敏副本 `data/site-data.json`，或线上后台「站点数据」（写 D1 `site_content`）；**不要手改生成物**：
   `resume.html`、`work/*.html`、`data/site-data.js` 由脚本生成，CI 会逐字比对。
 - 改完跑生成脚本：
   ```bash

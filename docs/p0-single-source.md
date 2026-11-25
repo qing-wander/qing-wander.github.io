@@ -124,9 +124,12 @@ CI（`.github/workflows/content-build.yml`）在 push / PR 上跑同样三件事
 | DELETE | `/api/wall` + `X-Admin-Token` | 站长应急删除（唯一保留的令牌接口，级联删回复） |
 
 > **2026-11-21 起旧后台接口 `/api/admin/wall/*` 已下线。** 设备台账、留言审核、CSV 导出
-> 全部走独立后台 `shenge-work-admin.pages.dev`（会话鉴权，见 `admin/`）：`/api/devices`、
-> `/api/messages`、`/api/messages/status`、`/api/messages/reply`、`/api/devices/block`、`/api/export`。
+> 全部走后台（会话鉴权，见 `admin/`）：`/api/admin/devices`、
+> `/api/admin/messages`、`/api/admin/messages/status`、`/api/admin/messages/reply`、`/api/admin/devices/block`、`/api/admin/export`。
 > 保留 `DELETE /api/wall` 只为应急删除单条，避免静态令牌长期持有全站读权限。
+>
+> **现状（2026-11-25）**：后台已并入主站 `chenpeisheng.cn`（`/admin` 控制台、`/login` 登录、`/api/admin/**` 接口，
+> 守卫在 `functions/_middleware.js`）；下文独立 Pages 项目 `shenge-work-admin.pages.dev` 为历史部署，仅保留作回滚。
 >
 > **2026-11-23 起增加 `wall_replies` 表**（迁移 `db/migrations/2026-11-23-wall-replies.sql`）：
 > 一条留言可挂多条 `author=owner`（站长后台回复）与 `author=visitor`（访客评论），
@@ -169,7 +172,9 @@ node scripts/dev-api-server.mjs            # 本地 8877
 
 ## 7. 管理后台（已上线）
 
-地址：**https://shenge-work-admin.pages.dev** · 独立 Pages 项目，与公开站共用同一个 D1 `portfolio-db`。
+> **现状（2026-11-25）**：后台已并入主站，控制台 `/admin`、登录 `/login`、接口 `/api/admin/**`，
+> 与公开站共用同一个 D1 `portfolio-db`。下文「独立 Pages 项目 `shenge-work-admin.pages.dev`」
+> 是早期部署形态，`admin/wrangler.toml` 保留作回滚，线上已由仓库根 `functions/` 接管。
 
 ### 结构
 
@@ -187,7 +192,7 @@ admin/
 - 口令登录 → HMAC-SHA256 签名的 `pa_sess` cookie（HttpOnly / Secure / SameSite=Lax，12 小时）
 - 登录限流：同 IP 15 分钟 8 次，落 `rate_limits` 表
 - 写操作三重校验：SameSite + `X-Admin-Request: 1` 自定义头 + Origin 同源
-- 会话签名不建表，零存储成本；换 GitHub OAuth 时只改 `functions/api/auth/login.js`，
+- 会话签名不建表，零存储成本；换 GitHub OAuth 时只改 `functions/api/admin/auth/login.js`，
   `isAdmin()` 的判定换成语种即可
 - 应急通道：`X-Admin-Token == WALL_ADMIN_TOKEN` 仍可用（脚本/自检走这条）
 
@@ -195,17 +200,17 @@ admin/
 
 | 方法 | 路径 | 用途 |
 |---|---|---|
-| POST | `/api/auth/login` | 口令换 cookie |
-| POST | `/api/auth/logout` | 清 cookie |
-| GET | `/api/auth/me` | 前端判断登录态 |
-| GET | `/api/stats` | PV / UV / 24h UV / 设备数 / 留言数 / 今日新增 / 隐藏 / 待回复 / 拉黑 |
-| GET | `/api/devices` | 设备台账（首见、最近活跃、留言数、最近一条、状态） |
-| GET | `/api/messages` | 留言审核（设备 / 状态 / 待回复 / 关键词 / `focus` 直达，每条附对话） |
-| POST | `/api/messages/status` | 隐藏 / 恢复 |
-| POST | `/api/messages/reply` | 站长回复某条留言（写 `author=owner`） |
-| DELETE | `/api/messages/reply` | 删除一条回复（误发 / 审核） |
-| POST | `/api/devices/block` | 拉黑 / 解封 |
-| GET | `/api/export` | 导出 CSV（留言 + 设备两段） |
+| POST | `/api/admin/auth/login` | 口令换 cookie |
+| POST | `/api/admin/auth/logout` | 清 cookie |
+| GET | `/api/admin/auth/me` | 前端判断登录态 |
+| GET | `/api/admin/stats` | PV / UV / 24h UV / 设备数 / 留言数 / 今日新增 / 隐藏 / 待回复 / 拉黑 |
+| GET | `/api/admin/devices` | 设备台账（首见、最近活跃、留言数、最近一条、状态） |
+| GET | `/api/admin/messages` | 留言审核（设备 / 状态 / 待回复 / 关键词 / `focus` 直达，每条附对话） |
+| POST | `/api/admin/messages/status` | 隐藏 / 恢复 |
+| POST | `/api/admin/messages/reply` | 站长回复某条留言（写 `author=owner`） |
+| DELETE | `/api/admin/messages/reply` | 删除一条回复（误发 / 审核） |
+| POST | `/api/admin/devices/block` | 拉黑 / 解封 |
+| GET | `/api/admin/export` | 导出 CSV（留言 + 设备两段） |
 
 ### 部署与密钥
 
