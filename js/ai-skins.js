@@ -175,11 +175,23 @@
 
   function fallback3D(hostEl, msg) {
     hostEl.innerHTML = SVG_CPBOT + '<div class="ai-mv-hud">3D 降级 // ' + msg + '</div>';
+    signalReady(hostEl);
+  }
+
+  /* 整块就绪信号：舞台在真正有东西可画之前一律隐藏（is-booting），
+     model-viewer 的 load / 3D 降级 / 2D 皮肤同步创建完成后各回调一次。
+     以前占位、入口标签、模型各自到货各自显示，右下角一块内容分批冒出来。 */
+  function signalReady(hostEl) {
+    var cb = hostEl && hostEl.__onSkinReady;
+    if (typeof cb !== 'function') return;
+    hostEl.__onSkinReady = null;
+    try { cb(); } catch (e) {}
   }
 
   function create3D(cfg) {
     return function (host) {
       var disposed = false, mv = null, state = 'idle', restoreTimer = null;
+      host.setAttribute('data-skin-3d', '1');   /* activate 据此判断要等 load 才放行 */
       host.innerHTML =
         '<div class="ai-mv-loading">' +
           '<svg class="ai-sk-svg" viewBox="0 0 120 150" style="max-width:110px;max-height:130px">' +
@@ -229,11 +241,15 @@
         mv.setAttribute('interaction-prompt', 'none');
         mv.setAttribute('touch-action', 'pan-y');
         mv.setAttribute('loading', 'eager');
-        var loading = host.querySelector('.ai-mv-loading');
-        if (loading) loading.remove();
+        /* 占位不提前拆：model-viewer 在模型可画之前是透明的，占位垫在下面兜底，
+           弱网时整块淡入也有东西可看；load 之后才拆，避免露出"空场" */
         host.appendChild(mv);
         mv.addEventListener('load', function () {
+          var loading = host.querySelector('.ai-mv-loading');
+          if (loading) loading.remove();
           stage.classList.add('is-mv-ready');
+          signalReady(host);
+          armHint();   /* 12s 兜底已经先放行过的话，这里把入口标签补上 */
           /* 减少动态偏好：停在待机首帧，不做入场挥手与坐姿序列 */
           if (reduceMotion) { apply(state, true); try { mv.pause(); } catch (e) {} return; }
           if (cfg.seq) intro(); else apply(state, true);
@@ -252,19 +268,20 @@
       }
 
       var bootScheduled = false;
+      /* 整块显示的代价是"没就绪就什么都不露"，所以启动要越早越好：
+         DOM 就绪且主线程空闲就开拉（比等 window.load 早 1~2s），
+         load 与定时器只作兜底（Turnstile / 字体等第三方资源常把 load 拖到十几秒）。 */
       function scheduleBoot() {
         if (bootScheduled) return;
         bootScheduled = true;
-        var go = function () { setTimeout(boot, 400); };
-        if (window.requestIdleCallback) requestIdleCallback(go, { timeout: 2500 });
-        else setTimeout(go, 900);
+        var go = function () { setTimeout(boot, 120); };
+        if (window.requestIdleCallback) requestIdleCallback(go, { timeout: 1200 });
+        else setTimeout(go, 300);
       }
-      if (document.readyState === 'complete') scheduleBoot();
-      else {
-        window.addEventListener('load', scheduleBoot, { once: true });
-        /* 兜底：Turnstile / 字体等第三方资源可能把 load 拖到十几秒，不能让角色一直停在占位 */
-        setTimeout(scheduleBoot, 2600);
-      }
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', scheduleBoot, { once: true });
+      else scheduleBoot();
+      window.addEventListener('load', scheduleBoot, { once: true });
+      setTimeout(scheduleBoot, 1800);
 
       /* ── 骨骼动画序列（cfg.seq）：入场挥手 → 待机呼吸 → 停留后坐下 ── */
       var seq = cfg.seq || null;
@@ -647,7 +664,7 @@
   /* ─────────────── 舞台 / 菜单 DOM ─────────────── */
 
   var stage = document.createElement('div');
-  stage.className = 'ai-stage';
+  stage.className = 'ai-stage is-booting';   /* 先藏住，等 activate 里就绪后整块放行 */
   stage.id = 'aiStage';
   stage.setAttribute('role', 'button');
   stage.setAttribute('tabindex', '0');
@@ -709,15 +726,46 @@
 
   function setState(s) { if (instance && instance.setState) instance.setState(s); }
 
+  /* ── 整块原子呈现 ─────────────────────────────────────────────
+     以前右下角这一块是“谁先到谁先显示”：SVG 占位 →（2.6s 定时器）入口标签
+     → 最后才是模型和挥手，观感像内容在分批加载。
+     现在舞台带 is-booting 整体不可见，模型 load（或降级/2D 同步创建）后
+     一次性淡入；挥手由 load 事件触发，标签跟着同一个节拍出来，三者同帧。
+     弱网/组件异常时 12s 兜底放行，避免角落一直空着。 */
+  var bootGuard = null, pendingPop = false, hintArmed = false;
+
+  function revealStage(noHint) {
+    if (bootGuard) { clearTimeout(bootGuard); bootGuard = null; }
+    if (!stage.classList.contains('is-booting')) return;
+    stage.classList.remove('is-booting');
+    if (pendingPop) { pendingPop = false; stage.classList.add('is-switching'); }
+    /* 12s 兜底那次只把块儿放出来（可能还停在占位），标签等真就绪再挂 */
+    if (!noHint) armHint();
+    /* 供其它模块复用同一节拍（如以后要恢复招呼气泡，见 main.js aiShowTip） */
+    try { document.dispatchEvent(new CustomEvent('cpai:stage-ready')); } catch (e) {}
+  }
+
   function activate(id, silent) {
     var skin = byId(id);
     if (!skin) return;
     if (instance && instance.destroy) { try { instance.destroy(); } catch (e) {} }
+    /* 换皮同样整块替换：新皮肤就绪前先整体隐藏，避免"旧皮消失 → 空场 → 新皮" */
+    stage.classList.add('is-booting');
+    stage.classList.remove('is-switching', 'is-mv-ready', 'is-thinking', 'is-think-anim');
+    pendingPop = !silent;
+    if (bootGuard) { clearTimeout(bootGuard); bootGuard = null; }
+    bootGuard = setTimeout(function () { revealStage(true); }, 12000);
+
     actor.innerHTML = '';
     host = document.createElement('div');
     host.className = 'ai-skin-host';
     actor.appendChild(host);
-    try { instance = skin.create(host) || {}; } catch (e) { instance = {}; host.innerHTML = SVG_CPBOT; }
+    host.__onSkinReady = revealStage;   /* create3D 在 load / 降级时回调 */
+    try { instance = skin.create(host) || {}; } catch (e) {
+      instance = {};
+      host.removeAttribute('data-skin-3d');
+      host.innerHTML = SVG_CPBOT;
+    }
     current = skin;
     stage.setAttribute('data-skin', id);
     nameEl.textContent = skin.name;
@@ -727,12 +775,8 @@
       cards[i].classList.toggle('is-active', cards[i].getAttribute('data-skin') === id);
     }
     try { localStorage.setItem(STORE, id); } catch (e) {}
-    stage.classList.remove('is-switching');
-    stage.classList.remove('is-mv-ready');
-    stage.classList.remove('is-thinking');
-    stage.classList.remove('is-think-anim');
-    void stage.offsetWidth;
-    stage.classList.add('is-switching');
+    /* 2D 皮肤渲染是同步的，创建完就整块放行；3D 等 model-viewer 的 load */
+    if (!host.hasAttribute('data-skin-3d')) revealStage();
     if (!silent) setState('greet');
     else setState('idle');
   }
@@ -763,14 +807,20 @@
   var hintSettled = false;
   function showHint() { if (hintEl) hintEl.classList.add('is-on'); }
   function hideHint() { if (hintEl) hintEl.classList.remove('is-on'); }
-  setTimeout(function () {
-    /* 首访 2s 左右会先冒招呼气泡，气泡本身已经指向角色，标签就不要再叠上去 */
-    if (aiPanel.hidden && !document.body.classList.contains('ai-panel-open') && !document.querySelector('.ai-fab-tip')) showHint();
-  }, 2600);
-  setTimeout(function () {
-    hintSettled = true;
-    if (!stage.matches || !stage.matches(':hover')) hideHint();
-  }, 11000);
+  /* 标签不再自己掐表：由 revealStage 在"模型可画"的同一拍调起，
+     所以挥手、角色、标签是一起出现的，不会先飘一个标签在空位置上。
+     延迟 260ms 只是让它跟角色的淡入错开半拍，视觉上属于同一次出现。 */
+  function armHint() {
+    if (hintArmed) return;
+    hintArmed = true;
+    setTimeout(function () {
+      if (aiPanel.hidden && !document.body.classList.contains('ai-panel-open') && !document.querySelector('.ai-fab-tip')) showHint();
+    }, 260);
+    setTimeout(function () {
+      hintSettled = true;
+      if (!stage.matches || !stage.matches(':hover')) hideHint();
+    }, 9260);
+  }
   stage.addEventListener('mouseenter', showHint);
   stage.addEventListener('mouseleave', function () { if (hintSettled) hideHint(); });
   stage.addEventListener('focus', showHint);

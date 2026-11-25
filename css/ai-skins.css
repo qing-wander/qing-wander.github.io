@@ -30,11 +30,19 @@ body.has-ai-skin .ai-fab-tip { bottom: 300px; right: 18px; }
   box-shadow: none;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
-  transition: right .28s ease, opacity .2s ease, transform .2s ease;
+  transition: right .28s ease, opacity .32s cubic-bezier(.2, .9, .3, 1), transform .32s cubic-bezier(.2, .9, .3, 1);
   user-select: none; -webkit-user-select: none;
 }
 .ai-stage::before { display: none; }
 .ai-stage::after { display: none; }
+/* 整块原子呈现：3D 可画之前整块不可见 —— 占位图、入口标签、落地阴影一律不露，
+   就绪后与挥手、标签同一拍淡入上浮；visibility 一起切，顺带把它移出 Tab 顺序 */
+.ai-stage.is-booting {
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(10px) scale(.985);
+  pointer-events: none;
+}
 /* hover 不再整体上移：外移会与模型自身的呼吸浮动叠加，看起来像"弹一下"；
    改成内部轻微放大，热区位置保持不动 */
 .ai-stage-actor { transition: transform .3s cubic-bezier(.2, .9, .3, 1); }
