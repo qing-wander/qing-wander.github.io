@@ -209,7 +209,8 @@ export default {
     {
       "profileId": "comein",
       "company": "进门财经 · 深圳进门财经科技股份有限公司",
-      "role": "机构金融投研 SaaS · Agent 工程师",
+      "companyNote": "机构金融投研 SaaS",
+      "role": "Agent 工程师",
       "time": "2026.01 — 2026.07",
       "points": [
         "主导 AI 金融投研工作台（AI 进宝）核心基建研发：Agent 基座与多租户云沙箱、MCP / Skill 扩展、AI 资源计费、五端 IM 网关，<strong>支撑 Agent 从接入到计费全链路落地</strong>"
@@ -239,6 +240,7 @@ export default {
     {
       "profileId": "zhishu",
       "company": "Lessie · 深圳指数引力科技有限公司",
+      "companyNote": "网红营销 SaaS",
       "role": "Agent 工程师 · 创始团队成员（红杉投资 AI 初创）",
       "time": "2024.03 — 2025.11",
       "points": [
@@ -272,7 +274,8 @@ export default {
     {
       "profileId": "fanggeek",
       "company": "房极客 · 深圳市房极客网络科技有限公司",
-      "role": "房地产 SaaS · Java 开发工程师",
+      "companyNote": "房地产 SaaS",
+      "role": "Java 开发工程师",
       "time": "2023.08 — 2024.01",
       "points": [
         "参与小鹿选房 C 端、看房日记 B 端、经纪人 ERP 中台研发，负责新房报备 / 上下架 / 房源跟进 / 权限控制 / 余额划转等模块，<strong>打通新房业务线上流转</strong>。"
@@ -292,7 +295,8 @@ export default {
     {
       "profileId": "chowsang",
       "company": "周生生（中国）商业有限公司",
-      "role": "Java 开发工程师 · 获评「高级程序员」职称（港企 · 电商零售）",
+      "companyNote": "珠宝品牌自营数字化",
+      "role": "Java 开发工程师 · 获评「高级程序员」职称",
       "time": "2021.09 — 2023.06",
       "points": [
         "负责多渠道潜客 <strong>CRM 平台</strong>研发：整合大陆、港澳台线上线下销售线索，日活 <strong>10W+</strong>，销售转化率提升 <strong>70%</strong>。",
