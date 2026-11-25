@@ -105,12 +105,12 @@ echo "=== ③ 部署到 Cloudflare Pages（项目 ${PROJECT} / 分支 ${BRANCH}�
 
 echo "=== ④ 验证线上"
 PROD="https://$PROJECT.pages.dev/"
-for path in "" resume.html company.html jd.html data/site-data.json css/style.css js/main.js css/jd-match.css js/jd-match.js; do
+for path in "" resume.html company.html school.html jd.html data/site-data.json css/style.css js/main.js css/jd-match.css js/jd-match.js css/school-profile.css js/school-profile.js data/school-profiles.js; do
   code=$(curl -sL --ipv4 -o /dev/null -w '%{http_code}' -A "Mozilla/5.0" "${PROD}${path}")
   echo "   ${code}  ${PROD}${path}"
 done
 # 独立页不能只是 200：SPA fallback 也会 200 但返回首页，用 title 兜底核对
-for path in jd.html company.html; do
+for path in jd.html company.html school.html; do
   title=$(curl -sL --ipv4 -A "Mozilla/5.0" "${PROD}${path}" | grep -o '<title>[^<]*</title>' | head -1)
   case "$title" in
     *"求职作品集 2026"*) echo "   ⚠ ${path} 疑似回退到首页（title=${title}）" ;;

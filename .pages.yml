@@ -21,3 +21,9 @@ content:
     type: file
     path: data/company-profiles.json
     format: code
+
+  - name: school-profiles
+    label: 学校档案（教育经历 / 在校经历 / 课程表 / 获奖证书）
+    type: file
+    path: data/school-profiles.json
+    format: code

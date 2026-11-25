@@ -15,7 +15,7 @@
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&display=swap"></noscript>
 <link rel="stylesheet" href="css/fonts.css?v=20261111a">
 <!-- 公司档案（徽章 / 速览行 / 抽屉）：数据源 data/company-profiles.js，打印时自动隐藏 -->
-<link rel="stylesheet" href="css/company-profile.css?v=20261125e">
+<link rel="stylesheet" href="css/company-profile.css?v=20261125g">
 <meta name="description" content="陈培胜的网页版简历：5 年 Java 后端 + 2 年 AI Agent 工程，Agent 开发 / AI 工程化方向，支持打印导出 PDF。">
 <meta name="theme-color" content="#F3EEE2">
 <link rel="canonical" href="https://chenpeisheng.cn/resume.html">
@@ -142,9 +142,18 @@ body {
   color: var(--blue) !important;
   border-bottom-color: var(--blue);
 }
+/* 学校档案入口：沿用公司名同款链接，右侧补一个可跳转提示箭头（打印时隐藏） */
+.sp-name-link::after {
+  content: ' ↗';
+  font-size: .62em;
+  font-weight: 700;
+  color: var(--orange);
+  vertical-align: .18em;
+}
 @media print {
   .head-meta .link { color: inherit; border-bottom: none; text-decoration: none; }
   .item-title a, .pts a { color: inherit; border-bottom: none; text-decoration: none; }
+  .sp-name-link::after { content: ''; }
 }
 .file-no {
   font-family: var(--font-mono);
@@ -322,6 +331,8 @@ body {
 .btn-solid { background: var(--orange); color: #fff; }
 .btn-blue { background: var(--blue); color: #fff; }
 .btn-green { background: var(--green); color: #fff; }
+/* 合并 PDF 按钮后颜色依次前移：橙 → 蓝 → 绿 → 黑，返回主页落到黑色 */
+.btn-black { background: var(--ink); color: #fff; }
 .btn-deliver { background: var(--ink); color: #fff; }
 
 /* ── 简历转发弹窗 ── */
@@ -525,8 +536,7 @@ body {
   * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
 
   /* 背景只挂在 body 上：body 背景会自动传播铺满整个打印画布。
-     若同时给 html 设背景，黑白模式的 bw-print 类挂在 body 上覆盖变量后，
-     html 仍取 :root 的米黄色，会在页边与正文盒子之外漏色。 */
+     若同时给 html 设背景，html 仍取 :root 的米黄色，会在页边与正文盒子之外漏色。 */
   body { background: var(--paper) !important; }
   body { padding: 14px 14px; font-size: 12.6px; }
   /* 头部信息行与网页端一致：保持原字号、禁止换行，避免邮箱被挤到下一行 */
@@ -557,24 +567,22 @@ body {
   .edu-verify { padding: 4px 10px; gap: 10px; }
   .edu-verify-qr { width: 60px; height: 60px; }
 
-  /* ── 黑白打印模式：布局样式不变，仅保留黑白两色（纸质打印省墨兼容） ── */
-  body.bw-print {
-    --paper: #ffffff;
-    --card: #ffffff;
-    --ink: #000000;
-    --ink-soft: #000000;
-    --orange: #000000;
-    --blue: #000000;
+  /* ── 合并后的 PDF：只保留「彩色版」这一套版式（米白底 / 粗边框 / 彩色强调），
+        并把原先黑白正式版里三处更克制的处理并进来 —— 一个按钮即最终稿。 ──
+     1) 姓名去掉橙色文字阴影，纸面更干净；
+     2) 专业技能高亮块由橙 / 蓝实心底改为「白底黑字 + 黑描边」的空白方框，
+        保留原有 1.5px 边框，宽度零变化，ATS 与黑白打印都友好；
+     3) 板块序号色块的填充色沿用屏幕端 ARCHIVE 主题的橙 #FF5A1E，
+        与网页简历里看到的完全一致，不再被打印态的深红覆盖。 */
+  .head-name { text-shadow: none; }
+  .sec-no { background: #FF5A1E; color: #ffffff; }
+  .sheet .skill-row-main em,
+  .sheet .skill-row-main em:nth-of-type(odd),
+  .sheet .skill-row-main em:nth-of-type(even),
+  .sheet .skill-row-main em.em-b {
+    background: #ffffff !important;
+    color: #000000 !important;
   }
-  /* 板块序号块与技能高亮块：实心底改为白底黑字描边（保留原有边框，宽度零变化） */
-  body.bw-print .sec-no { background: #ffffff; color: #000000; }
-  body.bw-print .skill-row-main em { background: #ffffff; color: #000000; }
-  /* 姓名去掉阴影：避免与加粗黑字重叠发闷 */
-  body.bw-print .head-name { text-shadow: none; }
-  body.bw-print img { filter: grayscale(1); }
-  body.bw-print .edu-verify { background: #ffffff; }
-  /* 黑白为正式版：去掉外层右下黑色投影，仅保留边框；彩色版保留风格化阴影 */
-  body.bw-print .sheet { box-shadow: none; }
 }
 @media (max-width: 620px) {
   .head-name { font-size: 32px; }
@@ -804,7 +812,7 @@ body {
     <div class="sec-title"><span class="sec-no">05</span><h2>教育经历</h2><span class="sec-line"></span></div>
     <div class="item">
       <div class="item-head">
-        <p class="item-title">中山大学新华学院 <span>全日制统招本科 · 软件工程 · 国家励志奖学金 · 校级奖学金</span></p>
+        <p class="item-title"><a class="sp-name-link" data-sp="xinhua" href="https://chenpeisheng.cn/school.html?c=xinhua" title="学校档案：学校概况 / 在校经历 / 课程表 / 获奖证书 / 相册">中山大学新华学院</a> <span>全日制统招本科 · 软件工程 · 国家励志奖学金 · 校级奖学金</span></p>
         <span class="item-time">2017.09 — 2021.06</span>
       </div>
       <ul class="pts">
@@ -824,11 +832,10 @@ body {
 </div>
 
 <div class="actions">
-  <button class="btn btn-solid" onclick="window.print()">保存为 PDF（彩色）⎙</button>
-  <button class="btn btn-blue" onclick="printBW()">打印 PDF（正式黑白）⎙</button>
-  <button class="btn btn-green" id="btnLongImage" onclick="exportLongImage(this)">生成长图 ▤</button>
-  <button class="btn btn-deliver" id="btnDeliver" data-analytics="resume_deliver_open" onclick="openDeliver()">发简历到邮箱 ✉</button>
-  <a class="btn" href="index.html">← 返回作品集主页</a>
+  <button class="btn btn-solid" onclick="window.print()">保存/打印为 PDF ⎙</button>
+  <button class="btn btn-blue" id="btnLongImage" onclick="exportLongImage(this)">生成长图 ▤</button>
+  <button class="btn btn-green" id="btnDeliver" data-analytics="resume_deliver_open" onclick="openDeliver()">发简历到邮箱 ✉</button>
+  <a class="btn btn-black" href="index.html">← 返回作品集主页</a>
 </div>
 
 <!-- ── 转发弹窗：浏览者填收件人邮箱，把在线简历发给对方（自己 / 同事 / 指定人） ── -->
@@ -1033,31 +1040,9 @@ document.getElementById('dlForm').addEventListener('submit', function (e) {
     });
 });
 
-/* 黑白打印：临时挂上 bw-print 类再触发打印，结束后自动移除。
-   头像换用真实灰度图（images/portrait-bw.jpg）——
-   CSS filter 在部分浏览器的真实打印管线中会被丢弃，像素级灰度图在任何打印路径下都可靠；
-   页面加载时预取灰度图，确保点击打印时已在缓存、瞬时替换。 */
-(function () {
-  var bwPreload = new Image();
-  bwPreload.src = 'images/portrait-bw.jpg';
-})();
-function printBW() {
-  document.body.classList.add('bw-print');
-  var av = document.querySelector('.avatar img');
-  if (av && av.getAttribute('src') !== 'images/portrait-bw.jpg') {
-    av.setAttribute('data-bw-revert', av.getAttribute('src'));
-    av.setAttribute('src', 'images/portrait-bw.jpg');
-  }
-  setTimeout(function () { window.print(); }, 120);
-}
-window.addEventListener('afterprint', function () {
-  document.body.classList.remove('bw-print');
-  var av = document.querySelector('.avatar img');
-  if (av && av.hasAttribute('data-bw-revert')) {
-    av.setAttribute('src', av.getAttribute('data-bw-revert'));
-    av.removeAttribute('data-bw-revert');
-  }
-});
+/* PDF 只有一套：「保存/打印为 PDF」按钮直接调用 window.print()，
+   打印样式里已把原先黑白正式版的三处克制处理（姓名无阴影 / 技能空白方框 /
+   序号色块与网页同色）合并进来，不再有第二套 bw-print 模式与灰度头像替换。 */
 
 /* 简历长图：按需加载 html2canvas（本地自托管，断网/境外 CDN 不可达也能用），
    生成后先进入预览，预览内提供下载 / 取消 */
@@ -1196,9 +1181,24 @@ function exportLongImage(btn) {
 
 <script src="js/analytics.js?v=20261119b" defer></script>
 <!-- 公司档案数据快照 + 抽屉组件（resume.html 与 index.html 共用） -->
-<script src="data/company-profiles.js?v=20261125e"></script>
-<script src="js/cp-panorama.js?v=20261125e" defer></script>
-<script src="js/company-social.js?v=20261125e" defer></script>
-<script src="js/company-profile.js?v=20261125e" defer></script>
+<script src="data/company-profiles.js?v=20261125g"></script>
+<script src="js/cp-panorama.js?v=20261125g" defer></script>
+<script src="js/company-social.js?v=20261125g" defer></script>
+<script src="js/company-profile.js?v=20261125g" defer></script>
+<script>
+/* 学校档案深链：线上用绝对地址（保证 PDF 内链接可点）；
+   本地预览 / file:// 下改回本地相对路径，避免跳到尚未部署的线上地址。 */
+(function () {
+  var host = location.hostname || '';
+  var local = /^(localhost|127\.0\.0\.1|0\.0\.0\.0|\[::1\])$/.test(host) || /^file:/.test(location.protocol);
+  if (!local) return;
+  function fix() {
+    var a = document.querySelector('.sp-name-link');
+    if (a) a.setAttribute('href', 'school.html?c=' + encodeURIComponent(a.getAttribute('data-sp') || ''));
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fix);
+  else fix();
+})();
+</script>
 </body>
 </html>

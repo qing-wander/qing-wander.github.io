@@ -1,0 +1,145 @@
+{
+  "meta": {
+    "_note": "学校档案唯一真相源：网页简历教育经历、作品集首页教育板块、学校档案独立页共用。编辑本文件后运行 python3 scripts/sync_school_profiles.py 重建 JS 快照（CI 会做漂移检查）。学校维度信息以官网公开口径为准并标注来源编号；在校经历 / 课程 / 获奖为本人自述，未公开或不确定的字段如实标注，不编造。",
+    "collectedAt": "2026-11-25",
+    "disclaimer": "本档案由学校官网公开信息与本人自述整理，仅用于求职背景展示，非学校官方出具的档案、成绩单或学历证明。学历可通过下方学信网在线验证码独立核验。",
+    "backToResume": "resume.html",
+    "backToPortfolio": "index.html"
+  },
+  "schools": {
+    "xinhua": {
+      "id": "xinhua",
+      "code": "13902",
+      "logo": "images/edu-xinhua.png",
+      "logoNote": "校徽为本人就读期间使用的「中山大学新华学院」标识，取自作品集素材（images/edu-xinhua.png）。",
+      "name": "中山大学新华学院",
+      "currentName": "广州新华学院",
+      "shortName": "新华学院",
+      "nameEn": "Xinhua College of Sun Yat-sen University → Guangzhou Xinhua University",
+      "nameNote": "2021 年 2 月经教育部批准转设为独立设置的本科层次普通高等学校，更名为「广州新华学院」。本人 2017.09 入学、2021.06 毕业，就读期间校名为「中山大学新华学院」。",
+      "industry": "全日制普通本科 · 民办 · 多科性",
+      "oneLine": "软件工程本科（全日制统招）：从数据结构、操作系统到 Web 开发，四年打下的工程底子，后来一路长成 Java 后端与 AI Agent 工程。",
+      "period": "2017.09 — 2021.06",
+      "degree": "本科 · 全日制统招",
+      "major": "软件工程",
+      "majorEn": "SOFTWARE ENGINEERING",
+      "majorNote": "工学 / 计算机类 · 四年制本科",
+      "pills": [
+        "广东 · 广州 / 东莞",
+        "2005 年设立",
+        "2021 年转设更名",
+        "软件工程 · 四年制",
+        "2017 级",
+        "全日制统招本科"
+      ],
+      "quickStats": ["2017 入学", "2021 毕业", "4 年全日制", "2 项奖学金"],
+      "kpis": [
+        { "label": "就读时间", "value": "2017.09—2021.06", "sub": "4 学年 · 全日制统招" },
+        { "label": "学历 / 专业", "value": "本科 · 软件工程", "sub": "工学 · 计算机类 · 四年制" },
+        { "label": "在校荣誉", "value": "2 项", "sub": "国家励志奖学金 + 校级奖学金" },
+        { "label": "学历核验", "value": "学信网可查", "sub": "在线验证码见下方" }
+      ],
+      "school": {
+        "intro": "中山大学新华学院（现广州新华学院，院校代码 13902）于 2005 年 5 月经教育部批准设立，由中山大学与广东东宝集团有限公司合作创办，原为独立学院；2021 年 2 月经教育部批准转设为独立设置的本科层次普通高等学校并更名。学校横跨广州、东莞两地办学，设广州、东莞两个校区，是涵盖经济学、法学、教育学、文学、理学、工学、医学、管理学、艺术学等学科的多科性全日制普通本科高校。",
+        "motto": "博学、笃行、正心、自强",
+        "website": { "text": "www.xhsysu.edu.cn", "href": "https://www.xhsysu.edu.cn/" },
+        "facts": [
+          { "label": "创办时间", "text": "2005 年 5 月经教育部批准设立并招生（教发函〔2005〕68 号）", "source": 2 },
+          { "label": "举办方沿革", "text": "原由中山大学与广东东宝集团有限公司合作举办；转设后由广东东宝集团有限公司举办，属非营利性组织", "source": 2 },
+          { "label": "办学性质", "text": "民办 · 全日制普通本科高等学校（2017 年入学时为独立学院）", "source": 2 },
+          { "label": "院校代码", "text": "13902", "source": 3 },
+          { "label": "主管部门", "text": "广东省教育厅；法人登记管理机关为广东省民政厅", "source": 2 },
+          { "label": "校训", "text": "博学、笃行、正心、自强", "source": 1 },
+          { "label": "办学宗旨", "text": "立德树人、服务社会；以「德才兼备、知行合一」为人才培养目标", "source": 1 },
+          { "label": "学科与专业", "text": "涵盖经、法、教、文、理、工、医、管、艺等学科；软件工程属工学 / 计算机类，四年制本科", "source": 3 },
+          { "label": "校区", "text": "广州校区（天河区）+ 东莞校区（麻涌镇），规划面积 2185 亩（含配套用地 600 亩）", "source": 1 },
+          { "label": "办学规模", "text": "全日制在校生 2.5 万余人、面向全国 25 个省份招生（学校官网现行口径，非本人就读期间数据）", "source": 1 },
+          { "label": "官方网站", "text": "www.xhsysu.edu.cn", "source": 1 }
+        ],
+        "campuses": [
+          { "name": "广州校区", "address": "广东省广州市天河区龙洞华美路 19 号", "note": "火炉山 / 凤凰山旁，毗邻天河核心区", "source": 2 },
+          { "name": "东莞校区", "address": "广东省东莞市麻涌镇沿江西路 248 号", "note": "麻涌河与华阳湖国家生态湿地公园环绕", "source": 1 }
+        ],
+        "history": [
+          { "date": "2005.05", "title": "批准设立", "text": "教育部批准设立中山大学新华学院（独立学院），同年招生。", "source": 2 },
+          { "date": "2017.09", "title": "本人入学", "text": "入读软件工程专业，本科全日制统招，学制四年。", "source": 0 },
+          { "date": "2021.02", "title": "转设更名", "text": "教育部批准转设为独立设置的本科层次普通高等学校，更名「广州新华学院」；更名发生在本人毕业前数月。", "source": 1 },
+          { "date": "2021.06", "title": "本人毕业", "text": "完成本科学业，软件工程本科毕业；在校期间获国家励志奖学金与校级奖学金。", "source": 0 },
+          { "date": "2021—2025", "title": "转设后发展", "text": "2021 年获批广东省硕士学位授予立项建设单位、广东省博士工作站；2022 年获批国家自然科学基金依托单位；2025 年通过教育部本科教学工作合格评估。", "source": 1 }
+        ],
+        "highlights": [
+          { "title": "实验实训条件", "detail": "建有医药、经管、理工、文法、艺术设计五大实验实训平台；信息科学实验教学示范中心为省级实验教学示范中心之一。", "source": 3 },
+          { "title": "应用型定位", "detail": "突出应用型办学特色与产教融合，强调「较强创新创业和实践能力」，与软件工程专业的工程实践导向一致。", "source": 1 },
+          { "title": "转设后资质", "detail": "2021 年获批广东省博士工作站与硕士学位授予立项建设单位，2022 年获批国家自然科学基金依托单位。", "source": 1 }
+        ]
+      },
+      "timeline": {
+        "note": "按学年梳理的在校经历，主体口径来自本人简历与作品集；其中标注为参考的科目属软件工程专业通行课程体系补充，非成绩单逐门罗列。",
+        "items": [
+          { "no": "Y1", "term": "2017 — 2018 · 大一", "title": "打基础", "text": "入学软件工程专业；主修线性代数等数学基础与程序设计入门，开始建立「把问题拆成数据结构 + 流程」的习惯。", "tags": ["线性代数", "程序设计基础（参考）"] },
+          { "no": "Y2", "term": "2018 — 2019 · 大二", "title": "计算机核心课", "text": "数据结构与算法、计算机组成原理、操作系统、数据库原理集中在这一阶段；开始用 Java 写课程设计与小工具。", "tags": ["数据结构与算法", "计算机组成原理", "操作系统", "数据库原理"] },
+          { "no": "Y3", "term": "2019 — 2020 · 大三", "title": "软件工程与网络", "text": "软件工程导论、计算机网络与 Web 开发相关课程；从「写得出」转向「写得可维护」，接触项目协作与版本管理。", "tags": ["软件工程导论", "计算机网络", "Web 开发（参考）"] },
+          { "no": "Y4", "term": "2020 — 2021 · 大四", "title": "实习 + 毕业设计", "text": "大四实习做前端，第一次在真实需求里交付代码；2021.06 本科毕业。", "tags": ["前端实习", "毕业设计（参考）"] },
+          { "no": "NOW", "term": "2021 — 至今 · 毕业后", "title": "从 Java 后端到 AI Agent 工程", "text": "毕业后从 Java 后端起步，先后主导 6 个系统从 0 到 1；近两年跨栈 Python / TypeScript，转向 Multi-Agent 编排、Agentic RAG、MCP 与向量数据库。", "tags": ["Java 后端", "AI Agent 工程"], "kind": "after" }
+        ]
+      },
+      "courses": {
+        "note": "下表依据本人简历与作品集中明确记载的主修课程整理，按软件工程专业通行的课程群归类，并以四个学年阶段排布。实心标签＝简历 / 作品集明确记载；虚线标签＝同课程群常见科目，仅作课程体系参考，非成绩单逐门罗列。本表不是学校官方培养方案，也不是实际排课课表。",
+        "terms": [
+          { "term": "大一", "en": "YEAR 1", "focus": "数学与编程基础", "items": [{ "name": "线性代数", "confirmed": true }, { "name": "高等数学", "confirmed": false }, { "name": "程序设计基础", "confirmed": false }], "output": "把问题拆成数据结构与流程" },
+          { "term": "大二", "en": "YEAR 2", "focus": "计算机核心", "items": [{ "name": "数据结构与算法", "confirmed": true }, { "name": "计算机组成原理", "confirmed": true }, { "name": "操作系统", "confirmed": true }, { "name": "数据库原理", "confirmed": true }, { "name": "离散数学", "confirmed": false }], "output": "理解程序怎么跑、数据怎么存" },
+          { "term": "大三", "en": "YEAR 3", "focus": "软件工程与网络", "items": [{ "name": "软件工程导论", "confirmed": true }, { "name": "计算机网络", "confirmed": true }, { "name": "软件测试", "confirmed": false }, { "name": "Web 应用开发", "confirmed": false }], "output": "从写得出来到写得可维护" },
+          { "term": "大四", "en": "YEAR 4", "focus": "工程实践", "items": [{ "name": "前端实习", "confirmed": true }, { "name": "毕业设计", "confirmed": false }, { "name": "软件项目管理", "confirmed": false }], "output": "第一次在真实需求里交付代码" }
+        ]
+      },
+      "awards": [
+        { "no": "AWARD-01", "title": "国家励志奖学金", "level": "国家级", "org": "本科期间 · 国家级奖学金", "year": "本科期间", "img": "images/cert-1.jpg", "alt": "国家励志奖学金奖章插画", "note": "在校期间获得的国家级奖学金，与作品集「获奖证书」板块同一份口径。配图为示意插画，非证书扫描件。", "tag": "国家级" },
+        { "no": "AWARD-02", "title": "校级奖学金", "level": "校级", "org": "中山大学新华学院 · 本科期间", "year": "本科期间", "img": "images/cert-2.jpg", "alt": "校级奖学金奖章插画", "note": "与首页「2 项奖学金（含国家级）」统计一致。配图为示意插画，非证书扫描件。", "tag": "校级" },
+        { "no": "AWARD-03", "title": "「高级程序员」职称（非在校荣誉）", "level": "在职获评", "org": "周生生 · 2022 年", "year": "2022", "img": "images/cert-3.jpg", "alt": "高级程序员职称徽章插画", "note": "边界说明：此项为毕业后在职获评，不属于在校获奖，列在这里只为避免与两项奖学金混淆。", "tag": "边界说明", "muted": true }
+      ],
+      "album": [
+        { "img": "images/edu-xinhua.png", "alt": "中山大学新华学院校徽", "caption": "就读期间校徽", "tag": "标识", "note": "环形字标 Xinhua College of Sun Yat-sen University，中心 2005 为建校年份" },
+        { "img": "images/cert-1.jpg", "alt": "国家励志奖学金奖章插画", "caption": "国家励志奖学金", "tag": "荣誉", "note": "示意插画，非证书扫描件" },
+        { "img": "images/cert-2.jpg", "alt": "校级奖学金奖章插画", "caption": "校级奖学金", "tag": "荣誉", "note": "示意插画，非证书扫描件" },
+        { "img": "images/edu-verify-qr.png", "alt": "学信网学历在线验证二维码", "caption": "学历在线核验", "tag": "核验", "note": "扫码可查学历在线验证报告" },
+        { "img": "images/portrait.jpg", "alt": "本人照片", "caption": "本人", "tag": "人物", "note": "作品集头像" },
+        { "img": "", "alt": "", "caption": "校园实拍 / 毕业照", "tag": "待补充", "note": "暂无可公开的校园实拍照片；如需补充，由本人提供后再加入相册。", "empty": true }
+      ],
+      "growth": {
+        "note": "补充维度：把本科课程与现在实际在用的工程能力一一对上，回答「学校学的到底用在哪」。左侧为课程群，右侧为当前技术栈，属本人自述的能力映射。",
+        "items": [
+          { "course": "数据结构与算法", "now": "Multi-Agent 编排 / 检索链路", "text": "任务分解、状态机与图遍历，是后来写 Supervisor / ReAct 编排与 Agentic RAG 检索链路的底层直觉。" },
+          { "course": "数据库原理", "now": "Milvus / MySQL / Redis / Elasticsearch", "text": "索引、事务与查询代价，迁移到向量检索、会话缓存与 RAG 召回链路设计。" },
+          { "course": "计算机网络", "now": "MCP / HTTP / SSE 流式输出", "text": "协议分层与长连接，直接对应工具调用协议与 Agent 流式响应。" },
+          { "course": "操作系统", "now": "Docker / K8s / 多租户沙箱", "text": "进程隔离与资源配额，是后来做 Agent 沙箱与多租户执行环境的基础。" },
+          { "course": "软件工程导论", "now": "6 个系统 0→1 / DevOps", "text": "需求—设计—测试—交付的工程闭环，后来扩展成 Jenkins CI/CD 与可观测性实践。" }
+        ]
+      },
+      "verify": {
+        "label": "学历在线验证码（学信网）",
+        "code": "AH96NG89HCCUWMEA",
+        "tip": "查验 www.chsi.com.cn/xlcx/bgcx.jsp · 或学信网 App 扫码 · 有效期至 2027-04-29",
+        "qrImage": "images/edu-verify-qr.png",
+        "qrAlt": "学信网学历在线验证二维码",
+        "url": "https://www.chsi.com.cn/xlcx/bgcx.jsp"
+      },
+      "dataConfidence": {
+        "note": "学校维度采用官网 / 章程 / 招生网公开口径并标注来源；在校经历、课程与获奖为本人自述，未经第三方逐项核验；学历本身可由学信网在线验证码独立核验。",
+        "items": [
+          { "label": "学校公开信息", "level": "官网口径", "detail": "学校简介 / 章程 / 招生网，见下方资料来源" },
+          { "label": "学历与就读时间", "level": "可独立核验", "detail": "学信网在线验证码 AH96NG89HCCUWMEA" },
+          { "label": "课程清单", "level": "本人自述", "detail": "简历 / 作品集明确记载 + 同课程群参考科目" },
+          { "label": "获奖证书", "level": "本人自述", "detail": "配图为示意插画，非证书扫描件" },
+          { "label": "校园实拍照片", "level": "暂无", "detail": "未公开展示，相册中如实标注「待补充」" }
+        ]
+      },
+      "sources": [
+        { "id": 1, "title": "广州新华学院 · 学校简介（官网）", "url": "https://xhsysu.edu.cn/xxgk/xxjj.htm", "note": "创办时间、转设更名、校区、校训、办学规模与转设后资质" },
+        { "id": 2, "title": "广州新华学院章程 · 信息公开网", "url": "https://xxgk.xhsysu.edu.cn/info/1132/1819.htm", "note": "前身与举办方、办学性质、法定地址、主管部门" },
+        { "id": 3, "title": "广州新华学院招生网 · 学校简介", "url": "https://zsb.xhsysu.edu.cn/xxgk/xxjj.htm", "note": "院校代码、学科布局、实验实训平台与省级实验教学示范中心" },
+        { "id": 4, "title": "广州新华学院新闻中心 · 学校简介", "url": "https://xhnews.xhsysu.edu.cn/info/1035/5353.htm", "note": "校区环境与转设沿革的补充口径" },
+        { "id": 5, "title": "中国高等教育学生信息网（学信网）· 学历查询", "url": "https://www.chsi.com.cn/xlcx/bgcx.jsp", "note": "学历在线验证码查验入口" }
+      ]
+    }
+  }
+}

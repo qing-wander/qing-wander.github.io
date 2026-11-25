@@ -175,12 +175,21 @@ function skillsSection(r) {
   return section('专业技能', '04', '专业技能', inner);
 }
 
+/* 学校名即学校档案入口：与公司名同款，href 用线上绝对地址，
+   打印成 PDF 后 Chrome 会把它转成可点击的链接注释；
+   本地预览（localhost / file://）由模板底部脚本改回相对路径，避免跳到尚未部署的线上地址。 */
+function schoolNameLink(e) {
+  if (!e.profileId) return esc(e.school);
+  const id = esc(e.profileId);
+  return `<a class="sp-name-link" data-sp="${id}" href="https://chenpeisheng.cn/school.html?c=${id}" title="学校档案：学校概况 / 在校经历 / 课程表 / 获奖证书 / 相册">${esc(e.school)}</a>`;
+}
+
 function educationSection(r) {
   const e = r.education;
   const inner = [
     '    <div class="item">',
     '      <div class="item-head">',
-    `        <p class="item-title">${esc(e.school)} <span>${esc(e.note)}</span></p>`,
+    `        <p class="item-title">${schoolNameLink(e)} <span>${esc(e.note)}</span></p>`,
     `        <span class="item-time">${esc(e.period)}</span>`,
     '      </div>',
     ...bullets(e.bullets),

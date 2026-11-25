@@ -166,14 +166,24 @@
         '<p class="obj-desc">' + esc(c.desc || '') + '</p></div>';
     }).join('');
 
-    /* ── 教育经历 ── */
+    /* ── 教育经历 ──
+       profileId 关联 data/school-profiles.json：学校名即学校档案独立页入口，
+       与公司档案同款；链接用相对路径，本地预览与线上同域都可达。 */
     var ed = d.education || {}, em = ed.main || {};
+    var schoolUrl = em.profileId ? 'school.html?c=' + encodeURIComponent(em.profileId) : '';
+    var schoolTitle = '学校档案：学校概况 / 在校经历 / 课程表 / 获奖证书 / 相册';
+    var schoolName = schoolUrl
+      ? '<a class="edu-school-link" href="' + schoolUrl + '" title="' + schoolTitle + '">' + esc(em.school) + '<span class="edu-school-go">↗</span></a>'
+      : esc(em.school);
+    var schoolGo = schoolUrl
+      ? '<a class="edu-file-link" href="' + schoolUrl + '" title="' + schoolTitle + '">查看学校档案 · 课程表 / 在校经历 / 获奖证书 ↗</a>'
+      : '';
     var eduMain =
       '<div class="edu-card reveal">' +
         '<div class="edu-card-head"><span class="edu-years">' + esc(em.time) + '</span>' +
         '<span class="tag ' + (em.tagCls || 'tag-orange') + '">' + esc(em.tag) + '</span></div>' +
         '<div class="edu-brand">' + (em.logo ? '<img class="edu-logo" src="' + esc(em.logo) + '" alt="' + esc(em.school) + ' 校徽">' : '') +
-        '<h3 class="edu-school">' + esc(em.school) + '</h3></div>' +
+        '<div class="edu-brand-txt"><h3 class="edu-school">' + schoolName + '</h3>' + schoolGo + '</div></div>' +
         '<p class="edu-major">' + esc(em.major) + ' <span class="edu-en">' + esc(em.majorEn) + '</span></p>' +
         '<div class="edu-stats">' + (em.stats || []).map(function (s) {
           return '<div class="edu-stat ' + (s.cls || '') + '"><strong>' + esc(s.num) + '<span>' + esc(s.unit) + '</span></strong><em>' + esc(s.label) + '</em></div>';

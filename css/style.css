@@ -841,6 +841,26 @@ body.bar-tight .nav.open a { font-size: 17px; padding: 12px 10px; border-bottom:
   box-shadow: 3px 3px 0 rgba(var(--ink-rgb), .18);
 }
 .edu-school { font-family: var(--font-display); font-weight: 900; font-size: clamp(30px, 3.6vw, 42px); line-height: 1.2; }
+/* 学校档案入口：学校名可点 + 名下一行档案链接，与公司档案同款 */
+.edu-brand-txt { min-width: 0; }
+.edu-school-link {
+  color: inherit; text-decoration: none;
+  border-bottom: 3px solid transparent;
+  transition: color .15s ease, border-color .15s ease;
+}
+.edu-school-link:hover, .edu-school-link:focus-visible {
+  color: var(--orange); border-bottom-color: var(--orange); outline: none;
+}
+.edu-school-go { font-size: .46em; font-weight: 700; vertical-align: .42em; margin-left: 8px; color: var(--orange); }
+.edu-file-link {
+  display: inline-block; margin-top: 2px;
+  font-family: var(--font-mono); font-size: 11.5px; font-weight: 700; letter-spacing: .03em;
+  color: var(--blue); text-decoration: none; border-bottom: 1.5px solid var(--blue);
+  transition: color .15s ease, border-color .15s ease;
+}
+.edu-file-link:hover, .edu-file-link:focus-visible {
+  color: var(--orange); border-bottom-color: var(--orange); outline: none;
+}
 .edu-major { font-size: 18px; font-weight: 700; margin-top: 4px; }
 .edu-en {
   font-family: var(--font-mono);

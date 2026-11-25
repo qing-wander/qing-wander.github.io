@@ -161,6 +161,7 @@ window.SITE_DATA = {
       "tag": "本科 · 全日制统招",
       "tagCls": "tag-orange",
       "school": "中山大学新华学院",
+      "profileId": "xinhua",
       "logo": "images/edu-xinhua.png",
       "major": "软件工程",
       "majorEn": "SOFTWARE ENGINEERING",

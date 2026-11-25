@@ -159,6 +159,7 @@ export default {
       "tag": "本科 · 全日制统招",
       "tagCls": "tag-orange",
       "school": "中山大学新华学院",
+      "profileId": "xinhua",
       "logo": "images/edu-xinhua.png",
       "major": "软件工程",
       "majorEn": "SOFTWARE ENGINEERING",
@@ -1139,6 +1140,7 @@ export default {
     "education": {
       "editable": "manual",
       "school": "中山大学新华学院",
+      "profileId": "xinhua",
       "note": "全日制统招本科 · 软件工程 · 国家励志奖学金 · 校级奖学金",
       "period": "2017.09 — 2021.06",
       "bullets": [
