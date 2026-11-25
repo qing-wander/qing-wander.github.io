@@ -251,11 +251,12 @@ node scripts/rag_query.mjs --golden tests/golden-queries.json   # 金标集 hit@
 - [x] `/api/chat` 与页面问答框对接（endpoint 已切，接口兼容 `{question}` / `sources`）
 - [x] JD 匹配搬到 Cloudflare：`/api/jd` + `/api/chat?mode=jd`，混合检索逐条召回 + 一次 LLM 判定
       —— Agent JD 83/100（高度匹配）、财务 JD 22/100（差距较大，3 缺口），2.1-2.3s
-- [ ] rerank、动态简历变体
 - [x] RAG 切片（按 bullet id）+ D1 词面索引 + 金标集 hit@3 闸门：`rag/`、`scripts/build_rag_chunks.mjs`、`tests/golden-queries.json`
-- [ ] RAG 余下：`/api/chat`（需给 Pages 项目挂 `[ai]` + `[[vectorize]]` 绑定）、JD 匹配、动态简历变体
-- [ ] 跨设备查看（设备绑定码）
-- [ ] `resume.micro` 微调流水线（L0 锁定字段注入提示词）
+- [ ] 未排期的增强项（rerank 重排、动态简历变体、跨设备查看、`resume.micro` 微调流水线）已统一登记
+      [TODO.md T24](TODO.md)（思考池），本文件不再另起清单。
+
+> 早期方案「给 Pages 项目挂 `[ai]` / `[[vectorize]]` 绑定」已被替代：`AI` / `VECTORIZE` 绑定在
+> KB Worker（`worker/kb/`）上，Pages 不支持这两类绑定，见 README [系统架构](../README.md#系统架构)。
 
 ### 7.6 `/api/kb` 线上验证（2026-11-19）
 
@@ -341,4 +342,3 @@ HTML_PATH=variants/agent-2026.html node scripts/check_resume_pages.mjs --info  #
 合并：`render_variant` 自动读 `variants/<slug>.summary.json`，只接受纯文本（标签全转义）且 ≤220 字，
 超了或为空就沿用原文简介。实测变体仍 **2 页**，L0 校验通过。
 
-> AI生成

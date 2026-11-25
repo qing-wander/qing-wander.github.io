@@ -4,9 +4,9 @@
 > 统一在这里登记，每条给出状态、影响、前置条件、执行步骤与验收标准，并回链依据文档。
 > 目的：换会话、换机器、换协作人时，不用通读五份设计文档也能知道下一步该做什么、哪些是故意不做的。
 >
-> 最近一次盘点：**2026-11-21**（T22 / T23 均已根治完成：`character-views` 原始素材 57 文件 / 573MB
-> 整目录归档到飞书云盘、从 git 移除并 push，Cloudflare Pages 自动构建由连续 `Failure` 恢复为 `Success`，
-> 两站内容一致；R2 方案因账号无支付方式废弃）。此前 2026-11-20 发现 `pages.dev` 自 `907a108` 起
+> 最近一次盘点：**2026-11-25**（台账复核；T3 部署文档已于 11-25 全文重写。11-21 已根治 T22 / T23：
+> `character-views` 原始素材 57 文件 / 573MB 整目录归档到飞书云盘、从 git 移除并 push，
+> Cloudflare Pages 自动构建由连续 `Failure` 恢复为 `Success`，两站内容一致；R2 方案因账号无支付方式废弃）。此前 2026-11-20 发现 `pages.dev` 自 `907a108` 起
 > 连续构建失败、线上停在 11-19 旧版，根因是构建命令把整个 `assets/` 拷进 `dist` 触发 25MiB 单文件上限。
 > 更早的 2026-11-19
 > 盘点完成 Cloudflare 免费资源盘点 + D1 迁移（T16）+ Turnstile（T17）+ D1 备份（T18）
@@ -88,6 +88,7 @@ Workers KV 迁到 D1（`portfolio-db`，4 张表），免费写额度从 1,000 �
 | T21 | 桌宠表现力升级：眨眼 / 口型 / 首屏体积≤1.2MB / 对称正盘腿 / 启用躺平 / 坐→站过渡 | `待办` | 中 | 右下角助手 | [pet-self3d-pipeline.md §8](pet-self3d-pipeline.md) |
 | T22 | 两个域名内容不一致：pages.dev 构建失败停在旧版，看不到新 3D 模型 | `已完成` | 高 | `pages.dev` 全站 | 本文 §3.18 / [cloudflare-pages-deploy.md](cloudflare-pages-deploy.md) |
 | T23 | `assets/character-views` 原始素材归档 + 移出仓库根治构建（R2 方案废弃 → 飞书云盘） | `已完成` | 中 | 仓库体积 / Pages 构建 | 本文 §3.19 / [cloudflare-free-resources.md](cloudflare-free-resources.md) §10 |
+| T24 | RAG / 简历增强迭代池：rerank 重排、动态简历变体、跨设备查看、`resume.micro` 微调流水线 | `思考池` | 低 | AI 问答 / 简历变体 / 留言板 | [p0-single-source.md §8](p0-single-source.md) |
 
 ---
 
@@ -641,6 +642,22 @@ lark-cli drive +pull --as user --folder-token BnalfpLM8lzNYLdkYu3cqH71nAc \
 
 ---
 
+### 3.20 T24 · RAG / 简历增强迭代池（思考池，2026-11-25 登记）
+
+来源：[p0-single-source.md §8](p0-single-source.md) 的未勾选项。均为增强项，**不阻塞既有线上功能**，未排期；触发条件出现后再从思考池领出。
+
+| 候选项 | 说明 | 前置 / 验收参考 |
+|---|---|---|
+| rerank 重排 | 混合检索召回后加一道重排（如 Workers AI reranker），提升长尾问题命中 | 金标集 hit@3 不下降；延迟与 CPU 在免费额度内 |
+| 动态简历变体 | 按岗位 JD 切换简历侧重（`variants/` 已有生成链） | 变体仍 ≤2 页，L0 锁定字段不被改写 |
+| 跨设备查看 | 设备绑定码：留言 / 档案可跨自己的设备访问 | 不破坏现有设备隔离的隐私边界 |
+| `resume.micro` 微调 | L0 锁定字段注入提示词的本地微调流水线 | 先有评测集再谈微调；优先级低于规则与检索优化 |
+
+> 注：早期文档里「给 Pages 项目挂 `[ai]` / `[[vectorize]]` 绑定」的方案已被替代——`AI` / `VECTORIZE`
+> 绑定在 KB Worker（`worker/kb/`）上，Pages 不支持这两类绑定，见 README [系统架构](../README.md#系统架构)。
+
+---
+
 ## 4. 已完成（2026-11-16 / 17 收尾，勿重复做）
 
 - 岗位匹配 JD MATCH 上线（2026-11-17）：静态 `7c7b5e1` 已推送、Pages 已构建、云函数 `mode:"jd"` 线上真实模型实测可用，问答与 TTS 回归 200（详见 §3.10）；**不要重复部署或重复 push**；
@@ -684,4 +701,3 @@ lark-cli drive +pull --as user --folder-token BnalfpLM8lzNYLdkYu3cqH71nAc \
 4. 每次较大改动收尾时盘点一次；长期不动的 `思考池` 条目可保留，但不要悄悄变成排期。
 5. 涉及**账号登录、GitHub App 授权、域名付款**的步骤必须本人操作，代理人应提前通知，不要尝试绕过。
 
-> AI生成

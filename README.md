@@ -1,15 +1,10 @@
 # 陈培胜 · AI Agent 工程师求职作品集
 
 ![在线站点](https://img.shields.io/badge/在线-chenpeisheng.cn-FF5A1E?style=flat-square)
-
-![HTML5](https://img.shields.io/badge/HTML5-%2BCSS-%2BVanilla%20JS-E34F26?style=flat-square\&logo=html5\&logoColor=white)
-
-![Cloudflare Pages](https://img.shields.io/badge/Deploy-Cloudflare%20Pages-F38020?style=flat-square\&logo=cloudflare\&logoColor=white)
-
-![Node](https://img.shields.io/badge/Node.js-22-339933?style=flat-square\&logo=node.js\&logoColor=white)
-
-![CI](https://img.shields.io/badge/CI-tests%20%7C%20content%20build%20%7C%20RAG-2B4BE0?style=flat-square\&logo=githubactions\&logoColor=white)
-
+![HTML5](https://img.shields.io/badge/HTML5-%2BCSS-%2BVanilla%20JS-E34F26?style=flat-square&logo=html5&logoColor=white)
+![Cloudflare Pages](https://img.shields.io/badge/Deploy-Cloudflare%20Pages-F38020?style=flat-square&logo=cloudflare&logoColor=white)
+![Node](https://img.shields.io/badge/Node.js-22-339933?style=flat-square&logo=node.js&logoColor=white)
+![CI](https://img.shields.io/badge/CI-tests%20%7C%20content%20build%20%7C%20RAG-2B4BE0?style=flat-square&logo=githubactions&logoColor=white)
 ![License](https://img.shields.io/badge/License-MIT-1FA658?style=flat-square)
 
 > 一个**没有前端框架**的静态求职站，长出了一套跑在边缘上的后端：  
@@ -53,7 +48,7 @@
 | 数据 | `data/site-data.json` 是内容唯一真相源；线上真人数据存 D1 `site_content`，仓库只放脱敏副本      |
 | AI | 混合检索（D1 FTS5 BM25 + Vectorize 向量，RRF 融合）→ 受约束生成；关键词兜底不断线               |
 | 部署 | `git push` → Cloudflare Pages 自动构建；`scripts/pages-build.sh` 产出 `dist/` |
-| 质量 | 4 条 GitHub Actions + 23 个 `node:test` 单测 + 内容漂移闸门（生成物必须与数据逐字一致）        |
+| 质量 | 4 条 GitHub Actions + 26 个 `node:test` 测试文件 + 内容漂移闸门（生成物必须与数据逐字一致）        |
 
 **它不只是简历页面。** 除展示外还包括：AI 数字分身问答、JD 岗位匹配、AI 语音播报、3D 桌宠、按设备隔离的留言板、简历自动投递（含 PDF/证书附件与发送前预览）、学历核验加锁审批、公司/学校档案页、访问统计与管理后台。
 
@@ -171,13 +166,14 @@ python3 scripts/sync_site_data.py       # data/site-data.js 快照
 # 校验（CI 同款闸门）
 node scripts/validate_content.mjs
 node scripts/render_resume.mjs --check
+node scripts/render_work_details.mjs --check
 python3 scripts/sync_site_data.py --check
 ```
 
 **4）跑测试 / 构建产物**
 
 ```bash
-node --test tests/*.test.mjs     # 23 个测试文件，零外部依赖
+node --test tests/*.test.mjs     # 26 个测试文件，零外部依赖
 bash scripts/pages-build.sh      # 产出 dist/，缺文件或超 25MiB 会直接失败
 ```
 
@@ -285,7 +281,6 @@ npx wrangler d1 execute portfolio-db --remote --file=db/migrations/<file>.sql
 
 细节与历史故障复盘见 [docs/cloudflare-pages-deploy.md](docs/cloudflare-pages-deploy.md)。
 
-
 ## 目录结构
 
 ```text
@@ -307,7 +302,7 @@ npx wrangler d1 execute portfolio-db --remote --file=db/migrations/<file>.sql
 ├── miniprogram/             # 微信小程序扫码登录端
 ├── scripts/                 # 生成链、构建、部署、联调、备份、自检
 ├── templates/               # 简历与案例页模板
-├── tests/                   # node:test 单测（23 个文件）
+├── tests/                   # node:test 单测（26 个文件）
 ├── tools/ variants/ work/   # 桌宠制作脚本、简历变体、作品案例页
 ├── worker/
 │   ├── kb/                  # 语义层 Worker resume-kb-api（embed / query / rerank / rebuild）
@@ -334,6 +329,8 @@ npx wrangler d1 execute portfolio-db --remote --file=db/migrations/<file>.sql
 ```bash
 node --test tests/*.test.mjs
 node scripts/validate_content.mjs
+node scripts/render_resume.mjs --check
+node scripts/render_work_details.mjs --check
 node scripts/build_rag_chunks.mjs --check
 python3 scripts/sync_site_data.py --check
 ```
@@ -368,7 +365,6 @@ npx wrangler pages deploy dist --branch=preview-check            # 发一个预�
 ```
 
 预览环境只配 `ADMIN_EMAILS` 与三个自签随机密钥（`ADMIN_SESSION_SECRET` / `DEVICE_HASH_PEPPER` / `VERIFY_ACCESS_SECRET`），**刻意不配** `RESEND_API_KEY` / `TURNSTILE_SECRET` / 微信 / `KB_WORKER_URL`：预览不需要真发信、真发码、真写向量库，缺了会自动降级，也避免在预览里点「重建知识库」误打到生产索引。
-
 
 ## 文档索引
 

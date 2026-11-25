@@ -63,7 +63,7 @@ button { font-family: inherit; cursor: pointer; }
 .ai-panel:not(.ai-mode-jd) .ai-jd-card { display: none; }
 .ai-panel.ai-mode-jd .ai-msg[data-mode="jd"],
 .ai-panel.ai-mode-jd .ai-jd-card { display: block; }
-/* CP.AI 面板在窄屏接近全屏：锁背景滚动，防滚动穿透；桌面不锁（可边看边滚） */
+/* PS.AI 面板在窄屏接近全屏：锁背景滚动，防滚动穿透；桌面不锁（可边看边滚） */
 @media (max-width: 760px) {
   body.ai-lock { overflow: hidden; }
 }
@@ -2329,7 +2329,7 @@ a.cap-ref:hover, a.cap-ref:focus-visible {
 }
 @media print { .theme-ctl { display: none; } }
 
-/* ══════════════ CP.AI 简历问答助手（入口 + 面板） ══════════════ */
+/* ══════════════ PS.AI 简历问答助手（入口 + 面板） ══════════════ */
 .ai-fab {
   position: fixed; right: 18px; bottom: 106px; z-index: 95;
   display: flex; align-items: center; gap: 10px;

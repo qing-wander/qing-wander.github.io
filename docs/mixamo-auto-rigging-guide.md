@@ -4,6 +4,8 @@
 > 原文标题：《使用Mixamo实现人物模型骨骼的自动绑定，并生成动画教程（附导入UE中使用）》
 > 沉淀目的：给本站 `assets/character-views/model/` 下的人形模型走 Mixamo 绑骨→动画→替换站点 3D 角色提供可复现依据。
 > 配套文档：`docs/pet-self3d-pipeline.md`（本站上一轮 PetSelfRigged.glb 的完整实战记录，含踩坑）。
+>
+> 状态：参考资料（外部文章沉淀）· 最后核对 2026-11-21。
 
 ---
 

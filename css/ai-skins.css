@@ -1,5 +1,5 @@
 /* ════════════════════════════════════════════════════════════
-   CP.AI 角色舞台 / 皮肤切换系统
+   PS.AI 角色舞台 / 皮肤切换系统
    --------------------------------------------------------------
    · 只覆盖「视觉层」：js/main.js 里的问答、自动打招呼、CloudBase RAG 全部不动
    · 皮肤分两类：3D 真模型（本地 GLB + model-viewer）/ 2D 本地自绘角色（零外部依赖）
@@ -261,7 +261,7 @@ body.ai-panel-max .ai-stage { opacity: 0; pointer-events: none; }
 .sk-breathe { transform-origin: 50% 100%; animation: skBreathe 3.4s ease-in-out infinite; }
 @keyframes skBreathe { 0%, 100% { transform: scaleY(1); } 50% { transform: scaleY(1.028); } }
 
-/* ── CP.AI 档案机器人 ────────────────────────────────────── */
+/* ── PS.AI 档案机器人 ────────────────────────────────────── */
 .sk-cpbot-antenna { transform-origin: 50% 100%; animation: skSway 2.6s ease-in-out infinite; }
 @keyframes skSway { 0%, 100% { transform: rotate(-6deg); } 50% { transform: rotate(7deg); } }
 .sk-cpbot-eyes { animation: skScan 4.2s ease-in-out infinite; }

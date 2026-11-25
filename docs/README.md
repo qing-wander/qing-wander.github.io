@@ -26,7 +26,7 @@
 |---|---|---|---|---|
 | [cloudflare-rag-admin-plan.md](cloudflare-rag-admin-plan.md) | 总设计：单一真相源、RAG、JD 匹配、后台、可观测、免费额度测算 | 现行（规划 + 落地记录） | 2026-11-23 | `functions/api/**`、`db/schema.sql` |
 | [ai-assistant-survey.md](ai-assistant-survey.md) | 问答助手 v1：可达性实测、TF-IDF + CloudBase、限流、日志、验收 V1–V11 | 历史（v1 链路，仍作踩坑参考） | 2026-11-25（补现状说明） | `functions/tencent/**`、`functions/api/chat.js` |
-| [jd-match.md](jd-match.md) | 岗位匹配：需求拆条、字面覆盖核算、接口契约、验收 | 现行 | 2026-11-23 | `functions/api/jd.js`、`js/jd-match.js` |
+| [jd-match.md](jd-match.md) | 岗位匹配：需求拆条、字面覆盖核算、接口契约、验收 | 现行 | 2026-11-25 | `functions/api/jd.js`、`js/jd-match.js` |
 | [ai-voice-survey.md](ai-voice-survey.md) | 语音：免费 TTS 选型、自动播放对策、两期实施 | 现行 | 2026-11-23 | `js/ai-voice*.js`、`functions/lib/tts.js`、`functions/tencent/tts.js` |
 | [p0-single-source.md](p0-single-source.md) | P0 实施：单一真相源 + 留言板设备隔离 | 现行（含迁移前置条件） | 2026-11-23 | `scripts/build_rag_chunks.mjs`、`functions/api/wall.js` |
 
@@ -53,7 +53,7 @@
 | 文档 | 内容 | 状态 | 最近核对 |
 |---|---|---|---|
 | [portfolio-capabilities-and-learnings.md](portfolio-capabilities-and-learnings.md) | 功能全景、能力矩阵、33 条经验、诚实缺口 | 现行（复盘） | 2026-11-18 |
-| [TODO.md](TODO.md) | 唯一「还没做的事」台账（状态 / 影响 / 验收） | 台账 | 2026-11-23 |
+| [TODO.md](TODO.md) | 唯一「还没做的事」台账（状态 / 影响 / 验收） | 台账 | 2026-11-25 |
 
 ## 3. 按角色路线
 

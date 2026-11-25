@@ -1,4 +1,4 @@
-# CP.AI 语音播报（TTS）· 免费资源调研与落地设计
+# PS.AI 语音播报（TTS）· 免费资源调研与落地设计
 
 > 文档定位：本文件是 `chenpeisheng.cn` 右下角 AI 助手**语音层**的单一设计依据。调研结论、免费额度核实、自动播放对策、接口契约、验收清单都在这里；代码与本文冲突时先改文档再改代码。
 >
@@ -188,7 +188,7 @@ Provider 接口预留后，Phase 2 只要写一个云端 provider（返回可播
 1.5s 气泡出现 → welcomeState: none → pending
   │  立即尝试 speak(GREET_TEXT)（有些浏览器因 MEI/已激活会成功）
   ├─ 1.2s 内触发 onstart  ─────────────► played ✅ 不显示 CTA
-  └─ 未触发 / not-allowed ─────────────► pending ⏸ 显示「🔊 听 CP.AI 说句话」CTA
+  └─ 未触发 / not-allowed ─────────────► pending ⏸ 显示「🔊 听 PS.AI 说句话」CTA
                                               │
               ┌───────────────────────────────┴──────────────────┐
               ▼                                                  ▼
@@ -227,7 +227,7 @@ Provider 接口预留后，Phase 2 只要写一个云端 provider（返回可播
 | 6 | 本地浏览器验证 | `python -m http.server 8899` + 临时 `playwright-core` 脚本（放在系统临时目录，不入库），用 mock `speechSynthesis` 覆盖「允许自动播 / 拦截自动播 / 全程不交互」三种场景 |
 | 7 | `functions/tencent/tts.js` | 腾讯云 `TextToVoice` 直调：Node 内置 `https`/`crypto` 手写 TC3-HMAC-SHA256 签名，零第三方依赖；实例内 LRU 缓存、语气分层、≤150 字硬限制 |
 | 8 | `functions/tencent/index.js` | 新增 `mode:'tts'` 路由，复用 `/chat` 的 Origin 白名单、IP 盐化与双窗口限流，返回 base64 mp3 |
-| 9 | `js/ai-voice-cloud.js` | 云端 Provider：启动探测 → 成功才 `AIVoice.setProvider()`；失败/超时保持浏览器语音；按 `kind|text` 缓存；`window.AIVoiceCloud` 排障接口 |
+| 9 | `js/ai-voice-cloud.js` | 云端 Provider：启动探测 → 成功才 `AIVoice.setProvider()`；失败/超时保持浏览器语音；按 `kind\|text` 缓存；`window.AIVoiceCloud` 排障接口 |
 | 10 | 云函数部署 | 通过 SCF Git Data API 式的 `UpdateFunctionConfiguration` + `UpdateFunctionCode` 上传代码包，环境变量只增不改线上既有的 `AI_API_KEY` / `ALLOWED_ORIGINS` |
 
 ### 6.2 Phase 1 验收清单
