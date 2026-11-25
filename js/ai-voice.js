@@ -16,6 +16,9 @@
   /* ─────────────── 常量与配置 ─────────────── */
 
   var STORE = 'cpai_voice_v1';
+  /* 招呼语默认值：后台 /api/greeting 有配置时由下面的事件覆盖。
+     ‼ 必须保留 var + 可写：ai-voice.js 在 main.js 之后加载，配置是异步取回的，
+       不能在初始化时只读一次 window.CP_GREETING_TEXT（那时还没取到）。 */
   var GREET_TEXT = '你好呀，我是陈培胜的数字分身。这页内容挺多，翻起来费时间，直接问我就好。答案都会标出依据，声音随时可以关掉。';
   var ON_TEXT = '语音已打开，有什么想问的？';
   var VOICE_TEST = '你好，这是当前的音色，听起来怎么样？';
@@ -691,10 +694,23 @@
   }
   observe();
 
+  /* ── 招呼文案热更新（后台 /admin「AI 语音」改完，访客刷新即生效）──
+     main.js 取到 /api/greeting 后派发 cpai:greeting；若本脚本加载更晚，
+     则在这里主动读一次 window.CP_GREETING_TEXT，两头都不漏。 */
+  function applyGreeting(text) {
+    var t = String(text || '').trim();
+    if (t) GREET_TEXT = t.slice(0, 150);
+  }
+  if (window.CP_GREETING_TEXT) applyGreeting(window.CP_GREETING_TEXT);
+  window.addEventListener('cpai:greeting', function (e) {
+    applyGreeting(e && e.detail && e.detail.text);
+  }, false);
+
   /* ─────────────── 对外契约 ─────────────── */
 
   window.AIVoice = {
     setEnabled: setEnabled,
+    setGreetingText: applyGreeting,
     isEnabled: function () { return enabled; },
     speak: function (text, opts) { return say(text, opts || {}); },
     cancel: function () { if (supported) stop(); },

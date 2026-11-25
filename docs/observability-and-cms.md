@@ -510,3 +510,30 @@ HTML 42124 B，检索最高分 30.1，接口耗时 **0.5 s**，产出的 PDF **2
 `const RERANK_MODEL` 这行第一次没写进去（替换条件是「文件里出现过 RERANK_MODEL 字样就跳过」，
 而注释里已经写了），上线后 `/rerank` 直接 502 报 `RERANK_MODEL is not defined`。
 定位方式：给 `/api/kb` 加 `debug=1` 把 worker 的错误正文透出来 —— 比翻日志快得多。
+
+## 后台第六阶段：招呼文案一处改（2026-11-25 已上线）
+
+数字分身的「打招呼文案」以前硬编码在三个地方：面板欢迎语（`js/main.js` 的 `AI_CONFIG.welcome`）、
+语音招呼语（`js/ai-voice.js` 的 `GREET_TEXT`）、后台试听默认文本（`voice/preview.js` 的常量）。
+想改一句话要动三个文件 + 重新构建，运营改不动。
+
+现在收拢成一个后台可配置项：**`/admin` → 「AI 语音」→ 「招呼文案」**。
+
+- 存 `admin_config.key = 'ai_greeting'`，与主题、音色同一张表，改完立即对公开站生效。
+- 后台 `GET/POST /api/admin/greeting`：`{ text }` 保存，`{ reset: true }` 恢复默认；
+  与音色接口同款 `requireAdmin` + CSRF + 固定 key 白名单，前端塞不进别的 key。
+- 公开 `GET /api/greeting`：`Cache-Control: public, max-age=60` + CORS，github.io 主站可跨域读。
+  读不到 / 没配 / 值非法一律回代码默认值，不影响访问。
+- 文案是纯文本，服务端拒绝 `<` `>`（不让「配置」变成「注入」），最长 150 字（与 TTS 上限对齐）。
+  前端按换行转义成 `<br>` 渲染，两级都不给 HTML 留口子。
+
+**生效路径**：首页启动时异步拉 `/api/greeting` → 派发 `cpai:greeting` 事件 →
+面板欢迎语用新文案、`AIVoice.setGreetingText()` 换语音招呼语；后台试听框默认填这份文案，
+`preview.js` 也用它兜底——**一处改，三处跟着变，试听点一下就是新版**。
+
+**时序坑**：`js/main.js` 在 `ai-voice.js` 之前加载，但配置是异步取回的，
+所以语音模块不能只在初始化时读一次全局值。做法是事件通知 + 初始化时补读一次
+`window.CP_GREETING_TEXT`，两头都不漏；拿不到配置就各自用默认值，问答功能不受影响。
+
+**本地验证**：`node --test tests/greeting.test.mjs`（9 项），覆盖写入 → 公开读 → 试听联动、
+鉴权 / CSRF、恢复默认、非法输入不落库；浏览器端用 CDP 断言接口文案 → 页面全局 → 面板 DOM 三者一致。

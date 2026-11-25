@@ -9,9 +9,9 @@
    ────────────────────────────────────────────────────────────── */
 import { assertCsrf, fail, ipHash, json, requireAdmin } from '../../../lib/admin-auth.js';
 import { gate, hourKey } from '../../../lib/guard.js';
+import { readGreeting } from '../../../lib/greeting.js';
 import { MAX_TTS_CHARS, isKnownVoice, synthesize, voiceMeta } from '../../../lib/tts.js';
 
-const DEFAULT_PREVIEW = '你好，我是陈培胜的数字分身。他的项目经历、技术栈和协作方式，都可以直接问我。';
 const LIMIT_PER_HOUR = 60;
 
 export async function onRequestPost({ request, env }) {
@@ -23,7 +23,10 @@ export async function onRequestPost({ request, env }) {
   let body = {};
   try { body = await request.json(); } catch (e) { return fail('bad_json', '请求体不是 JSON'); }
 
-  const text = String((body && body.text) || '').trim().slice(0, MAX_TTS_CHARS) || DEFAULT_PREVIEW;
+  /* 试听默认文案跟随后台「招呼文案」：站长改完文案，直接点试听就是新版，
+     不用先在框里手动改一遍；显式传了 text 则以传入的为准。 */
+  const greeting = await readGreeting(env);
+  const text = String((body && body.text) || '').trim().slice(0, MAX_TTS_CHARS) || greeting.text;
   const voice = Number(body && body.voice) || 0;
   if (voice && !isKnownVoice(voice)) return fail('unknown_voice', '这个音色不在白名单里');
 

@@ -177,10 +177,23 @@
     </article>
 
     <article class="cfg-card">
+      <div class="cfg-head"><h2>招呼文案</h2><span class="pill" id="greetingMeta">—</span></div>
+      <p class="cfg-note">数字分身首次打招呼的文案。保存后访客面板欢迎语、语音招呼语、下方试听框同步生效，不用重新构建。<span class="mono"> · key=ai_greeting</span></p>
+      <label class="cfg-label">文案（纯文本，最多 150 字）
+        <textarea class="cfg-textarea" id="greetingText" rows="2" maxlength="150"></textarea>
+      </label>
+      <div class="cfg-actions">
+        <span class="toolbar-note">不接受 HTML 标签；支持换行，访客端显示为分行。</span>
+        <button class="btn btn-ghost" id="greetingReset" type="button">恢复默认</button>
+        <button class="btn" id="greetingSave" type="button">保存文案</button>
+      </div>
+    </article>
+
+    <article class="cfg-card">
       <div class="cfg-head"><h2>试听</h2><span class="pill" id="voiceStat">待试听</span></div>
-      <p class="cfg-note">试听文本按 150 字截断；云函数只合成不缓存试听内容，同一句重复试听会重新合成一次。</p>
+      <p class="cfg-note">试听文本按 150 字截断，默认就是上面的招呼文案；云函数只合成不缓存试听内容，同一句重复试听会重新合成一次。</p>
       <label class="cfg-label">试听文本
-        <textarea class="cfg-textarea" id="voiceText" rows="2">你好，我是陈培胜的数字分身。他的项目经历、技术栈和协作方式，都可以直接问我。</textarea>
+        <textarea class="cfg-textarea" id="voiceText" rows="2"></textarea>
       </label>
       <div class="cfg-actions">
         <span class="toolbar-note" id="voiceMeta">选中音色后点「试听」</span>

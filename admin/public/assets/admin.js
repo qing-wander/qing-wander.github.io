@@ -480,12 +480,17 @@
 
   $('configReload').addEventListener('click', function () { loadConfig(); loadTheme(); toast('已重新读取'); });
 
-  /* ── AI 语音：音色切换 + 试听 ────────────────────────────────────
-     切换写 /api/admin/voice（存 D1 admin_config.ai_voice），公开站 /api/voice 读；
+  /* ── AI 语音：音色切换 + 招呼文案 + 试听 ────────────────────────
+     音色写 /api/admin/voice（D1 admin_config.ai_voice），公开站 /api/voice 读；
+     招呼文案写 /api/admin/greeting（D1 admin_config.ai_greeting），公开站
+     /api/greeting 读，首页面板欢迎语 + 语音招呼语都吃这一份；
      试听走 /api/admin/voice/preview —— 同源代理到云函数，不落库、不改设置。 */
   var VOICE = { list: [], cur: 0, name: '', maxChars: 150, isDefault: true };
   var voiceAudio = null;
   var voiceBusy = false;
+  /* 试听框是否已被站长手动改过：改过就不再被招呼文案覆盖，便于临时试别的句子 */
+  var voiceTextDirty = false;
+  $('voiceText').addEventListener('input', function () { voiceTextDirty = true; });
 
   function voiceStat(text, kind) {
     var el = $('voiceStat');
@@ -547,6 +552,47 @@
     });
   }
 
+  /* ── 招呼文案：一处改，首页面板欢迎语 / 语音招呼语 / 试听框同步 ── */
+  function syncVoiceText(text) {
+    if (voiceTextDirty) return;   /* 站长手动改过试听框就别覆盖 */
+    $('voiceText').value = text || '';
+  }
+
+  function loadGreeting() {
+    return api('/api/admin/greeting').then(function (d) {
+      $('greetingText').value = d.text || '';
+      $('greetingText').maxLength = d.max_chars || 150;
+      $('greetingMeta').textContent = d.is_default ? '默认文案' : '已自定义';
+      $('greetingMeta').className = 'pill' + (d.is_default ? '' : ' ok');
+      syncVoiceText(d.text);
+    }).catch(function (err) {
+      $('greetingMeta').textContent = '读取失败';
+      $('greetingMeta').className = 'pill bad';
+      toast(err.message || '招呼文案读取失败', true);
+    });
+  }
+
+  function saveGreeting(reset) {
+    var btn = reset ? $('greetingReset') : $('greetingSave');
+    var body = reset ? { reset: true } : { text: $('greetingText').value.trim() };
+    if (!reset && !body.text) { toast('先写点文案', true); return; }
+    btn.disabled = true;
+    return api('/api/admin/greeting', { method: 'POST', body: JSON.stringify(body) })
+      .then(function (d) {
+        $('greetingText').value = d.text || '';
+        $('greetingMeta').textContent = d.is_default ? '默认文案' : '已自定义';
+        $('greetingMeta').className = 'pill' + (d.is_default ? '' : ' ok');
+        voiceTextDirty = false;
+        syncVoiceText(d.text);
+        toast(reset ? '已恢复默认文案' : '已保存，访客刷新即生效');
+      })
+      .catch(function (err) { toast(err.message || '保存失败', true); })
+      .then(function () { btn.disabled = false; });
+  }
+
+  $('greetingSave').addEventListener('click', function () { saveGreeting(false); });
+  $('greetingReset').addEventListener('click', function () { saveGreeting(true); });
+
   function previewVoice(id) {
     if (voiceBusy) return;
     var text = String($('voiceText').value || '').trim().slice(0, VOICE.maxChars);
@@ -593,7 +639,7 @@
 
   $('voicePlay').addEventListener('click', function () { previewVoice(VOICE.cur); });
   $('voiceStop').addEventListener('click', function () { stopVoice(); voiceStat('已停止'); });
-  $('voiceReload').addEventListener('click', function () { loadVoice().then(function () { toast('已重新读取'); }); });
+  $('voiceReload').addEventListener('click', function () { loadVoice(); loadGreeting(); toast('已重新读取'); });
 
   function switchTab(name) {
     state.tab = name;
@@ -616,7 +662,7 @@
     else if (name === 'messages') loadMessages();
     else if (name === 'qa') loadQa();
     else if (name === 'config') { loadTheme(); loadConfig(); }
-    else if (name === 'voice') loadVoice();
+    else if (name === 'voice') { loadVoice(); loadGreeting(); }
     else if (name === 'anim' && window.AnimConsole) window.AnimConsole.init();
   }
   $('tabDevices').addEventListener('click', function () { switchTab('devices'); });
@@ -742,7 +788,7 @@
     else if (state.tab === 'messages') loadMessages();
     else if (state.tab === 'qa') loadQa();
     else if (state.tab === 'config') { loadTheme(); loadConfig(); }
-    else if (state.tab === 'voice') loadVoice();
+    else if (state.tab === 'voice') { loadVoice(); loadGreeting(); }
   }
 
   /* ── 启动 ──

@@ -16,6 +16,7 @@ import { onRequestGet as socialGet, onRequestPost as socialPost, onRequestOption
 import { onRequestGet as verifyAccessGet, onRequestPost as verifyAccessPost, onRequestOptions as verifyAccessOpt } from '../functions/api/verify-access.js';
 import { onRequestGet as verifyApproveGet, onRequestPost as verifyApprovePost } from '../functions/api/verify-access-approve.js';
 import { onRequestGet as challengeGet, onRequestOptions as challengeOpt } from '../functions/api/challenge.js';
+import { onRequestGet as greetingGet, onRequestOptions as greetingOpt } from '../functions/api/greeting.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const PORT = Number(process.env.PORT || 8877);
@@ -161,6 +162,10 @@ http.createServer(async (req, res) => {
     }
     if (p === '/api/challenge') {
       const r = req.method === 'GET' ? await handler(challengeGet, req) : await handler(challengeOpt, req);
+      return send(res, r);
+    }
+    if (p === '/api/greeting') {
+      const r = req.method === 'OPTIONS' ? await handler(greetingOpt, req) : await handler(greetingGet, req);
       return send(res, r);
     }
     if (p === '/api/deliver') {

@@ -815,6 +815,8 @@
       endpoint: AI_ENDPOINT,   // Cloudflare Pages Function：混合检索 → 受约束生成；github.io 下自动跨站
       timeout: 20000,       // 云函数执行超时 30s，前端留余量
       maxChars: 200,        // 与后端 MAX_QUESTION_CHARS 对齐
+      /* 欢迎语先放默认值；后台在 /admin「AI 语音」改的招呼文案异步覆盖下来，
+         面板打开时若已取到就用新版，取不到（网络抖动 / 未部署函数）回退默认。 */
       welcome: '你好，我是陈培胜的数字分身。<br>你可以把我当成「在线的他」：关于他的项目、技术栈和工作经历，都能直接问我。我会依据他的真实简历资料作答，并标注出处。<br>想了解什么，尽管开口。',
       quickQuestions: ['你主导过哪些 0→1 系统？', '你的 Agent 架构经验？', '技术栈与方向？', '怎么联系你？'],
       /* ── 主动性：为兼容保留配置，但面板不再自动弹出（仅点击 3D 角色打开） ── */
@@ -839,6 +841,27 @@
         ]
       }
     };
+    /* ── 招呼文案：后台 /api/greeting 一处改，面板欢迎语与语音招呼语同步 ──
+       启动即异步拉取，不挡首屏；文案是纯文本，按换行转义成 <br> 后渲染。
+       github.io 下 API_BASES[0] 指向 pages.dev 函数，公开 GET 已开 CORS。 */
+    function greetingToHtml(text) {
+      return esc(String(text || '')).replace(/\r?\n/g, '<br>');
+    }
+    fetch(API_BASES[0] + '/api/greeting', { cache: 'no-store' })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (j) {
+        if (!j || !j.ok || !j.text) return;
+        AI_CONFIG.welcome = greetingToHtml(j.text);
+        /* 交给语音模块：Greet 文本与面板欢迎语保持同一份。
+           用事件而不是直接调 AIVoice.setGreetingText：两个脚本的加载顺序
+           不该成为约束，晚加载的一方在初始化时也会读 window.CP_GREETING_TEXT。 */
+        window.CP_GREETING_TEXT = String(j.text);
+        if (window.dispatchEvent && window.CustomEvent) {
+          window.dispatchEvent(new CustomEvent('cpai:greeting', { detail: { text: String(j.text) } }));
+        }
+      })
+      .catch(function () { /* 拿不到配置就用默认文案，不影响问答 */ });
+
     var aiFab = $('aiFab');
     /* 「岗位匹配」独立脚本（js/jd-match.js）复用同一台云函数与同一个 /chat 端点 */
     window.CP_AI_ENDPOINT = AI_CONFIG.endpoint;
