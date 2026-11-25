@@ -286,10 +286,16 @@ export default {
           "text": "Java"
         },
         {
-          "text": "Spring Boot"
+          "text": "Spring Cloud / Boot"
         },
         {
           "text": "MySQL"
+        },
+        {
+          "text": "RocketMQ"
+        },
+        {
+          "text": "MongoDB"
         }
       ]
     },

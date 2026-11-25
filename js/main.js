@@ -459,7 +459,7 @@
     window.addEventListener('resize', function () { if (window.innerWidth > 1280) closeMenu(); });
 
     /* ── 2. 导航当前区高亮 ── */
-    var sections = ['about', 'objective', 'experience', 'projects', 'works', 'skills', 'education', 'awards', 'contact', 'wall']
+    var sections = ['about', 'experience', 'projects', 'works', 'skills', 'education', 'awards', 'objective', 'contact', 'wall']
       .map(function (id) { return document.getElementById(id); })
       .filter(Boolean);
     var navLinks = Array.prototype.slice.call(nav.querySelectorAll('a[data-sec]'));
