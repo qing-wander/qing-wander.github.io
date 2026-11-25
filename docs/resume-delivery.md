@@ -129,7 +129,8 @@
 3. **绑定**：Workers & Pages → 项目 `shenge-work` → **Settings → Bindings**（Production 环境）：
    - `+ Add` → **D1 database** → Variable name **`DB`** → 选 `portfolio-db`；
    - `+ Add` → **KV namespace** → Variable name **`SITE_KV`** → 选 `site-kv`；
-   - 检索相关再加 `AI`（Workers AI）与 `VECTORIZE`（索引 `resume-kb`）。
+   - 检索用的 `AI`（Workers AI）与 `VECTORIZE`（索引 `resume-kb`）**不在 Pages**，而在语义层 Worker
+     `worker/kb/`（`resume-kb-api`），部署方式见 [cloudflare-pages-deploy.md §3](cloudflare-pages-deploy.md)。
 4. **注意**：项目名是 `shenge-work`，不是 `shenge-work.pages.dev`。Preview 环境默认未绑定，
    预览部署的留言板会显示关闭态（刻意如此，避免测试数据混入生产）。
 

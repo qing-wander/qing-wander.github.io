@@ -91,15 +91,19 @@ ls dist/*.html
 
 1. **建 D1**：`bash scripts/db-init.sh remote`（会建库、跑 `db/schema.sql`、灌 RAG 与站点数据）。
 2. **建 Pages 项目**：连接你的 GitHub 仓库，构建命令 `bash scripts/pages-build.sh`，输出 `dist`。
-3. **绑定资源**（Settings → Bindings，Production 环境）：`DB` → D1、`SITE_KV` → KV、`AI`、`VECTORIZE`。
-4. **配环境变量**：照 [../.env.example](../.env.example)，至少 `ADMIN_SESSION_SECRET`、`ADMIN_EMAILS`、
-   `DEVICE_HASH_PEPPER`、`VERIFY_ACCESS_SECRET`、`DELIVER_CHALLENGE_SECRET`；`ALLOWED_ORIGINS`
-   改成你自己的域名。
-5. **迁表**：新库直接用 `db/schema.sql`；老库按 `db/migrations/` 顺序补，或执行单条：
+3. **绑定资源**（Pages → Settings → Bindings，Production 环境）：`DB` → D1、`SITE_KV` → KV。
+   `AI` / `VECTORIZE` 不在 Pages，而是在语义层 Worker `worker/kb/`（`resume-kb-api`）里，见下一步。
+4. **部署语义层 Worker**：`cd worker/kb && npx wrangler deploy`（绑定 `AI` / `VECTORIZE` / `DB`），
+   `npx wrangler secret put KB_TOKEN`；把 Worker 地址与同一令牌填回 Pages 的 `KB_WORKER_URL` / `KB_TOKEN`。
+5. **配环境变量**：照 [../.env.example](../.env.example)，至少 `ADMIN_SESSION_SECRET`、`ADMIN_EMAILS`、
+   `DEVICE_HASH_PEPPER`、`VERIFY_ACCESS_SECRET`、`DELIVER_CHALLENGE_SECRET`、`KB_WORKER_URL`、`KB_TOKEN`；
+   `ALLOWED_ORIGINS` 改成你自己的域名。
+6. **迁表**：新库直接用 `db/schema.sql`；老库按 `db/migrations/` 顺序补，或执行单条：
    ```bash
    npx wrangler d1 execute portfolio-db --remote --file=db/migrations/<file>.sql
    ```
-6. **绑自定义域**：Pages → Custom domains 添加域名；随后把 `ALLOWED_ORIGINS`、`MAIN_SITE_URL`
+7. **建索引**：进 `/admin` →「站点数据」保存一次，或点「重建知识库」；之后每次保存自动重建。
+8. **绑自定义域**：Pages → Custom domains 添加域名；随后把 `ALLOWED_ORIGINS`、`MAIN_SITE_URL`
    以及 HTML 里的 canonical / OG / JSON-LD 一起改掉。
 
 > 变量或绑定**修改后需要一次新部署才生效**（控制台会提示 "This change will take effect on the next deployment"）。

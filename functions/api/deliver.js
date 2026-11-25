@@ -53,6 +53,7 @@ import {
   buildDeliveryEmail, buildSubject, defaultZipName,
 } from '../lib/deliver-content.js';
 import { createZip } from '../lib/zip.js';
+import { readResumePdfFromKv } from '../lib/resume-pdf.js';
 import {
   allowedOrigins, corsHeaders, isAllowedOrigin, json,
   certToken, dayKey, hourKey, ipTag, limit, tooLarge, verifyProof,
@@ -219,8 +220,12 @@ export function parseDelivery(body) {
    开启 zip 时把 PDF + 已备好的证书打成一个包，邮件只挂这一个附件。 */
 export async function probeAttachments(request, d, withData = true, env) {
   const files = [];
-  /* PDF 是固定附件，不在正文「另申请」清单里重复列一次 */
-  const pdfBytes = await fetchAttachmentBytes(request, RESUME_PDF_PATH, env);
+  /* PDF 是固定附件，不在正文「另申请」清单里重复列一次。
+     优先取 KV 里的真实版（带手机号）；没上传才回落到仓库的脱敏副本。 */
+  const kvPdf = await readResumePdfFromKv(env);
+  const pdfBytes = (kvPdf && kvPdf.byteLength <= MAX_ATTACH_BYTES)
+    ? kvPdf
+    : await fetchAttachmentBytes(request, RESUME_PDF_PATH, env);
   if (pdfBytes) files.push({ name: RESUME_PDF_NAME, bytes: pdfBytes });
 
   for (const key of d.certs) {

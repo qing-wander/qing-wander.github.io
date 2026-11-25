@@ -48,7 +48,7 @@
 | 数据 | `data/site-data.json` 是内容唯一真相源；线上真人数据存 D1 `site_content`，仓库只放脱敏副本 |
 | AI | 混合检索（D1 FTS5 BM25 + Vectorize 向量，RRF 融合）→ 受约束生成；关键词兜底不断线 |
 | 部署 | `git push` → Cloudflare Pages 自动构建；`scripts/pages-build.sh` 产出 `dist/` |
-| 质量 | 5 条 GitHub Actions + 23 个 `node:test` 单测 + 内容漂移闸门（生成物必须与数据逐字一致） |
+| 质量 | 4 条 GitHub Actions + 23 个 `node:test` 单测 + 内容漂移闸门（生成物必须与数据逐字一致） |
 
 **它不只是简历页面。** 除展示外还包括：AI 数字分身问答、JD 岗位匹配、AI 语音播报、3D 桌宠、按设备隔离的留言板、简历自动投递（含 PDF/证书附件与发送前预览）、学历核验加锁审批、公司/学校档案页、访问统计与管理后台。
 
@@ -68,7 +68,7 @@
 
 | 能力 | 入口 | 实现 |
 |---|---|---|
-| 数字分身问答 | 右下角 3D 角色 → 面板 | `POST /api/chat`：混合检索 → 受约束提示词 → Worker `resume-kb-api`（GLM-4.7-flash） |
+| 数字分身问答 | 右下角 3D 角色 → 面板 | `POST /api/chat`：混合检索 → 受约束提示词 → Worker `resume-kb-api`（llama-3.3-70b） |
 | 岗位匹配 | `jd.html` / 助手面板「JD 匹配」 | `POST /api/jd`：JD 拆条 → 逐条字面覆盖核算（不靠模型打分）→ 覆盖/部分/缺口 + 证据 + 追问点 |
 | 语音播报 | 面板喇叭按钮 | 浏览器 `SpeechSynthesis` 优先；云端 TTS（`/api/chat` mode=tts）探测成功才切，失败无感回落 |
 | 3D 桌宠 | 右下角常驻 | `<model-viewer>` + 本地 GLB（个人形象 / 温柔形象，性别切换联动头像与音色） |
@@ -80,7 +80,7 @@
 - **学历核验**：学校档案默认加锁，访客提交申请 → 邮件审批 → 签名链接限时解锁。
 - **公司档案互动**：`/api/company-social` 记录浏览量、点赞、评论回复。
 - **全站计数**：`/api/visits`（D1）驱动顶栏复古里程表。
-- **管理后台** `/admin`：概览统计、设备台账、留言审核与回复、问答看板（空召回率 / 高频问题聚类）、站点数据编辑、主题与音色配置、提示词配置、CSV 导出。
+- **管理后台** `/admin`：概览统计、设备台账、留言审核与回复、问答看板（空召回率 / 高频问题聚类）、站点数据编辑、知识库状态与一键重建、主题与音色配置、提示词配置、CSV 导出。
 - **登录** `/login`：无密码。邮箱验证码（白名单）或微信扫码 / 公众号授权；小程序扫码为可选开关。
 
 ## 系统架构
@@ -96,7 +96,7 @@
                        │     ├─ D1 FTS5（BM25，中文 bigram）
                        │     ├─ Vectorize（bge-m3 1024 维）
                        │     ├─ RRF 融合 + 业务加权
-                       │     └─ Worker resume-kb-api（GLM-4.7-flash）
+                       │     └─ Worker resume-kb-api（bge-m3 + llama-3.3-70b）
                        ├─ /api/wall  /api/visits  /api/company-social ── D1
                        ├─ /api/deliver  /api/challenge  /api/verify-access ── Resend + D1
                        └─ /api/admin/** ── admin_config / wall_* / qa_logs
@@ -119,8 +119,8 @@
 | 前端 | 原生 HTML5 / CSS3 / ES5 兼容 JavaScript；`<model-viewer>`、html2canvas 本地 vendor |
 | 边缘 | Cloudflare Pages + Pages Functions（ES Module Worker 运行时） |
 | 存储 | D1（SQLite）：`site_content` / `wall_*` / `kb_*` / `qa_logs` / `rate_limits` / `counters` 等；KV 仅存登录票据与少量兜底计数 |
-| 检索 | D1 FTS5 + Cloudflare Vectorize（bge-m3）+ Workers AI |
-| 生成 | Worker `resume-kb-api` → GLM-4.7-flash（受约束提示词） |
+| 检索 | D1 FTS5 + Vectorize（bge-m3）+ Workers AI；混合检索在 Worker `worker/kb/` 内完成 |
+| 生成 | Worker `resume-kb-api` → `@cf/meta/llama-3.3-70b-instruct-fp8-fast`（受约束提示词，模型可在后台切换） |
 | 语音 | 浏览器 SpeechSynthesis；云端 TTS 经 `/api/chat (mode=tts)` 转发腾讯云（TC3 签名，密钥只在云函数） |
 | 邮件 | Resend（验证码、留言通知、简历投递、核验审批） |
 | 生成链 | Node 22 脚本（渲染简历 / 案例页 / 分享卡 / 打印预览）+ Python 3（JSON→JS 快照、知识库） |
@@ -197,12 +197,23 @@ Cloudflare Pages → Settings → Variables and Secrets 配置（Secret 类型�
 
 **资源绑定**（不是环境变量，需在控制台创建）
 
+**Pages 项目**
+
 | 绑定 | 资源 | 用途 |
 |---|---|---|
 | `DB` | D1 `portfolio-db` | 全部业务数据、RAG 词面索引、后台配置 |
 | `SITE_KV` | KV `site-kv` | 登录票据、少量兜底计数 |
-| `AI` | Workers AI | 查询向量化 |
-| `VECTORIZE` | Vectorize `resume-kb` | 语义向量索引 |
+
+**语义层 Worker**（`worker/kb/`，名字 `resume-kb-api`）
+
+| 绑定 | 资源 | 用途 |
+|---|---|---|
+| `AI` | Workers AI | 查询向量化（`@cf/baai/bge-m3`）与重排 |
+| `VECTORIZE` | Vectorize `resume-kb` | 语义向量索引（1024 维） |
+| `DB` | D1 `portfolio-db` | `/rebuild` 从 `site_content` 重建切片 |
+
+> `AI` 与 `VECTORIZE` 放在 Worker 而不是 Pages，是因为 Pages 的 `deployment_configs` 不支持这两类绑定；
+> 部署：`cd worker/kb && npx wrangler deploy`，再用 `npx wrangler secret put KB_TOKEN` 写入共享令牌。
 
 > 密钥只放平台环境变量，仓库内不含任何真实密钥；本地用 `.dev.vars` / `.secrets.local`（均已 gitignore）。
 
@@ -227,7 +238,7 @@ data/site-data.json ──┬─▶ scripts/render_resume.mjs ────▶ re
 **改内容的正确姿势**
 
 1. 本地：改 `data/site-data.json` → 跑生成脚本 → 跑 `--check` 校验；
-2. 线上：进 `/admin` →「站点数据」直接编辑（写入 D1，最多 5 分钟生效，无需重新构建）；
+2. 线上：进 `/admin` →「站点数据」直接编辑（写入 D1，最多 5 分钟生效，无需重新构建；保存后自动触发知识库重建）；
 3. 批量：`node scripts/seed-site-content.mjs` 或 `bash scripts/db-init.sh remote`。
 
 ## 构建与部署
@@ -292,8 +303,11 @@ npx wrangler d1 execute portfolio-db --remote --file=db/migrations/<file>.sql
 ├── templates/               # 简历与案例页模板
 ├── tests/                   # node:test 单测（23 个文件）
 ├── tools/ variants/ work/   # 桌宠制作脚本、简历变体、作品案例页
+├── worker/
+│   ├── kb/                  # 语义层 Worker resume-kb-api（embed / query / rerank / rebuild）
+│   └── index.mjs            # 备用：独立 Worker 计数（需自有域名，当前未启用）
 ├── docs/                    # 设计文档与台账（索引见 docs/README.md）
-├── .github/workflows/       # tests / content build / RAG / 快照 / 贡献图
+├── .github/workflows/       # tests / content build / 快照 / 贡献图
 ├── .env.example  wrangler.toml  .pages.yml
 └── 本地预览.command
 ```
@@ -304,7 +318,7 @@ npx wrangler d1 execute portfolio-db --remote --file=db/migrations/<file>.sql
 
 | Workflow | 触发 | 作用 |
 |---|---|---|
-| [`test.yml`](.github/workflows/test.yml) | `functions/**`、`tests/**`、PR | 语法检查 + `node --test` + 知识库/快照幂等 |
+| [`test.yml`](.github/workflows/test.yml) | `functions/**`、`tests/**`、PR | 语法检查 + `node --test` + 兜底知识库/快照幂等 |
 | [`content-build.yml`](.github/workflows/content-build.yml) | 数据 / 模板 / 生成物变更 | 生成物与数据逐字一致、结构校验、两页预算 |
 | [`sync-site-data.yml`](.github/workflows/sync-site-data.yml) | `site-data.json` 变更 | 重建 `data/site-data.js` 快照 |
 | [`contributions.yml`](.github/workflows/contributions.yml) | 定时 | 更新页脚 GitHub 贡献热力图数据 |
@@ -331,6 +345,7 @@ python3 scripts/sync_site_data.py --check
 7. **建索引**：后台进「站点数据」点一次「重建知识库」，切片的向量会自动灌进 Vectorize；之后每次保存站点数据都会自动重建，不需要 CI 令牌。
 8. **换个人素材**：`images/`（形象照、证书）、`assets/skins/models/*.glb`（3D 形象）、`favicon*`、`assets/resume/*.pdf`。原作者的人像与证书**不可复用**。
 9. **按需关掉别人的服务**：不用的微信登录 / TTS / Worker 检索留空即可，代码均有降级；`KB_WORKER_URL` 不配时走 D1 词面 + 关键词兜底。
+10. **手机号与 PDF**：仓库里的简历页/PDF 只有占位号。`/resume` 由中间件从 D1 注入真号码；投递用的真实 PDF 用 `node scripts/make-cloud-pdf.mjs --put` 生成并上传 KV（键 `resume:pdf`），`/api/resume-pdf` 下发、`/api/deliver` 发信时优先用它。
 
 完整步骤与表结构说明见 [docs/cloudflare-rag-admin-plan.md](docs/cloudflare-rag-admin-plan.md)。
 

@@ -665,6 +665,21 @@ openid 只回给持有 ticket 的网页，不显示在小程序界面（避免�
   fork 把自己的 JSON 放进 `data/`（或设 `DATA_DIR`）即可换数据，不用改代码。
 - 部署参数与 Secrets 见 `.env.example`；域名、白名单等需在环境变量里换成自己的。
 
+## 手机号与简历 PDF 上云（2026-11-25）
+
+公开仓库会被 fork，所以 `resume.html` 与仓库里的 PDF 只保留占位号
+`138 0000 0000`；访客看到的必须是真号码，两条链路各自补齐：
+
+- **页面**：`functions/_middleware.js` 对 `/resume` 在响应前调
+  `functions/lib/resume-inject.js`，把 D1 `site_content['site-data']` 里的
+  `tel:` 号码回填进 HTML，响应带 `X-Content-Source: cloud`，
+  缓存 5 分钟；D1 读不到就原样输出占位串，不会白屏。
+- **PDF**：真实版由 `node scripts/make-cloud-pdf.mjs --put` 生成（号码默认从
+  D1 读）并上传 KV 键 `resume:pdf`；`/api/resume-pdf` 对外下发，
+  `/api/deliver` 发信时也优先用它。KV 没上传时回落到仓库里的脱敏 PDF。
+- **投放**：仓库里的 `assets/resume/chen-peisheng-resume-2026.pdf` 仍是脱敏副本，
+  只作为兜底与打印预览用；真实版不进 Git。
+
 ## 性别套装一键配置
 
 - D1 `admin_config` 的 `ai_voice_female` / `ai_voice_male` 分别存两套音色；

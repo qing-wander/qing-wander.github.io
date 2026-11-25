@@ -117,6 +117,7 @@ for f in index.html resume.html jd.html company.html school.html 404.html \
          functions/api/admin/voice.js functions/api/admin/voice/preview.js \
          functions/lib/site-content.js functions/api/admin/site-content.js \
          functions/lib/kb-sync.js functions/api/admin/kb.js \
+         functions/lib/resume-inject.js functions/lib/resume-pdf.js functions/api/resume-pdf.js \
          'functions/data/[file].js' data/fallback/site-data.js data/fallback/people.js \
          functions/_middleware.js robots.txt; do
   if [ ! -f "$OUT/$f" ]; then

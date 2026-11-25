@@ -21,6 +21,7 @@ import {
   allowedOrigins, certToken, ipTag, isAllowedOrigin, limit, minuteKey,
 } from './lib/guard.js';
 import { isAdmin } from './lib/admin-auth.js';
+import { injectResumePhone, resumePhone } from './lib/resume-inject.js';
 
 /* ── ① UA 黑名单：按小写子串匹配 ─────────────────────────────────── */
 export const BLOCKED_UA = [
@@ -74,6 +75,8 @@ export function isBlockedPath(pathname) {
 /* ── ③ 敏感数据路径 ─────────────────────────────────────────────── */
 const DATA_PREFIX = ['/data/', '/rag/', '/knowledge/', '/docs/'];
 const CERT_PREFIX = '/assets/resume/certificates/';
+/* 简历文档：需要把占位手机号换成云端真号码 */
+const RESUME_DOC_PATHS = ['/resume'];
 
 export function isDataPath(pathname) {
   return DATA_PREFIX.some((p) => pathname.indexOf(p) === 0);
@@ -222,6 +225,24 @@ export async function onRequest(context) {
 
   if (isBlockedPath(path)) return deny(404);
   if (isBlockedUA(request.headers.get('User-Agent'))) return deny(403);
+
+  /* 简历页：仓库里是脱敏副本（手机号是占位串），真号码从 D1 注入后再返回。
+     只处理 HTML 文档；/resume.html 的 308 跳转原样放行给 Pages。 */
+  if (RESUME_DOC_PATHS.indexOf(path) >= 0 && (request.method === 'GET' || request.method === 'HEAD')) {
+    const resp = await next();
+    const ct = resp.headers.get('Content-Type') || '';
+    if (resp.ok && ct.indexOf('text/html') >= 0 && request.method === 'GET') {
+      const phone = await resumePhone(env);
+      if (phone) {
+        const html = injectResumePhone(await resp.text(), phone);
+        const headers = new Headers(resp.headers);
+        headers.set('Cache-Control', 'public, max-age=300');
+        headers.set('X-Content-Source', 'cloud');
+        return new Response(html, { status: resp.status, headers });
+      }
+    }
+    return resp;
+  }
 
   /* 后台：先验会话，再放行页面；一步都不能省 */
   if (isAdminPath(path)) {
