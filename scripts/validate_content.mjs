@@ -181,7 +181,12 @@ const v = e.verify || {};
 need(v, 'label', 'resume.education.verify');
 need(v, 'code', 'resume.education.verify');
 need(v, 'tip', 'resume.education.verify');
-if (!/^[A-Z0-9]{10,22}$/.test(String(v.code || ''))) fail('学信网验证码格式异常（应为 10–22 位大写字母数字）');
+/* 公开仓库里验证码已由 scripts/redact-public-data.mjs 替换为 REDACTED_* 占位符，
+   此时跳过格式校验；真实数据（D1）仍按 10–22 位大写字母数字约束。 */
+const verifyCode = String(v.code || '');
+if (!/^REDACTED_/.test(verifyCode) && !/^[A-Z0-9]{10,22}$/.test(verifyCode)) {
+  fail('学信网验证码格式异常（应为 10–22 位大写字母数字）');
+}
 if (!v.qrImage || /^data:/i.test(v.qrImage)) fail('学信网二维码必须是 images/ 下的文件路径，不能内联 base64');
 if (v.qrImage && !existsSync(resolve(ROOT, v.qrImage))) fail(`二维码文件不存在：${v.qrImage}`);
 if (!existsSync(QR_FILE)) fail('缺少 images/edu-verify-qr.png');
