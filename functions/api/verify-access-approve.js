@@ -1,5 +1,7 @@
 /* ──────────────────────────────────────────────────────────────────────
-   学历核验 · 邮件审批页（/api/verify-access-approve）
+   私密佐证材料 · 邮件审批页（/api/verify-access-approve）
+   学历核验与任职佐证（离职证明等）共用同一审批链路，资源类型由
+   verify_access_requests.school_id 里的 `type:target` 区分。
    ──────────────────────────────────────────────────────────────────────
    GET  ?id=…&exp=…&sig=…  校验签名后展示申请详情 + 批准/拒绝按钮。
                             只读，不因邮件客户端预读链接而误批。
@@ -11,6 +13,7 @@
 
 import { escapeHtml, formatBeijing } from '../lib/wall-notify.js';
 import { verifyApproval } from '../lib/verify-access-token.js';
+import { parseResource, resourceLabel, resourceTitle } from '../lib/secure-access.js';
 
 const HEADERS = {
   'Content-Type': 'text/html; charset=utf-8',
@@ -42,10 +45,11 @@ function page(title, body) {
   });
 }
 
-function detailTable(row) {
+function detailTable(row, resource) {
   const pairs = [
     ['申请人', row.name],
     ['当前身份', row.identity],
+    ['申请资源', resourceTitle(resource)],
     ['公司 / 机构', row.org || '—'],
     ['联系方式', row.contact || '—'],
     ['查看用途', row.purpose],
@@ -65,17 +69,22 @@ function detailTable(row) {
     '<div class="kicker">REASON / 查看理由</div><div class="reason">' + escapeHtml(row.reason || '') + '</div>';
 }
 
-function statusPage(status) {
+function statusPage(status, label) {
+  const l = label || '学历核验';
+  const isSchool = l === '学历核验';
+  const reveal = isSchool ? '验证码与二维码' : '材料';
+  const signed = isSchool ? '' : '材料链接带签名、5 分钟失效并自动续签，旧链接无法继续访问对象存储。';
   if (status === 'approved') {
-    return page('已批准 · 学历核验', '<div class="kicker">VERIFY / APPROVED</div><h1>已批准解锁</h1>' +
-      '<div class="done">申请人的页面会在几秒内自动显示验证码与二维码，无需刷新。授权仅对本次申请的设备有效，' +
-      '批准后 24 小时自动过期，到期后对方需重新申请。此链接已失效，不能重复操作。</div>');
+    return page('已批准 · ' + l, '<div class="kicker">VERIFY / APPROVED</div><h1>已批准解锁</h1>' +
+      '<div class="done">申请人的页面会在几秒内自动显示' + reveal + '，无需刷新。授权仅对本次申请的设备有效，' +
+      '批准后 24 小时自动过期，到期后对方需重新申请。' + escapeHtml(signed) +
+      '此链接已失效，不能重复操作。</div>');
   }
   if (status === 'rejected') {
-    return page('已拒绝 · 学历核验', '<div class="kicker">VERIFY / REJECTED</div><h1>已拒绝申请</h1>' +
+    return page('已拒绝 · ' + l, '<div class="kicker">VERIFY / REJECTED</div><h1>已拒绝申请</h1>' +
       '<div class="done">申请人会看到「未获批准」。此链接已失效，不能重复操作。</div>');
   }
-  return page('链接已失效 · 学历核验', '<div class="kicker">VERIFY / EXPIRED</div><h1>链接无效或已过期</h1>' +
+  return page('链接已失效 · ' + l, '<div class="kicker">VERIFY / EXPIRED</div><h1>链接无效或已过期</h1>' +
     '<p class="note">邮件中的审批链接 7 天后失效，且只能在有效期内操作一次。请让申请人重新提交申请。</p>');
 }
 
@@ -99,6 +108,10 @@ async function readParams(request) {
   };
 }
 
+function labelOf(row) {
+  return row ? resourceLabel(parseResource(row.school_id)) : '学历核验';
+}
+
 async function loadRequest(env, id) {
   if (!env.DB) return null;
   try {
@@ -115,13 +128,17 @@ export async function onRequestGet(context) {
   if (!(await verifyApproval(id, exp, sig, env))) return statusPage('expired');
   const row = await loadRequest(env, id);
   if (!row) return statusPage('expired');
-  if (row.status !== 'pending') return statusPage(row.status);
+  const label = labelOf(row);
+  if (row.status !== 'pending') return statusPage(row.status, label);
 
   const action = new URL(request.url).pathname;
+  const signedNote = label === '学历核验'
+    ? '' : '批准后下发的材料链接带服务端签名，5 分钟失效并自动续签。';
   const body =
-    '<div class="kicker">VERIFY / APPROVAL REQUEST</div><h1>学历核验 · 访问审批</h1>' +
-    '<p class="note">请核对下面信息与申请人自述是否一致，再决定是否解锁。批准会实时作用于对方打开的页面。</p>' +
-    detailTable(row) +
+    '<div class="kicker">VERIFY / APPROVAL REQUEST</div><h1>' + escapeHtml(label) + ' · 访问审批</h1>' +
+    '<p class="note">请核对下面信息与申请人自述是否一致，再决定是否解锁。批准会实时作用于对方打开的页面。' +
+    escapeHtml(signedNote) + '</p>' +
+    detailTable(row, parseResource(row.school_id)) +
     '<form method="post" action="' + escapeHtml(action) + '">' +
       '<input type="hidden" name="id" value="' + escapeHtml(id) + '">' +
       '<input type="hidden" name="exp" value="' + escapeHtml(exp) + '">' +
@@ -129,7 +146,7 @@ export async function onRequestGet(context) {
       '<div class="row"><button class="yes" type="submit" name="decision" value="approve">✓ 核实无误，批准解锁</button>' +
       '<button class="no" type="submit" name="decision" value="reject">× 信息存疑，拒绝</button></div>' +
     '</form>';
-  return page('学历核验审批', body);
+  return page(label + '审批', body);
 }
 
 export async function onRequestPost(context) {
@@ -138,10 +155,11 @@ export async function onRequestPost(context) {
   if (!(await verifyApproval(id, exp, sig, env))) return statusPage('expired');
   const row = await loadRequest(env, id);
   if (!row) return statusPage('expired');
-  if (row.status !== 'pending') return statusPage(row.status);
+  const label = labelOf(row);
+  if (row.status !== 'pending') return statusPage(row.status, label);
 
   const approve = decision === 'approve';
-  if (!approve && decision !== 'reject') return statusPage('expired');
+  if (!approve && decision !== 'reject') return statusPage('expired', label);
   try {
     await env.DB.prepare(
       'UPDATE verify_access_requests SET status = ?, approved_at = ? WHERE id = ? AND status = \'pending\''
@@ -152,5 +170,5 @@ export async function onRequestPost(context) {
     return page('写入失败', '<div class="kicker">VERIFY / ERROR</div><h1>写入失败</h1>' +
       '<p class="note">数据库暂时不可用，请稍后重新打开邮件中的链接再试。</p>');
   }
-  return statusPage(approve ? 'approved' : 'rejected');
+  return statusPage(approve ? 'approved' : 'rejected', label);
 }

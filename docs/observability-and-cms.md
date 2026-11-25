@@ -692,6 +692,61 @@ openid 只回给持有 ticket 的网页，不显示在小程序界面（避免�
 - 后台「配置」面板的「展示套装」卡片一键切男版 / 女版；「AI 语音」面板先选女版 /
   男版再改音色或试听。`?gender=` 仅作预览参数，不写入线上配置。
 
+## 私密佐证材料 · 通用加密访问流程（2026-11-25）
+
+离职证明、学历验证码这类含个人身份信息的材料默认加锁：访客提交申请 → 本人邮件
+批准 → 页面轮询到批准后实时解锁 → 下发短时效签名链接读取原件。这套流程与具体
+页面解耦，将来新增任何隐私材料都不用改流程代码。
+
+### 资源注册表与接入方式
+
+- 资源标识形如 `<type>:<target>`，`type` 目前两类：`school-verify`（学历核验，
+  沿用旧链路，无材料链接）、`company-material`（任职佐证材料）。
+- 新增一份材料只需三步：
+  1. 在 `functions/lib/secure-assets.js` 的 `MATERIALS` 注册资源与材料
+     （`available` = 原件已上传，`pending` = 待补充，页面显示「整理中」）；
+  2. 对应公司 / 学校档案的展示数据里加 `secureMaterials` 段（只有公开元数据，
+     不含存储地址）；
+  3. 页面容器写 `data-secure-access="<type>:<target>"`，由 `js/secure-access.js`
+     通用组件挂载。申请、审批、签名、续期全流程自动接管。
+
+### 链路与安全模型
+
+- **申请**：`POST /api/verify-access {resource, name, identity, org, contact,
+  purpose, reason, consent, device}`。资源必须在白名单内；蜜罐字段 `website`
+  填了就静默成功；IP 10 分钟 3 次 / 全站每天 30 次限流。申请写入 D1
+  `verify_access_requests`（pending），Resend 通知本人，邮件里带 HMAC 签名审批链接。
+- **轮询**：`GET /api/verify-access?id=<申请ID>` 只回状态（不回申请人隐私字段）；
+  批准后服务端复查设备绑定与 24 小时有效期，通过则签发一批 `/api/secure-asset`
+  签名 URL。
+- **取流**：`GET /api/secure-asset?rid=&aid=&exp=&dev=&sig=` 是唯一接触原件二进制
+  的出口。每次请求依次校验：签名（绑定申请 ID + 材料 ID + 设备 + 过期秒 + 资源）→
+  过期时间（默认 5 分钟，且拒绝更长有效期的伪造链接）→ 审批状态与设备一致性 →
+  材料归属且 `available` → 单授权每分钟 40 次限流。响应一律 `no-store`，不回裸
+  存储地址。
+- **签名密钥**：优先 `SECURE_ASSET_SECRET`，未配置沿用 `VERIFY_ACCESS_SECRET` 加
+  `:secure-asset` 命名空间，再退回 `DEVICE_HASH_PEPPER` 开发兜底。
+- **前端续签**：`js/secure-access.js` 三态（锁定 / 等待 / 已解锁），5 秒轮询，
+  提前 120 秒续签；页面恢复可见、图片加载失败时立即续签。授权 24 小时到期或换
+  设备自动重新加锁。签名 URL 只存在内存，不写 localStorage、不落 DOM 缓存。
+
+### 私有存储与上传
+
+- 原件不进公开仓库，也不放在公有读桶。默认存 Cloudflare KV：二进制键
+  `secure-asset:<id>`，元数据键 `secure-asset-meta:<id>`（JSON）。
+- 可选腾讯云 COS：配好 `COS_SECRET_ID/KEY/BUCKET/REGION`（`COS_SESSION_TOKEN` /
+  `COS_PRIVATE_PREFIX` 可选）后，元数据 `backend=cos`，服务端用 COS 签名私有读；
+  桶是 public-read，单对象必须显式 `x-cos-acl: private`。
+- 上传脚本 `scripts/upload-secure-assets.mjs`：找源图 → 按注册表角度旋转 → 等比
+  缩到 2200px、JPEG q82（去 EXIF）→ 算 sha256 → 写存储。
+  `--dry-run` 只处理不上传，`--only <id>` 单份，`--source <id>=<path>` 指定源图，
+  `--to cos` 走 COS。本地联调可用 `SECURE_ASSET_LOCAL_DIR=.temp/secure-assets`
+  让 dev server 直读处理好的图片。
+- 当前归档：`leaving-comein`（进门财经）、`leaving-zhishu`（指数引力）、
+  `leaving-fanggeek`（房极客）已上传；`leaving-chowsang`（周生生）pending 待补充。
+- 测试：`tests/secure-access.test.mjs`（10 项）覆盖签名有效期 / 设备绑定 / 材料归属 /
+  限流 / 审批状态回落 / 公开站下发一致性。
+
 ## 预览环境：独立沙箱（2026-11-25）
 
 ### 发现的隐患

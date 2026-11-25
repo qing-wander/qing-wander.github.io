@@ -37,7 +37,7 @@
 | [cloudflare-pages-deploy.md](cloudflare-pages-deploy.md) | 主站托管：构建、部署、绑定、迁移、历史故障复盘 | 现行（2026-11-25 重写） | 2026-11-25 | `scripts/pages-build.sh`、`deploy-pages.sh`、`wrangler.toml` |
 | [cloudflare-free-resources.md](cloudflare-free-resources.md) | 免费额度盘点、KV→D1 迁移与回滚 | 现行 | 2026-11-23 | `functions/api/visits.js`、`wall.js` |
 | [resume-delivery.md](resume-delivery.md) | 留言板 + 简历投递：接口语义、限流、配置、排障 | 现行（2026-11-25 校正 D1/设备隔离） | 2026-11-25 | `functions/api/wall.js`、`deliver.js`、`lib/wall-notify.js` |
-| [observability-and-cms.md](observability-and-cms.md) | 教程：Umami / Clarity / Pages CMS 接入与排障 | 通用教程（站点现状以 README 为准） | 2026-11-25 | `js/analytics.js`、`.pages.yml` |
+| [observability-and-cms.md](observability-and-cms.md) | 教程：Umami / Clarity / Pages CMS 接入；私密佐证材料加密申请—审批—签名取流链路 | 通用教程（站点现状以 README 为准） | 2026-11-25 | `js/analytics.js`、`functions/api/secure-asset.js`、`functions/lib/secure-access.js`、`js/secure-access.js` |
 
 ### 2.3 视觉与素材
 

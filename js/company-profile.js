@@ -815,6 +815,32 @@
     return html + '</section>';
   }
 
+  /* ── 任职佐证材料（离职证明等，默认加锁）────────────────────
+     放在「数据说明 / 资料来源」之前：与佐证、来源同一语义区，
+     不打断开篇的公司调研阅读；有材料的公司档案才渲染。
+     真实文件在私有对象存储，页面只留一个挂载点，加密申请 / 审批 /
+     实时刷新 / 签名链接续期全部由 js/secure-access.js 通用组件接管。 */
+  function secureMaterialsBlock(c) {
+    var m = c.secureMaterials;
+    if (!m || !m.resource) return '';
+    var items = m.items || [];
+    var available = items.filter(function (it) { return it.status === 'available'; });
+    var brief = items.map(function (it) {
+      return { label: it.label || '材料', issuer: it.issuer || '', status: it.status || 'available' };
+    });
+    var inner = '<div class="cp-secure-mount" data-secure-access="' + esc(m.resource) + '"' +
+      ' data-secure-title="' + esc(m.title || '任职佐证材料') + '"' +
+      ' data-secure-lead="' + esc(m.note || '') + '"' +
+      ' data-secure-items="' + esc(JSON.stringify(brief)) + '"' +
+      ' data-secure-pending="' + (available.length ? '0' : '1') + '"></div>';
+    return foldBlock({
+      tag: 'section', cls: 'cp-sec cp-secure-materials',
+      titleHtml: '任职佐证材料 <span class="cp-sec-en">EMPLOYMENT PROOF · LOCKED</span>',
+      inner: inner, cid: c.id, key: 'secure-materials',
+      fold: false, threshold: 999
+    });
+  }
+
   function sourcesBlock(c) {
     var src = c.sources || [];
     var list = src.map(function (s) {
@@ -891,6 +917,7 @@
       outlookBlock(c) +
       officeBlock(c, id) +
       dataConfidenceBlock(c) +
+      secureMaterialsBlock(c) +
       sourcesBlock(c) +
       wechatBlock(c) +
       (window.CompanySocial ? window.CompanySocial.skeleton(id) : '');
@@ -905,6 +932,10 @@
     if (!c) return;
     buildDrawer();
     drawer.querySelector('.cp-panel-scroll').innerHTML = renderPanel(id);
+    /* 加密材料组件：抽屉每次重建 DOM 后重新挂载（旧容器会自动销毁定时器） */
+    if (window.SecureAccess && window.SecureAccess.mountAll) {
+      try { window.SecureAccess.mountAll(drawer); } catch (e) {}
+    }
     /* 互动区块（浏览 / 点赞 / 评论）在抽屉内容就位后再挂载；组件未加载时静默跳过 */
     if (window.CompanySocial) {
       window.CompanySocial.mount(drawer.querySelector('.cp-panel-scroll'), id);

@@ -15,6 +15,7 @@ import { onRequestPost as deliverPreviewPost, onRequestOptions as deliverPreview
 import { onRequestGet as socialGet, onRequestPost as socialPost, onRequestOptions as socialOpt } from '../functions/api/company-social.js';
 import { onRequestGet as verifyAccessGet, onRequestPost as verifyAccessPost, onRequestOptions as verifyAccessOpt } from '../functions/api/verify-access.js';
 import { onRequestGet as verifyApproveGet, onRequestPost as verifyApprovePost } from '../functions/api/verify-access-approve.js';
+import { onRequestGet as secureAssetGet } from '../functions/api/secure-asset.js';
 import { onRequestGet as challengeGet, onRequestOptions as challengeOpt } from '../functions/api/challenge.js';
 import { onRequestGet as greetingGet, onRequestOptions as greetingOpt } from '../functions/api/greeting.js';
 
@@ -49,8 +50,26 @@ const DB = {
 /* 内存 KV：模拟 expirationTtl，deliver.js 的发信限额仍用它
    （线上也保持 KV，写量可控：日上限 30 封 ≈ 90 写/天） */
 const KV = new Map();
+/* 私密材料本地联调：SECURE_ASSET_LOCAL_DIR 指向 .temp/secure-assets 时，
+   直接读上传脚本处理好的图片，模拟线上 KV 里的二进制与元数据。 */
+const LOCAL_ASSET_DIR = process.env.SECURE_ASSET_LOCAL_DIR || '';
 const SITE_KV = {
-  async get(k) {
+  async get(k, opts) {
+    if (LOCAL_ASSET_DIR && k.startsWith('secure-asset:')) {
+      const id = k.slice('secure-asset:'.length);
+      try {
+        const buf = await fs.readFile(path.join(ROOT, LOCAL_ASSET_DIR, id + '.jpg'));
+        if (opts && opts.type === 'arrayBuffer') {
+          return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
+        }
+        return buf.toString('base64');
+      } catch (e) { return null; }
+    }
+    if (LOCAL_ASSET_DIR && k.startsWith('secure-asset-meta:')) {
+      const id = k.slice('secure-asset-meta:'.length);
+      try { return await fs.readFile(path.join(ROOT, LOCAL_ASSET_DIR, id + '.meta.json'), 'utf8'); }
+      catch (e) { return null; }
+    }
     const e = KV.get(k);
     if (!e) return null;
     if (e.expiresAt && e.expiresAt <= Date.now()) { KV.delete(k); return null; }
@@ -192,6 +211,9 @@ http.createServer(async (req, res) => {
       const r = req.method === 'POST' ? await handler(verifyApprovePost, req)
         : await handler(verifyApproveGet, req);
       return send(res, r);
+    }
+    if (p === '/api/secure-asset') {
+      return send(res, await handler(secureAssetGet, req));
     }
     let file = p === '/' ? '/index.html' : p;
     const abs = path.join(ROOT, decodeURIComponent(file));

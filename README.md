@@ -48,7 +48,7 @@
 | 数据 | `data/site-data.json` 是内容唯一真相源；线上真人数据存 D1 `site_content`，仓库只放脱敏副本      |
 | AI | 混合检索（D1 FTS5 BM25 + Vectorize 向量，RRF 融合）→ 受约束生成；关键词兜底不断线               |
 | 部署 | `git push` → Cloudflare Pages 自动构建；`scripts/pages-build.sh` 产出 `dist/` |
-| 质量 | 4 条 GitHub Actions + 28 个 `node:test` 测试文件 + 内容漂移闸门（生成物必须与数据逐字一致）        |
+| 质量 | 4 条 GitHub Actions + 29 个 `node:test` 测试文件 + 内容漂移闸门（生成物必须与数据逐字一致）        |
 
 **它不只是简历页面。** 除展示外还包括：AI 数字分身问答、JD 岗位匹配、AI 语音播报、3D 桌宠、按设备隔离的留言板、简历自动投递（含 PDF/证书附件与发送前预览）、学历核验加锁审批、公司/学校档案页、访问统计与管理后台。
 
@@ -99,6 +99,7 @@
                        │     └─ Worker resume-kb-api（bge-m3 + llama-3.3-70b）
                        ├─ /api/wall  /api/visits  /api/company-social ── D1
                        ├─ /api/deliver  /api/challenge  /api/verify-access ── Resend + D1
+                       ├─ /api/secure-asset ── 私密材料签名取流（私有 KV / COS，5 分钟短链）
                        └─ /api/admin/** ── admin_config / wall_* / qa_logs
                                  │
                       腾讯云 CloudBase 云函数（functions/tencent/）
@@ -173,7 +174,7 @@ python3 scripts/sync_site_data.py --check
 **4）跑测试 / 构建产物**
 
 ```bash
-node --test tests/*.test.mjs     # 28 个测试文件，零外部依赖
+node --test tests/*.test.mjs     # 29 个测试文件，零外部依赖
 bash scripts/pages-build.sh      # 产出 dist/，缺文件或超 25MiB 会直接失败
 ```
 

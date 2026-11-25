@@ -70,6 +70,14 @@ bash scripts/pages-build.sh          # 可选，但改了 HTML/构建相关务�
   ```
 - 新增字段时同步更新：模板（`templates/`）、渲染脚本、`scripts/validate_content.mjs` 的校验规则。
 
+### 私密佐证材料（离职证明等）
+
+- 含身份信息的原件只存私有 KV / COS，**不进仓库、不进公开对象存储**；档案数据里只写
+  `secureMaterials` 公开元数据（id / 标签 / 出具方 / 状态），不含存储地址。
+- 归档原件由站长用 `scripts/upload-secure-assets.mjs` 处理后上传（先 `--dry-run` 预览）；
+  该脚本需要本机 wrangler / COS 凭证，不属于 PR 流程。申请—审批—签名取流链路见
+  [`docs/observability-and-cms.md`](docs/observability-and-cms.md)。
+
 ## 4. 隐私红线
 
 **以下内容一律不得进入仓库、日志或测试夹具**：

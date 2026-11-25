@@ -32,6 +32,10 @@
 
 import { notifyAccessRequest } from '../lib/verify-access-notify.js';
 import { newRequestId, signApproval } from '../lib/verify-access-token.js';
+import {
+  approvalState, isValidResource, issueAssets, parseResource,
+  resourceLabel, resourceTitle,
+} from '../lib/secure-access.js';
 
 const JSON_HEADERS = { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' };
 
@@ -43,7 +47,7 @@ const MIN_REASON = 15;
 const MAX_DEVICE_KEY = 60;
 const MAX_DEVICE_VALUE = 120;
 const MAX_DEVICE_ID = 64;
-const APPROVAL_TTL_MS = 24 * 3600 * 1000;  // 批准解锁后 24 小时有效
+/* APPROVAL_TTL_MS 通用核心里统一定义（批准后 24 小时），所有资源一致 */
 const IP_WINDOW_MS = 600000;   // 10 分钟
 const IP_LIMIT = 3;
 const DAY_LIMIT = 30;
@@ -197,30 +201,38 @@ export async function onRequestGet(context) {
     ).bind(id).first();
     if (!row) return json({ ok: false, error: 'not_found' }, cors, 200);
 
-    /* 设备绑定：批准只对提交申请的那台设备生效。历史记录没记设备 ID 时放行，
-       避免旧数据突然全部失效。 */
-    let savedDevice = '';
-    try { savedDevice = String((JSON.parse(row.meta || '{}').deviceId) || ''); } catch (e) {}
+    /* 设备绑定 + 24 小时过期：判定逻辑抽到通用核心，学历核验与其它
+       加密材料共用一套语义（旧记录没记设备 ID 时放行）。 */
     const givenDevice = clean(request.headers.get('X-Device-Id'), MAX_DEVICE_ID);
-    if (savedDevice && givenDevice !== savedDevice) {
+    const state = approvalState(row, Date.now(), givenDevice);
+    if (state.deviceMismatch) {
       return json({ ok: false, error: 'device_mismatch', message: '该授权仅对申请时的设备有效' }, cors, 200);
     }
 
-    const approvedAt = Number(row.approved_at || 0);
-    let status = row.status;
-    let expiresAt = 0;
-    if (status === 'approved') {
-      expiresAt = approvedAt + APPROVAL_TTL_MS;
-      /* 24 小时后自动过期：前端据此重新加锁并提示再次申请 */
-      if (!approvedAt || Date.now() > expiresAt) status = 'expired';
-    }
-    return json({
+    const resource = parseResource(row.school_id);
+    const payload = {
       ok: true,
-      status,
-      schoolId: row.school_id || '',
-      approvedAt,
-      expiresAt,
-    }, cors, 200);
+      status: state.status,
+      schoolId: row.school_id || '',   // 兼容旧前端字段
+      resource,
+      label: resourceLabel(resource),
+      approvedAt: state.approvedAt,
+      expiresAt: state.expiresAt,
+    };
+    if (state.status === 'approved') {
+      /* 每次轮询 / 页面刷新都重新签发短时效签名链接：
+         链接绑定申请 ID + 材料 ID + 设备 + 过期秒，5 分钟后自动作废，
+         拿到旧链接的人既看不到内容，也刷不动底层对象存储。 */
+      const issued = await issueAssets({
+        origin: new URL(request.url).origin,
+        rid: id, dev: givenDevice, resource, env,
+        approvalExpiresAt: state.expiresAt,
+      });
+      payload.assets = issued.assets;
+      payload.assetRefreshIn = issued.refreshIn;
+      payload.assetUrlTtl = issued.ttl;
+    }
+    return json(payload, cors, 200);
   } catch (e) {
     console.warn('[verify-access] 查询审批状态失败', (e && e.message) || e);
     return json({ ok: false, error: 'db_error' }, cors, 200);
@@ -307,13 +319,22 @@ export async function onRequestPost(context) {
     }
   }
 
-  /* 申请 ID 同时作为访客轮询凭据；审批链接另带 HMAC 签名，二者权限不同 */
+  /* 申请 ID 同时作为访客轮询凭据；审批链接另带 HMAC 签名，二者权限不同。
+     资源标识：新前端显式传 resource（company-material:公司 id 等），
+     旧学历核验前端不传，从来源页 ?c= 推导，行为完全兼容。 */
   const id = newRequestId();
-  let schoolId = 'xinhua';
+  let resource = 'school-verify:xinhua';
   try {
     const fromQuery = new URL(body.origin || referrer || request.url).searchParams.get('c');
-    if (fromQuery && /^[a-z0-9_-]{1,40}$/i.test(fromQuery)) schoolId = fromQuery;
+    if (fromQuery && /^[a-z0-9_-]{1,40}$/i.test(fromQuery)) resource = 'school-verify:' + fromQuery;
   } catch (e) {}
+  if (body.resource) {
+    const candidate = String(body.resource).trim();
+    if (!isValidResource(candidate)) {
+      return json({ ok: false, error: 'bad_request', message: '申请的资源不存在' }, cors, 400);
+    }
+    resource = candidate;
+  }
 
   const item = {
     name, identity: IDENTITY[identity], org, contact,
@@ -336,7 +357,7 @@ export async function onRequestPost(context) {
            (id, school_id, name, identity, org, contact, purpose, reason, meta, device_hash, created_at, status)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')`
       ).bind(
-        id, schoolId, item.name, item.identity, item.org, item.contact, item.purpose, item.reason,
+        id, resource, item.name, item.identity, item.org, item.contact, item.purpose, item.reason,
         JSON.stringify(meta), hash, now
       ).run();
       const token = await signApproval(id, env, now);
@@ -355,7 +376,10 @@ export async function onRequestPost(context) {
     console.warn('[verify-access] 未绑定 D1，邮件将不带审批链接（无法在线解锁）');
   }
 
-  const sent = await notifyAccessRequest(env, item, meta, approval);
+  const sent = await notifyAccessRequest(env, item, meta, approval, {
+    label: resourceLabel(resource),
+    resourceTitle: resourceTitle(resource),
+  });
   if (!sent.ok) console.warn('[verify-access] 邮件通知未送达：' + sent.reason);
 
   /* 发信失败也返回成功：访客无法补救，重复提交只会制造更多噪音 */

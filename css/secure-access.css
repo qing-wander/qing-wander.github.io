@@ -1,0 +1,150 @@
+/* ════════════════════════════════════════════════════════════════════
+   css/secure-access.css · 加密材料通用组件样式
+   ────────────────────────────────────────────────────────────────────
+   只依赖站点已有的主题变量（--ink / --card / --ink-soft / --orange），
+   自带 fallback，因此在公司档案抽屉、独立档案页、未来任何页面都一致。
+   ════════════════════════════════════════════════════════════════════ */
+.sa-box {
+  --sa-ink: var(--ink, #141311);
+  --sa-paper: var(--card, #FFFCF4);
+  --sa-soft: var(--ink-soft, #4A463F);
+  --sa-accent: var(--orange, #FF5A1E);
+  --sa-line: rgba(20, 19, 17, .28);
+  --sa-faint: rgba(20, 19, 17, .05);
+  color: var(--sa-ink);
+  font-family: var(--font-cn, 'PingFang SC', 'Microsoft YaHei', sans-serif);
+  border: 2px dashed var(--sa-line);
+  background: var(--sa-faint);
+  padding: 16px 18px 15px;
+  margin: 12px 0 6px;
+}
+/* 现代浏览器按当前主题自动混色；不支持 color-mix 时用上面的中性灰兜底 */
+@supports (color: color-mix(in srgb, red, blue)) {
+  .sa-box {
+    --sa-line: color-mix(in srgb, var(--sa-ink) 28%, transparent);
+    --sa-faint: color-mix(in srgb, var(--sa-ink) 6%, transparent);
+  }
+}
+.sa-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.sa-kicker {
+  font: 700 10px/1.5 ui-monospace, Menlo, Consolas, monospace;
+  letter-spacing: .14em; color: var(--sa-accent);
+}
+.sa-lock-chip {
+  font: 700 10px/1 ui-monospace, Menlo, Consolas, monospace;
+  letter-spacing: .1em; color: var(--sa-paper); background: var(--sa-ink);
+  padding: 5px 8px;
+}
+.sa-lock-chip.is-wait { background: #B8860B; color: #fff; }
+.sa-lock-chip.is-open { background: var(--sa-accent); color: #fff; }
+.sa-title { font-size: 15px; font-weight: 900; margin: 9px 0 8px; }
+
+.sa-items { list-style: none; margin: 0 0 10px; padding: 0; }
+.sa-item {
+  display: flex; align-items: baseline; flex-wrap: wrap; gap: 7px;
+  padding: 7px 0; border-bottom: 1px solid var(--sa-line);
+  font-size: 12.5px; line-height: 1.5;
+}
+.sa-item-icon { font-size: 13px; color: var(--sa-accent); }
+.sa-item small { color: var(--sa-soft); font-size: 11.5px; }
+.sa-item em { margin-left: auto; font-style: normal; font-size: 11px; color: var(--sa-soft); }
+.sa-item.is-pending { opacity: .72; }
+.sa-item.is-pending em { color: #B8860B; }
+.sa-items-note { font-size: 12px; color: var(--sa-soft); }
+
+.sa-lead { font-size: 12.5px; line-height: 1.75; color: var(--sa-soft); margin: 10px 0 12px; }
+.sa-notice {
+  font-size: 12.5px; line-height: 1.7; padding: 8px 11px; margin: 8px 0;
+  border-left: 3px solid var(--sa-accent); background: var(--sa-paper);
+}
+.sa-notice.is-warn { border-left-color: #C4112C; color: #C4112C; }
+.sa-foot-note { font-size: 11px; line-height: 1.7; color: var(--sa-soft); margin: 10px 0 0; opacity: .85; }
+
+.sa-apply, .sa-refresh, .sa-submit {
+  font: 700 13px/1.4 inherit; cursor: pointer;
+  padding: 10px 16px; border: 2px solid var(--sa-ink);
+  background: var(--sa-ink); color: var(--sa-paper);
+  transition: transform .14s ease, box-shadow .14s ease;
+}
+.sa-apply:hover:not(:disabled), .sa-refresh:hover, .sa-submit:hover:not(:disabled) {
+  transform: translate(-2px, -2px); box-shadow: 3px 3px 0 var(--sa-accent);
+}
+.sa-apply:disabled { opacity: .5; cursor: not-allowed; }
+.sa-refresh { background: var(--sa-paper); color: var(--sa-ink); font-size: 12px; padding: 7px 12px; }
+
+.sa-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; margin: 12px 0; }
+.sa-card {
+  margin: 0; border: 2px solid var(--sa-line); background: #fff;
+  display: flex; flex-direction: column;
+}
+.sa-img {
+  width: 100%; max-height: 300px; object-fit: contain; background: #f7f5f0;
+  cursor: zoom-in; display: block;
+}
+.sa-card figcaption { padding: 8px 10px 10px; display: flex; flex-direction: column; gap: 2px; font-size: 11.5px; color: var(--sa-soft); }
+.sa-card figcaption b { font-size: 12.5px; color: var(--sa-ink); }
+.sa-empty { font-size: 12.5px; color: var(--sa-soft); }
+.sa-flag { font-size: 11.5px; font-weight: 700; color: var(--sa-accent); margin: 8px 0; }
+.sa-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.sa-link-note { font-size: 11px; line-height: 1.6; color: var(--sa-soft); }
+
+/* ── 申请弹窗 ─────────────────────────────────────────────── */
+.sa-modal-mask {
+  position: fixed; inset: 0; z-index: 9998; overflow-y: auto;
+  background: rgba(12, 11, 10, .62); display: flex;
+  align-items: flex-start; justify-content: center; padding: 32px 14px;
+}
+.sa-modal-mask[hidden] { display: none; }
+.sa-modal {
+  --sa-ink: #141311; --sa-paper: #FFFCF4; --sa-soft: #4A463F;
+  --sa-accent: #FF5A1E;
+  position: relative; width: min(560px, 100%);
+  background: var(--sa-paper); color: var(--sa-ink);
+  border: 3px solid var(--sa-ink); box-shadow: 8px 8px 0 var(--sa-ink);
+  padding: 24px 24px 22px; font-family: var(--font-cn, 'PingFang SC', 'Microsoft YaHei', sans-serif);
+}
+.sa-modal-close {
+  position: absolute; top: 8px; right: 10px; border: 0; background: none;
+  font-size: 26px; line-height: 1; cursor: pointer; color: var(--sa-ink);
+}
+.sa-modal-kicker { font: 700 11px/1.5 ui-monospace, Menlo, Consolas, monospace; letter-spacing: .12em; color: var(--sa-accent); }
+.sa-modal-title { font-size: 19px; font-weight: 900; margin: 6px 0 8px; }
+.sa-modal-lead { font-size: 12.5px; line-height: 1.75; color: var(--sa-soft); margin: 0 0 16px; }
+.sa-form { display: flex; flex-direction: column; gap: 11px; }
+.sa-field { display: flex; flex-direction: column; gap: 4px; font-size: 12.5px; font-weight: 700; }
+.sa-field em { font-style: normal; font-size: 10.5px; color: var(--sa-accent); font-weight: 700; }
+.sa-field small { font-size: 11px; font-weight: 400; color: var(--sa-soft); line-height: 1.6; }
+.sa-field input, .sa-field select, .sa-field textarea {
+  font: 13px/1.6 inherit; padding: 8px 10px; border: 2px solid var(--sa-ink);
+  background: #fff; color: var(--sa-ink); border-radius: 0; width: 100%;
+}
+.sa-field textarea { resize: vertical; }
+.sa-check { display: flex; gap: 8px; align-items: flex-start; font-size: 12px; line-height: 1.6; }
+.sa-honeypot { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+.sa-form-error { font-size: 12px; color: #C4112C; margin: 0; }
+.sa-form-error[hidden], .sa-form-done[hidden], .sa-form[hidden] { display: none; }
+.sa-submit { align-self: flex-start; margin-top: 4px; }
+.sa-submit:disabled { opacity: .6; cursor: wait; }
+.sa-form-done b { font-size: 15px; }
+.sa-form-done p { font-size: 12.5px; line-height: 1.75; margin: 8px 0 14px; color: var(--sa-soft); }
+.sa-submit.is-alt { background: #fff; color: var(--sa-ink); }
+body.sa-modal-open { overflow: hidden; }
+
+/* ── 大图预览 ─────────────────────────────────────────────── */
+.sa-lightbox {
+  position: fixed; inset: 0; z-index: 9999; background: rgba(10, 9, 8, .9);
+  display: flex; align-items: center; justify-content: center; padding: 24px;
+}
+.sa-lightbox[hidden] { display: none; }
+.sa-lightbox img { max-width: 100%; max-height: 92vh; object-fit: contain; background: #fff; }
+.sa-lightbox-close {
+  position: absolute; top: 16px; right: 20px; border: 0; background: none;
+  color: #fff; font-size: 30px; cursor: pointer;
+}
+
+@media (max-width: 640px) {
+  .sa-box { padding: 13px 13px 12px; }
+  .sa-modal { padding: 20px 16px 18px; }
+  .sa-grid { grid-template-columns: minmax(0, 1fr); }
+  .sa-item em { margin-left: 0; width: 100%; }
+}

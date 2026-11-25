@@ -30,9 +30,16 @@ function safeMeta(value, max) {
    item = { name, identity, org, contact, purpose, reason, created_at }
    meta = { origin, ipCountry, ipHash, userAgent, device, deviceId }
    approval = { url, expiresAt }  签名审批链接；点开后由本人确认，不是点开即批 */
-export function buildAccessNotice(item, meta, approval) {
+/* opts.label / opts.resourceTitle：通用加密材料流程传入的资源可读名。
+   不传时逐字保持原「学历核验」文案，旧链路行为完全不变。 */
+export function buildAccessNotice(item, meta, approval, opts) {
   const i = item || {};
   const m = meta || {};
+  const o = opts || {};
+  const label = safeMeta(o.label, 40) || '学历核验';
+  const resTitle = safeMeta(o.resourceTitle, 80) || label;
+  const isSchool = label === '学历核验';
+  const target = isSchool ? '学历信息' : (resTitle || label);
   const name = safeMeta(i.name, 40) || '未署名申请人';
   const identity = safeMeta(i.identity, 40) || '未填写';
   const org = safeMeta(i.org, 80) || '—';
@@ -61,16 +68,20 @@ export function buildAccessNotice(item, meta, approval) {
     ['IP 国家 / 地区', country],
     ['IP 哈希', ipHash],
   ];
+  /* 新资源额外写清「申请的是哪份材料」，方便本人核对；学历核验保持原表不变 */
+  if (!isSchool) rows.splice(5, 0, ['申请资源', resTitle]);
   const deviceRows = [
     ['浏览器 UA', ua],
     ['设备指纹', deviceId],
     ['设备环境', device],
   ];
 
-  const subject = '【学历核验】访问申请 · ' + name + ' · ' + time.slice(5, 16);
+  const subject = '【' + label + '】访问申请 · ' + name + ' · ' + time.slice(5, 16);
+  const revealText = isSchool ? '验证码与二维码' : '所申请的材料';
+  const signedNote = '材料链接带服务端签名、5 分钟失效并自动续签；旧链接无法继续访问对象存储。';
 
   const textBody = [
-    '【学历核验】收到一条学历信息查看权限申请',
+    '【' + label + '】收到一条' + target + '查看权限申请',
     '',
     rows.map(([k, v]) => k + '：' + v).join('\n'),
     '',
@@ -80,12 +91,13 @@ export function buildAccessNotice(item, meta, approval) {
     '设备与网络：',
     deviceRows.map(([k, v]) => k + '：' + v).join('\n'),
     '',
-    '请核实申请人身份（姓名 + 公司 + 联系方式）后，再决定是否解锁验证码与二维码。',
+    '请核实申请人身份（姓名 + 公司 + 联系方式）后，再决定是否解锁' + revealText + '。',
     '',
     '【批准 / 拒绝解锁】（链接 ' + expiresAt + ' 失效，打开后需再次点按钮确认，邮件客户端预读不会误批）：',
     approvalUrl || '（当前环境未绑定数据库，无法生成审批链接；请改用回复邮件确认）',
     '',
-    '批准后，对方页面会在无需刷新的情况下自动显示验证码与二维码。',
+    '批准后，对方页面会在无需刷新的情况下自动显示' + revealText + '。',
+    ...(isSchool ? [] : [signedNote]),
     '授权仅对本次申请的设备有效，批准后 24 小时自动过期；到期后对方需重新提交申请。',
     '如需回复申请人：' + (EMAIL_RE.test(contact) ? contact : '（未留邮箱，请从联系方式中判断）'),
   ].join('\n');
@@ -107,7 +119,8 @@ export function buildAccessNotice(item, meta, approval) {
     '<div style="background:#f4f1e8;padding:24px;">',
     '<div style="max-width:600px;margin:0 auto;background:#fffdf7;border:2px solid #141311;box-shadow:6px 6px 0 #141311;padding:24px;">',
     '<div style="font:bold 12px/1.5 ui-monospace,Menlo,Consolas,monospace;letter-spacing:.12em;color:#C4112C;">VERIFY / ACCESS REQUEST</div>',
-    '<h1 style="margin:8px 0 4px;font:bold 22px/1.4 \'PingFang SC\',\'Microsoft YaHei\',sans-serif;color:#141311;">学历核验：有人申请查看验证码</h1>',
+    '<h1 style="margin:8px 0 4px;font:bold 22px/1.4 \'PingFang SC\',\'Microsoft YaHei\',sans-serif;color:#141311;">' +
+    escapeHtml(label) + '：有人申请查看' + (isSchool ? '验证码' : '材料') + '</h1>',
     '<p style="margin:0 0 16px;font:12px/1.6 \'PingFang SC\',\'Microsoft YaHei\',sans-serif;color:#6b675e;">请核实申请人身份后再决定是否解锁；邮件中的 IP 仅保留哈希。</p>',
     '<table style="border-collapse:collapse;width:100%;">' + tableRows(rows) + '</table>',
     block('REASON / 查看理由', reason, '#fff'),
@@ -125,7 +138,8 @@ export function buildAccessNotice(item, meta, approval) {
         '审查并决定是否解锁 →</a>' +
         '<p style="margin:10px 0 0;font:12px/1.6 \'PingFang SC\',\'Microsoft YaHei\',sans-serif;color:#141311;">' +
         '链接 ' + escapeHtml(expiresAt) + ' 失效；打开后需再次点「批准解锁」才生效，邮件预读不会误操作。' +
-        '批准后的授权仅对申请人本次使用的设备有效，24 小时后自动过期，到期需重新申请。</p>' +
+        '批准后的授权仅对申请人本次使用的设备有效，24 小时后自动过期，到期需重新申请。' +
+        (isSchool ? '' : escapeHtml(signedNote)) + '</p>' +
         '<p style="margin:6px 0 0;word-break:break-all;font:11px/1.6 ui-monospace,Menlo,Consolas,monospace;color:#141311;">' +
         escapeHtml(approvalUrl) + '</p></div>'
       : '<p style="margin-top:18px;font:12px/1.6 \'PingFang SC\',\'Microsoft YaHei\',sans-serif;color:#6b675e;">当前环境未绑定数据库，无法生成审批链接；请改用回复邮件确认。</p>',
@@ -187,6 +201,6 @@ async function deliver(env, mail) {
   }
 }
 
-export async function notifyAccessRequest(env, item, meta, approval) {
-  return deliver(env, buildAccessNotice(item, meta, approval));
+export async function notifyAccessRequest(env, item, meta, approval, opts) {
+  return deliver(env, buildAccessNotice(item, meta, approval, opts));
 }

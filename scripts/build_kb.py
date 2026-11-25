@@ -43,6 +43,10 @@ ZHIPU_URL = "https://open.bigmodel.cn/api/paas/v4/embeddings"
 ZHIPU_MODEL = "embedding-3"
 
 TAG_RE = re.compile(r"<[^>]+>")
+# 工作时间里的括号注解（如「（组织架构调整）」）只服务于页面排版：
+# 分块标题会被拼进检索正文，若把「架构」这类词放进去，会让履历块
+# 在「Agent 架构经验」之类的问题上压过技能分块。语义索引只用纯时间。
+PERIOD_NOTE_RE = re.compile(r"（[^（）]*）")
 WS_RE = re.compile(r"[ \t\r\f\v]+")
 NL_RE = re.compile(r"\n{2,}")
 CJK_RE = re.compile(r"[\u4e00-\u9fff]+")
@@ -175,10 +179,11 @@ def build_chunks(data):
                               for s in edu.get("sides", []))
     pack_points(chunks, "edu", "education", edu_title, "index.html#education", "", [edu_body])
 
-    # 3) 工作经历
+    # 3) 工作经历（时间里的展示注解不进语义索引）
     for i, exp in enumerate(data.get("experience", []), 1):
+        idx_time = PERIOD_NOTE_RE.sub("", clean(exp.get("time", ""))).strip()
         title = "%s｜%s（%s）" % (clean(exp.get("company", "")), clean(exp.get("role", "")),
-                                clean(exp.get("time", "")))
+                                idx_time)
         pack_points(chunks, "exp-%02d" % i, "experience", title, "index.html#experience",
                     "", exp.get("points", []))
 
