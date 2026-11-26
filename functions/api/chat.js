@@ -77,6 +77,7 @@ function corsHeaders(request, env) {
 }
 
 const NO_HIT_ANSWER = '简历里没写这块，我不替候选人多说。要不你换个角度问，比如他做过的项目、技术栈或者工作经历？';
+const MODEL_FALLBACK_ANSWER = '这条我暂时答不上来（模型服务不可用），你可以直接看页面上的原文。';
 
 const LIMIT_PER_HOUR = 60;   // 单 IP 每小时问答上限，防刷模型额度
 const MAX_Q = 200;           // 问题长度上限
@@ -119,14 +120,22 @@ export function buildMessages(q, hits, extraPrompt) {
 
 async function callWorker(messages, env, model) {
   if (!env.KB_WORKER_URL || !env.KB_TOKEN) return { ok: false, reason: 'no-worker' };
-  const r = await fetch(`${env.KB_WORKER_URL.replace(/\/$/, '')}/chat`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'X-KB-Token': env.KB_TOKEN },
-    body: JSON.stringify({ messages, max_tokens: 400, temperature: 0.2, ...(model ? { model } : {}) }),
-  }).catch(() => null);
-  if (!r || !r.ok) return { ok: false, reason: 'worker-http' };
+  let r;
+  try {
+    r = await fetch(`${env.KB_WORKER_URL.replace(/\/$/, '')}/chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-KB-Token': env.KB_TOKEN },
+      body: JSON.stringify({ messages, max_tokens: 400, temperature: 0.2, ...(model ? { model } : {}) }),
+    });
+  } catch {
+    return { ok: false, reason: 'worker-http' };
+  }
+  if (!r || !r.ok) return { ok: false, reason: 'worker-http', status: r ? r.status : 0 };
   const d = await r.json().catch(() => ({}));
-  return d.ok ? { ok: true, text: d.text, ms: d.ms } : { ok: false, reason: d.error || 'worker-bad' };
+  if (!d.ok) return { ok: false, reason: d.error || 'worker-bad' };
+  const text = String(d.text || '').trim();
+  if (!text) return { ok: false, reason: 'empty-text' };
+  return { ok: true, text, ms: d.ms };
 }
 
 /* 简易限流：直接数 qa_logs 里这一小时该 IP 的请求数，够用且不需要额外表 */
@@ -204,7 +213,8 @@ export async function onRequestPost({ request, env }) {
 
   const cfg = await readChatConfig(env);
   const call = await callWorker(buildMessages(q, r.hits, cfg.prompt), env, cfg.model);
-  const answer = call.ok ? call.text : '这条我暂时答不上来（模型服务不可用），你可以直接看页面上的原文。';
+  const degraded = !call.ok;
+  const answer = call.ok ? call.text : MODEL_FALLBACK_ANSWER;
   /* citations 带上切片原文（截 400 字）：前端「依据」可展开核对，
      这是「可验证」承诺的另一半 —— 只有 id 的来源用户没法自己查证 */
   const citations = r.hits.map((h) => ({
@@ -212,9 +222,11 @@ export async function onRequestPost({ request, env }) {
     text: String(h.text || '').slice(0, 400),
   }));
 
+  /* 失败原因写进 model 列（qa_logs 无独立 reason 列）：后台 qa 看板据此区分
+     「真模型回答」与「降级兜底」，枚举值 no-worker / worker-http / worker-bad / empty-text */
   await logQa(env, {
     ts: Date.now(), query: q, answer, hitIds: citations.map((c) => c.id).join(','),
-    hitCount: citations.length, empty: false, model: call.ok ? MODEL_LABEL : '-',
+    hitCount: citations.length, empty: false, model: degraded ? `failed:${call.reason}` : MODEL_LABEL,
     ms: Date.now() - t0, ipHash, deviceHash: body.device_id ? 'dev' : '',
   });
 
@@ -224,6 +236,7 @@ export async function onRequestPost({ request, env }) {
     citations,
     sources: citations.map((c) => ({ title: c.title || c.id, id: c.id, path: c.source_path, excerpt: String(c.text || '').slice(0, 300) })),
     empty: false, semantic: r.semantic, ms: Date.now() - t0,
+    degraded, ...(degraded ? { failReason: call.reason } : {}),
   }, 200, request, env);
 }
 

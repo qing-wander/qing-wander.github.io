@@ -103,15 +103,21 @@ export default {
       if (!messages.length) return json({ ok: false, error: 'empty messages' }, 400);
       const model = typeof body.model === 'string' ? body.model : DEFAULT_CHAT_MODEL;
       const t0 = Date.now();
-      const r = await env.AI.run(model, {
-        messages,
-        max_tokens: Math.min(Math.max(Number(body.max_tokens) || 400, 128), 1200),
-        temperature: Number.isFinite(Number(body.temperature)) ? Number(body.temperature) : 0.2,
-      });
-      /* Workers AI 走 OpenAI 兼容结构时正文在 choices[0].message.content */
-      /* 三种返回形态都兜：OpenAI 兼容 message.content、旧版 response、choices[0].text */
-      const text = r?.choices?.[0]?.message?.content || r?.response || r?.choices?.[0]?.text || '';
-      return json({ ok: true, model, text: String(text).trim(), usage: r?.usage || null, ms: Date.now() - t0 });
+      try {
+        const r = await env.AI.run(model, {
+          messages,
+          max_tokens: Math.min(Math.max(Number(body.max_tokens) || 400, 128), 1200),
+          temperature: Number.isFinite(Number(body.temperature)) ? Number(body.temperature) : 0.2,
+        });
+        /* Workers AI 走 OpenAI 兼容结构时正文在 choices[0].message.content */
+        /* 三种返回形态都兜：OpenAI 兼容 message.content、旧版 response、choices[0].text */
+        const text = String(r?.choices?.[0]?.message?.content || r?.response || r?.choices?.[0]?.text || '').trim();
+        if (!text) return json({ ok: false, error: 'empty-text', model, ms: Date.now() - t0 }, 502);
+        return json({ ok: true, model, text, usage: r?.usage || null, ms: Date.now() - t0 });
+      } catch (e) {
+        const message = e && e.message ? e.message : 'unknown';
+        return json({ ok: false, error: 'ai-run-failed: ' + message, model, ms: Date.now() - t0 }, 502);
+      }
     }
 
     return json({ ok: false, error: 'not found' }, 404);
