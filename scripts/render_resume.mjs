@@ -211,10 +211,21 @@ function renderBody(r) {
   ].map((sec) => sec.join('\n')).join('\n\n');
 }
 
-function render(data) {
+function render(data, templateText) {
   const r = data && data.resume;
   if (!r) throw new Error('data/site-data.json 缺少 resume 块');
-  const tpl = readFileSync(TEMPLATE_FILE, 'utf8');
+  /* templateText：模板文本直接注入（Astro 构建期传入 —— bundle 后 import.meta.url 失效，
+     内部读盘路径不可用）；不传（CLI / 云端 embed 切片）走原读盘路径，行为不变。
+     注意：const tpl = readFileSync(TEMPLATE_FILE, 'utf8') 这行是 embed_assets.mjs 的切片
+     替换锚点，必须逐字保留；云端版本会被替换为 TEMPLATE 常量注入。 */
+  if (templateText == null) {
+    const tpl = readFileSync(TEMPLATE_FILE, 'utf8');
+    return renderWithTemplate(r, tpl);
+  }
+  return renderWithTemplate(r, String(templateText));
+}
+
+function renderWithTemplate(r, tpl) {
   const out = tpl
     .replace('{{RESUME_TITLE}}', () => esc(r.meta.title))
     .replace('{{RESUME_DESCRIPTION}}', () => esc(r.meta.description))

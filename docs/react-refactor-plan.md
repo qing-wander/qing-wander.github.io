@@ -691,6 +691,22 @@ admin 是本次重构**单位收益最高**的部分：原生 JS 1,033 行的多
 - **遗留（已知怪癖，不阻断）**：ai-voice.js 的 `inlineEl`（自动播放被浏览器拦截时的面板内 CTA）append 在 aiBody——React 下次 reconcile 消息列表时会将其移除；出现概率极低（仅自动播放被拦 + welcome pending 场景），M5 收编语音模块时一并处理。
 - **生产切换**：M3（A+B）仍不入 `REACT_MIGRATED_PAGES`（与 M1/M2 一致等拍板）；本地混排全链验证通过。
 
+### M4 · resume.html 生成链 —— 🔄 代码完成，待提交（2026-11-26）
+
+- **核心定案【单源等价】（对方案 §6-M4 的执行偏差，已定案）**：`src/pages/resume.astro` 不手写六段 Astro 模板，而是构建期直接调用旧链的同一 `render()`（scripts/render_resume.mjs），模板文本以第二参注入（`process.cwd()` 读 templates/resume.template.html），`<Fragment set:html>` 注入完整静态 HTML。**构建产物与根目录 resume.html 逐字一致（diff = 0）**——等价性由「结构保证」（同一函数、同一模板、同一数据）而非「测试保证」；打印 CSS / A4 分页 / ATS 文本序 / `#company=` 深链 / PDF 资产零风险。手写复刻对「打印排版逐字等价 + 云端 PDF 共用模板」的页面是纯风险引入，此为不采用方案原文「React 组件 SSG 渲染」的原因。
+- **交付**：
+  - `src/pages/resume.astro`（33 行）：frontmatter render + set:html；旧交互脚本（630 行内联投递逻辑 + js/print-preview.js + analytics + 公司档案快照/抽屉 + 本地路径修正脚本）随模板逐字保留，零改动桥接。
+  - `scripts/render_resume.mjs`：render 参数化重构——拆 `renderWithTemplate(r, tpl)`，`render(data, templateText?)`（不传走原读盘，CLI 行为不变）。**embed_assets.mjs 的三个切片锚点（`const BANNER = [` / `export { render };` / `const tpl = readFileSync(TEMPLATE_FILE, 'utf8');`）逐字保留**——云端切片经重嵌入后 `const tpl = TEMPLATE;` 替换语义不变；云端调用点（functions/api/variant.js 单参）行为已实测一致。
+  - `functions/lib/resume-render.js`：AUTO-GENERATED 产物随源更新（embed_assets 重生成，--check 一致）——这是 M4 唯一触碰 functions 的变更，且为生成物同步而非手改。
+  - `tests/e2e/m4.e2e.mjs`（18 项）。
+- **验收**：
+  - **单源等价**：dist-react/resume.html ≡ 根目录 resume.html 逐字一致（diff 0 行）；双服（8878 旧 / 8879 混排）全页截图**像素级 0 差异**（1280×2950，差异像素 0 / 0.0000%）。
+  - **PDF 链**：新版产物无头 Chrome 打印 2 页（预算 2 页）+ 旧链 check_resume_pages 2 页 + render_print_previews sha256 同步全绿。
+  - **投递 E2E 18/18**：单源等价 / PDF 页数 / 五段 body（01-05）/ 头部直出 / 公司·学校档案深链 / 打印按钮 + openPrintPreview 桥接 / 主题引导（?theme=noir）/ 投递全流（challenge PoW mock → preview iframe 渲染服务端正文 → deliver 成功 alert → 关窗）/ recipient_not_verified → mailto 兜底（encodeURIComponent 编码形收件人）/ 旧版 8878 对照。
+  - 四绿（test 11/11 / lint / check 0 错误 / build 9 页）+ node:test 289/289 + 漂移链 9 项全绿（embed_assets --check 含云端切片一致性）。
+- **render_resume.mjs 退役路径（M4 期间的实况）**：生产/云端/备份线仍由旧链维持（根目录 resume.html 是生产与 GitHub Pages 备份线的交付物；模板与 render_resume.mjs 是云端 PDF 渲染的依赖），故**不删模板、不停 CI 闸门**——方案原文的「模板删除 + check-stale-build 闸门」推迟到生产切换（D6 拍板）后与 M5 旧代码下线一并执行。Astro 侧的等价闸门由 m4.e2e.mjs ①（逐字 diff）承担，混排期即生效。
+- **遗留**：React 岛（投递表单 / 打印预览组件化，§5.4）未做——两岛按方案本就是「渐进水合」项，当前旧脚本桥接已满足全部功能（18 项 E2E 含投递全流），组件化在生产切换后与 M5 收编一并处理；真机电池（简历投递 / 分享卡下载入口不回归）归 M5 收尾轮（方案 §6-M4 原文即如此排期）。
+
 ---
 
 *文档维护：本方案是活文档，随 M0–M5 推进在本文档内以「里程碑日志」形式追加实况记录；重大方向变更须更新 §9 估算并注明版本。*

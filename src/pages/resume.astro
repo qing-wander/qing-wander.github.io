@@ -1,0 +1,29 @@
+---
+// /resume.html —— M4（React 迁移 · 特殊工程）
+//
+// 策略【单源等价】：本页在 Astro 构建期调用旧链的同一 render()（scripts/render_resume.mjs），
+// 模板文本显式注入（render 第二参）——bundle 后 import.meta.url 失效，其内部读盘路径不可用；
+// frontmatter 以 process.cwd()（构建/预览时均为项目根）读同一份
+// templates/resume.template.html + data/site-data.json，以 <Fragment set:html> 注入完整静态 HTML。
+// 构建产物与根目录 resume.html 逐字一致（打印 CSS / A4 分页 / ATS 文本序 / #company= 深链 /
+// PDF 资产零风险，N1/N6 双闸门直接满足；等价由结构保证而非测试保证）。
+//
+// 为什么不手写六段 Astro 模板：resume 是「打印排版逐字等价」要求最高的页面（无头 Chrome
+// PDF 逐页比对 + 两页预算 + 云端 PDF 共用模板），手写复刻都在引入等价性风险。
+//
+// React 岛（投递表单 / 打印预览，§5.4）在后续分片渐进：旧交互脚本（630 行内联投递逻辑 +
+// js/print-preview.js）零改动桥接在本页输出中逐字保留；组件化收编在生产切换（D6 拍板）后
+// 与 M5 旧代码下线一并处理。
+//
+// 真相源链（不变）：data/site-data.json → templates/resume.template.html →
+//   ├─ scripts/render_resume.mjs → resume.html（根目录生成物 · 生产/云端/备份线）
+//   └─ src/pages/resume.astro（本页 · 构建期同一 render → dist-react/resume.html）
+
+import { readFileSync } from 'node:fs';
+import { render } from '../../scripts/render_resume.mjs';
+import siteData from '@data/site-data.json';
+
+const html = render(siteData, readFileSync('templates/resume.template.html', 'utf8'));
+---
+
+<Fragment set:html={html} />
