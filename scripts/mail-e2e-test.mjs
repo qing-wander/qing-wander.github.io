@@ -117,9 +117,9 @@ async function main() {
     console.log('  id: ' + (out.body.id || '(未返回)'));
     console.log('  to: ' + (out.body.to || args.to));
     console.log('  下一步：到收件箱点「显示原始邮件」，确认');
-    console.log('    From: 陈培胜 <hi@chenpeisheng.cn>');
+    console.log('    From: 陈培胜 · 简历投递 <jobs@chenpeisheng.cn>');
     console.log('    dkim=pass header.d=chenpeisheng.cn');
-    console.log('    spf=pass smtp.mailfrom=send.chenpeisheng.cn');
+    console.log('    spf=pass smtp.mailfrom=rsend.chenpeisheng.cn');
     return;
   }
 
