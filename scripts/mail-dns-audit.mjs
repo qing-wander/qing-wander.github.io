@@ -24,11 +24,15 @@ resolver.setServers(['1.1.1.1', '8.8.8.8']);
 const DEFAULT_DOMAIN = 'chenpeisheng.cn';
 
 // DKIM selector 探测表：不同服务商用的 selector 不一样，逐个查一遍看哪个存在。
+// ⚠️ 飞书用的是「feishu + 启用时间戳」这种动态 selector（例如 feishu2611261416），
+//    猜名字永远猜不全。要确认飞书到底签没签，**看真实邮件头**里的 s= 才准：
+//      Gmail 打开邮件 → ⋮ → 显示原始邮件 → 找 DKIM-Signature 的 s= 与 Authentication-Results。
 const DKIM_SELECTORS = [
   ['resend', 'Resend（事务邮件）'],
   ['cf2024-1', 'Cloudflare Email Routing'],
   ['cf2024-2', 'Cloudflare Email Routing（备用）'],
   ['feishu', '飞书邮箱'],
+  ['feishu2611261416', '飞书邮箱（本域实际 selector，2026-11-26 启用）'],
   ['mail', '腾讯企业邮'],
   ['google', 'Google Workspace'],
   ['zmail', 'Zoho Mail'],

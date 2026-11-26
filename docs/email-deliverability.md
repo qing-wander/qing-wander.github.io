@@ -10,10 +10,11 @@
 
 ## 0. 结论先行
 
-> **2026-11-26 下午更新：方案已落地。** `chenpeisheng.cn` 的 MX 已切到飞书（mx1/2/3.feishu.cn），
-> `hi@chenpeisheng.cn` 邮箱已建好并能收信，Cloudflare Email Routing 已停用。
-> 剩下两件收尾：**飞书 DKIM 还没启用**（后台权限不足，需超级管理员）、**DMARC 策略还停在 p=none**。
-> 过程中的一次事故与修复见 §11，务必读一遍——同一个坑很容易再踩。
+> **2026-11-27 更新：方案已落地并验收。** `chenpeisheng.cn` 的 MX 已切到飞书（mx1/2/3.feishu.cn），
+> `hi@chenpeisheng.cn` 能收能发，Cloudflare Email Routing 已停用；
+> **DKIM 双通道均 PASS**（飞书 selector `feishu2611261416` + Resend），
+> DMARC 已从 `p=none` 升到 **`p=quarantine`**。
+> 教训与事故复盘见 §11，务必读一遍——同一个坑很容易再踩。
 
 1. **现在这套不是"域名邮箱"，是"域名收件箱 + 借别人的身份发信"。** Cloudflare Email Routing 只负责收，没有 SMTP，永远发不了信；你在 QQ / Gmail 点回复，发件人就是 QQ / Gmail 地址，跟 `chenpeisheng.cn` 没有关系。
 2. **"信誉被扣分"这个说法不准确，但你的直觉方向是对的。** 域名信誉不会掉——因为你根本没用它发过信；真正的损失是**它永远是 0 分的冷启动状态**，同时被消耗的是你 QQ / Gmail **个人账号**的信誉（账号级 + 共享 IP 池，你既控制不了也申诉不了）。
@@ -174,7 +175,7 @@ send.chenpeisheng.cn                MX 10 feedback.forge.rmta.net
 ### 阶段 2 · 切换窗口（10 分钟，建议凌晨）
 
 > ✅ 已于 2026-11-26 完成：MX 全部指向飞书，Cloudflare Email Routing 已停用（那三条 CF MX 已消失）。
-> 唯一遗漏是第 5 步之后的 DKIM 没启用，见 §11.2。
+> 第 5 步的 DKIM 也已在 2026-11-26 14:16 启用并验证通过（selector `feishu2611261416`），见 §11.2 订正。
 
 > 关键：**先加飞书 MX，再关 Cloudflare Email Routing**。反过来的话，关掉 routing 会立刻删掉 CF 的 MX，中间会出现"域名无 MX"的空窗，来信直接退信。
 
@@ -327,33 +328,43 @@ node scripts/mail-dns-audit.mjs --expect feishu
 | MX | `1 mx1.feishu.cn` / `5 mx2.feishu.cn` / `10 mx3.feishu.cn` | ✅ 已切飞书，Cloudflare 那三条 MX 已被移除（Email Routing 停用） |
 | 根域 TXT | `v=spf1 include:_netblocks.m.feishu.cn include:amazonses.com -all` | ✅ 飞书已加；`amazonses.com` 是 Resend 的底层，**可留可删**（见 11.4） |
 | 域名验证 | `verification-code-site-App_feishu=3jsD2sl5p9re0SiA5RW1` | ✅ 飞书域名验证已过 |
-| DMARC | `v=DMARC1; p=none; rua=mailto:hi@chenpeisheng.cn; fo=1; adkim=r; aspf=r` | ⏳ 观察期，D+14 再升 quarantine |
-| DKIM | 只有 `resend._domainkey`，**飞书 selector 不存在** | ❌ **缺口**，见 11.2 |
+| DMARC | `v=DMARC1; p=quarantine; rua=mailto:hi@chenpeisheng.cn; fo=1; adkim=r; aspf=r` | ✅ 2026-11-27 由 `p=none` 升为 `quarantine` |
+| DKIM | 飞书 selector `feishu2611261416`（后台显示「已启用」） | ✅ 实测 **PASS**，见 11.2 订正 |
 
 体检脚本结论从「通过 5 · 告警 4」变成 **「通过 7 · 告警 1 · 致命 0」**：
 
 ```
 MX        ✓ 指向真实邮箱服务商（mx1/2/3.feishu.cn）
 SPF       ✓ 单条 + 有 all 收尾
-DKIM      ✓ 已启用 resend（但缺飞书的）
-DMARC     ! p=none 只观察不拦截
+DKIM      ✓ resend + 飞书双 selector
+DMARC     ✓ p=quarantine 已拦截
 send 子域  ✓ Resend 的 SPF / MX 原样保留，与飞书不冲突
 ```
 
-### 11.2 飞书邮箱已建号，但缺 DKIM
+### 11.2 订正：飞书 DKIM 其实是通的（此前判断错误）
 
-- 登录进飞书邮箱（租户 `wcnj4xzurpeh`）确认**邮箱账号就是 `hi@chenpeisheng.cn`**，
-  收件箱里已有「欢迎使用飞书邮箱」的欢迎信 → 收信通路是活的。
-- 管理后台 `产品设置 → 邮箱 → 安全与反垃圾 → DKIM 身份验证` 打不开：
-  当前登录账号**不是超级管理员**（提示「你没有访问该功能的权限，请联系 @用户254038」）。
-  也就是说 DKIM 这一步必须由超级管理员 `用户254038` 本人操作，脚本代办不了。
+上一轮写的是「飞书 DKIM 未启用、需超管开权限」。**这个结论是错的**，本轮用真实邮件头推翻了它。
 
-**要补的动作（2 分钟）**：超管进后台 → 安全与反垃圾 → DKIM 身份验证 → 选 `chenpeisheng.cn` → 启用
-→ 密钥长度选 2048 → 复制后台给的主机记录与 TXT 值 → 在 Cloudflare DNS 加一条 TXT
-（主机名以**后台页面为准**，不要照抄本文档）→ 回后台点「立即验证」。
+- 后台权限确实一度打不开，但 2026-11-26 14:16 左右 DKIM 已经在飞书后台启用并验证通过；
+  飞书自动使用了一个带时间戳的 selector：**`feishu2611261416`**。
+- 这也是当时 `dig` 探不到的原因——脚本枚举的是 `feishu` / `mail` / `default` / `s1` 这类常见名字，
+  猜不到时间戳后缀。**结论：判断 DKIM 不能靠猜 selector，要看真实邮件头。**
 
-> 不补 DKIM 也能收能发（SPF 对齐已能过 DMARC），但少了签名：一旦邮件被转发、
-> 或被 Gmail/Outlook 的严格策略审视，就只能靠 SPF 单腿站立，进垃圾箱的概率会高一档。
+实测邮件头（飞书直发 → Gmail，2026-11-26 17:45）：
+
+```
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; s=feishu2611261416; d=chenpeisheng.cn;
+Authentication-Results: mx.google.com;
+       dkim=pass header.i=@chenpeisheng.cn header.s=feishu2611261416;
+       spf=pass ... smtp.mailfrom=hi@chenpeisheng.cn;
+       dmarc=pass (p=NONE sp=NONE)
+```
+
+所以 §11.5 里「飞书那封进垃圾箱 = 缺 DKIM 的代价」这个因果也一并更正：
+**认证是齐的，进垃圾箱是发件人显示名 + 域名冷启动信誉的问题**，见 11.8。
+
+> 另：飞书发信 IP `209.127.231.73` 落在 `spf1.m.feishu.cn` 的 `209.127.230.0/23` 段内，
+> 已被 `include:_netblocks.m.feishu.cn` 覆盖，根域 SPF 里的 `amazonses.com` 与飞书无关（那是 Resend 底层）。
 
 ### 11.3 事故：`RESEND_API_KEY` 值为空，全站「自动投递」静默降级成 mailto
 
@@ -411,9 +422,10 @@ Cloudflare Pages 的密钥类变量保存后不可回读，编辑某一行时如
 | `shenge.work@gmail.com` | 进**主要**收件箱（非垃圾） | 发件人 `陈培胜 <hi@chenpeisheng.cn>`；Gmail「显示原始邮件」→ **SPF PASS（23.251.234.51）/ DKIM PASS（域 `chenpeisheng.cn`）/ DMARC PASS**，「10 秒后递送」 |
 | `hi@chenpeisheng.cn` | 进飞书收件箱 | 发件人显示 `陈培胜 <hi@chenpeisheng.cn>`，正文与 1 个 PDF 附件完好 → 同时证明「飞书收信 + Resend 发信」两条腿都在跑 |
 
-对照实验（同一时段的飞书直发）：14:37 从飞书网页版发给 Gmail 的测试信
-**落在垃圾邮件**，而 Resend 那封（DKIM 有签名）落在主要收件箱。
-这就是 §11.2 说的「缺 DKIM 的代价」，不是理论推演，是同一收件箱里的直接对照。
+对照实验（同一时段的飞书直发）：14:37 与 17:45 从飞书网页版发给 Gmail 的测试信
+**落在垃圾邮件**。但原始邮件头显示 **SPF / DKIM / DMARC 全部 PASS**（见 11.2 订正），
+所以这不是认证问题——Gmail 给的理由是「与过去识别的垃圾邮件相似」，
+本质是**发件人显示名为 `用户254038` + 新域名零信誉**，见 11.8。
 
 至此 T1（自动投递）与「`hi@` 能收能发」两条链路都通过验收。
 
@@ -431,12 +443,36 @@ node scripts/mail-e2e-test.mjs --to you@example.com      # 期望 201 + 邮件�
 
 > 注意投递限流：同一收件人**每天 2 封**、同 IP 每小时 3 封 / 每天 5 封，别拿一个地址反复测。
 
-### 11.7 还剩三件事（按优先级）
+### 11.7 收尾清单（2026-11-27 执行结果）
 
-| # | 事项 | 谁来做 | 卡点 |
-|---|---|---|---|
-| 1 | 飞书后台启用 DKIM（2048 位）并在 Cloudflare 加 TXT | **超级管理员 `用户254038`** | 当前登录账号无「邮箱权限」，页面直接提示无权限 |
-| 2 | DMARC 观察满 14 天后 `p=none → quarantine`，再 30 天 → `reject` | 任何人 | 需先看 `rua` 报告的 DKIM 通过率 > 98% |
-| 3 | 清理 Resend 旧 key `Onboarding`，并评估删掉根域 SPF 里的 `include:amazonses.com` | 任何人 | 第 3 项删前先跑一次复测 |
+| # | 事项 | 状态 |
+|---|---|---|
+| 1 | 飞书 DKIM | ✅ **本来就是通的**（selector `feishu2611261416`，实测 dkim=pass）。上一轮「未启用」是误判，见 11.2 |
+| 2 | DMARC `p=none → quarantine` | ✅ 已改，实测生效 |
+| 3 | 清理 Resend 旧 key `Onboarding` | ✅ 已删除，现仅存 `pages-deliver-20261126`；删后复测投递 `201` |
+| 4 | 删根域 SPF 的 `include:amazonses.com` | ⏳ 已验证**与飞书无关、删了不影响飞书**；`send.` 子域自带独立 SPF，Resend 也不依赖它。Cloudflare 控制台那条 TXT 的输入框无法通过自动化写入，**需手动改一次**（见 11.8） |
+
+### 11.8 本轮（11-27）发现的两件事
+
+**一、发件人显示名是垃圾箱的真凶**
+
+飞书账号的显示名一直是系统默认的 `用户254038`，于是从飞书发出的每封信都是：
+
+```
+From: =?utf-8?q?=E7=94=A8=E6=88=B7254038?= <hi@chenpeisheng.cn>   →  用户254038 <hi@chenpeisheng.cn>
+```
+
+认证全过、内容正常，但「发件人是一串数字 ID」本身就是强垃圾信号。
+已在 `管理后台 → 成员 → 详情 → 编辑基本信息 → 姓名` 改为 **陈培胜** 并保存。
+（与站点自动投递用的 `陈培胜 <hi@chenpeisheng.cn>` 对齐，收件人看到的身份才统一。）
+
+> 提醒：改完在飞书邮箱网页版写信，发件人可能仍显示旧名（会话缓存），刷新页面或重登即可。
+
+**二、DMARC 报告的解读口径**
+
+`p=quarantine` 生效后，`rua=hi@chenpeisheng.cn` 会开始收到 `noreply-dmarc-support@google.com`
+的聚合报告（已在飞书收件箱见到第一封）。看报告只看两列：
+`<policy_evaluated>` 里的 `dkim` / `spf` —— 只要两个都是 `pass`，就说明没有第三方在冒用你的域名；
+出现 `fail` 且来源 IP 陌生，才需要去查是不是有服务在用你的域名发信。
 
 > AI生成
