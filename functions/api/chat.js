@@ -77,7 +77,9 @@ function corsHeaders(request, env) {
 }
 
 const NO_HIT_ANSWER = '简历里没写这块，我不替候选人多说。要不你换个角度问，比如他做过的项目、技术栈或者工作经历？';
-const MODEL_FALLBACK_ANSWER = '这条我暂时答不上来（模型服务不可用），你可以直接看页面上的原文。';
+/* 生成链路故障时也不把内部术语（Worker / 模型服务）暴露给访客。
+   有命中切片就走 localAnswer 摘录原文；连可用正文都没有才用这句。 */
+const SOURCE_FALLBACK_ANSWER = '这块我的简历里没写清楚，你可以点下面的依据看原文。';
 
 const LIMIT_PER_HOUR = 60;   // 单 IP 每小时问答上限，防刷模型额度
 const MAX_Q = 200;           // 问题长度上限
@@ -116,6 +118,35 @@ export function buildMessages(q, hits, extraPrompt) {
     },
     { role: 'user', content: `【资料片段】\n${material}\n\n【问题】${q}` },
   ];
+}
+
+/* 生成链路（KB Worker / Workers AI）不可用时的本地兜底。
+   仍然只使用 retrieve 命中的原文切片，不改数字、不补事实，citations 照常返回，
+   所以「可验证」承诺不降级；只是把模型润色换成保守摘录。 */
+const CONTACT_INTENT = /(联系|联系方式|邮箱|邮件|电话|手机|微信|github|怎么找你|怎么联系)/i;
+
+export function localAnswer(q, hits) {
+  if (!Array.isArray(hits) || !hits.length) return '';
+
+  /* 联系方式是最高频的明确问法，单独给直答，别只丢一句「看原文」 */
+  const contact = hits.find((h) => h.id === 'contact-01' || /联系方式/.test(h.title || ''));
+  if (CONTACT_INTENT.test(q) && contact) {
+    const bits = String(contact.text || '')
+      .replace(/^【[^】]*】\s*/, '')
+      .replace(/。$/, '')
+      .trim();
+    if (bits) return `你可以直接联系我：${bits}。页面「联系方式」里也能看到。`;
+  }
+
+  const top = hits[0];
+  let body = String(top.text || '').replace(/^【[^】]*】\s*/, '').trim();
+  if (!body) return '';
+
+  /* 最多取前两句，避免把整段原文倾倒给访客；数字和公司全称原样保留 */
+  const sentences = body.split(/(?<=[。！？；])/).filter(Boolean);
+  body = sentences.slice(0, 2).join('').replace(/。$/, '');
+  if (body.length > 220) body = body.slice(0, 220).replace(/[，、；：:]\s*$/, '') + '…';
+  return `我这块的信息是：${body}。`;
 }
 
 async function callWorker(messages, env, model) {
@@ -214,7 +245,11 @@ export async function onRequestPost({ request, env }) {
   const cfg = await readChatConfig(env);
   const call = await callWorker(buildMessages(q, r.hits, cfg.prompt), env, cfg.model);
   const degraded = !call.ok;
-  const answer = call.ok ? call.text : MODEL_FALLBACK_ANSWER;
+  /* 生成失败时先从命中切片摘录，绝不把 Worker / 模型内部错误暴露给用户；
+     citations 仍原样返回，用户可点依据核对原文。 */
+  const excerpt = degraded ? localAnswer(q, r.hits) : '';
+  const answer = call.ok ? call.text : (excerpt || SOURCE_FALLBACK_ANSWER);
+  const answerSource = call.ok ? 'worker' : (excerpt ? 'extractive' : 'source-only');
   /* citations 带上切片原文（截 400 字）：前端「依据」可展开核对，
      这是「可验证」承诺的另一半 —— 只有 id 的来源用户没法自己查证 */
   const citations = r.hits.map((h) => ({
@@ -236,7 +271,7 @@ export async function onRequestPost({ request, env }) {
     citations,
     sources: citations.map((c) => ({ title: c.title || c.id, id: c.id, path: c.source_path, excerpt: String(c.text || '').slice(0, 300) })),
     empty: false, semantic: r.semantic, ms: Date.now() - t0,
-    degraded, ...(degraded ? { failReason: call.reason } : {}),
+    degraded, answerSource, ...(degraded ? { failReason: call.reason } : {}),
   }, 200, request, env);
 }
 
