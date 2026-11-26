@@ -46,6 +46,13 @@ Workers KV 迁到 D1（`portfolio-db`，4 张表），免费写额度从 1,000 �
 前端计数不再依赖第三方 abacus，改为走 Pages 自身的 `/api/visits`，**全程不需要自有域名**。
 详见 [cloudflare-free-resources.md](cloudflare-free-resources.md)。
 
+**2026-11-26 前端架构迁移完成并切生产（T26 观察期开始）**：Astro 6 + React 19 渐进迁移
+M0–M5 全部完成（方案与里程碑台账见 [react-refactor-plan.md](react-refactor-plan.md)），
+`chenpeisheng.cn` 线上已走 React 版（E2E 五套 155 项 / 视觉对比 12/12 / resume 逐字等价 /
+Lighthouse N5 通过：index.mobile 中位数 61 ≥ 基线 55）；`REACT_MIGRATED_PAGES=none` 为一键回退开关。
+剩余收尾 = T26 观察三项（真机电池 / 一周无回归 / 到期备份线切换 + 旧文件删除）；
+性能最大失血点登记为 **T25 Google Fonts 本地化**（移动档 LCP ~20s 根源，建站期即存在，非迁移回归）。
+
 ---
 
 ## 1. 状态约定
@@ -89,6 +96,8 @@ Workers KV 迁到 D1（`portfolio-db`，4 张表），免费写额度从 1,000 �
 | T22 | 两个域名内容不一致：pages.dev 构建失败停在旧版，看不到新 3D 模型 | `已完成` | 高 | `pages.dev` 全站 | 本文 §3.18 / [cloudflare-pages-deploy.md](cloudflare-pages-deploy.md) |
 | T23 | `assets/character-views` 原始素材归档 + 移出仓库根治构建（R2 方案废弃 → 飞书云盘） | `已完成` | 中 | 仓库体积 / Pages 构建 | 本文 §3.19 / [cloudflare-free-resources.md](cloudflare-free-resources.md) §10 |
 | T24 | RAG / 简历增强迭代池：rerank 重排、动态简历变体、跨设备查看、`resume.micro` 微调流水线 | `思考池` | 低 | AI 问答 / 简历变体 / 留言板 | [p0-single-source.md §8](p0-single-source.md) |
+| T25 | Google Fonts 本地化（自托管 / 子集化 Noto Sans SC），根治移动档 LCP ~20s | `待办` | 高（性能主优化项） | 全站移动档 LCP | 本文 §3.21 |
+| T26 | React 迁移收尾观察：真机电池、一周线上无回归观察、到期后备份线切 React + 旧文件物理删除 | `待办（观察期）` | 中 | 全站 | [react-refactor-plan.md M5](react-refactor-plan.md) |
 
 ---
 
@@ -150,6 +159,7 @@ curl -s -X POST https://shenge-work.pages.dev/api/deliver \
 2026-11-19 补充原因：**支付问题未解决**（比价 / 付款方式待定），不是忘了做。
 保持「自动发信仅支持账号邮箱 + 其他邮箱 mailto 兜底」。
 **重开触发条件**：访客反馈收不到自动邮件、或站长解决支付方式愿意提供 / 购买域名。
+
 
 ---
 
@@ -656,6 +666,42 @@ lark-cli drive +pull --as user --folder-token BnalfpLM8lzNYLdkYu3cqH71nAc \
 > 注：早期文档里「给 Pages 项目挂 `[ai]` / `[[vectorize]]` 绑定」的方案已被替代——`AI` / `VECTORIZE`
 > 绑定在 KB Worker（`worker/kb/`）上，Pages 不支持这两类绑定，见 README [系统架构](../README.md#系统架构)。
 
+### 3.21 T25 · Google Fonts 本地化（性能主优化项，2026-11-26 登记）
+
+**来源与证据**：M5 生产切换后的 Lighthouse 对照（`tests/e2e/baseline/lighthouse-post-react/`）——
+模拟 4G 节流下 Google Fonts 异步 CSS ~15s 才完成（`fonts.googleapis.com` / `fonts.gstatic.com`
+两跳境外请求），font-swap 后的 heroBio 大文本成为 LCP，移动档 LCP ~18–23s、
+desktop ~20s。该依赖自建站起就存在（M0 基线 mobile LCP 25.3s 同根源），**不是 React 迁移引入的回归**
+（迁移版 index.mobile 中位数 61 ≥ 基线 55，N5 通过）；但它是当前性能分数的最大失血点。
+
+**方案方向**（执行时二选一或组合）：
+1. **自托管子集化**（推荐）：Noto Sans SC 按站点实际用字子集化（glyphs 压缩到几十 KB 量级），
+   放 `css/fonts.css` 同款自托管路径（仓库已有本地自托管先例：等宽字体 `Space Mono` 走
+   `css/fonts.css?v=`，断境外 CDN 不影响渲染）；`display=swap` 语义保留。
+2. 整站系统字体栈兜底已有（`PingFang SC / Microsoft YaHei`），最激进方案是干脆移除 Noto Sans SC
+   ——视觉一致性会受 macOS/iOS 与 Windows 差异影响，需与 N1 视觉零变化目标权衡。
+
+**验收标准**：Lighthouse mobile 档 LCP < 5s（量级目标）；`fonts.googleapis/gstatic` 不再出现在
+network-requests；四主题视觉对比 12/12 不回归（字体渲染差异属可控噪声内）；构建产物无新增境外请求。
+
+**注意**：首页同时存在 `?v=` 缓存串与 `manifest.json` 等本地资产，改动走 `css/fonts.css` 时
+记得升 `?v=`（M3-B 桥接脚本约束：Astro 会把非 `is:inline` 的 stylesheet 打包合并，保持模板内联引用方式）。
+
+### 3.22 T26 · React 迁移收尾观察（2026-11-26 登记，观察期至 12-03）
+
+M0–M5 已全部完成并生产切换（线上 React 版运行中，`REACT_MIGRATED_PAGES=none` 为回退开关）。
+本条目挂三项非阻塞收尾，全部有明确到期条件：
+
+| 子项 | 内容 | 触发 / 验收 |
+|---|---|---|
+| 真机电池 | iOS Safari + 微信内置浏览器 + Android Chrome（§5.8 矩阵 + 简历投递 / 分享卡下载入口） | 手动走查：主题切换、AI 面板全流、JD 提交、分享卡下载；微信内重点看输入键盘顶起 / webview 差异 |
+| 一周观察 | 线上无回归观察（D6 双开语义在生产切换后的延续） | 期间留意 AI 问答 / 投递 / 留言墙真实用户路径；发现异常先回退（none 开关）再排查 |
+| 备份线切换 | 观察期满且无回归：GitHub Pages 备份线也切 React 产物，随后执行旧 HTML / js 旧模块 / `_*.html` 探针的物理删除（方案 §6-M5） | 删除前 `REACT_MIGRATED_PAGES=none` 回退路径测试一次；删除后备份线全页 200 复验 |
+
+> 唯一已知怪癖（不阻塞）：ai-voice.js 的 `inlineEl`（自动播放被浏览器拦截时的面板内 CTA）
+> 会在 React 下次 reconcile 消息列表时被移除；出现概率极低，M5 收编语音模块时一并处理
+> （详见 [react-refactor-plan.md](react-refactor-plan.md) M3-B「遗留」段）。
+
 ---
 
 ## 4. 已完成（2026-11-16 / 17 收尾，勿重复做）
@@ -701,3 +747,4 @@ lark-cli drive +pull --as user --folder-token BnalfpLM8lzNYLdkYu3cqH71nAc \
 4. 每次较大改动收尾时盘点一次；长期不动的 `思考池` 条目可保留，但不要悄悄变成排期。
 5. 涉及**账号登录、GitHub App 授权、域名付款**的步骤必须本人操作，代理人应提前通知，不要尝试绕过。
 
+> AI生成
