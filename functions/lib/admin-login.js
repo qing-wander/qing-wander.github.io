@@ -60,8 +60,12 @@ async function hmac(secret, text) {
   return b64url(sig);
 }
 
+/* 与 admin-auth.js 的 sessionSecret 保持同一套优先级；RESEND_API_KEY 是
+   Pages 密钥事故后的兜底，避免 ADMIN_* 值为空时验证码接口直接 500。 */
 function loginSecret(env) {
-  return String((env && (env.ADMIN_SESSION_SECRET || env.ADMIN_PASSWORD)) || '');
+  return String((env && (
+    env.ADMIN_SESSION_SECRET || env.ADMIN_PASSWORD || env.RESEND_API_KEY
+  )) || '');
 }
 
 /* ── 邮箱验证码 ───────────────────────────────────────────────── */

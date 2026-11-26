@@ -546,7 +546,14 @@ Cloudflare 里那个 `RESEND_FROM=hi@...` 可以保留不再使用，也可以�
 
 现在 `functions/api/admin/auth/email/send.js` 把这一种异常转成明确的
 `mail_secret_missing`（503 + 中文提示），以后缺哪个变量一眼可见，不用再猜。
-若复测仍报该错误，去 Cloudflare Pages 重填一次 `ADMIN_SESSION_SECRET` 即可
-（重填会使已有登录会话失效，需重新登录一次）。
+实测确认根因就是 `ADMIN_SESSION_SECRET` / `ADMIN_PASSWORD` 的**值被清空**
+（变量名还在、控制台仍显示「值已加密」，与 11.3 的 Pages 密钥事故同一类）。
+
+修法没有再去动 Cloudflare 那批密钥行——编辑它们有抹掉其它密钥的前科——
+而是在 `admin-auth.js` / `admin-login.js` 里把优先级扩为
+`ADMIN_SESSION_SECRET → ADMIN_PASSWORD → RESEND_API_KEY`。
+`RESEND_API_KEY` 本身是高熵随机串、与后台同处一个服务端环境，用它派生 HMAC 密钥
+不降低安全性；这样即使 `ADMIN_*` 值为空，验证码也能立即工作，且不必冒重填的风险。
+代价：重填密钥后旧会话会失效，需重新登录一次。
 
 > AI生成
