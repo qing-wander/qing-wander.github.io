@@ -47,7 +47,7 @@ function envOf(db, extra = {}) {
     ADMIN_SESSION_SECRET: SECRET,
     ADMIN_EMAILS: EMAILS,
     RESEND_API_KEY: 'test-resend',
-    RESEND_FROM: 'chenpeisheng <hi@chenpeisheng.cn>',
+    ADMIN_EMAIL_FROM: 'chenpeisheng <hi@chenpeisheng.cn>',
   }, extra);
 }
 

@@ -11,6 +11,8 @@ import { z } from 'zod';
 /* ── 公共 ── */
 const num = z.number().nullable().optional();
 const ts = z.union([z.number(), z.string()]).nullable().optional();
+/* qa_logs.empty 库里存 0/1 整数，前端按 truthy 判断；兼容布尔与数字 */
+const flag = z.union([z.boolean(), z.number()]).optional();
 
 /* ── schemas ── */
 export const statsSchema = z.object({
@@ -69,7 +71,7 @@ export const qaSchema = z.object({
   top_questions: z.array(z.object({ q: z.string(), n: z.number() }).passthrough()).default([]),
   top_hits: z.array(z.object({ id: z.string(), n: z.number() }).passthrough()).default([]),
   recent: z.array(z.object({
-    ts, query: z.string(), hit_count: z.number().default(0), ms: num, empty: z.boolean().optional(),
+    ts, query: z.string(), hit_count: z.number().default(0), ms: num, empty: flag,
   }).passthrough()).default([]),
 }).passthrough();
 

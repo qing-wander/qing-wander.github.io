@@ -49,6 +49,13 @@ describe('qaSchema / authMethodsSchema / voiceSchema / variantSchema', () => {
     const d = qaSchema.parse({ totals: { total: 0, last7: 0, empty: 0, empty_rate: 0, ms_avg: null } });
     expect(d.recent).toEqual([]);
   });
+  it('qa recent 的 empty 为 0/1 整数也可解析', () => {
+    const d = qaSchema.parse({
+      totals: { total: 1, last7: 1, empty: 0, empty_rate: 0, ms_avg: 10 },
+      recent: [{ ts: 1, query: 'q', hit_count: 1, empty: 0, model: 'x', ms: 30 }],
+    });
+    expect(d.recent[0].empty).toBe(0);
+  });
   it('authMethods 未配置微信样例', () => {
     const d = authMethodsSchema.parse({ ok: true, wechat: { qr: false, mp: false }, inWechat: false, mini: false, email: { enabled: true, count: 1, hint: 'de***@local.test' } });
     expect(d.email.enabled).toBe(true);

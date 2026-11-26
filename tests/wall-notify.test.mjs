@@ -41,7 +41,7 @@ function envOf(db, extra = {}) {
     ALLOWED_ORIGINS: ORIGIN,
     DEVICE_HASH_PEPPER: 'test-pepper',
     RESEND_API_KEY: 're_test_key',
-    RESEND_FROM: 'Portfolio Wall <onboarding@resend.dev>',
+    WALL_NOTIFY_FROM: 'Portfolio Wall <onboarding@resend.dev>',
   }, extra);
 }
 
