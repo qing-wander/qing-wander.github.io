@@ -753,20 +753,24 @@ M0–M5 已全部完成并生产切换（线上 React 版运行中，`REACT_MIGR
 
 - 现象：`POST /api/chat` 返回 200 但 `answer` 恒为兜底话术「这条我暂时答不上来（模型服务不可用）…」；
   检索 citations 正常命中，故障只在生成环节。
-- 代码侧已改（待部署生效）：
+- 代码侧已改并已上线（2026-11-27 实测响应已带 `degraded` / `failReason` 字段）：
   - `functions/api/chat.js`：`callWorker` 区分 `no-worker / worker-http / worker-bad / empty-text`；
     失败原因写入 `qa_logs.model`（`failed:<reason>`，表无独立 reason 列）；响应新增 `degraded` 与
     `failReason` 字段，便于线上直接定位。
   - `worker/kb/index.mjs` `/chat`：`env.AI.run` 包 try/catch，抛错回 502 + 错误信息；正文为空判
     `empty-text` 失败，不再把空当成功。
-- 待办（部署后复核根因）：
-  1. push 后看线上 `/api/chat` 响应 `failReason`，或后台 qa 看板 `model` 列的 `failed:*`：
-     - `no-worker` → Pages 环境变量 `KB_WORKER_URL` / `KB_TOKEN` 缺失或被清空（对照近期邮件密钥
-       同批清空事故）；
-     - `worker-http` → Worker `resume-kb-api` 不可达 / 非 200；
-     - `worker-bad` / `empty-text` / `ai-run-failed` → Worker 内 Workers AI 模型调用失败（配额、
-       模型名、绑定）。
-  2. wrangler 登录后 `tail` Worker 日志 / 核对 `AI`、`VECTORIZE`、`DB` 绑定；Worker 需单独
+- **2026-11-27 根因收敛（线上实测）**：`POST /api/chat` 返回 `degraded:true, failReason:"no-worker"`，
+  83ms，citations 仍命中 2 条。`no-worker` 分支在 `callWorker` 里是 `!env.KB_WORKER_URL || !env.KB_TOKEN`
+  直接判定（fetch 之前），即**线上 production Pages 的环境变量 `KB_WORKER_URL` / `KB_TOKEN` 缺失或未生效**，
+  不是 Worker 不可达、也不是 Workers AI 模型调用失败。本地 `.secrets.local` 两值齐全，仅线上未注入。
+  旁证：JD 匹配（`jd.js`）在缺 Worker 时回退本地 TF-IDF 检索，所以对照表仍能出；问答生成环节必须调
+  Worker，缺变量才整体降级兜底——这解释了「JD 匹配正常、问答降级」的不一致。
+- 待办（配置侧，仓库代码改不了）：
+  1. CF Pages 面板 → production 环境变量，核对 `KB_WORKER_URL=https://resume-kb-api.shenge-work.workers.dev`
+     与 `KB_TOKEN` 是否存在、值是否与本地一致；补配后重新构建。
+  2. 变量注入后重测 `/api/chat`：若仍降级，再按 `failReason` 分流——`worker-http` → Worker 不可达；
+     `worker-bad / empty-text / ai-run-failed` → Worker 内 AI 模型配额 / 模型名 / 绑定问题；
+     wrangler 登录后 `tail` Worker 日志核对 `AI`、`VECTORIZE`、`DB` 绑定；Worker 改动需单独
      `cd worker/kb && wrangler deploy`。
 - 验收：普通问题返回真人风格回答；`degraded` 不出现；qa_logs 正常记模型名。
 
@@ -813,6 +817,7 @@ M0–M5 已全部完成并生产切换（线上 React 版运行中，`REACT_MIGR
 - 根因：`js/main.js` 重排导航/SEC 编号时，`visibleSecs` 取了页面全部可见 `section[id]`，`hero`、`footerPeople` 这类没有对应导航项的板块也占了一个序号；博客是外链、不参与重排，保留静态 `11`，于是与重排后落到 `11` 的留言墙撞号。
 - 修复：重排过滤条件改为「`!s.hidden` 且存在对应 `navLinks` 的 `data-sec`」，只有导航板块计入序号；修复后关于我 `01` … 留言墙 `10`、博客 `11`，无撞号。
 - 验收：部署后首页导航编号连续不重复；SEC 编号与导航一致。
+- 2026-11-27 部署状态：修复 commit `208c3ff` 已在 `origin/main`；同批 Functions（`chat.js`）新版已上线（线上响应已带 `failReason`），但首页导航线上仍是旧行为——`02` 起跳、留言墙/博客双 `11`。判断静态产物（`js/main.js` / `_astro`）尚未刷新到新版本，或 CDN 命中旧缓存；需在 CF Pages 确认最近一次构建成功完成，必要时清静态缓存后复验导航编号。
 
 **2026-11-27 公开侧复测结论（后台仍留到最后测）**
 
