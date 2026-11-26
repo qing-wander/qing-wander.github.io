@@ -772,6 +772,10 @@ M0–M5 已全部完成并生产切换（线上 React 版运行中，`REACT_MIGR
   - 「怎么联系你？」→ 模型生成回答，`degraded:false`、`answerSource:"worker"`、`semantic:true`；
   - 「你主导过哪些 0→1 系统？」「你的 Agent 架构经验？」「技术栈与方向？」均返回真人风格答案，
     无降级、citations 正常。
+- 2026-11-27 二次复验（两互证均通过）：
+  - `POST /api/chat`（q=你做过哪些项目？）：`ok:true`、`degraded:false`、`answerSource:"worker"`、
+    `failReason:null`、`ms:2435`、3 条 citations，回答为模型真人风格；
+  - `GET /api/admin/kb`：200、`worker_ready:true`（修复前为 false），与 chat 侧互证 Worker 链路在线。
 - 注：`*.workers.dev` 在境内本地 DNS 被污染，直连超时不代表 Worker 离线；以 Pages 边缘调用与线上响应为准。
 
 **T28 · Turnstile 110200，留言墙校验未生效（高，配置侧）**
@@ -817,14 +821,30 @@ M0–M5 已全部完成并生产切换（线上 React 版运行中，`REACT_MIGR
 - 根因：`js/main.js` 重排导航/SEC 编号时，`visibleSecs` 取了页面全部可见 `section[id]`，`hero`、`footerPeople` 这类没有对应导航项的板块也占了一个序号；博客是外链、不参与重排，保留静态 `11`，于是与重排后落到 `11` 的留言墙撞号。
 - 修复：重排过滤条件改为「`!s.hidden` 且存在对应 `navLinks` 的 `data-sec`」，只有导航板块计入序号；修复后关于我 `01` … 留言墙 `10`、博客 `11`，无撞号。
 - 验收：部署后首页导航编号连续不重复；SEC 编号与导航一致。
-- 2026-11-27 部署状态：修复 commit `208c3ff` 已在 `origin/main`；同批 Functions（`chat.js`）新版已上线（线上响应已带 `failReason`），但首页导航线上仍是旧行为——`02` 起跳、留言墙/博客双 `11`。判断静态产物（`js/main.js` / `_astro`）尚未刷新到新版本，或 CDN 命中旧缓存；需在 CF Pages 确认最近一次构建成功完成，必要时清静态缓存后复验导航编号。
+- 2026-11-27 部署状态：修复 commit `208c3ff` 已在 `origin/main`；线上磁盘 `js/main.js` 已是新版（`navLinks.some` 过滤），但浏览器执行的仍是旧缓存副本。根因是静态 JS 版本号自修复后未 bump 导致强缓存；已把 `src/pages/index.astro` 引用从 `?v=20261126a` 升到 `?v=20261127a`，待下次 Pages 构建后复验编号连续（about 01 … wall 10、博客 11，无撞号）。
 
-**T33 · 后台问答看板数据不渲染（已完成，待部署）**
+**T33 · 后台问答看板数据不渲染（已完成，线上复验通过）**
 
 - 现象（2026-11-27 登录后台实测）：看板指标卡全「—」、高频问题 / 命中热度 / 近期记录均空；趋势柱图与问题聚类正常。`GET /api/admin/qa` 200，`totals`（total 45、empty 7、last7 35、answered 38、ms_avg 2471）与 `recent` 30 条齐全。
 - 根因：`src/lib/api/admin.ts` `qaSchema.recent` 行 `empty` 定成 `z.boolean().optional()`，而 `qa_logs.empty` 存 `0/1` 整数；zod 严格校验 number→boolean 不符，`schema.parse` 抛 ZodError，react-query 进 error 态，`qa.data` 整体 `undefined`，依赖它的卡片/列表回退空态（趋势、聚类是独立 query，不受影响）。
 - 修复：`empty` 改 `z.union([z.boolean(), z.number()]).optional()`（复用 `flag` 常量）；`admin.test.ts` 补「recent.empty 为 0/1 整数也可解析」样例，`vitest run` 10 项过。
-- 旁证：`/api/admin/kb` 返回 `worker_ready:false`，与 T27 `no-worker` 互证。
+- 线上复验（2026-11-27 硬刷新后）：指标卡 60 总量 / 50 近 7 天 / 7 空召回 / 11.7% / 2199ms，近期 30 行状态「已作答」，React bundle 哈希已更新；此前空态确为旧 bundle 强缓存。
+- 旁证：`/api/admin/kb` 修复前 `worker_ready:false`（与 T27 `no-worker` 互证）；2026-11-27 复验已为 `worker_ready:true`。
+
+**T34 · 投递 `/api/deliver` 首发返回 CF 502（中，待日志定位）**
+
+- 现象（2026-11-27 授权后端到端联调）：`GET /api/challenge` 取 PoW 凭证（difficulty 3）→ 本地解 nonce →
+  `POST /api/deliver`（收件人 `test@example.com` 保留域，不触达真实人），首次返回 **Cloudflare 502 Bad
+  gateway HTML 错误页**，而不是应用层 JSON；第二次请求被投递限流拦下（429），未能复现。
+- 代码侧核对：`deliver.js` 所有发信异常路径都已 try/catch 返回 JSON（`resend_network` / `resend_error` /
+  `recipient_not_verified`），不会产出 CF 边缘 502 HTML；崩溃候选在 catch 之外——`probeAttachments`
+  （读 KV/静态 PDF、`toBase64`）或 `buildDeliveryEmail` 抛未捕获异常，或 Function 执行超时。
+- 阻塞：本机无 `CF_API_TOKEN`、`wrangler` 未登录（code 10001），取不到 Pages Function 实时日志；需在
+  CF 控制台 Functions 日志按 `deliver` 过滤，看是未捕获异常堆栈还是超时。
+- 待办：① 限流窗口解除或换出口 IP 后重放一次，确认 502 是否稳定复现；② 取日志定位崩溃点；③ 代码侧把
+  `probeAttachments` / `buildDeliveryEmail` 包进 try/catch，崩溃时回 JSON `deliver_crashed` 502，避免
+  CF HTML 页把内部错误暴露给访客。
+- 备注：`/api/deliver-preview` 同 payload 不发信，此前已测通 200；问题只在真实发信分支。
 
 **2026-11-27 公开侧复测结论（后台仍留到最后测）**
 
@@ -845,13 +865,16 @@ M0–M5 已全部完成并生产切换（线上 React 版运行中，`REACT_MIGR
 | 音色接口（11-27 补测） | ✅ `/api/voice` GET 200，默认音色 101001「智瑜」；语音切换按钮动态渲染在位，自动播放策略下的真实发声留真机复核 |
 | 后台·设备台账（11-27 登录后） | ✅ 概览（浏览 249 / 访客 250 / 24h 47 / 留言设备 4 / 留言 5 / 今日 0 / 隐藏 4 / 待回复 0 / 拉黑 0）+ 4 台设备行（哈希前缀、首见/活跃、留言数、状态、看留言/拉黑）；搜索、导出 CSV、分页入口在位 |
 | 后台·留言审核 | ✅ 5 条留言，时间/设备/称呼/内容/状态/对话数齐全；回复、隐藏、筛选入口在位（写操作未提交） |
-| 后台·问答看板 | ❌ T33：接口有数据但前端整页空（schema 类型不符，已本地修待部署）；趋势柱图、问题聚类独立 query 正常 |
+| 后台·问答看板 | ✅ T33 线上复验通过：硬刷新后指标卡与近期记录正常渲染（60 总量 / 50 近 7 天 / 7 空召回 / 11.7% / 2199ms）；此前空态为旧 bundle 强缓存 |
 | 后台·模型与提示词 | ✅ resume_chat / jd_match / summary_rewrite / variant_plan 四模块模型 ID + 提示词可读；resume_chat 已存（2026-11-19），其余「尚未保存过」；保存按钮在位（未提交） |
 | 后台·AI 语音 | ✅ 女版 5 音色卡（智瑜 101001 默认 / 智希 101026 / 智梅 101027 / 智付 101055 / 智燕 101011）+ 招呼文案 + 试听/保存；合成链路 `/api/chat(mode=tts)` → 腾讯云函数说明在位 |
 | 后台·站点数据 | ✅ 7/7 已配置（首页文案 26KB / 公司 69KB / 学校 10KB / 推荐人 720B / GitHub 45KB / 案例 9KB / CDN 映射 13KB），JSON 可读取编辑；D1 副本新旧文案混杂（T31 落点，待同步） |
 | 后台·生成变体 | ✅ JD 输入（≥20 字）+ rewrite 勾选 + 下载 HTML 入口；当前「尚未生成」（未触发模型调用） |
 | 后台·角色动画 | ✅ 男性首页角色 / 女性访客切换各 3 动作；MaleRigged.glb 870KB · 41 骨骼 · 3 段剪辑；待机/挥手/坐下均「上线」；3D 预览离屏环境载入中，留真机 |
-| 后台只读接口 / 导出（11-27） | ✅ stats/messages/devices/config/voice/greeting/theme/gender/kb 全 200；`/api/admin/kb` count 42、worker_ready:false（互证 T27）；CSV 导出 `text/csv`，表头 seq…admin_note，11 条留言 |
+| 后台只读接口 / 导出（11-27） | ✅ stats/messages/devices/config/voice/greeting/theme/gender/kb 全 200；`/api/admin/kb` `worker_ready:true`（T27 互证已闭环）；CSV 导出 `text/csv`，表头 seq…admin_note，11 条留言 |
+| 留言墙写链路（11-27 授权联调） | ✅ `POST /api/wall` 201 落库回显（id `wmwy42v07sagwj`）；随即后台 `messages/status` 置 hidden 200，公开墙已不可见，仅后台可查；为唯一写入 D1 的测试残留 |
+| 投递写链路（11-27 授权联调） | ⚠️ T34：PoW 校验通过后首发返回 CF 502 HTML（应用未走错误分类），二次被 429 限流拦下；preview 不发信分支正常。待 CF 日志定位 |
+| 核验申请写链路（11-27） | ⏳ 未提交：`/api/verify-access` 会真实发 Resend 邮件到站长 `hi@chenpeisheng.cn`，副作用需用户确认后再触发 |
 | 公司 / 学校 / 案例页 | ✅ 渲染正常，控制台 0 error |
 
 ---
