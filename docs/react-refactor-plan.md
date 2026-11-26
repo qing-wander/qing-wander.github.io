@@ -707,6 +707,21 @@ admin 是本次重构**单位收益最高**的部分：原生 JS 1,033 行的多
 - **render_resume.mjs 退役路径（M4 期间的实况）**：生产/云端/备份线仍由旧链维持（根目录 resume.html 是生产与 GitHub Pages 备份线的交付物；模板与 render_resume.mjs 是云端 PDF 渲染的依赖），故**不删模板、不停 CI 闸门**——方案原文的「模板删除 + check-stale-build 闸门」推迟到生产切换（D6 拍板）后与 M5 旧代码下线一并执行。Astro 侧的等价闸门由 m4.e2e.mjs ①（逐字 diff）承担，混排期即生效。
 - **遗留**：React 岛（投递表单 / 打印预览组件化，§5.4）未做——两岛按方案本就是「渐进水合」项，当前旧脚本桥接已满足全部功能（18 项 E2E 含投递全流），组件化在生产切换后与 M5 收编一并处理；真机电池（简历投递 / 分享卡下载入口不回归）归 M5 收尾轮（方案 §6-M4 原文即如此排期）。
 
+### M5 · 生产切换与收尾 —— ✅ 生产切换已生效（2026-11-26，提交 9e375fe；后续收尾见下）
+
+- **生产切换（用户拍板，提前于 D6 双开观察期满期）**：`scripts/pages-build.sh` 默认 `REACT_MIGRATED_PAGES` 收编 M0–M4 全部页面（portfolio / admin / login / jd / company / school / 404 / index / resume），`REACT_MIGRATED_PAGES=none` 环境变量保留为一键回退全旧版开关。切换依据：E2E 五套 155 项全绿 + 视觉对比 12/12 + resume 逐字等价 + 可一键回退，双开观察期的风险缓冲由验收链替代。
+- **线上验证（chenpeisheng.cn，切换部署后实测）**：
+  - 八页全部 React 版：index（CP_AI_REACT + astro-island + `_astro/AiShell.*.js`）/ jd / company / school / 404 / resume / work/portfolio / login / admin，全 200；
+  - 线上 AI 面板水合实测（正常 UA；headless UA 被 middleware 反爬名单拦截属预期）：CP_AI_REACT_READY ready、3D 舞台创建、aiWinSize / ai-voice 音量按钮存活（水合未重建 DOM）、4 经历卡、navNos `0203040506070809101111` 与本地一致、**3D 舞台点击开面板成功、零 JS 错误**；
+  - `/resume`（无 .html）经 middleware 真手机号注入路径原样放行（`/resume.html` 原样 308→200 语义不变）。
+- **GitHub Pages 备份线验证**：仓库根静态文件（旧版）全页 200（index/resume/jd/company/school/404/work/portfolio/css）——备份线职责是「兜底旧版」，React 版产物不在仓库根，设计如此；`.nojekyll` 与 `_astro` 兼容已在 M0/M1 验证。
+- **文档改写（M5-C）**：README 架构叙事（badge + 三处正文 + 贡献条款）「零框架」→「Astro 6 + React 19 SSG + 岛屿」；CHANGELOG 新增 2026-11-26 迁移里程碑条目。
+- **旧代码下线（M5-B）的执行边界（与方案原文的差异，已定案）**：
+  1. **旧版根 HTML 与 js/ 旧模块本日不删**——它们承担三重现役职责：①`REACT_MIGRATED_PAGES=none` 的一键回退产物；②GitHub Pages 备份线的线上交付物；③`file://` 双击本地预览层（M4 前的用户习惯）。方案原文「删除旧 HTML 壳」的完整执行条件（备份线也切 React 产物）尚不满足。
+  2. `js/main.js` 第 11 节守卫（CP_AI_REACT 分支）为**长期形态**而非过渡：回退开关存在一天，守卫就有效一天。
+  3. `_*.html` 调试探针 7 个留在仓库（构建脚本已排除，不进产物，历史调试档案）。
+- **M5 剩余待办（后续会话）**：真机电池（iOS Safari + 微信内置 + Android Chrome，§5.8 矩阵 + 简历投递/分享卡入口）；Lighthouse 与 M0 基线对照（index 移动档 55 分 / LCP 25.3s 优化目标）；连续一周线上无回归观察（D6 双开语义在生产切换后的延续）；一周后视稳定性决定备份线是否也切 React 产物并执行旧文件物理删除。
+
 ---
 
 *文档维护：本方案是活文档，随 M0–M5 推进在本文档内以「里程碑日志」形式追加实况记录；重大方向变更须更新 §9 估算并注明版本。*

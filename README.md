@@ -1,13 +1,13 @@
 # 陈培胜 · AI Agent 工程师求职作品集
 
 ![在线站点](https://img.shields.io/badge/在线-chenpeisheng.cn-FF5A1E?style=flat-square)
-![HTML5](https://img.shields.io/badge/HTML5-%2BCSS-%2BVanilla%20JS-E34F26?style=flat-square&logo=html5&logoColor=white)
+![前端](https://img.shields.io/badge/前端-Astro%206%20%2B%20React%2019-BC52EE?style=flat-square&logo=astro)
 ![Cloudflare Pages](https://img.shields.io/badge/Deploy-Cloudflare%20Pages-F38020?style=flat-square&logo=cloudflare&logoColor=white)
 ![Node](https://img.shields.io/badge/Node.js-22-339933?style=flat-square&logo=node.js&logoColor=white)
 ![CI](https://img.shields.io/badge/CI-tests%20%7C%20content%20build%20%7C%20RAG-2B4BE0?style=flat-square&logo=githubactions&logoColor=white)
 ![License](https://img.shields.io/badge/License-MIT-1FA658?style=flat-square)
 
-> 一个**没有前端框架**的静态求职站，长出了一套跑在边缘上的后端：  
+> 一个 **Astro 6 + React 19 SSG** 的静态求职站，长出了一套跑在边缘上的后端：  
 > Cloudflare Pages Functions + D1 + Vectorize + Workers AI，外加腾讯云 TTS。  
 > 展示内容以仓库 `data/site-data.json` 为脱敏生成源；线上真人数据存放于 D1 `site_content`（见[数据与内容模型](#数据与内容模型)分层）。
 
@@ -43,12 +43,12 @@
 
 | 维度 | 做法                                                                     |
 | -- | ---------------------------------------------------------------------- |
-| 前端 | 原生 HTML / CSS / JS（ES5 兼容 IIFE），零框架、零构建步骤，首屏不依赖 JS 框架运行时               |
+| 前端 | **Astro 6 SSG + React 19 岛屿**（2026-11 完成渐进迁移，方案与验收台账见 [docs/react-refactor-plan.md](docs/react-refactor-plan.md)）：SSG 直出 + 局部水合，CSS/类名体系沿用资产不重写 |
 | 后端 | Cloudflare Pages Functions（`functions/`）承载全部 `/api/*`，无独立服务器           |
 | 数据 | 仓库 `data/site-data.json` 为脱敏生成副本；线上真人数据存 D1 `site_content`，两者字段结构一致  |
 | AI | 混合检索（D1 FTS5 BM25 + Vectorize 向量，RRF 融合）→ 受约束生成；关键词兜底不断线               |
-| 部署 | `git push` → Cloudflare Pages 自动构建；`scripts/pages-build.sh` 产出 `dist/` |
-| 质量 | 4 条 GitHub Actions + 29 个 `node:test` 测试文件 + 内容漂移闸门（生成物必须与数据逐字一致）        |
+| 部署 | `git push` → Cloudflare Pages 自动构建；`scripts/pages-build.sh` 产出 `dist/`（React 页混排清单内嵌在脚本里） |
+| 质量 | 4 条 GitHub Actions + 29 个 `node:test` 测试文件 + Playwright E2E 五套（155 项）+ 内容漂移闸门（生成物必须与数据逐字一致）        |
 
 **它不只是简历页面。** 除展示外还包括：AI 数字分身问答、JD 岗位匹配、AI 语音播报、3D 桌宠、按设备隔离的留言板、简历自动投递（含 PDF/证书附件与发送前预览）、学历核验加锁审批、公司/学校档案页、访问统计与管理后台。
 
@@ -117,7 +117,7 @@
 
 | 层     | 选型                                                                                                        |
 | ----- | --------------------------------------------------------------------------------------------------------- |
-| 前端    | 原生 HTML5 / CSS3 / ES5 兼容 JavaScript；`<model-viewer>`、html2canvas 本地 vendor                                |
+| 前端    | **Astro 6（SSG）+ React 19 岛屿**，TypeScript strict；外围交互脚本（3D 舞台 / 语音 / 公司档案）以桥接模式零改动共存；`<model-viewer>`、html2canvas 本地 vendor |
 | 边缘    | Cloudflare Pages + Pages Functions（ES Module Worker 运行时）                                                  |
 | 存储    | D1（SQLite）：`site_content` / `wall_*` / `kb_*` / `qa_logs` / `rate_limits` / `counters` 等；KV 仅存登录票据与少量兜底计数 |
 | 检索    | D1 FTS5 + Vectorize（bge-m3）+ Workers AI；混合检索在 Worker `worker/kb/` 内完成                                     |
@@ -388,7 +388,7 @@ npx wrangler pages deploy dist --branch=preview-check            # 发一个预�
 
 1. **不要手改生成物**（`resume.html`、`work/*.html`、`data/site-data.js`）——改数据或模板，然后跑生成脚本。
 2. **不要把个人隐私写进仓库**：手机号、验证码、密钥、真实设备数据一律不入库。
-3. **前端保持零框架、ES5 兼容**；新增接口先写纯函数 + 单测，再接到 Functions。
+3. **前端用 Astro + React 岛屿**（迁移方案与验收台账见 [docs/react-refactor-plan.md](docs/react-refactor-plan.md)）；新增接口先写纯函数 + 单测，再接到 Functions。
 
 安全漏洞请按 [SECURITY.md](SECURITY.md) 私信报告，不要开公开 issue。
 
@@ -406,3 +406,5 @@ npx wrangler pages deploy dist --branch=preview-check            # 发一个预�
 - GitHub：<https://github.com/shenge-work>
 - 邮箱：<hi@chenpeisheng.cn>
 - 博客：<https://blog.chenpeisheng.cn>
+
+> AI生成

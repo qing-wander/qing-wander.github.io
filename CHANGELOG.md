@@ -3,6 +3,32 @@
 本仓库按日期记录变更（未打语义化版本 tag）。格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)；
 更早的历史见 `git log`。
 
+## 2026-11-26
+
+### 新增
+- **前端架构迁移完成并切换生产**：Astro 6.4 + React 19 + TypeScript strict 渐进迁移 M0–M4
+  （方案、验收数据与里程碑台账见 [docs/react-refactor-plan.md](docs/react-refactor-plan.md)），
+  `scripts/pages-build.sh` 默认混排清单收编全部已迁移页（portfolio / admin / login / jd / company /
+  school / 404 / index / resume），线上 `chenpeisheng.cn` 走 React 版产物；
+  `REACT_MIGRATED_PAGES=none` 环境变量保留为一键回退全旧版的开关。
+- **迁移验收链**：Playwright E2E 五套（M1 admin 24 / M2 独立页 63 / M3-A 主页 26 / M3-B AI 面板
+  24 / M4 resume 18，合计 155 项）+ 视觉对比（四主题 × 390/680/1024 像素级口径 12/12）+
+  resume 单源等价（构建产物与旧链生成物逐字 diff = 0）+ 既有 node:test 289/289 与内容漂移链 9 项全绿。
+- **渐进迁移基建**：`src/`（pages / features / components / lib，zod 契约 + API client 收编
+  `window.CP_*` 全局）+ dev-api-server（27 admin 路由 + 静态映射）+ 基线采集（Lighthouse 8 份
+  入 `tests/e2e/baseline/`）。
+
+### 变更
+- 旧版根 HTML（index/jd/company/school/404/resume 壳）保留在工作区作为回退与 `file://` 预览层；
+  `js/main.js` 第 11 节（AI 面板）由 `CP_AI_REACT` 守卫短路，`js/jd-match.js` 在新版不再底载。
+- AI 面板（M3-B）：FAB 岛外静态直出 + document 事件委托；面板 aside 单根岛 `client:idle`；
+  `ai-head` 用危险容器保住外围脚本（ai-voice / ai-panel-ux）水合前窗口期注入的按钮。
+- resume（M4）：`render_resume.mjs` 参数化（`renderWithTemplate`），Astro 构建期复用同一
+  `render()`；`functions/lib/resume-render.js`（AUTO-GENERATED）随之重嵌入，云端 variant 行为不变。
+
+### 文档
+- README 架构叙事改写（「零框架」→「Astro 6 + React 19 SSG + 岛屿」）；本条目记录迁移里程碑。
+
 ## 2026-11-25
 
 ### 新增
@@ -72,3 +98,5 @@
 
 2026-09 ~ 2026-10：作品集主页与在线简历从零搭建（原生 HTML/CSS/JS、Neo-brutalism 视觉、
 数据驱动渲染、GitHub Pages 上线）。
+
+> AI生成
