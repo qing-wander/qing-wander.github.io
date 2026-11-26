@@ -3,6 +3,15 @@
 本仓库按日期记录变更（未打语义化版本 tag）。格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)；
 更早的历史见 `git log`。
 
+## 2026-11-27
+
+### 修复
+- **AI 数字分身问答恢复**：补齐 Pages production 的 `KB_WORKER_URL` / `KB_TOKEN` secret，重新对齐
+  `resume-kb-api` Worker 的 `KB_TOKEN` 并部署最新代码；`chenpeisheng.cn` 与 `shenge-work.pages.dev`
+  实测问答由模型生成，`degraded:false`。
+- `/api/chat` 新增本地摘录兜底：生成链路再故障时直接从命中切片作答（联系方式直答），
+  不再向访客显示「模型服务不可用」等内部术语；响应新增 `answerSource` 字段。
+
 ## 2026-11-26
 
 ### 新增

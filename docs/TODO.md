@@ -98,7 +98,7 @@ Lighthouse N5 通过：index.mobile 中位数 61 ≥ 基线 55）；`REACT_MIGRA
 | T24 | RAG / 简历增强迭代池：rerank 重排、动态简历变体、跨设备查看、`resume.micro` 微调流水线 | `思考池` | 低 | AI 问答 / 简历变体 / 留言板 | [p0-single-source.md §8](p0-single-source.md) |
 | T25 | Google Fonts 本地化（自托管 / 子集化 Noto Sans SC），根治移动档 LCP ~20s | `待办` | 高（性能主优化项） | 全站移动档 LCP | 本文 §3.21 |
 | T26 | React 迁移收尾观察：真机电池、一周线上无回归观察、到期后备份线切 React + 旧文件物理删除 | `待办（观察期）` | 中 | 全站 | [react-refactor-plan.md M5](react-refactor-plan.md) |
-| T27 | 问答生成链路故障：实测 `failReason=no-worker`，根因是线上 Pages 缺 `KB_WORKER_URL`/`KB_TOKEN` 环境变量（非 Worker/AI 故障） | `待配置侧补环境变量` | 高 | `/api/chat` 数字分身问答 | 本文 §3.23 / [线上站点测试报告-2026-11-26.md](线上站点测试报告-2026-11-26.md) P1-1 |
+| T27 | 问答生成链路故障：线上 Pages 缺 `KB_WORKER_URL`/`KB_TOKEN`，且 KB Worker 未部署最新代码；变量已补、Worker 已重部署并线上验证 | `已完成（2026-11-27）` | 高 | `/api/chat` 数字分身问答 | 本文 §3.23 / [线上站点测试报告-2026-11-26.md](线上站点测试报告-2026-11-26.md) P1-1 |
 | T28 | Turnstile 报 110200：widget 未渲染，留言墙人机校验实际未生效（CF 后台站点域名匹配） | `待办（配置侧）` | 高 | 留言墙 POST 校验 | 本文 §3.23 / 测试报告 P1-2 |
 | T29 | Cloudflare Web Analytics beacon 被 CSP 拦截，CF 这一路统计未生效（仓库代码未下发该 script-src，疑面板规则） | `待复核` | 中 | 访问统计 | 本文 §3.23 / 测试报告 P2-1 |
 | T30 | 头像 PNG 体积治理：avatar-male 疑似死资源；female 1536×1536 用于 ≤420px 展示位 | `待办（并入性能专项）` | 低 | 首屏 / 助手头像 | 测试报告 P3-2 |
@@ -750,30 +750,29 @@ M0–M5 已全部完成并生产切换（线上 React 版运行中，`REACT_MIGR
 > [线上站点测试报告-2026-11-26.md](线上站点测试报告-2026-11-26.md)。只读验证为主，写操作
 > （留言、投递、核验申请、后台）未擅自提交。
 
-**T27 · 问答生成链路故障（高，进行中）**
+**T27 · 问答生成链路故障（高，已修复）**
 
 - 现象：`POST /api/chat` 返回 200 但 `answer` 恒为兜底话术「这条我暂时答不上来（模型服务不可用）…」；
   检索 citations 正常命中，故障只在生成环节。
-- 代码侧已改并已上线（2026-11-27 实测响应已带 `degraded` / `failReason` 字段）：
-  - `functions/api/chat.js`：`callWorker` 区分 `no-worker / worker-http / worker-bad / empty-text`；
-    失败原因写入 `qa_logs.model`（`failed:<reason>`，表无独立 reason 列）；响应新增 `degraded` 与
-    `failReason` 字段，便于线上直接定位。
-  - `worker/kb/index.mjs` `/chat`：`env.AI.run` 包 try/catch，抛错回 502 + 错误信息；正文为空判
-    `empty-text` 失败，不再把空当成功。
-- **2026-11-27 根因收敛（线上实测）**：`POST /api/chat` 返回 `degraded:true, failReason:"no-worker"`，
-  83ms，citations 仍命中 2 条。`no-worker` 分支在 `callWorker` 里是 `!env.KB_WORKER_URL || !env.KB_TOKEN`
-  直接判定（fetch 之前），即**线上 production Pages 的环境变量 `KB_WORKER_URL` / `KB_TOKEN` 缺失或未生效**，
-  不是 Worker 不可达、也不是 Workers AI 模型调用失败。本地 `.secrets.local` 两值齐全，仅线上未注入。
-  旁证：JD 匹配（`jd.js`）在缺 Worker 时回退本地 TF-IDF 检索，所以对照表仍能出；问答生成环节必须调
-  Worker，缺变量才整体降级兜底——这解释了「JD 匹配正常、问答降级」的不一致。
-- 待办（配置侧，仓库代码改不了）：
-  1. CF Pages 面板 → production 环境变量，核对 `KB_WORKER_URL=https://resume-kb-api.shenge-work.workers.dev`
-     与 `KB_TOKEN` 是否存在、值是否与本地一致；补配后重新构建。
-  2. 变量注入后重测 `/api/chat`：若仍降级，再按 `failReason` 分流——`worker-http` → Worker 不可达；
-     `worker-bad / empty-text / ai-run-failed` → Worker 内 AI 模型配额 / 模型名 / 绑定问题；
-     wrangler 登录后 `tail` Worker 日志核对 `AI`、`VECTORIZE`、`DB` 绑定；Worker 改动需单独
-     `cd worker/kb && wrangler deploy`。
-- 验收：普通问题返回真人风格回答；`degraded` 不出现；qa_logs 正常记模型名。
+- 根因（两层）：
+  1. 线上 production Pages 未注入 `KB_WORKER_URL` / `KB_TOKEN`，`callWorker` 在 fetch 前直接返回
+     `no-worker`；本地 `.secrets.local` 两值齐全，仅线上缺失。
+  2. 补上变量后 `failReason` 变为 `worker-http`：`resume-kb-api` Worker 仍停留在 2026-11-25 的旧版本，
+     `/chat` 的 `env.AI.run` try/catch 与 `empty-text` 判定未上线；同时 Worker 侧 `KB_TOKEN` 与 Pages
+     侧需重新对齐。
+- 修复（2026-11-27）：
+  - `functions/api/chat.js`：`callWorker` 细分 `no-worker / worker-http / worker-bad / empty-text`；失败
+    原因写 `qa_logs.model`；响应带 `degraded` / `failReason` / `answerSource`。新增 `localAnswer()`：
+    Worker 不可用时只从命中切片保守摘录，联系方式直接给公开联系方式，**不再把「模型服务不可用」等内部
+    术语暴露给访客**，citations 照常可核对。
+  - Cloudflare Pages（production）：用 wrangler 写入 `KB_WORKER_URL` / `KB_TOKEN` 两个 secret。
+  - `resume-kb-api` Worker：重新写入 `KB_TOKEN`，并用 `wrangler deploy --config worker/kb/wrangler.toml`
+    部署最新代码（AI / Vectorize / D1 绑定正常）。
+- 线上验收（2026-11-27，`chenpeisheng.cn` 与 `shenge-work.pages.dev` 双域名一致）：
+  - 「怎么联系你？」→ 模型生成回答，`degraded:false`、`answerSource:"worker"`、`semantic:true`；
+  - 「你主导过哪些 0→1 系统？」「你的 Agent 架构经验？」「技术栈与方向？」均返回真人风格答案，
+    无降级、citations 正常。
+- 注：`*.workers.dev` 在境内本地 DNS 被污染，直连超时不代表 Worker 离线；以 Pages 边缘调用与线上响应为准。
 
 **T28 · Turnstile 110200，留言墙校验未生效（高，配置侧）**
 
