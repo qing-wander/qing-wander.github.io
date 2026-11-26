@@ -8,7 +8,8 @@
 
    收件人：默认站长本人 hi@chenpeisheng.cn —— Resend 未验证自有域名时，
    onboarding@resend.dev 只能发给注册邮箱；可用 WALL_NOTIFY_TO 覆盖。
-   发件人：复用简历转发那套 RESEND_FROM，缺省 onboarding@resend.dev。
+   发件人：留言墙专用 wall@chenpeisheng.cn（WALL_NOTIFY_FROM 可覆盖）；
+   与简历投递 / 后台验证码 / 访问验证各自独立，避免互相污染信誉。
    失败策略：任何异常都只记日志并返回 {ok:false}，留言接口照常 201，
    不让第三方发信服务反过来影响访客写留言。
 
@@ -19,7 +20,7 @@
 
 const RESEND_URL = 'https://api.resend.com/emails';
 const DEFAULT_TO = 'hi@chenpeisheng.cn';
-const DEFAULT_FROM = 'Portfolio Wall <onboarding@resend.dev>';
+const DEFAULT_FROM = '作品集留言墙 <wall@chenpeisheng.cn>';
 /* 后台已并入主站：/admin 由 functions/_middleware.js 守卫，未登录会跳 /login */
 const ADMIN_URL = 'https://chenpeisheng.cn/admin';
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
@@ -178,9 +179,7 @@ async function deliverNotice(env, mail) {
       console.warn('[wall-notify] 收件人地址不合法：' + to);
       return { ok: false, reason: 'invalid_recipient' };
     }
-    const from = String(
-      (env && env.WALL_NOTIFY_FROM) || (env && env.RESEND_FROM) || DEFAULT_FROM
-    ).trim();
+    const from = String((env && env.WALL_NOTIFY_FROM) || DEFAULT_FROM).trim();
 
     const resp = await fetch(RESEND_URL, {
       method: 'POST',

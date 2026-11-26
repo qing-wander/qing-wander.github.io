@@ -491,4 +491,62 @@ From: =?utf-8?q?=E7=94=A8=E6=88=B7254038?= <hi@chenpeisheng.cn>   →  用户254
 `<policy_evaluated>` 里的 `dkim` / `spf` —— 只要两个都是 `pass`，就说明没有第三方在冒用你的域名；
 出现 `fail` 且来源 IP 陌生，才需要去查是不是有服务在用你的域名发信。
 
+---
+
+## 12. 发件身份隔离矩阵（2026-11-27）
+
+### 12.1 之前的问题：四类邮件共用一个真人身份
+
+代码里四个发信口都写着 `专属变量 → RESEND_FROM → 默认兜底`，而 Cloudflare Pages 里
+**只配了 `RESEND_FROM`（值为 `陈培胜 <hi@chenpeisheng.cn>`）**，
+`ADMIN_EMAIL_FROM` / `WALL_NOTIFY_FROM` / `VERIFY_ACCESS_FROM` / `DELIVER_FROM` 一个都没有。
+结果就是：简历自动投递、后台验证码、留言墙通知、访问验证通知，**全部从本人的真实邮箱发出**。
+
+这比"同一个域不同用途"更糟——被消耗的不是某个匿名系统地址，而是本人对外沟通的那个身份。
+验证码这种高频、易被误判的邮件一旦拉低信誉，真人回信和 HR 看到的投递邮件会一起受牵连。
+
+### 12.2 现在的矩阵
+
+| 用途 | 发件身份 | 代码位置 | 可覆盖变量 |
+|---|---|---|---|
+| 简历自动投递 | `陈培胜 · 简历投递 <jobs@chenpeisheng.cn>` | `functions/api/deliver.js` | `DELIVER_FROM` |
+| 后台登录验证码 | `作品集后台 <code@chenpeisheng.cn>` | `functions/lib/admin-login.js` | `ADMIN_EMAIL_FROM` |
+| 留言墙通知 | `作品集留言墙 <wall@chenpeisheng.cn>` | `functions/lib/wall-notify.js` | `WALL_NOTIFY_FROM` |
+| 访问验证通知 | `作品集访问验证 <access@chenpeisheng.cn>` | `functions/lib/verify-access-notify.js` | `VERIFY_ACCESS_FROM` |
+| **人工真实邮箱** | `hi@chenpeisheng.cn`（飞书，**只收不发自动邮件**） | 飞书邮箱 | — |
+
+四个地址都已用 Resend API 实测可发（HTTP 200）。Resend 的域名验证是**域级**的，
+`resend._domainkey` 覆盖 `*.chenpeisheng.cn`，所以新增地址不需要加任何 DNS 记录。
+
+**关键改动：彻底移除 `RESEND_FROM` 作为发件人回落。**
+它名字太通用，任何新功能顺手引用就会把全部邮件重新汇到一个身份上。
+现在每个用途只认自己的专属变量，默认值本身就是隔离地址；
+不配任何环境变量也是隔离的，配了只是改名。
+Cloudflare 里那个 `RESEND_FROM=hi@...` 可以保留不再使用，也可以之后单独删除。
+
+### 12.3 边界：这还不是"域级隔离"
+
+同一注册域下的不同地址，**在 Gmail/Outlook 的信誉模型里仍共享一部分域级信誉**。
+上面这套做到的是：
+
+- ✅ 真人邮箱 `hi@` 不再参与任何自动发信，个人身份与机器流量解耦；
+- ✅ 四类邮件身份独立，退信 / 投诉 / 收件人过滤器只影响对应那一类；
+- ✅ 以后某一类被滥用，可以单独换地址或停用，不牵动其它三类。
+
+要做到**真正的域级隔离**，需要第二个注册域（如 `chenpeisheng.dev`）专门承接事务邮件，
+并单独配 SPF / DKIM / DMARC 与 DMARC 报告地址。个人量级下这不是必需项；
+如果哪天验证码或投递量上来、或收到 DMARC 报告里的异常来源，再考虑升级。
+
+### 12.4 顺带修掉的后台报错
+
+后台登录页点「发验证码」返回 `发送失败`，接口实际是 Cloudflare `error code: 1101`
+（Worker 抛未捕获异常）。查下来 D1 表 `admin_email_codes` 在线上存在、Resend 直发也正常，
+异常来自 `codeHash()` 读不到 `ADMIN_SESSION_SECRET` / `ADMIN_PASSWORD` 时主动 throw，
+而调用方没有捕获，异常冒泡到平台就变成没有信息的 1101。
+
+现在 `functions/api/admin/auth/email/send.js` 把这一种异常转成明确的
+`mail_secret_missing`（503 + 中文提示），以后缺哪个变量一眼可见，不用再猜。
+若复测仍报该错误，去 Cloudflare Pages 重填一次 `ADMIN_SESSION_SECRET` 即可
+（重填会使已有登录会话失效，需重新登录一次）。
+
 > AI生成

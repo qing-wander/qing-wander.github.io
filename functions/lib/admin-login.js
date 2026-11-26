@@ -12,7 +12,7 @@
 
 const enc = new TextEncoder();
 const RESEND_URL = 'https://api.resend.com/emails';
-const DEFAULT_FROM = 'Portfolio Resume <onboarding@resend.dev>';
+const DEFAULT_FROM = '作品集后台 <code@chenpeisheng.cn>';
 const DEFAULT_ADMIN_EMAIL = 'hi@chenpeisheng.cn';
 
 /* ── 基础工具 ─────────────────────────────────────────────────── */
@@ -120,7 +120,7 @@ function escapeHtml(s) {
 export async function sendCodeMail(env, email, code) {
   const apiKey = env.RESEND_API_KEY;
   if (!apiKey) return { ok: false, error: 'mail_not_configured' };
-  const from = env.ADMIN_EMAIL_FROM || env.RESEND_FROM || DEFAULT_FROM;
+  const from = env.ADMIN_EMAIL_FROM || DEFAULT_FROM;
   let r;
   try {
     r = await fetch(RESEND_URL, {

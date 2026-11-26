@@ -32,7 +32,8 @@
 
    环境变量（Cloudflare Pages → Settings → Variables）：
      RESEND_API_KEY   必填，未配置返回 503（前端自动走 mailto 兜底）
-     RESEND_FROM      可选，默认 'Portfolio Resume <onboarding@resend.dev>'
+     DELIVER_FROM     可选，简历投递专用发件身份（默认 jobs@chenpeisheng.cn）
+     RESEND_FROM      可选，仅作兼容兜底，勿再填 hi@ 本人邮箱
      DELIVER_BCC      可选，站长收一份备案（如 hi@chenpeisheng.cn），留空则不发
      ALLOWED_ORIGINS  可选，逗号分隔（默认 github.io / pages.dev / localhost）
 
@@ -63,7 +64,7 @@ import {
 export { allowedOrigins, corsHeaders, isAllowedOrigin, json };
 
 const RESEND_URL = 'https://api.resend.com/emails';
-const DEFAULT_FROM = 'Portfolio Resume <onboarding@resend.dev>';
+const DEFAULT_FROM = '陈培胜 · 简历投递 <jobs@chenpeisheng.cn>';
 
 const MAX_NAME = 24;
 const MAX_NOTE = 500;
@@ -328,7 +329,7 @@ export async function onRequestPost({ request, env }) {
 
   const mail = buildDeliveryEmail(d);
   const payload = {
-    from: env.RESEND_FROM || DEFAULT_FROM,
+    from: env.DELIVER_FROM || DEFAULT_FROM,
     to: d.to,
     subject: buildSubject(d),
     html: mail.html,

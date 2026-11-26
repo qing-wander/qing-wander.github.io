@@ -47,8 +47,15 @@ export async function onRequestPost({ request, env }) {
   const addrHit = await gate(env.DB, 'admin:email:addr:' + addrKey, hour, 4, 3700);
   if (addrHit === null) return fail('rate_limited', '这个邮箱本小时发得太频繁，稍后再试', 429);
 
-  const code = randomCode();
-  const codeHashValue = await codeHash(env, email, code);
+  /* 密钥缺失时 codeHash 会 throw，落到平台就是 1101 + 前端「发送失败」，
+     完全看不出原因。这里显式转成错误码，后台能直接看到该补哪个变量。 */
+  let code, codeHashValue;
+  try {
+    code = randomCode();
+    codeHashValue = await codeHash(env, email, code);
+  } catch (e) {
+    return fail('mail_secret_missing', '后台密钥未配置，无法发送验证码', 503);
+  }
   await env.DB.prepare(
     `INSERT INTO admin_email_codes (email, code_hash, expires_at, attempts, sent_at)
      VALUES (?, ?, ?, 0, ?)

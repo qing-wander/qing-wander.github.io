@@ -7,7 +7,8 @@
        测试时 mock fetch 即可，不依赖 Cloudflare 运行时。
 
    收件人：默认 hi@chenpeisheng.cn（简历本人），可用 VERIFY_ACCESS_TO 覆盖。
-   发件人：优先 VERIFY_ACCESS_FROM → RESEND_FROM → onboarding@resend.dev。
+   发件人：访问验证专用 access@chenpeisheng.cn（VERIFY_ACCESS_FROM 可覆盖）；
+   与简历投递 / 后台验证码 / 留言通知各自独立，避免互相污染信誉。
    回复：申请人留了邮箱时设 reply_to，本人可直接回邮件核验身份 / 决定解锁。
    失败策略：任何异常只记日志并返回 {ok:false}，不 throw 给接口调用方。
 
@@ -19,7 +20,7 @@ import { escapeHtml, formatBeijing } from './wall-notify.js';
 
 const RESEND_URL = 'https://api.resend.com/emails';
 const DEFAULT_TO = 'hi@chenpeisheng.cn';
-const DEFAULT_FROM = 'Portfolio Profile <onboarding@resend.dev>';
+const DEFAULT_FROM = '作品集访问验证 <access@chenpeisheng.cn>';
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
 function safeMeta(value, max) {
@@ -162,9 +163,7 @@ async function deliver(env, mail) {
       console.warn('[verify-access] 收件人地址不合法：' + to);
       return { ok: false, reason: 'invalid_recipient' };
     }
-    const from = String(
-      (env && env.VERIFY_ACCESS_FROM) || (env && env.RESEND_FROM) || DEFAULT_FROM
-    ).trim();
+    const from = String((env && env.VERIFY_ACCESS_FROM) || DEFAULT_FROM).trim();
 
     const payload = {
       from,
