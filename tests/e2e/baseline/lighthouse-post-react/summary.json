@@ -1,0 +1,159 @@
+{
+  "capturedAt": "2026-11-26T06:07:03.147Z",
+  "base": "https://chenpeisheng.cn",
+  "engine": "lighthouse@post-react(M5)",
+  "pages": [
+    {
+      "page": "index",
+      "variant": "mobile",
+      "url": "https://chenpeisheng.cn/",
+      "scores": {
+        "performance": 59,
+        "accessibility": 92,
+        "seo": 100,
+        "best-practices": 75
+      },
+      "metrics": {
+        "FCP": "4.1 s",
+        "LCP": "22.7 s",
+        "TBT": "120 ms",
+        "CLS": "0.001",
+        "TTI": "25.3 s"
+      },
+      "sha1": "f753171084d2"
+    },
+    {
+      "page": "index",
+      "variant": "desktop",
+      "url": "https://chenpeisheng.cn/",
+      "scores": {
+        "performance": 67,
+        "accessibility": 92,
+        "seo": 100,
+        "best-practices": 75
+      },
+      "metrics": {
+        "FCP": "2.7 s",
+        "LCP": "19.7 s",
+        "TBT": "100 ms",
+        "CLS": "0.001",
+        "TTI": "22.1 s"
+      },
+      "sha1": "2b8c078943fb"
+    },
+    {
+      "page": "resume",
+      "variant": "mobile",
+      "url": "https://chenpeisheng.cn/resume.html",
+      "scores": {
+        "performance": 90,
+        "accessibility": 93,
+        "seo": 100,
+        "best-practices": 79
+      },
+      "metrics": {
+        "FCP": "2.8 s",
+        "LCP": "2.8 s",
+        "TBT": "10 ms",
+        "CLS": "0.01",
+        "TTI": "4.9 s"
+      },
+      "sha1": "6aac2bf509c6"
+    },
+    {
+      "page": "resume",
+      "variant": "desktop",
+      "url": "https://chenpeisheng.cn/resume.html",
+      "scores": {
+        "performance": 93,
+        "accessibility": 93,
+        "seo": 100,
+        "best-practices": 79
+      },
+      "metrics": {
+        "FCP": "2.6 s",
+        "LCP": "2.6 s",
+        "TBT": "20 ms",
+        "CLS": "0.011",
+        "TTI": "5.9 s"
+      },
+      "sha1": "313ba8850881"
+    },
+    {
+      "page": "jd",
+      "variant": "mobile",
+      "url": "https://chenpeisheng.cn/jd.html",
+      "scores": {
+        "performance": 84,
+        "accessibility": 96,
+        "seo": 100,
+        "best-practices": 100
+      },
+      "metrics": {
+        "FCP": "2.7 s",
+        "LCP": "3.4 s",
+        "TBT": "0 ms",
+        "CLS": "0",
+        "TTI": "3.4 s"
+      },
+      "sha1": "9f653d21ebf3"
+    },
+    {
+      "page": "jd",
+      "variant": "desktop",
+      "url": "https://chenpeisheng.cn/jd.html",
+      "scores": {
+        "performance": 92,
+        "accessibility": 96,
+        "seo": 100,
+        "best-practices": 100
+      },
+      "metrics": {
+        "FCP": "2.6 s",
+        "LCP": "2.6 s",
+        "TBT": "0 ms",
+        "CLS": "0",
+        "TTI": "2.6 s"
+      },
+      "sha1": "3427e045d335"
+    },
+    {
+      "page": "company",
+      "variant": "mobile",
+      "url": "https://chenpeisheng.cn/company.html?c=zhishu",
+      "scores": {
+        "performance": 79,
+        "accessibility": 92,
+        "seo": 66,
+        "best-practices": 96
+      },
+      "metrics": {
+        "FCP": "3.0 s",
+        "LCP": "3.7 s",
+        "TBT": "0 ms",
+        "CLS": "0",
+        "TTI": "5.6 s"
+      },
+      "sha1": "f8cc056ff612"
+    },
+    {
+      "page": "company",
+      "variant": "desktop",
+      "url": "https://chenpeisheng.cn/company.html?c=zhishu",
+      "scores": {
+        "performance": 88,
+        "accessibility": 92,
+        "seo": 66,
+        "best-practices": 96
+      },
+      "metrics": {
+        "FCP": "3.0 s",
+        "LCP": "3.0 s",
+        "TBT": "20 ms",
+        "CLS": "0",
+        "TTI": "5.4 s"
+      },
+      "sha1": "6982ef17b3d2"
+    }
+  ]
+}

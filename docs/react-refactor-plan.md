@@ -720,7 +720,12 @@ admin 是本次重构**单位收益最高**的部分：原生 JS 1,033 行的多
   1. **旧版根 HTML 与 js/ 旧模块本日不删**——它们承担三重现役职责：①`REACT_MIGRATED_PAGES=none` 的一键回退产物；②GitHub Pages 备份线的线上交付物；③`file://` 双击本地预览层（M4 前的用户习惯）。方案原文「删除旧 HTML 壳」的完整执行条件（备份线也切 React 产物）尚不满足。
   2. `js/main.js` 第 11 节守卫（CP_AI_REACT 分支）为**长期形态**而非过渡：回退开关存在一天，守卫就有效一天。
   3. `_*.html` 调试探针 7 个留在仓库（构建脚本已排除，不进产物，历史调试档案）。
-- **M5 剩余待办（后续会话）**：真机电池（iOS Safari + 微信内置 + Android Chrome，§5.8 矩阵 + 简历投递/分享卡入口）；Lighthouse 与 M0 基线对照（index 移动档 55 分 / LCP 25.3s 优化目标）；连续一周线上无回归观察（D6 双开语义在生产切换后的延续）；一周后视稳定性决定备份线是否也切 React 产物并执行旧文件物理删除。
+- **Lighthouse 对照验收（N5，2026-11-26 已完成）**：`tests/e2e/perf-post.mjs`（同 M0 脚本口径）对生产 React 版抓 2 轮全量 + index.mobile 追加 3 轮，产物入 `tests/e2e/baseline/lighthouse-post-react/`。结论：
+  - **N5 主验收档（index.mobile）通过**：基线 55 → 实测中位数 61（59/61/61/63，首轮 52 为冷缓存离群值）；LCP 25.3s → ~18–23s（改善 2–7s）。
+  - **TBT 全线改善**（岛水合移出关键路径）：company.desktop 420ms → 10–20ms、company.mobile 250ms → 0–30ms、index.desktop 270ms → 100–120ms。
+  - **方差定级**：resume 新旧版逐字一致（diff=0），其波动（mobile −4~−7 / desktop ±1）即为该环境噪声带；jd.mobile 84–97、company.mobile 79–90 的跨轮摆动证明单轮比较不可判，未发现可复现的硬回归。
+  - **index.desktop LCP 4.9s → ~20s 的指标位移解释**：旧版头像 `src=""` 由 main.js 运行时填（图晚到，成为 LCP 4.9s）；新版 SSR 直出 src（图早渲染）→ LCP 改由 font-swap 后的 heroBio 大文本承担（Google Fonts 异步 CSS 在模拟节流下 ~15s 到达）——首屏实际可见内容提前，指标因「最大元素」换了对象而变大；根治方案（字体自托管/子集化）归后续优化，非迁移回归。
+- **M5 剩余待办（后续会话）**：真机电池（iOS Safari + 微信内置 + Android Chrome，§5.8 矩阵 + 简历投递/分享卡入口）；连续一周线上无回归观察（D6 双开语义在生产切换后的延续）；一周后视稳定性决定备份线是否也切 React 产物并执行旧文件物理删除；Google Fonts 自托管/子集化（mobile LCP ~20s 的真正根治项，独立于迁移）。
 
 ---
 

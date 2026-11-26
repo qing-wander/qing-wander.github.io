@@ -14,6 +14,9 @@
 - **迁移验收链**：Playwright E2E 五套（M1 admin 24 / M2 独立页 63 / M3-A 主页 26 / M3-B AI 面板
   24 / M4 resume 18，合计 155 项）+ 视觉对比（四主题 × 390/680/1024 像素级口径 12/12）+
   resume 单源等价（构建产物与旧链生成物逐字 diff = 0）+ 既有 node:test 289/289 与内容漂移链 9 项全绿。
+- **N5 性能验收（Lighthouse 对照 M0 基线）**：index.mobile 中位数 61 ≥ 基线 55（LCP 25.3s → ~20s）；
+  TBT 全线改善（company.desktop 420ms → 10–20ms，水合移出关键路径）；以逐字一致的 resume 页
+  波动为噪声带参照，未发现可复现回归；产物存 `tests/e2e/baseline/lighthouse-post-react/`。
 - **渐进迁移基建**：`src/`（pages / features / components / lib，zod 契约 + API client 收编
   `window.CP_*` 全局）+ dev-api-server（27 admin 路由 + 静态映射）+ 基线采集（Lighthouse 8 份
   入 `tests/e2e/baseline/`）。
