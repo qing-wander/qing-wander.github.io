@@ -814,6 +814,12 @@ M0–M5 已全部完成并生产切换（线上 React 版运行中，`REACT_MIGR
 - 2026-11-27 线上实测：首页 W-01 仍是旧文案「数字分身问答终端（RAG 接入中）。GitHub Pages 部署」，
   证实线上真人数据走 D1 `site_content` 副本，仓库 JSON 改动未覆盖到 D1。
 - 待办：后台编辑站点数据（或直接改 D1 `site_content`）把同一条目同步为新文案；同步后线上与仓库一致。
+- 2026-11-27 CI 附带修复：W-01 改文案时只重建了 `data/site-data.js`（前端快照），漏了 `functions/lib/site-data.js`
+  （Function 运行时内嵌副本，由 `embed_assets.mjs` 生成）；该副本仍是旧文案，触发 `content-build`
+  「生成物漂移检查」红掉（最近失败 run `0363e9b`，失败步骤即 drift）。已跑 `node scripts/embed_assets.mjs`
+  重新生成并推送 `98026f6`，本地 embed/render_resume/render_work_details/validate/pages/preview/sync/tests
+  全绿。注意三处副本别再混淆：`data/site-data.js`（前端快照，`sync_site_data.py` 管）、
+  `functions/lib/site-data.js`（Function 内嵌，`embed_assets.mjs` 管）、D1 `site_content`（线上真人数据，后台管）。
 
 **T32 · 导航编号撞号（已完成，待部署）**
 
