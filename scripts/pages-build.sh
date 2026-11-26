@@ -133,12 +133,16 @@ done
 
 echo "=== ⑦ React 迁移页面混排（docs/react-refactor-plan.md §6 / M0 起）"
 # 已迁移到 Astro 6 + React 19 的页面清单（相对 dist 根的 URL 路径）。
-#   M0: work/portfolio.html（管道验证，已上线）
-#   M1: admin/index.html login.html（本地/dev 验证通过后，经用户确认再纳入此清单切换生产）
-#   M2 → …
+#   M0: work/portfolio.html（管道验证，2026-11-25 上线）
+#   M1: admin/index.html login.html
+#   M2: jd.html company.html school.html 404.html
+#   M3: index.html（A 分片 SSG 直出 + B 分片 AI 面板 React 岛）
+#   M4: resume.html（单源等价：构建期复用旧链同一 render()，逐字 diff=0）
+# 2026-11-26 生产切换（用户拍板）：全部已迁移页收编默认清单。
+# 回退开关：环境变量 REACT_MIGRATED_PAGES=none 一键回到全旧版行为（渐进迁移期遗留）。
 # 清单为空或 REACT_MIGRATED_PAGES=none 时本段跳过，构建行为与迁移前完全一致；
 # 混排只替换 dist 内对应 URL 的产物，未迁移页面继续走旧静态文件（渐进迁移 / N3 约束）。
-REACT_MIGRATED_PAGES="${REACT_MIGRATED_PAGES:-work/portfolio.html}"
+REACT_MIGRATED_PAGES="${REACT_MIGRATED_PAGES:-work/portfolio.html admin/index.html login.html jd.html company.html school.html 404.html index.html resume.html}"
 if [ -n "$REACT_MIGRATED_PAGES" ] && [ "$REACT_MIGRATED_PAGES" != "none" ]; then
   echo "   · 迁移页：$REACT_MIGRATED_PAGES"
   # pnpm 就绪：Pages 构建镜像 / 本地 / GitHub Actions 均为 Node 22+（corepack 内置）
