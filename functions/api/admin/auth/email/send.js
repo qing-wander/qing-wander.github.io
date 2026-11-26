@@ -10,7 +10,18 @@ import {
   maskEmail, normalizeEmail, randomCode, sendCodeMail,
 } from '../../../../lib/admin-login.js';
 
-export async function onRequestPost({ request, env }) {
+/* 顶层兜底：任何未预期的异常都以明确错误码回传，不再让平台把它压成
+   「error code: 1101 + 发送失败」这种无法排查的表现。 */
+export async function onRequestPost(ctx) {
+  try {
+    return await handlePost(ctx);
+  } catch (e) {
+    const detail = e && e.message ? e.message : String(e);
+    return fail('mail_internal', '后台发信异常：' + detail, 500);
+  }
+}
+
+async function handlePost({ request, env }) {
   const csrf = assertCsrf(request);
   if (csrf) return csrf;
   if (!env.DB) return fail('db_not_bound', '后台没有绑定 D1', 503);
