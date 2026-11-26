@@ -380,6 +380,13 @@ Cloudflare Pages 的密钥类变量保存后不可回读，编辑某一行时如
 2. Pages → 设置 → 变量和密钥 → `RESEND_API_KEY` 重新填入，保存；
 3. **重新部署**（Pages 的环境变量不热更新，必须新部署才注入）→ 接口恢复 200。
 
+**同一次事故还有第二个受害者**：`RESEND_API_KEY` 修好后复测，邮件确实进了 Gmail 收件箱，
+但发件人显示为 **`Portfolio Resume`** —— 这是 `functions/api/deliver.js` 里 `DEFAULT_FROM`
+（`Portfolio Resume <onboarding@resend.dev>`）的兜底值，说明 **`RESEND_FROM` 的值同样是空的**。
+所以两个变量在同一次保存里一起被清掉了。
+最终修法：**在同一次编辑里同时填 `RESEND_API_KEY` 与 `RESEND_FROM`（`陈培胜 <hi@chenpeisheng.cn>`），
+然后一次保存**，再重新部署——只改其中一个行反而会把另一个又抹掉。
+
 **教训（比结论更重要）**：
 
 - 改 Pages 环境变量时**一次只改一行**，改完先确认其它密钥行仍显示「值已加密」，再点保存；

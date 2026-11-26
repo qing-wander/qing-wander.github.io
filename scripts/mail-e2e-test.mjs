@@ -112,7 +112,7 @@ async function main() {
     verify: { token: ch.token, nonce: solved.nonce },
   });
 
-  if (out.status === 200 && out.body && out.body.ok) {
+  if ((out.status === 200 || out.status === 201) && out.body && out.body.ok) {
     console.log(`✓ 投递成功 HTTP ${out.status}`);
     console.log('  id: ' + (out.body.id || '(未返回)'));
     console.log('  to: ' + (out.body.to || args.to));
