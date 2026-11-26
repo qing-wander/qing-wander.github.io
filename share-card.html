@@ -1,0 +1,524 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="archive">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>作品集分享卡 · 陈培胜</title>
+<meta name="robots" content="noindex,nofollow" />
+<link rel="stylesheet" href="/css/fonts.css" />
+<script>
+/* 主题引导：与主页 ThemeGuard 同逻辑，保证分享卡跟随主页当前主题。
+   优先级：?theme= > localStorage 手动锁定 > /api/theme > archive */
+(function () {
+  var T = ['archive', 'blueprint', 'newsprint', 'noir'];
+  var qs = new URLSearchParams(location.search).get('theme');
+  var manual = null;
+  try {
+    if (localStorage.getItem('portfolio_theme_mode') === 'manual')
+      manual = localStorage.getItem('portfolio_theme_manual');
+  } catch (e) {}
+  var t = T.indexOf(qs) >= 0 ? qs : (T.indexOf(manual) >= 0 ? manual : null);
+  if (t) { document.documentElement.setAttribute('data-theme', t); return; }
+  try {
+    var x = new XMLHttpRequest();
+    x.open('GET', '/api/theme', true);
+    x.onreadystatechange = function () {
+      if (x.readyState === 4 && x.status === 200) {
+        try {
+          var name = (JSON.parse(x.responseText).theme || '').toLowerCase();
+          if (T.indexOf(name) >= 0) document.documentElement.setAttribute('data-theme', name);
+        } catch (e) {}
+      }
+    };
+    x.send();
+  } catch (e) {}
+})();
+</script>
+<style>
+:root, [data-theme="archive"] {
+  --paper:#F3EEE2; --card:#FFFCF4; --ink:#141311; --ink-soft:#4A463F;
+  --orange:#FF5A1E; --blue:#2B4BE0; --green:#1FA658;
+  --ink-rgb:20,19,17; --paper-rgb:243,238,226; --accent-text:#fff;
+}
+[data-theme="blueprint"] {
+  --paper:#E9F1F8; --card:#F5FAFE; --ink:#123A5C; --ink-soft:#48678A;
+  --orange:#E03E36; --blue:#1D6FB8; --green:#2E8B57;
+  --ink-rgb:18,58,92; --paper-rgb:233,241,248; --accent-text:#fff;
+}
+[data-theme="newsprint"] {
+  --paper:#F4EDDA; --card:#FAF5E6; --ink:#1C1812; --ink-soft:#59503E;
+  --orange:#C4112C; --blue:#1E3A5F; --green:#2F7D46;
+  --ink-rgb:28,24,18; --paper-rgb:244,237,218; --accent-text:#fff;
+}
+[data-theme="noir"] {
+  --paper:#100E1A; --card:#1A1729; --ink:#ECE7FF; --ink-soft:#8F87AD;
+  --orange:#FF3D8F; --blue:#22D3EE; --green:#9EE86B;
+  --ink-rgb:236,231,255; --paper-rgb:16,14,26; --accent-text:#1A0A14;
+}
+* { box-sizing:border-box; }
+html,body { margin:0; padding:0; }
+body {
+  font-family:"Noto Sans SC","PingFang SC","Microsoft YaHei","Hiragino Sans GB",sans-serif;
+  background:var(--paper); color:var(--ink);
+  min-height:100vh; -webkit-font-smoothing:antialiased;
+}
+
+/* ── 工具栏（不进入导出图）── */
+.bar {
+  position:sticky; top:0; z-index:20;
+  display:flex; flex-wrap:wrap; align-items:center; gap:10px;
+  padding:12px 18px; background:var(--paper);
+  border-bottom:1px solid rgba(var(--ink-rgb),.14);
+}
+.bar .brand { font-weight:800; font-size:15px; letter-spacing:.02em; margin-right:6px; }
+.bar .brand small { font-weight:500; color:var(--ink-soft); font-size:11px; margin-left:6px; }
+.seg { display:inline-flex; border:1.5px solid var(--ink); border-radius:6px; overflow:hidden; }
+.seg button {
+  font:inherit; font-size:12px; font-weight:700; cursor:pointer;
+  padding:7px 12px; border:0; background:transparent; color:var(--ink);
+}
+.seg button.on { background:var(--ink); color:var(--paper); }
+.seg button + button { border-left:1.5px solid var(--ink); }
+.bar .spacer { flex:1 1 auto; }
+.btn {
+  font:inherit; font-size:12px; font-weight:800; cursor:pointer;
+  padding:8px 14px; border:1.5px solid var(--ink); border-radius:6px;
+  background:var(--ink); color:var(--paper);
+}
+.btn.ghost { background:transparent; color:var(--ink); }
+.btn:disabled { opacity:.55; cursor:not-allowed; }
+.theme-dots { display:inline-flex; gap:6px; }
+.theme-dots button {
+  width:16px; height:16px; border-radius:50%; cursor:pointer;
+  border:2px solid var(--ink); padding:0; opacity:.55;
+}
+.theme-dots button.on { opacity:1; transform:scale(1.18); }
+.theme-dots button[data-t="archive"]{background:#FF5A1E}
+.theme-dots button[data-t="blueprint"]{background:#1D6FB8}
+.theme-dots button[data-t="newsprint"]{background:#C4112C}
+.theme-dots button[data-t="noir"]{background:#FF3D8F}
+.hint { font-size:11px; color:var(--ink-soft); }
+
+/* ── 预览台 ── */
+.stage-wrap {
+  position:relative; display:flex; justify-content:center;
+  padding:26px 12px 60px; overflow:hidden;
+}
+.stage { position:relative; flex:none; align-self:flex-start; transform-origin:top center; }
+
+/* ── 卡片：固定 1080 基准像素，导出所见即所得 ── */
+.card {
+  position:relative; width:1080px; height:1080px; overflow:hidden;
+  background:var(--paper); color:var(--ink);
+  padding:44px 46px 40px; display:flex; flex-direction:column;
+  border:3px solid var(--ink);
+}
+.card--portrait { height:1440px; }
+/* 细网格背景 */
+.card::before {
+  content:""; position:absolute; inset:0; z-index:0; pointer-events:none;
+  background-image:
+    repeating-linear-gradient(to right, rgba(var(--ink-rgb),.055) 0 1px, transparent 1px 42px),
+    repeating-linear-gradient(to bottom, rgba(var(--ink-rgb),.055) 0 1px, transparent 1px 42px);
+}
+.card > * { position:relative; z-index:1; }
+/* 四角标记 */
+.corner { position:absolute; width:34px; height:34px; z-index:2; border-color:var(--orange); border-style:solid; border-width:0; }
+.corner.tl { top:14px; left:14px; border-top-width:5px; border-left-width:5px; }
+.corner.tr { top:14px; right:14px; border-top-width:5px; border-right-width:5px; }
+.corner.bl { bottom:14px; left:14px; border-bottom-width:5px; border-left-width:5px; }
+.corner.br { bottom:14px; right:14px; border-bottom-width:5px; border-right-width:5px; }
+
+/* 顶栏 */
+.c-top { display:flex; align-items:flex-start; justify-content:space-between; }
+.c-id { display:flex; align-items:center; gap:16px; }
+.c-logo {
+  width:96px; height:96px; background:var(--ink); color:var(--paper);
+  display:flex; align-items:center; justify-content:center;
+  font-weight:900; font-size:44px; letter-spacing:-3px;
+  box-shadow:7px 7px 0 var(--blue); flex:none;
+}
+.c-logo i { color:var(--orange); font-style:normal; }
+.c-idname { font-weight:900; font-size:23px; letter-spacing:.12em; line-height:1.25; }
+.c-idsub { font-size:15px; color:var(--ink-soft); margin-top:6px; }
+.c-hiring {
+  display:inline-flex; align-items:center; gap:10px;
+  border:3px solid var(--ink); background:var(--card);
+  padding:12px 18px; font-weight:800; font-size:19px; letter-spacing:.03em;
+}
+.c-hiring .dot { width:14px; height:14px; border-radius:50%; background:var(--green); box-shadow:0 0 0 4px rgba(31,166,88,.18); }
+
+/* 编号行 */
+.c-nums { display:flex; gap:10px; margin-top:20px; flex-wrap:wrap; }
+.c-nums span {
+  border:2px solid var(--ink); padding:7px 12px; font-size:14px;
+  font-family:"JetBrains Mono","Consolas",monospace; font-weight:700; letter-spacing:.04em;
+}
+.c-nums .rec { color:var(--orange); }
+
+/* 标题区 */
+.c-title { margin-top:26px; }
+.c-sec { font-family:"JetBrains Mono","Consolas",monospace; font-weight:700; font-size:17px; color:var(--blue); letter-spacing:.06em; }
+.c-sec b { color:var(--orange); }
+.c-sec em { color:var(--ink-soft); font-style:normal; }
+.c-name {
+  font-weight:900; font-size:124px; line-height:1.02; letter-spacing:-.02em;
+  margin:8px 0 2px -6px; white-space:nowrap;
+}
+.c-name-en { font-weight:800; font-size:30px; letter-spacing:.34em; color:var(--blue); margin-bottom:20px; }
+.c-role { display:flex; align-items:stretch; gap:18px; }
+.c-role .zh {
+  background:var(--orange); color:var(--accent-text); font-weight:900; font-size:38px;
+  padding:16px 24px; box-shadow:6px 6px 0 var(--ink);
+}
+.c-role .en { display:flex; align-items:center; font-family:"JetBrains Mono","Consolas",monospace; font-weight:800; font-size:17px; color:var(--ink-soft); letter-spacing:.08em; line-height:1.35; }
+.c-role .en::before { content:""; width:5px; height:100%; background:var(--blue); margin-right:16px; }
+
+/* 简介 */
+.c-bio { margin-top:22px; font-size:22px; line-height:1.62; color:var(--ink-soft); }
+.c-bio strong { color:var(--ink); font-weight:800; }
+
+/* 数据卡 */
+.c-stats { display:grid; grid-template-columns:repeat(4,1fr); gap:18px; margin-top:24px; padding-right:6px; padding-bottom:6px; }
+.c-stat { border:2.5px solid var(--ink); background:var(--card); padding:14px 16px 12px; box-shadow:4px 4px 0 var(--ink); }
+.c-stat:last-child { box-shadow:none; }
+.c-stat .n { font-weight:900; font-size:56px; line-height:1; color:var(--blue); font-family:"JetBrains Mono","Consolas",monospace; }
+.c-stat:nth-child(1) .n, .c-stat.hot .n { color:var(--orange); }
+.c-stat .l { font-size:16px; color:var(--ink-soft); margin-top:8px; }
+
+/* FOCUS 标签（仅竖版） */
+.c-focus { display:flex; align-items:center; gap:10px; margin-top:26px; flex-wrap:wrap; }
+.c-focus .k { font-family:"JetBrains Mono","Consolas",monospace; font-weight:800; font-size:16px; letter-spacing:.06em; margin-right:6px; }
+.c-focus .tag { border:2px solid var(--ink); padding:7px 12px; font-size:15px; font-weight:700; background:var(--card); }
+.c-focus .tag:nth-child(2) { background:var(--orange); color:var(--accent-text); border-color:var(--orange); }
+.c-focus .tag:nth-child(3) { background:var(--blue); color:#fff; border-color:var(--blue); }
+
+/* 目录（仅竖版） */
+.c-index { margin-top:26px; border-top:3px solid var(--ink); border-bottom:3px solid var(--ink); padding:16px 4px; display:grid; grid-template-columns:1fr 1fr; column-gap:40px; row-gap:10px; }
+.c-index .row { display:flex; align-items:baseline; justify-content:space-between; font-size:19px; }
+.c-index .row .no { color:var(--orange); font-weight:900; font-family:"JetBrains Mono","Consolas",monospace; margin-right:10px; }
+.c-index .row .en { color:var(--ink-soft); font-family:"JetBrains Mono","Consolas",monospace; font-size:14px; letter-spacing:.05em; }
+
+/* 二维码区 */
+.c-qr { margin-top:auto; border:3px solid var(--ink); background:var(--card); padding:18px 20px; display:flex; gap:24px; align-items:center; }
+.c-qrbox { width:250px; height:250px; flex:none; border:2px solid var(--ink); background:#fff; padding:12px; display:flex; align-items:center; justify-content:center; }
+#qrcode { width:100%; height:100%; display:flex; align-items:center; justify-content:center; }
+#qrcode img, #qrcode canvas { width:100% !important; height:100% !important; image-rendering:pixelated; }
+.c-qrinfo { flex:1 1 auto; min-width:0; }
+.c-signal { font-family:"JetBrains Mono","Consolas",monospace; font-weight:800; font-size:16px; color:var(--blue); letter-spacing:.05em; }
+.c-cta { font-weight:900; font-size:44px; line-height:1.18; margin:8px 0 4px; }
+.c-cta-en { font-family:"JetBrains Mono","Consolas",monospace; font-size:15px; letter-spacing:.06em; color:var(--ink-soft); }
+.c-domain { display:inline-block; background:var(--ink); color:var(--card); font-family:"JetBrains Mono","Consolas",monospace; font-weight:800; font-size:24px; padding:9px 16px; margin-top:14px; letter-spacing:.03em; }
+.c-scan { font-size:15px; color:var(--orange); font-weight:700; margin-top:12px; }
+.c-qrinfo .meta-line { font-size:14px; color:var(--ink-soft); margin-top:8px; }
+
+/* 页脚 */
+.c-foot { display:flex; align-items:center; justify-content:space-between; margin-top:18px; font-family:"JetBrains Mono","Consolas",monospace; font-size:14px; color:var(--ink-soft); letter-spacing:.03em; }
+.c-foot b { color:var(--ink); }
+
+/* 方版局部收紧：方版不放 FOCUS / 目录，给二维码区腾出空间 */
+.card--square .c-name { font-size:112px; }
+.card--square .c-qrbox { width:230px; height:230px; }
+.card--square .c-cta { font-size:40px; }
+.card--square .c-focus, .card--square .c-index { display:none; }
+.card--square .c-bio { font-size:20px; }
+.card--square .c-stats { margin-top:20px; }
+.card--square .c-qr { padding:14px 18px; gap:20px; }
+.card--square .c-qrbox { width:200px; height:200px; }
+.card--square .c-cta { font-size:36px; }
+.card--square .c-domain { font-size:20px; padding:7px 12px; margin-top:10px; }
+.card--square .c-foot { margin-top:12px; font-size:12px; }
+
+/* 导出时对钩子：临时移除缩放与工具栏影响 */
+</style>
+</head>
+<body>
+
+<div class="bar">
+  <div class="brand">作品集分享卡 <small>数据 / 主题 / 二维码实时生成</small></div>
+  <div class="seg" role="group" aria-label="选择版式">
+    <button type="button" data-size="portrait" class="on">竖版 · 朋友圈</button>
+    <button type="button" data-size="square">方形 · 名片</button>
+  </div>
+  <div class="theme-dots" role="group" aria-label="切换主题">
+    <button type="button" data-t="archive" title="档案纸" class="on"></button>
+    <button type="button" data-t="blueprint" title="工程蓝图"></button>
+    <button type="button" data-t="newsprint" title="新闻纸"></button>
+    <button type="button" data-t="noir" title="午夜霓虹"></button>
+  </div>
+  <span class="hint" id="urlHint">二维码指向当前站点</span>
+  <div class="spacer"></div>
+  <button type="button" class="btn" id="exportBtn">导出图片 ↓</button>
+  <button type="button" class="btn ghost" id="homeBtn">返回主页</button>
+</div>
+
+<div class="stage-wrap" id="stageWrap">
+  <div class="stage" id="stage">
+    <!-- 卡片：竖版 -->
+    <div class="card card--portrait" id="card">
+      <span class="corner tl"></span><span class="corner tr"></span>
+      <span class="corner bl"></span><span class="corner br"></span>
+
+      <div class="c-top">
+        <div class="c-id">
+          <div class="c-logo" id="cLogo">CP<i>.</i></div>
+          <div>
+            <div class="c-idname" id="cIdName">CHEN PEISHENG</div>
+            <div class="c-idsub" id="cIdSub">5 年 Agent 工程师 · 个人档案</div>
+          </div>
+        </div>
+        <div class="c-hiring"><span class="dot"></span><span id="cHiring">开放机会 HIRING</span></div>
+      </div>
+
+      <div class="c-nums" id="cNums"></div>
+
+      <div class="c-title">
+        <div class="c-sec" id="cSec">SEC.00 <b>//</b> CANDIDATE DOSSIER <em>· 求职作品集 2026</em></div>
+        <div class="c-name" id="cName">陈培胜</div>
+        <div class="c-name-en" id="cNameEn">CHEN PEISHENG</div>
+        <div class="c-role">
+          <div class="zh" id="cRole">AI Agent 工程师</div>
+          <div class="en" id="cRoleEn">AI AGENT<br>ENGINEER</div>
+        </div>
+      </div>
+
+      <div class="c-bio" id="cBio"></div>
+
+      <div class="c-stats" id="cStats"></div>
+
+      <div class="c-focus" id="cFocus"></div>
+      <div class="c-index" id="cIndex"></div>
+
+      <div class="c-qr">
+        <div class="c-qrbox"><div id="qrcode"></div></div>
+        <div class="c-qrinfo">
+          <div class="c-signal">SIGNAL // SCAN TO OPEN</div>
+          <div class="c-cta">扫码查看<br>完整作品集</div>
+          <div class="c-cta-en">OPEN THE FULL DOSSIER</div>
+          <div class="c-domain" id="cDomain">chenpeisheng.cn</div>
+          <div class="c-scan">微信 / 相机扫一扫，或长按识别二维码</div>
+          <div class="meta-line" id="cQrMeta"></div>
+        </div>
+      </div>
+
+      <div class="c-foot">
+        <span>FILE END — EOF</span>
+        <span id="cFootMid">OPEN TO WORK · 深圳 / 广州 / 远程</span>
+        <span id="cCopy">© 2026 CHEN PEISHENG</span>
+        <b id="cMark">CP.</b>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/data/site-data.js"></script>
+<script src="/assets/vendor/qrcode.min.js"></script>
+<script>
+(function () {
+  'use strict';
+  var $ = function (id) { return document.getElementById(id); };
+  var card = $('card'), stage = $('stage'), wrap = $('stageWrap');
+  var d = window.SITE_DATA || window.__SITE_DATA__ || {};
+  var hero = d.hero || {}, meta = d.meta || {}, about = d.about || {}, contact = d.contact || {};
+  var footer = meta.footer || {};
+
+  /* ── 当前访问地址：二维码目标（实时）── */
+  var target;
+  try {
+    if (/^https?:$/.test(location.protocol)) target = location.origin + location.pathname.replace(/share-card\.html$/, '');
+    else target = 'https://chenpeisheng.cn/';
+  } catch (e) { target = 'https://chenpeisheng.cn/'; }
+  var host = (function () { try { return new URL(target).host.replace(/^www\./, ''); } catch (e) { return 'chenpeisheng.cn'; } })();
+  $('cDomain').textContent = host;
+  $('urlHint').textContent = '二维码 → ' + host;
+
+  /* ── 文本填充（全部来自 site-data）── */
+  var nameCn = String(hero.nameCn || '');
+  var nameEn = String(hero.nameEn || 'CHEN PEISHENG');
+  $('cName').textContent = nameCn;
+  $('cNameEn').textContent = nameEn;
+  $('cRole').textContent = String(hero.role || '');
+  $('cRoleEn').innerHTML = String(hero.roleEn || '').split(/\s+/).join('<br>');
+  $('cIdName').textContent = nameEn;
+  var mark = String(meta.brandMark || 'CP');
+  $('cLogo').innerHTML = mark.slice(0, 2) + '<i>.</i>';
+  $('cMark').textContent = mark + '.';
+  $('cCopy').textContent = footer.copyright || ('© ' + new Date().getFullYear() + ' ' + nameEn);
+
+  var tag0 = (hero.tags && hero.tags[0] && hero.tags[0].text) || '5 年 Agent 工程师';
+  $('cIdSub').textContent = tag0 + ' · 个人档案';
+  $('cHiring').textContent = (meta.statusPill || '开放新机会') + ' HIRING';
+  $('cFootMid').textContent = String(hero.statusMeta || 'OPEN TO WORK · 深圳 / 广州 / 远程').replace(/随时到岗\s*·\s*/, '');
+
+  /* 编号行：corners 动态渲染，方版隐藏坐标那条 */
+  var corners = (hero.corners || []).slice();
+  function renderNums() {
+    var list = currentSize === 'square' ? corners.filter(function (s) { return s.indexOf('°') < 0; }) : corners;
+    $('cNums').innerHTML = list.map(function (s) {
+      var rec = /REC/.test(s);
+      return '<span class="' + (rec ? 'rec' : '') + '">' + s + '</span>';
+    }).join('');
+  }
+
+  /* 简介：竖版完整 bio；方版取首句 + 方向 */
+  var bio = String(hero.bio || '').trim();
+  var lead = bio.split('：')[0];
+  var dirField = ((hero.idcard && hero.idcard.fields) || []).filter(function (f) { return /方向|ROLE/.test(f.dt || ''); })[0];
+  var dir = dirField ? String(dirField.dd || '') : '';
+  var shortBio = lead + (dir ? '。方向：' + dir + ' / 企业 AI 基建。' : '。');
+  function renderBio() {
+    $('cBio').innerHTML = currentSize === 'square'
+      ? shortBio
+      : bio.replace(/(主导 6 套系统从 0 到 1|不停机、可回滚、最小改动)/g, '<strong>$1</strong>');
+  }
+
+  /* 数据卡：从 about.stats + projects + 目录长度动态生成 */
+  var sections = [
+    ['about','关于我','ABOUT'], ['objective','求职意向','TARGET'],
+    ['education','教育经历','EDUCATION'], ['experience','工作经历','EXPERIENCE'],
+    ['projects','项目作品','WORKS'], ['skills','专业技能','SKILLS'],
+    ['awards','获奖证书','AWARDS'], ['contact','联系方式','CONTACT']
+  ].filter(function (s) { return d[s[0]]; });
+  var stats = (about.stats || []).slice();
+  function statOf(labelRe) {
+    var s = stats.filter(function (x) { return labelRe.test(x.label || ''); })[0];
+    return s ? String(s.count) + (s.suffix || '') : null;
+  }
+  var cards = [
+    { n: statOf(/经验/) || '05', l: '年工程经验', hot: true },
+    { n: statOf(/0→1|系统/) || '06', l: '套 0→1 系统' },
+    { n: String((d.projects || []).length || '05').padStart(2, '0'), l: '个项目作品' },
+    { n: String(sections.length).padStart(2, '0'), l: 'SEC 完整档案' }
+  ];
+  function renderStats() {
+    $('cStats').innerHTML = cards.map(function (c) {
+      return '<div class="c-stat' + (c.hot ? ' hot' : '') + '"><div class="n">' + c.n + '</div><div class="l">' + c.l + '</div></div>';
+    }).join('');
+  }
+
+  /* FOCUS 标签：从 marquee 派生，改 marquee 卡片即变 */
+  var focusTags = String(d.marquee || '').split('✦').map(function (s) { return s.trim(); })
+    .filter(function (s) { return s && !/OPEN TO WORK/i.test(s); }).slice(0, 6);
+  function renderFocus() {
+    $('cFocus').innerHTML = '<span class="k">FOCUS //</span>' + focusTags.map(function (t) {
+      return '<span class="tag">' + t + '</span>';
+    }).join('') + '<span class="tag">' + nameEn + '</span>';
+  }
+  function renderIndex() {
+    $('cIndex').innerHTML = sections.map(function (s, i) {
+      return '<div class="row"><span><span class="no">' + String(i + 1).padStart(2, '0') + '</span>' + s[1] + '</span><span class="en">' + s[2] + '</span></div>';
+    }).join('');
+  }
+
+  /* 二维码下方说明 */
+  var mailCard = (contact.cards || []).filter(function (x) { return /^mailto:/.test(x.href || ''); })[0];
+  $('cQrMeta').textContent = sections.length + ' 个章节 · ' + (d.projects || []).length + ' 个项目 · 完整技术档案'
+    + (mailCard ? ' · ' + mailCard.value : '');
+
+  /* ── 二维码：按当前地址实时生成 ── */
+  function buildQR() {
+    var box = $('qrcode');
+    box.innerHTML = '';
+    if (typeof QRCode === 'undefined') { box.textContent = host; return; }
+    try {
+      new QRCode(box, {
+        text: target, width: 226, height: 226,
+        colorDark: '#141311', colorLight: '#ffffff',
+        correctLevel: QRCode.CorrectLevel.M
+      });
+    } catch (e) { box.textContent = host; }
+  }
+
+  /* ── 版式 ── */
+  var currentSize = 'portrait';
+  function applySize() {
+    card.className = 'card card--' + currentSize;
+    renderNums(); renderBio();
+    fit();
+    setTimeout(buildQR, 0);
+  }
+  function fit() {
+    var avail = Math.min(wrap.clientWidth - 24, 760);
+    var scale = Math.min(1, avail / 1080);
+    stage.style.transform = 'scale(' + scale + ')';
+    wrap.style.height = (card.offsetHeight * scale + 40) + 'px';
+  }
+  document.querySelectorAll('[data-size]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      document.querySelectorAll('[data-size]').forEach(function (x) { x.classList.remove('on'); });
+      b.classList.add('on');
+      currentSize = b.getAttribute('data-size');
+      applySize();
+    });
+  });
+
+  /* ── 主题切换：写回 localStorage，与主页同步 ── */
+  function markTheme(t) {
+    document.documentElement.setAttribute('data-theme', t);
+    document.querySelectorAll('[data-t]').forEach(function (b) { b.classList.toggle('on', b.getAttribute('data-t') === t); });
+  }
+  document.querySelectorAll('[data-t]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var t = b.getAttribute('data-t');
+      markTheme(t);
+      try {
+        localStorage.setItem('portfolio_theme_mode', 'manual');
+        localStorage.setItem('portfolio_theme_manual', t);
+      } catch (e) {}
+    });
+  });
+  markTheme(document.documentElement.getAttribute('data-theme') || 'archive');
+
+  /* ── 导出：复用 html2canvas ── */
+  function loadScript(src, cb, fail) {
+    var s = document.createElement('script');
+    s.src = src; s.onload = cb; s.onerror = fail;
+    document.head.appendChild(s);
+  }
+  function download(blob, name) {
+    var u = URL.createObjectURL(blob), a = document.createElement('a');
+    a.href = u; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(u); }, 4000);
+  }
+  function exportImage() {
+    var btn = $('exportBtn'), old = btn.textContent;
+    btn.disabled = true; btn.textContent = '正在生成…';
+    function run() {
+      if (document.fonts && document.fonts.ready) document.fonts.ready.then(shoot); else shoot();
+    }
+    function shoot() {
+      var prevTransform = stage.style.transform;
+      stage.style.transform = 'none';
+      html2canvas(card, {
+        scale: 1, useCORS: true, backgroundColor: null, logging: false,
+        onclone: function (doc) { var s = doc.getElementById('stage'); if (s) s.style.transform = 'none'; }
+      }).then(function (cv) {
+        stage.style.transform = prevTransform;
+        cv.toBlob(function (blob) {
+          if (!blob) throw new Error('toBlob 返回空');
+          download(blob, nameCn + '-作品集分享卡-' + (currentSize === 'portrait' ? '竖版' : '方形') + '.png');
+          btn.disabled = false; btn.textContent = old;
+        }, 'image/png');
+      }).catch(function (err) {
+        stage.style.transform = prevTransform;
+        btn.disabled = false; btn.textContent = old;
+        alert('导出失败：' + (err && err.message ? err.message : '未知错误'));
+      });
+    }
+    if (window.html2canvas) run();
+    else loadScript('/assets/vendor/html2canvas.min.js?v=20261118a', run, function () {
+      btn.disabled = false; btn.textContent = old;
+      alert('图片组件加载失败，请检查网络后重试');
+    });
+  }
+  $('exportBtn').addEventListener('click', exportImage);
+  $('homeBtn').addEventListener('click', function () { location.href = target; });
+  window.addEventListener('resize', fit);
+
+  /* ── 初始化 ── */
+  renderStats(); renderFocus(); renderIndex();
+  applySize();
+})();
+</script>
+</body>
+</html>
