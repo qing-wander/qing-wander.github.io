@@ -823,6 +823,11 @@ M0–M5 已全部完成并生产切换（线上 React 版运行中，`REACT_MIGR
 | 3D 桌宠（R-1） | ⏳ 待真机：GLB 请求 200、WebGL 可用，但自动化环境 `model` 未就绪；需本地浏览器确认模型加载、坐姿/口型、皮肤音色联动 |
 | JD 匹配 | ✅ 正常：示例「AI Agent 工程师」61/100，1 覆盖 / 7 部分 / 0 缺口，证据可回溯，0.8s，无报错 |
 | 留言墙 | 18 条内容在位；Turnstile 仍无 challenge iframe（T28 复现） |
+| 接口守卫只读分支（11-27 补测） | ✅ 各写接口的 400/403/404 守卫均在写库/发信前拦截，未产生写操作：`company-social` 无设备头 `device_required`、坏 JSON `bad_request`、缺档案 id、未知 action；`wall` 无设备头、坏 JSON、空文本、过短文本（<2 字）；`variant` 坏 JSON `bad_json`、无改写令牌 `rewrite_forbidden`；`visits` 坏 JSON、缺 visitor id；`secure-asset` 参数格式非法 `bad_request`、格式合法但申请不存在 `not_found` 404 |
+| 后台接口守卫（11-27 补测） | ✅ `stats/messages/qa/config/devices/export/site-content/theme/gender/greeting/voice/kb` 未登录一律 401；业务功能待验证码登录后端到端验证 |
+| 404 / JD 页（11-27 补测） | ✅ 404 页回主页 / 简历 / 邮件三入口在位；`/jd` 三个示例标签（AI Agent 工程师、Java 后端金融、AI 解决方案）与字数计数、规则文案在位；本站静态资源全 200，console 里那条 404 为 Turnstile 外部子资源噪音（T28 连带） |
+| Hero 计数（11-27 补测） | ✅ 目标值 5 年 / 5 段 / 6 套 / 50 万+；自动化离屏时数字滚动动画未触发停在 0，滚动进视口后正确计数，非数据缺陷 |
+| 音色接口（11-27 补测） | ✅ `/api/voice` GET 200，默认音色 101001「智瑜」；语音切换按钮动态渲染在位，自动播放策略下的真实发声留真机复核 |
 | 公司 / 学校 / 案例页 | ✅ 渲染正常，控制台 0 error |
 
 ---
