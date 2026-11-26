@@ -44,8 +44,9 @@ try {
   // 名单当前仅 1 人（杨胜）；旧版 main.js 快照渲染同样 1 卡 —— 断新旧一致而非固定 >=3
   check('推荐的人（名单现 1 人，新旧一致）', st.people === 1);
   check('JSON-LD 直出', st.seo);
-  // 旧版 syncSectionLayout 实际行为：hero 也是 section[id] 占 01，板块重排 02-11，博客外链保持 11（旧版 8878 实测一致）
-  check('导航编号与旧版一致', st.navNos.join('') === '0203040506070809101111');
+  // syncSectionLayout 只对「有对应导航项的可见板块」重排序号：about…wall 为 01–10，
+  // 博客是外链、不参与重排，保持 11；hero / footerPeople 不占序号（T32 修复撞号）。
+  check('导航编号连续不撞号', st.navNos.join('') === '0102030405060708091011');
   check('公司档案徽章桥接', await page.evaluate(() => document.querySelectorAll('.exp-badge').length === 4));
   check('教育档案链接', await page.evaluate(() => !!document.querySelector('.edu-school-link')));
 
