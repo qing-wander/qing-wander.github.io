@@ -195,9 +195,12 @@ node scripts/mail-e2e-test.mjs --to <自己的邮箱>   # 期望 200，且邮件
 完整诊断、选型与 MX 迁移步骤见 [email-deliverability.md](email-deliverability.md)，
 迁移前后用 `node scripts/mail-dns-audit.mjs [--expect feishu]` 体检。
 
-**该上游问题已于 2026-11-26 切换完成**：MX 已指向飞书（mx1/2/3.feishu.cn），`hi@` 在飞书能收能发，
-Cloudflare Email Routing 已停用。剩两件收尾：① 飞书后台启用 DKIM（需超级管理员账号，当前登录账号无权限）；
-② DMARC 观察满 14 天后从 `p=none` 升到 `p=quarantine`。详见 email-deliverability.md §11。
+**该上游问题已于 2026-11-26 切换完成，收尾于 2026-11-27 全部做完**：MX 已指向飞书
+（mx1/2/3.feishu.cn），`hi@` 在飞书能收能发，Cloudflare Email Routing 已停用；
+飞书 DKIM 实测本就 PASS（selector `feishu2611261416`，此前「需超管启用」是误判），
+DMARC 已升 `p=quarantine`，根域 SPF 收敛为只授权飞书，Resend 旧 key 已清理。
+体检 `--expect feishu` 为 10 通过 / 0 告警 / 0 致命，改完复测投递 `201` 且三项认证全 pass。
+详见 [email-deliverability.md](email-deliverability.md) §11。
 
 ---
 

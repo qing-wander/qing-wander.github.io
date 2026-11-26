@@ -1,19 +1,21 @@
 # 域名邮箱与发信信誉：体检、选型与迁移 Runbook
 
-> 对象：`chenpeisheng.cn`（DNS 托管 Cloudflare，收信走 Email Routing 转发到 QQ / Gmail）
+> 对象：`chenpeisheng.cn`（DNS 托管 Cloudflare；收信已由 Email Routing 转发改为飞书邮箱直收）
 > 关联代码：`functions/api/deliver.js`、`functions/lib/wall-notify.js`、`functions/lib/admin-login.js`（均通过 Resend 发信）
 > 体检工具：`node scripts/mail-dns-audit.mjs [--expect feishu|tencent|google]`
 > 链路复测：`node scripts/mail-e2e-test.mjs --to <某邮箱>`（自动过 PoW，等价于真人点「自动投递」）
-> 最后更新：2026-11-26（飞书已切换，见 §11）
+> 最后更新：2026-11-27（迁移与收尾全部完成，见 §11）
 
 ---
 
 ## 0. 结论先行
 
-> **2026-11-27 更新：方案已落地并验收。** `chenpeisheng.cn` 的 MX 已切到飞书（mx1/2/3.feishu.cn），
+> **2026-11-27 更新：方案已落地并验收，收尾清单已全部完成。** `chenpeisheng.cn` 的 MX 已切到飞书（mx1/2/3.feishu.cn），
 > `hi@chenpeisheng.cn` 能收能发，Cloudflare Email Routing 已停用；
 > **DKIM 双通道均 PASS**（飞书 selector `feishu2611261416` + Resend），
-> DMARC 已从 `p=none` 升到 **`p=quarantine`**。
+> DMARC 已从 `p=none` 升到 **`p=quarantine`**，根域 SPF 已收敛为只授权飞书；
+> 改完后复测投递 `201`，Gmail 侧 `spf/dkim/dmarc` 三项全 pass 且落在收件箱。
+> 体检脚本：`--expect feishu` → **通过 10 · 告警 0 · 致命 0**。
 > 教训与事故复盘见 §11，务必读一遍——同一个坑很容易再踩。
 
 1. **现在这套不是"域名邮箱"，是"域名收件箱 + 借别人的身份发信"。** Cloudflare Email Routing 只负责收，没有 SMTP，永远发不了信；你在 QQ / Gmail 点回复，发件人就是 QQ / Gmail 地址，跟 `chenpeisheng.cn` 没有关系。
@@ -326,7 +328,7 @@ node scripts/mail-dns-audit.mjs --expect feishu
 | 项目 | 实测值（2026-11-26 15:00 前后） | 判断 |
 |---|---|---|
 | MX | `1 mx1.feishu.cn` / `5 mx2.feishu.cn` / `10 mx3.feishu.cn` | ✅ 已切飞书，Cloudflare 那三条 MX 已被移除（Email Routing 停用） |
-| 根域 TXT | `v=spf1 include:_netblocks.m.feishu.cn include:amazonses.com -all` | ✅ 飞书已加；`amazonses.com` 是 Resend 的底层，**可留可删**（见 11.4） |
+| 根域 TXT | `v=spf1 include:_netblocks.m.feishu.cn -all`（11-26 原值还含 `include:amazonses.com`，11-27 已删） | ✅ 只授权飞书一家，收窄到最小；删后复测见 11.7 |
 | 域名验证 | `verification-code-site-App_feishu=3jsD2sl5p9re0SiA5RW1` | ✅ 飞书域名验证已过 |
 | DMARC | `v=DMARC1; p=quarantine; rua=mailto:hi@chenpeisheng.cn; fo=1; adkim=r; aspf=r` | ✅ 2026-11-27 由 `p=none` 升为 `quarantine` |
 | DKIM | 飞书 selector `feishu2611261416`（后台显示「已启用」） | ✅ 实测 **PASS**，见 11.2 订正 |
@@ -407,9 +409,10 @@ Cloudflare Pages 的密钥类变量保存后不可回读，编辑某一行时如
 
 ### 11.4 两处可选的收尾建议
 
-1. **根域 SPF 里的 `include:amazonses.com` 可以删**。Resend 的发信信封域是 `send.chenpeisheng.cn`，
-   它自己那条 SPF 已经覆盖；根域再 include 一次 SES 全池，等于把「谁有权代表 `chenpeisheng.cn` 发信」
-   扩大到整个 SES 共享池，收益为零、面子上不干净。（删之前先跑一次 11.3 的复测，确认 DKIM 仍 pass。）
+1. **根域 SPF 里的 `include:amazonses.com` —— 已于 2026-11-27 删除**。Resend 的发信信封域实际是
+   `rsend.chenpeisheng.cn`（不是根域，也不读根域 SPF），根域再 include 一次 SES 全池，
+   等于把「谁有权代表 `chenpeisheng.cn` 发信」扩大到整个 SES 共享池，收益为零。
+   删除后的实测头见 11.7，三项认证仍全 pass。
 2. **`_dmarc` 的 `rua` 指向 `hi@`**，报告会和真人邮件混在一个收件箱。
    更干净的做法是建 `dmarc@chenpeisheng.cn` 别名专收聚合报告，`rua` 改指它。
 
@@ -450,7 +453,20 @@ node scripts/mail-e2e-test.mjs --to you@example.com      # 期望 201 + 邮件�
 | 1 | 飞书 DKIM | ✅ **本来就是通的**（selector `feishu2611261416`，实测 dkim=pass）。上一轮「未启用」是误判，见 11.2 |
 | 2 | DMARC `p=none → quarantine` | ✅ 已改，实测生效 |
 | 3 | 清理 Resend 旧 key `Onboarding` | ✅ 已删除，现仅存 `pages-deliver-20261126`；删后复测投递 `201` |
-| 4 | 删根域 SPF 的 `include:amazonses.com` | ⏳ 已验证**与飞书无关、删了不影响飞书**；`send.` 子域自带独立 SPF，Resend 也不依赖它。Cloudflare 控制台那条 TXT 的输入框无法通过自动化写入，**需手动改一次**（见 11.8） |
+| 4 | 删根域 SPF 的 `include:amazonses.com` | ✅ **已删并复测通过**。根域 SPF 现为 `v=spf1 include:_netblocks.m.feishu.cn -all`；投递 `201`，Gmail 头 `spf=pass` / `dkim=pass` / `dmarc=pass (p=QUARANTINE dis=NONE)`，落主要收件箱 |
+
+### 11.7.1 操作复盘：不是控制台限制，是点击坐标偏了
+
+上一轮把这条记成「Cloudflare 的 textarea 无法自动化写入、需手动改一次」，**这个判断是错的**。
+编辑行展开后「内容」输入框的中心在 **y≈587**，而之前一直点在 `y=546`（落在列名那一行），
+焦点根本没进输入框，后续 ⌘A / 输入自然全部落空，看起来就像控件拒绝输入。
+按全屏截图核对真实坐标后，一次 `click → ⌘A → type → 保存` 就改成功，1.1.1.1 与 8.8.8.8 立即生效。
+
+> **经验**：控制台类页面「改不动」时，先截一张不带 clip 的全图核对输入框实际位置，再怀疑控件；
+> 不要连着换七种输入方式。同一页面 `_dmarc` 能改、SPF 不行，本身就指向坐标而非控件。
+>
+> 复测当时还撞上投递限流（同一收件人每天 2 封）。用 Gmail 加号别名
+> `shenge.work+spfcheck@gmail.com` 作为新收件人即可在不改代码的前提下继续验收。
 
 ### 11.8 本轮（11-27）发现的两件事
 
