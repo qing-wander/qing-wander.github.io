@@ -98,12 +98,13 @@ Lighthouse N5 通过：index.mobile 中位数 61 ≥ 基线 55）；`REACT_MIGRA
 | T24 | RAG / 简历增强迭代池：rerank 重排、动态简历变体、跨设备查看、`resume.micro` 微调流水线 | `思考池` | 低 | AI 问答 / 简历变体 / 留言板 | [p0-single-source.md §8](p0-single-source.md) |
 | T25 | Google Fonts 本地化（自托管 / 子集化 Noto Sans SC），根治移动档 LCP ~20s | `待办` | 高（性能主优化项） | 全站移动档 LCP | 本文 §3.21 |
 | T26 | React 迁移收尾观察：真机电池、一周线上无回归观察、到期后备份线切 React + 旧文件物理删除 | `待办（观察期）` | 中 | 全站 | [react-refactor-plan.md M5](react-refactor-plan.md) |
-| T27 | 问答生成链路故障：模型服务不可用，全部降级兜底（代码侧可观测性已补，待部署后按 failReason 定位根因） | `进行中（代码已改，待部署复核）` | 高 | `/api/chat` 数字分身问答 | 本文 §3.23 / [线上站点测试报告-2026-11-26.md](线上站点测试报告-2026-11-26.md) P1-1 |
+| T27 | 问答生成链路故障：实测 `failReason=no-worker`，根因是线上 Pages 缺 `KB_WORKER_URL`/`KB_TOKEN` 环境变量（非 Worker/AI 故障） | `待配置侧补环境变量` | 高 | `/api/chat` 数字分身问答 | 本文 §3.23 / [线上站点测试报告-2026-11-26.md](线上站点测试报告-2026-11-26.md) P1-1 |
 | T28 | Turnstile 报 110200：widget 未渲染，留言墙人机校验实际未生效（CF 后台站点域名匹配） | `待办（配置侧）` | 高 | 留言墙 POST 校验 | 本文 §3.23 / 测试报告 P1-2 |
 | T29 | Cloudflare Web Analytics beacon 被 CSP 拦截，CF 这一路统计未生效（仓库代码未下发该 script-src，疑面板规则） | `待复核` | 中 | 访问统计 | 本文 §3.23 / 测试报告 P2-1 |
 | T30 | 头像 PNG 体积治理：avatar-male 疑似死资源；female 1536×1536 用于 ≤420px 展示位 | `待办（并入性能专项）` | 低 | 首屏 / 助手头像 | 测试报告 P3-2 |
 | T31 | W-01 卡片「RAG 接入中 / GitHub Pages 部署」过时文案修正；仓库源已改，线上 D1 仍旧文案 | `待后台同步 D1 副本` | 低 | 首页 SEC.05 | 测试报告 P3-1 |
 | T32 | 导航编号撞号：留言墙与博客都显示 11，且板块编号从 02 起跳（hero/footerPeople 占用序号） | `已完成（2026-11-27），待部署` | 低 | 首页 `#nav` | 本文 §3.23 / 测试报告 R-7 |
+| T33 | 后台问答看板数据不渲染：`qaSchema.recent.empty` 误定 boolean，库里存 0/1 整数，parse 抛错致 `qa.data` 整体空 | `已完成（2026-11-27），待部署` | 中 | 后台问答看板 | 本文 §3.23 / 测试报告 P2-2 |
 
 ---
 
@@ -819,6 +820,13 @@ M0–M5 已全部完成并生产切换（线上 React 版运行中，`REACT_MIGR
 - 验收：部署后首页导航编号连续不重复；SEC 编号与导航一致。
 - 2026-11-27 部署状态：修复 commit `208c3ff` 已在 `origin/main`；同批 Functions（`chat.js`）新版已上线（线上响应已带 `failReason`），但首页导航线上仍是旧行为——`02` 起跳、留言墙/博客双 `11`。判断静态产物（`js/main.js` / `_astro`）尚未刷新到新版本，或 CDN 命中旧缓存；需在 CF Pages 确认最近一次构建成功完成，必要时清静态缓存后复验导航编号。
 
+**T33 · 后台问答看板数据不渲染（已完成，待部署）**
+
+- 现象（2026-11-27 登录后台实测）：看板指标卡全「—」、高频问题 / 命中热度 / 近期记录均空；趋势柱图与问题聚类正常。`GET /api/admin/qa` 200，`totals`（total 45、empty 7、last7 35、answered 38、ms_avg 2471）与 `recent` 30 条齐全。
+- 根因：`src/lib/api/admin.ts` `qaSchema.recent` 行 `empty` 定成 `z.boolean().optional()`，而 `qa_logs.empty` 存 `0/1` 整数；zod 严格校验 number→boolean 不符，`schema.parse` 抛 ZodError，react-query 进 error 态，`qa.data` 整体 `undefined`，依赖它的卡片/列表回退空态（趋势、聚类是独立 query，不受影响）。
+- 修复：`empty` 改 `z.union([z.boolean(), z.number()]).optional()`（复用 `flag` 常量）；`admin.test.ts` 补「recent.empty 为 0/1 整数也可解析」样例，`vitest run` 10 项过。
+- 旁证：`/api/admin/kb` 返回 `worker_ready:false`，与 T27 `no-worker` 互证。
+
 **2026-11-27 公开侧复测结论（后台仍留到最后测）**
 
 | 项 | 结论 |
@@ -836,6 +844,15 @@ M0–M5 已全部完成并生产切换（线上 React 版运行中，`REACT_MIGR
 | 404 / JD 页（11-27 补测） | ✅ 404 页回主页 / 简历 / 邮件三入口在位；`/jd` 三个示例标签（AI Agent 工程师、Java 后端金融、AI 解决方案）与字数计数、规则文案在位；本站静态资源全 200，console 里那条 404 为 Turnstile 外部子资源噪音（T28 连带） |
 | Hero 计数（11-27 补测） | ✅ 目标值 5 年 / 5 段 / 6 套 / 50 万+；自动化离屏时数字滚动动画未触发停在 0，滚动进视口后正确计数，非数据缺陷 |
 | 音色接口（11-27 补测） | ✅ `/api/voice` GET 200，默认音色 101001「智瑜」；语音切换按钮动态渲染在位，自动播放策略下的真实发声留真机复核 |
+| 后台·设备台账（11-27 登录后） | ✅ 概览（浏览 249 / 访客 250 / 24h 47 / 留言设备 4 / 留言 5 / 今日 0 / 隐藏 4 / 待回复 0 / 拉黑 0）+ 4 台设备行（哈希前缀、首见/活跃、留言数、状态、看留言/拉黑）；搜索、导出 CSV、分页入口在位 |
+| 后台·留言审核 | ✅ 5 条留言，时间/设备/称呼/内容/状态/对话数齐全；回复、隐藏、筛选入口在位（写操作未提交） |
+| 后台·问答看板 | ❌ T33：接口有数据但前端整页空（schema 类型不符，已本地修待部署）；趋势柱图、问题聚类独立 query 正常 |
+| 后台·模型与提示词 | ✅ resume_chat / jd_match / summary_rewrite / variant_plan 四模块模型 ID + 提示词可读；resume_chat 已存（2026-11-19），其余「尚未保存过」；保存按钮在位（未提交） |
+| 后台·AI 语音 | ✅ 女版 5 音色卡（智瑜 101001 默认 / 智希 101026 / 智梅 101027 / 智付 101055 / 智燕 101011）+ 招呼文案 + 试听/保存；合成链路 `/api/chat(mode=tts)` → 腾讯云函数说明在位 |
+| 后台·站点数据 | ✅ 7/7 已配置（首页文案 26KB / 公司 69KB / 学校 10KB / 推荐人 720B / GitHub 45KB / 案例 9KB / CDN 映射 13KB），JSON 可读取编辑；D1 副本新旧文案混杂（T31 落点，待同步） |
+| 后台·生成变体 | ✅ JD 输入（≥20 字）+ rewrite 勾选 + 下载 HTML 入口；当前「尚未生成」（未触发模型调用） |
+| 后台·角色动画 | ✅ 男性首页角色 / 女性访客切换各 3 动作；MaleRigged.glb 870KB · 41 骨骼 · 3 段剪辑；待机/挥手/坐下均「上线」；3D 预览离屏环境载入中，留真机 |
+| 后台只读接口 / 导出（11-27） | ✅ stats/messages/devices/config/voice/greeting/theme/gender/kb 全 200；`/api/admin/kb` count 42、worker_ready:false（互证 T27）；CSV 导出 `text/csv`，表头 seq…admin_note，11 条留言 |
 | 公司 / 学校 / 案例页 | ✅ 渲染正常，控制台 0 error |
 
 ---
