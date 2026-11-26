@@ -189,7 +189,7 @@ admin/
 
 ### 鉴权（过渡方案，OAuth 可后接）
 
-- 口令登录 → HMAC-SHA256 签名的 `pa_sess` cookie（HttpOnly / Secure / SameSite=Lax，12 小时）
+- 口令登录 → HMAC-SHA256 签名的 `pa_sess` cookie（HttpOnly / Secure / SameSite=Lax，30 天免登录）
 - 登录限流：同 IP 15 分钟 8 次，落 `rate_limits` 表
 - 写操作三重校验：SameSite + `X-Admin-Request: 1` 自定义头 + Origin 同源
 - 会话签名不建表，零存储成本；换 GitHub OAuth 时只改 `functions/api/admin/auth/login.js`，

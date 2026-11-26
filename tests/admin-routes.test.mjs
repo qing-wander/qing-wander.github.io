@@ -196,6 +196,7 @@ test('登录：口令正确发 HttpOnly 会话 cookie，错误口令 401', async
   assert.match(setCookie, /HttpOnly/);
   assert.match(setCookie, /Secure/);
   assert.match(setCookie, /SameSite=Lax/);
+  assert.match(setCookie, /Max-Age=2592000/); // 30 天免登录
 
   const bad = await loginPost({
     request: new Request(ORIGIN + '/api/admin/auth/login', {

@@ -198,6 +198,7 @@ test('验证码正确 → 下发会话 cookie，且验证码一次性', async ()
   const setCookie = res.headers.get('Set-Cookie') || '';
   assert.match(setCookie, /pa_sess=/);
   assert.match(setCookie, /HttpOnly/);
+  assert.match(setCookie, /Max-Age=2592000/); // 30 天免登录
 
   const value = setCookie.split(';')[0].slice(COOKIE.length + 1);
   assert.equal(await verifySession(env, value), true);

@@ -213,6 +213,7 @@ export function LoginApp() {
         <p className="tag">PRIVATE CONSOLE</p>
         <h1>后台登录</h1>
         <p className="hint">不用密码：微信扫一下，或收一封邮箱验证码。</p>
+        <p className="note">登录状态保留 30 天，期间再进后台无需重复验证。</p>
 
         {!showMini && (
           <a className="btn btn-wx" id="wxBtn" href={wxEnabled ? '/api/admin/auth/wechat?mode=' + wxMode : undefined}

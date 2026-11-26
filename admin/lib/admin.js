@@ -6,7 +6,8 @@
    ────────────────────────────────────────────────────────────── */
 
 export const COOKIE = 'pa_sess';
-export const TTL = 43200; // 12 小时
+/* 与新版主站后台保持一致：30 天免登录。 */
+export const TTL = 30 * 24 * 60 * 60; // 2592000 秒（30 天）
 
 const enc = new TextEncoder();
 

@@ -6,7 +6,9 @@
    ────────────────────────────────────────────────────────────── */
 
 export const COOKIE = 'pa_sess';
-export const TTL = 43200; // 12 小时
+/* 登录票据 30 天有效：cookie Max-Age 与签名里的 exp 同值。
+   浏览器重启后仍保留，30 天内进后台不再要求验证码；到期自动回登录页。 */
+export const TTL = 30 * 24 * 60 * 60; // 2592000 秒（30 天）
 
 const enc = new TextEncoder();
 
