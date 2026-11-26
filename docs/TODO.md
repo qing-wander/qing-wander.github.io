@@ -160,6 +160,38 @@ curl -s -X POST https://shenge-work.pages.dev/api/deliver \
 保持「自动发信仅支持账号邮箱 + 其他邮箱 mailto 兜底」。
 **重开触发条件**：访客反馈收不到自动邮件、或站长解决支付方式愿意提供 / 购买域名。
 
+**2026-11-26 更新（域名已就位，DNS 侧已配好）**：
+`chenpeisheng.cn` 已注册并托管 Cloudflare，DNS 里已存在 Resend 所需的三条记录 ——
+`resend._domainkey`（根域 DKIM 公钥）、`send` 子域 SPF（ip4 段）与 `send` 子域 MX（`feedback.forge.rmta.net`）。
+也就是说「未验证域名」这个前置条件**很可能已经解除**，剩下的动作只有两步：
+
+1. ~~Resend 控制台确认 `chenpeisheng.cn` 状态为 `Verified`~~ ✅ 2026-11-26 已确认 **Verified**；
+2. ~~Pages 生产环境把 `RESEND_FROM` 改成 `陈培胜 <hi@chenpeisheng.cn>` 并重新部署~~ ✅ 2026-11-26 已改并重试部署（`16864ceb`，12:52 success）。
+
+**仅剩验收**：打开 `https://chenpeisheng.cn/resume` → 页尾「自动投递 ✉」→ 填真实邮箱提交，
+确认页面不再出现 mailto 兜底、收件方看到的发件人是「陈培胜 `<hi@chenpeisheng.cn>`」。
+注意 `/api/deliver` 有 PoW + 来源白名单 + Turnstile，直接 curl 会 `Forbidden`，只能走页面。
+
+**2026-11-26 下午更新（复测发现回退，已修）**：走页面复测时出现
+「自动发信尚未配置（缺 RESEND_API_KEY）」→ 接口实测 `503 resend_not_configured`，
+即 `RESEND_API_KEY` 的**值为空**（变量名还在）。时间点与 12:50 在控制台编辑 `RESEND_FROM` 吻合，
+判定为「编辑密钥行时整表提交把其它密钥覆盖成空值」。已在 Resend 新建 Sending key
+（`pages-deliver-20261126`）重填并保存，**必须重新部署后才生效**。
+为避免再次无感回退，新增 `scripts/mail-e2e-test.mjs`（自动过 PoW 的端到端复测，等价于真人点按钮），
+以后改完任何邮件相关环境变量都跑：
+
+```bash
+node scripts/mail-e2e-test.mjs --to <自己的邮箱>   # 期望 200，且邮件真的到达
+```
+
+同一轮还发现更上游的问题：`hi@` 目前靠 Cloudflare Email Routing 转发到 QQ / Gmail，**只能收不能发**，
+回信时发件人是私人邮箱；Gmail 的 `Send as` 第三方地址功能 2027-01 彻底下线。
+完整诊断、选型与 MX 迁移步骤见 [email-deliverability.md](email-deliverability.md)，
+迁移前后用 `node scripts/mail-dns-audit.mjs [--expect feishu]` 体检。
+
+**该上游问题已于 2026-11-26 切换完成**：MX 已指向飞书（mx1/2/3.feishu.cn），`hi@` 在飞书能收能发，
+Cloudflare Email Routing 已停用。剩两件收尾：① 飞书后台启用 DKIM（需超级管理员账号，当前登录账号无权限）；
+② DMARC 观察满 14 天后从 `p=none` 升到 `p=quarantine`。详见 email-deliverability.md §11。
 
 ---
 
