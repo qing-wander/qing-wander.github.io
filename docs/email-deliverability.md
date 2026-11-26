@@ -402,7 +402,22 @@ Cloudflare Pages 的密钥类变量保存后不可回读，编辑某一行时如
 2. **`_dmarc` 的 `rua` 指向 `hi@`**，报告会和真人邮件混在一个收件箱。
    更干净的做法是建 `dmarc@chenpeisheng.cn` 别名专收聚合报告，`rua` 改指它。
 
-### 11.5 本轮新增的两把工具
+### 11.5 端到端验收结果（2026-11-26 15:35）
+
+修复后连跑三次 `mail-e2e-test.mjs`，全部 `201 {"ok":true}`，其中两封分别落到 Gmail 与飞书：
+
+| 收件方 | 结果 | 关键证据 |
+|---|---|---|
+| `shenge.work@gmail.com` | 进**主要**收件箱（非垃圾） | 发件人 `陈培胜 <hi@chenpeisheng.cn>`；Gmail「显示原始邮件」→ **SPF PASS（23.251.234.51）/ DKIM PASS（域 `chenpeisheng.cn`）/ DMARC PASS**，「10 秒后递送」 |
+| `hi@chenpeisheng.cn` | 进飞书收件箱 | 发件人显示 `陈培胜 <hi@chenpeisheng.cn>`，正文与 1 个 PDF 附件完好 → 同时证明「飞书收信 + Resend 发信」两条腿都在跑 |
+
+对照实验（同一时段的飞书直发）：14:37 从飞书网页版发给 Gmail 的测试信
+**落在垃圾邮件**，而 Resend 那封（DKIM 有签名）落在主要收件箱。
+这就是 §11.2 说的「缺 DKIM 的代价」，不是理论推演，是同一收件箱里的直接对照。
+
+至此 T1（自动投递）与「`hi@` 能收能发」两条链路都通过验收。
+
+### 11.6 本轮新增的两把工具
 
 | 工具 | 用途 |
 |---|---|
@@ -411,7 +426,17 @@ Cloudflare Pages 的密钥类变量保存后不可回读，编辑某一行时如
 
 ```bash
 node scripts/mail-dns-audit.mjs --expect feishu          # 期望 0 致命
-node scripts/mail-e2e-test.mjs --to you@example.com      # 期望 200 + 邮件真的到了
+node scripts/mail-e2e-test.mjs --to you@example.com      # 期望 201 + 邮件真的到了
 ```
+
+> 注意投递限流：同一收件人**每天 2 封**、同 IP 每小时 3 封 / 每天 5 封，别拿一个地址反复测。
+
+### 11.7 还剩三件事（按优先级）
+
+| # | 事项 | 谁来做 | 卡点 |
+|---|---|---|---|
+| 1 | 飞书后台启用 DKIM（2048 位）并在 Cloudflare 加 TXT | **超级管理员 `用户254038`** | 当前登录账号无「邮箱权限」，页面直接提示无权限 |
+| 2 | DMARC 观察满 14 天后 `p=none → quarantine`，再 30 天 → `reject` | 任何人 | 需先看 `rua` 报告的 DKIM 通过率 > 98% |
+| 3 | 清理 Resend 旧 key `Onboarding`，并评估删掉根域 SPF 里的 `include:amazonses.com` | 任何人 | 第 3 项删前先跑一次复测 |
 
 > AI生成
