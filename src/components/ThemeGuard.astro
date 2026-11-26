@@ -1,0 +1,61 @@
+---
+// 主题引导（M2）—— jd / company / school 三页共用。
+// 逻辑与旧版各页内联脚本逐字一致（docs/react-refactor-plan.md N1）：
+//   ?theme= > localStorage 手动锁定 > 后台 /api/theme 接口 > 默认 archive。
+// 每日轮换已暂停（AUTO_ROTATE=false），保留一次性清理轮换期锁定的逻辑。
+// 必须以 is:inline 在 <head> 早期执行，避免主题闪烁（FOUC）。
+interface Props {
+  notFound?: boolean;
+}
+const { } = Astro.props;
+---
+
+<script is:inline>
+/* eslint-disable */
+/* 主题引导：与首页 / 简历同一套线路规则（github.io → pages.dev）；
+   每日自动轮换已暂停，默认固定橙色档案纸 ARCHIVE。 */
+(function () {
+  var T = ['archive', 'blueprint', 'newsprint', 'noir'];
+  var qs = new URLSearchParams(location.search).get('theme');
+  /* 每日自动轮换已暂停（AUTO_ROTATE=false）：默认固定橙色档案纸 ARCHIVE。
+     一次性清掉轮换期间留下的手动锁定，避免老访客仍停在深色主题；
+     之后访客主动切换风格仍然有效。把 AUTO_ROTATE 改回 true 可恢复旧轮换逻辑。 */
+  var AUTO_ROTATE = false;
+  var DEFAULT_THEME = 'archive';
+  try {
+    if (!AUTO_ROTATE && localStorage.getItem('portfolio_theme_rotation_off') !== '1') {
+      localStorage.removeItem('portfolio_theme_mode');
+      localStorage.removeItem('portfolio_theme_manual');
+      localStorage.setItem('portfolio_theme_rotation_off', '1');
+    }
+  } catch (e) {}
+  var manual = null;
+  try { if (localStorage.getItem('portfolio_theme_mode') === 'manual') manual = localStorage.getItem('portfolio_theme_manual'); } catch (e) {}
+  var t = T.indexOf(qs) >= 0 ? qs : (T.indexOf(manual) >= 0 ? manual : null);
+  if (!t) {
+    var n = new Date();
+    var day = Math.floor((n - new Date(n.getFullYear(), 0, 0)) / 864e5);
+    t = AUTO_ROTATE ? T[day % T.length] : DEFAULT_THEME;
+    if (T.indexOf(qs) < 0 && !manual) {
+      var bases = (function () {
+        var host = location.hostname || '';
+        if (/^(localhost|127\.0\.0\.1|0\.0\.0\.0|\[::1\])$/.test(host)) return [''];
+        if (/\.github\.io$/i.test(host)) return ['https://shenge-work.pages.dev'];
+        return ['', 'https://shenge-work.pages.dev'];
+      })();
+      (function next(i) {
+        if (i >= bases.length) return;
+        fetch(new URL(bases[i] + '/api/theme', location.href).href, { credentials: 'omit' }).then(function (r) {
+          var ct = r.headers.get('content-type') || '';
+          if (!r.ok || ct.indexOf('application/json') < 0) return next(i + 1);
+          return r.json().then(function (d) {
+            if (d && d.ok && T.indexOf(d.theme) >= 0) document.documentElement.setAttribute('data-theme', d.theme);
+            else next(i + 1);
+          }, function () { next(i + 1); });
+        }, function () { next(i + 1); });
+      })(0);
+    }
+  }
+  if (t) document.documentElement.setAttribute('data-theme', t);
+})();
+</script>

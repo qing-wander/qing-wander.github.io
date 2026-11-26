@@ -1,0 +1,119 @@
+---
+// /jd.html —— 岗位匹配独立页（React 迁移 M2）
+// 壳层与样式与旧版逐字平移（css 三件 + 内联主题/打印样式）；交互在 features/jd/JdPage.tsx 岛内。
+// URL 契约（N3）：build.format 'file' 输出同名 jd.html。
+import ThemeGuard from '../components/ThemeGuard.astro';
+import JdPage from '../features/jd/JdPage';
+---
+
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>JD 岗位匹配 · 陈培胜求职作品集</title>
+  <meta name="description" content="把在招岗位的 JD 贴进来，一分钟后拿到一张对照表：每条要求落在哪段经历、缺口在哪、面试能顺着问什么。由本站 RAG Agent 生成，证据带出处。" />
+  <meta name="theme-color" content="#F3EEE2" />
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-64.png" />
+  <link rel="apple-touch-icon" href="favicon.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&display=swap" media="print" onload="this.media='all'" />
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&display=swap" /></noscript>
+  <link rel="stylesheet" href="/css/fonts.css?v=20261111a" />
+  <!-- 整站变量与通用组件 + JD 匹配专属样式（缓存共享：访客多从主页来） -->
+  <link rel="stylesheet" href="/css/style.css?v=20261122d" />
+  <link rel="stylesheet" href="/css/jd-match.css?v=20261122d" />
+</head>
+<body>
+  <ThemeGuard />
+
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="tb-left">
+        <a href="/index.html">← 作品集</a>
+        <span class="tb-brand">JD MATCH · 岗位匹配</span>
+      </div>
+      <div class="tb-right">
+        <a href="/resume.html">网页简历 ↗</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="jd-page">
+    <section class="section" id="jd">
+      <div class="section-head">
+        <span class="section-no">SEC.JD</span>
+        <h2 class="section-title">岗位匹配 <span class="title-en">JD MATCH</span></h2>
+        <span class="section-line" aria-hidden="true"></span>
+        <span class="section-coord" aria-hidden="true">AGENT//SELF-PROOF</span>
+      </div>
+
+      <p class="jd-lead">
+        把在招岗位的 JD 贴进来，一分钟后拿到一张对照表：<b>每条要求落在哪段经历、缺口在哪、面试能顺着问什么</b>。
+        这张表由本站自己的 RAG Agent 生成 —— JD 先拆成需求条目，逐条在简历档案切片里召回，模型只允许引用召回原文作答。
+      </p>
+
+      <JdPage client:load />
+    </section>
+  </main>
+
+  <footer class="jd-page-foot">
+    <span>与本站数字分身共用同一份档案切片 · 结果可复制 Markdown</span>
+    <span><a href="/resume.html">网页简历</a> · <a href="/index.html">作品集主页</a></span>
+  </footer>
+
+  <style is:global>
+    /* ── 主题：与首页 / 简历同一套配色（后台默认 > 访客锁定 > 日期轮换）── */
+    [data-theme="blueprint"] {
+      --paper: #E9F1F8; --card: #F5FAFE; --ink: #123A5C; --ink-soft: #48678A;
+      --orange: #E03E36; --blue: #1D6FB8; --green: #2E8B57;
+    }
+    [data-theme="newsprint"] {
+      --paper: #F4EDDA; --card: #FAF5E6; --ink: #1C1812; --ink-soft: #59503E;
+      --orange: #C4112C; --blue: #1E3A5F; --green: #2F7D46;
+    }
+    [data-theme="noir"] {
+      --paper: #100E1A; --card: #1A1729; --ink: #ECE7FF; --ink-soft: #8F87AD;
+      --orange: #FF3D8F; --blue: #22D3EE; --green: #9EE86B;
+    }
+
+    /* 本页不加载整站 JS：入场动画直接放行，避免 .reveal 初始态把内容藏住 */
+    .reveal { opacity: 1 !important; transform: none !important; }
+
+    /* 页头 / 页脚 */
+    .topbar { position: sticky; top: 0; z-index: 60; background: var(--ink); color: var(--paper); border-bottom: var(--border); }
+    .topbar-inner { max-width: 1160px; margin: 0 auto; padding: 10px 20px; display: flex; align-items: center; justify-content: space-between; gap: 14px; }
+    .tb-left { display: flex; align-items: center; gap: 14px; min-width: 0; }
+    .tb-left a { font-family: var(--font-mono, monospace); font-size: 12px; letter-spacing: .05em; white-space: nowrap; }
+    .tb-left a:hover { color: var(--orange); }
+    .tb-brand { font-weight: 900; font-size: 12px; letter-spacing: .14em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .tb-right a { font-family: var(--font-mono, monospace); font-size: 11px; opacity: .8; white-space: nowrap; }
+    .tb-right a:hover { opacity: 1; color: var(--orange); }
+    .jd-page { max-width: 1160px; margin: 0 auto; padding: 30px 20px 70px; }
+    .jd-page-foot { max-width: 1160px; margin: 0 auto; padding: 0 20px 34px; font-family: var(--font-mono, monospace); font-size: 11px; color: var(--ink-soft); display: flex; flex-wrap: wrap; gap: 10px; justify-content: space-between; }
+    .jd-page-foot a { color: var(--ink); text-decoration: underline; }
+    @media (max-width: 640px) { .jd-page { padding: 18px 14px 50px; } .tb-right { display: none; } }
+    @media print {
+      html[data-theme] { --paper: #fff; --card: #fff; --ink: #000; --ink-soft: #333; }
+      body { background: #fff; color: #000; }
+      .topbar, .jd-page-foot { display: none !important; }
+      .jd-page { padding: 0; }
+      /* 打印 / 存 PDF：对照表场景——只输出标题、结论与逐条对照，隐藏交互件 */
+      .jd-lead { margin-bottom: 10px; font-size: 11.5px; }
+      .jd-wrap { display: block; }
+      .jd-form, .jd-empty, .jd-loading, .jd-error { display: none !important; }
+      .jd-actions { display: none !important; }
+      .jd-result { box-shadow: none; }
+      .jd-row { break-inside: avoid; }
+      /* 展开的切片原文不进纸面，纸面只留「要求 + 证据出处 + 缺口 + 追问点」 */
+      .jd-ev-excerpt { display: none !important; }
+      .jd-ev-src { color: #000 !important; border-bottom-color: rgba(0,0,0,.35); }
+      .jd-ev-caret { display: none; }
+      .jd-thead { display: none; }
+      /* 纸面页脚：来源与生成时间（结果渲染时填充） */
+      .jd-print-meta { display: block !important; margin-top: 14px; font-family: var(--font-mono, monospace); font-size: 9.5px; color: #444; }
+    }
+  </style>
+</body>
+</html>

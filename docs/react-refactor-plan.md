@@ -1,7 +1,7 @@
 # 前端 React 化重构 · 落地方案
 
 > 版本：v1.2（2026-11-26）
-> 状态：**执行中** —— M0 已上线（提交 7478ee7），M1 代码完成待发布；各阶段实况见文末[里程碑日志](#里程碑日志)。
+> 状态：**执行中** —— M0 已上线（提交 7478ee7），M1 代码完成待发布，M2 代码完成待发布；各阶段实况见文末[里程碑日志](#里程碑日志)。
 > 评审已通过并启动执行；决策点 D1–D9 均按默认建议拍板；执行中按方案推进，任何方向性变更须更新估算并注明版本。
 > 变更记录：v1.2 新增里程碑日志（M0/M1 实况）；v1.1 新增 §5.8 移动端与触屏适配策略（现状盘点落表、测试矩阵细化到各里程碑验收）、风险 R11/R12、附录 A.7 移动端专项清单，估算含真机走查电池。
 ---
@@ -629,6 +629,23 @@ admin 是本次重构**单位收益最高**的部分：原生 JS 1,033 行的多
   3. anim-console.js（477 行）按方案原样桥接：渲染旧版同 id/class 的 DOM 骨架，进 tab 时动态加载 `/admin/assets/anim-console.js` 调 `window.AnimConsole.init()`，M5 再定去留。
 - **验收**：单元/组件测试 11/11；Playwright E2E **24/24**（三通道登录全流、8 tab 逐项走查、保存文案写路径、退出、768/1024 平板快照）；既有 node:test 289/289 基线不回归；内容漂移链 4 项全绿（render_resume / sync_company_profiles / render_work_details / validate_content）；build/test/lint/check 四绿。
 - **已定（2026-11-26 用户拍板，照 D6 默认建议）**：admin/login 暂不加入 `REACT_MIGRATED_PAGES`，代码进 main 但生产 /admin /login 继续走旧版，双开观察一周后再切；期间 React 版可经本地 `pnpm build` + `node scripts/dev-api-server.mjs`（:8877）联调验收。
+
+### M2 · 独立页三件套 + 404 —— 🔄 代码完成，待提交发布（2026-11-26）
+
+- **交付**：
+  - `src/pages/{jd,company,school,404}.astro` 四页壳（样式与旧版逐字平移）；`src/components/ThemeGuard.astro` 三页共用主题引导（旧内联脚本逐字收编，is:inline 防 FOUC）。
+  - `src/features/jd/`：JdPage 岛（表单 SSG 直出 / 三态渲染 / 证据互斥展开 / 闪断自动重试 / 打印态 / `cp_jd_prefill` 预填链）+ `src/lib/jd/client.ts`（请求 / 文案表 / Markdown 导出逐字平移；`window.CP_JD_UI` 留旧 js/jd-match.js 继续供 index AI 面板用，M3 收编）。
+  - `src/features/company/`：约 20 板块全套 React 化（zod 契约 + 真相源 import；折叠会话记忆 / SVG 图表 / 高管轮播箭头+键盘+pointer 横滑（passive:false 轴向裁决）/ 友商 `?c=` 深链 / 灯箱 / 打印）。**渐进桥接**（旧 js 继续供 index 用、React 页 is:inline 引用）：cp-panorama.js（360° 全景）、company-social.js（读者互动）、secure-access.js（任职佐证挂载点）、asset-cdn.js（资产 CDN 统一重写）。
+  - `src/features/school/`：档案全板块 + 学历核验全流 React 化（申请弹窗 / 5s×360 轮询 / 批准自动解锁 / 24h 到期重锁 / 相册二维码联动锁定；localStorage 键与旧版一致，老解锁态无缝继承）；验证码渲染出口统一脱敏口径保留。
+  - `404.astro` 纯静态平移（零 JS）。
+  - 基建：`dev-api-server.mjs` M2 四页映射 + /404 404 状态；`tests/e2e/m2.e2e.mjs` + `tests/e2e/m2-visual.mjs`（新增 pngjs 依赖）。
+- **验收**：
+  - 功能 E2E **63/63**：jd 全链（含 mock /api/chat 结果渲染、复制 MD、打印态、预填链、主题）、company 全板块 + 折叠 + 轮播（箭头/横滑/键盘）+ 全景开合 + 灯箱 + 社交挂载 + 佐证锁定、school 锁定态无验证码泄漏 + 申请提交 + 解锁联动、404、四主题 × 390 touch 档。
+  - 视觉对比 **48/48**（四页 × 四主题 × 390/680/1024，本地双服同机）：结构差全部 ≤0.12%（阈值 0.2%）；另测得纯文本抗锯齿噪声底 ~1.5%（React 文本节点 vs innerHTML 固有 ±1 灰阶差，遍布字体/图片边缘，无成块布局差），已在脚本中以「结构差（>8 灰阶）」为判定口径并保留噪声值展示。
+  - 四绿 + node:test 289/289 + 漂移链 5 项（增加 sync_school_profiles --check）全绿。
+- **迁移中发现并修复的旧实现偏差**（视觉对比逼出）：① foldBlock 的 `inner.length ≥ 1400` 字符串兜底——React 版改 mount 时实测 innerHTML 长度（useLayoutEffect 升级折叠结构，与数据自适应）；② tagList pill 的空格分隔依赖文本节点（CSS 无 gap）且 `.cp-pill:first-child` 蓝底规则禁止 wrapper——flatMap 兄弟空格方案；③ 数据可信度板块漏了 `cp-sec` 基类。
+- **工具链经验**：浏览器 canvas 对 >8kpx 高图 toDataURL 存在解码质量偏移（制造 1%+ 假差异），视觉对比判定改 Node pngjs 无损解码 + 通道 >8 灰阶的结构差口径（PIL 交叉验证一致）。
+- **未决**：M2 四页同 M1 暂不加入 `REACT_MIGRATED_PAGES`（生产继续走旧版），与 admin/login 一并待用户拍板切换节奏；切换后旧版文件由 M5 统一下线。
 
 ---
 

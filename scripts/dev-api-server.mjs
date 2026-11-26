@@ -4,6 +4,7 @@
    表结构与线上一致（db/schema.sql），保证本地测的是同一套 SQL。 */
 import http from 'node:http';
 import fs from 'node:fs/promises';
+import fsSync from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { DatabaseSync } from 'node:sqlite';
@@ -291,10 +292,25 @@ http.createServer(async (req, res) => {
     let file = p === '/' ? '/index.html' : p;
     /* M1：React 版后台页面与 bundle 住在 dist-react/（pnpm build 产物）。
        路径映射：/admin(.html|/) → admin.html；/login → login.html；
-       /_astro/** → dist-react/_astro/**；/admin/assets/** → admin/public/assets/**。 */
+       /_astro/** → dist-react/_astro/**；/admin/assets/** → admin/public/assets/**。
+       M2：/jd.html /company.html /school.html /404(.html) → dist-react 同名产物。
+       其余路径（css/js/data/images 等）回落仓库根，与线上混排结果等价。 */
     const DIST = path.join(ROOT, 'dist-react');
+    const M2_REACT_PAGES = {
+      '/jd.html': 'jd.html',
+      '/company.html': 'company.html',
+      '/school.html': 'school.html',
+      '/404': '404.html',
+      '/404.html': '404.html',
+    };
     let abs = null;
-    if (p === '/admin' || p === '/admin/' || p === '/admin/index.html' || p === '/admin.html') {
+    let status = 200;
+    const m2page = M2_REACT_PAGES[p];
+    if (m2page && fsSync.existsSync(path.join(DIST, m2page))) {
+      abs = path.join(DIST, m2page);
+      /* /404（无扩展）对齐 CF Pages 语义：404.html 兜底 + 404 状态码 */
+      if (p === '/404') status = 404;
+    } else if (p === '/admin' || p === '/admin/' || p === '/admin/index.html' || p === '/admin.html') {
       abs = path.join(DIST, 'admin.html');
     } else if (p === '/login' || p === '/login/' || p === '/login/index.html') {
       abs = path.join(DIST, 'login.html');
@@ -312,7 +328,7 @@ http.createServer(async (req, res) => {
       if (!abs.startsWith(ROOT)) { res.writeHead(403).end('forbidden'); return; }
     }
     const data = await fs.readFile(abs);
-    res.writeHead(200, { 'Content-Type': MIME[path.extname(abs)] || 'application/octet-stream' });
+    res.writeHead(status, { 'Content-Type': MIME[path.extname(abs)] || 'application/octet-stream' });
     res.end(data);
   } catch (e) {
     if (e && e.code === 'ENOENT') { res.writeHead(404).end('not found'); return; }

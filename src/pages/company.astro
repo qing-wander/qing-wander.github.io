@@ -1,0 +1,157 @@
+---
+// /company.html —— 公司档案独立页（React 迁移 M2）
+// 壳层与样式与旧版逐字平移；档案内容由 features/company/CompanyPage 岛渲染。
+// 桥接脚本（is:inline，站点相对路径原样保留）：
+//   data/asset-map.js + js/asset-cdn.js —— 资源 CDN 重写（与旧版同序：岛模块脚本执行前就绪）
+//   js/cp-panorama.js —— 360° 全景查看器（M3-M5 收编，见 M2 里程碑日志）
+//   js/company-social.js —— 读者互动（同上）
+//   js/secure-access.js —— 任职佐证加锁流（同上）
+import ThemeGuard from '../components/ThemeGuard.astro';
+import CompanyPage from '../features/company/CompanyPage';
+---
+
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>公司档案 | 陈培胜 · 求职作品集</title>
+  <meta name="description" content="公司档案：主营业务、团队规模、融资时间线、行业位置与前景判断。与网页简历的档案抽屉同一份数据源。" />
+  <meta name="robots" content="noindex, follow" />
+  <meta name="theme-color" content="#F3EEE2" />
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-64.png" />
+  <link rel="apple-touch-icon" href="favicon.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&display=swap" media="print" onload="this.media='all'" />
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&display=swap" /></noscript>
+  <link rel="stylesheet" href="/css/fonts.css?v=20261111a" />
+  <!-- 档案内容组件样式：与简历页档案抽屉同一份 -->
+  <link rel="stylesheet" href="/css/company-profile.css?v=20261125s1" />
+  <link rel="stylesheet" href="/css/secure-access.css?v=20261125s1" />
+</head>
+<body>
+  <ThemeGuard />
+
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="tb-left">
+        <a href="/resume.html">← 网页简历</a>
+        <span class="tb-brand">COMPANY PROFILE · 公司档案</span>
+      </div>
+      <div class="tb-right">
+        <a href="/index.html">作品集 ↗</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="cp-page">
+    <div class="cp-page-body" id="cpPageBody">
+      <noscript><p class="cp-page-empty">本页需要启用 JavaScript 渲染档案内容；也可以在网页简历里点公司名称查看同一份档案。</p></noscript>
+      <CompanyPage client:load />
+    </div>
+  </main>
+
+  <!-- 桥接脚本：与旧版 company.html 完全同序（资产重写 → 全景/互动/加锁组件 → 档案渲染） -->
+  <script is:inline src="/data/asset-map.js"></script>
+  <script is:inline src="/js/asset-cdn.js?v=20261125g"></script>
+  <script is:inline src="/js/cp-panorama.js?v=20261125g"></script>
+  <script is:inline src="/js/company-social.js?v=20261125g"></script>
+  <script is:inline src="/js/secure-access.js?v=20261125s1"></script>
+
+  <style is:global>
+    /* ── 主题：与首页 / 简历同一套配色 ── */
+    [data-theme="blueprint"] {
+      --paper: #E9F1F8; --card: #F5FAFE; --ink: #123A5C; --ink-soft: #48678A;
+      --orange: #E03E36; --blue: #1D6FB8; --green: #2E8B57;
+    }
+    [data-theme="newsprint"] {
+      --paper: #F4EDDA; --card: #FAF5E6; --ink: #1C1812; --ink-soft: #59503E;
+      --orange: #C4112C; --blue: #1E3A5F; --green: #2F7D46;
+    }
+    [data-theme="noir"] {
+      --paper: #100E1A; --card: #1A1729; --ink: #ECE7FF; --ink-soft: #8F87AD;
+      --orange: #FF3D8F; --blue: #22D3EE; --green: #9EE86B;
+    }
+
+    :root {
+      --paper: #F3EEE2; --card: #FFFCF4; --ink: #141311; --ink-soft: #4A463F;
+      --orange: #FF5A1E; --blue: #2B4BE0; --green: #1FA658;
+      --border: 3px solid var(--ink);
+      --font-cn: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+      --font-mono: 'Space Mono', 'SF Mono', Consolas, monospace;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; overflow-x: clip; }
+    body {
+      background: var(--paper); color: var(--ink);
+      font-family: var(--font-cn); font-size: 15px; line-height: 1.75;
+      -webkit-font-smoothing: antialiased; overflow-x: clip;
+    }
+    a { color: inherit; }
+    ::selection { background: var(--orange); color: #fff; }
+
+    /* ── 页头 ── */
+    .topbar {
+      position: sticky; top: 0; z-index: 60;
+      background: var(--ink); color: var(--paper);
+      border-bottom: var(--border);
+    }
+    .topbar-inner {
+      max-width: 960px; margin: 0 auto; padding: 10px 20px;
+      display: flex; align-items: center; justify-content: space-between; gap: 14px;
+    }
+    .tb-left { display: flex; align-items: center; gap: 14px; min-width: 0; }
+    .tb-left a { font-family: var(--font-mono); font-size: 12px; letter-spacing: .05em; white-space: nowrap; }
+    .tb-left a:hover { color: var(--orange); }
+    .tb-brand { font-weight: 900; font-size: 12px; letter-spacing: .14em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .tb-right a { font-family: var(--font-mono); font-size: 11px; opacity: .8; white-space: nowrap; }
+    .tb-right a:hover { opacity: 1; color: var(--orange); }
+
+    /* ── 主体：档案渲染区 ── */
+    .cp-page { max-width: 960px; margin: 0 auto; padding: 30px 20px 80px; }
+    /* 抽屉组件的内部块在此作为普通文档流渲染：只需要给容器一个纸质卡底 */
+    .cp-page-body {
+      background: var(--card); border: var(--border); box-shadow: 6px 6px 0 var(--ink);
+      padding: 26px 26px 22px;
+    }
+
+    /* 未知 / 未选：公司列表 */
+    .cp-list-note { font-family: var(--font-mono); font-size: 11px; letter-spacing: .1em; color: var(--ink-soft); margin-bottom: 14px; }
+    .cp-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    .cp-list-card {
+      display: block; background: var(--card); border: 2px solid var(--ink);
+      padding: 14px 15px; text-decoration: none;
+      transition: transform .14s ease, box-shadow .14s ease;
+    }
+    .cp-list-card:hover { transform: translate(-2px, -2px); box-shadow: 4px 4px 0 var(--orange); }
+    .cp-list-name { display: flex; align-items: center; gap: 9px; font-size: 15px; font-weight: 900; }
+    .cp-list-ind { font-size: 11.5px; color: var(--ink-soft); margin-top: 3px; }
+    .cp-list-oneline {
+      font-size: 12px; color: var(--ink-soft); margin-top: 7px;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .cp-list-go { margin-top: 9px; font-family: var(--font-mono); font-size: 10px; color: var(--orange); }
+    .cp-page-empty { font-size: 13px; color: var(--ink-soft); }
+
+    @media (max-width: 640px) {
+      .cp-page { padding: 18px 14px 60px; }
+      .cp-page-body { padding: 18px 16px 16px; }
+      .cp-list { grid-template-columns: minmax(0, 1fr); }
+      .tb-right { display: none; }
+    }
+
+    /* ── 打印：HR 可直接存 PDF ── */
+    @media print {
+      html[data-theme] { --paper: #fff; --card: #fff; --ink: #000; --ink-soft: #333; --orange: #000; --blue: #000; --green: #000; }
+      body { background: #fff; color: #000; }
+      .topbar { display: none !important; }
+      .cp-page { padding: 0; max-width: none; }
+      .cp-page-body { box-shadow: none; border-color: #000; padding: 0; }
+      .cp-album-toggle { display: none !important; }
+      .cp-office.is-folded .cp-office-img.is-extra { display: block; }
+      .cp-src a { text-decoration: none; color: #000; }
+    }
+  </style>
+</body>
+</html>

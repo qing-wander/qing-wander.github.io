@@ -1,0 +1,130 @@
+---
+// /school.html —— 学校档案独立页（React 迁移 M2）
+// 壳层与样式与旧版逐字平移；档案内容 + 学历核验流在 features/school/ 岛内。
+// 桥接脚本：data/asset-map.js + js/asset-cdn.js（资源 CDN 重写，与旧版同序）。
+import ThemeGuard from '../components/ThemeGuard.astro';
+import SchoolPage from '../features/school/SchoolPage';
+---
+
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>学校档案 | 陈培胜 · 求职作品集</title>
+  <meta name="description" content="学校档案：学校概况与沿革、在校经历时间线、主修课程表、获奖证书、校园相册、学历核验。与网页简历教育经历同一份数据源。" />
+  <meta name="robots" content="noindex, follow" />
+  <meta name="theme-color" content="#F3EEE2" />
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-64.png" />
+  <link rel="apple-touch-icon" href="favicon.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&display=swap" media="print" onload="this.media='all'" />
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&display=swap" /></noscript>
+  <link rel="stylesheet" href="/css/fonts.css?v=20261111a" />
+  <!-- 学校档案组件样式：与公司档案同一套视觉语言，独立可加载 -->
+  <link rel="stylesheet" href="/css/school-profile.css?v=20261125k" />
+</head>
+<body>
+  <ThemeGuard />
+
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="tb-left">
+        <a href="/resume.html">← 网页简历</a>
+        <span class="tb-brand">SCHOOL PROFILE · 学校档案</span>
+      </div>
+      <div class="tb-right">
+        <button type="button" onclick="window.print()">打印此档案 ⎙</button>
+        <a href="/index.html">作品集 ↗</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="sp-page">
+    <div class="sp-page-body" id="spPageBody">
+      <noscript><p class="sp-page-empty">本页需要启用 JavaScript 渲染档案内容；也可以在网页简历里点学校名称跳转查看。</p></noscript>
+      <SchoolPage client:load />
+    </div>
+  </main>
+
+  <script is:inline src="/data/asset-map.js"></script>
+  <script is:inline src="/js/asset-cdn.js?v=20261125g"></script>
+
+  <style is:global>
+    /* ── 主题：与首页 / 简历 / 公司档案同一套配色 ── */
+    [data-theme="blueprint"] {
+      --paper: #E9F1F8; --card: #F5FAFE; --ink: #123A5C; --ink-soft: #48678A;
+      --orange: #E03E36; --blue: #1D6FB8; --green: #2E8B57;
+    }
+    [data-theme="newsprint"] {
+      --paper: #F4EDDA; --card: #FAF5E6; --ink: #1C1812; --ink-soft: #59503E;
+      --orange: #C4112C; --blue: #1E3A5F; --green: #2F7D46;
+    }
+    [data-theme="noir"] {
+      --paper: #100E1A; --card: #1A1729; --ink: #ECE7FF; --ink-soft: #8F87AD;
+      --orange: #FF3D8F; --blue: #22D3EE; --green: #9EE86B;
+    }
+    :root {
+      --paper: #F3EEE2; --card: #FFFCF4; --ink: #141311; --ink-soft: #4A463F;
+      --orange: #FF5A1E; --blue: #2B4BE0; --green: #1FA658;
+      --border: 3px solid var(--ink);
+      --font-cn: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+      --font-display: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+      --font-mono: 'Space Mono', 'SF Mono', Consolas, monospace;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; overflow-x: clip; }
+    body {
+      background: var(--paper); color: var(--ink);
+      font-family: var(--font-cn); font-size: 15px; line-height: 1.75;
+      -webkit-font-smoothing: antialiased; overflow-x: clip;
+    }
+    a { color: inherit; }
+    ::selection { background: var(--orange); color: #fff; }
+
+    /* ── 页头 ── */
+    .topbar {
+      position: sticky; top: 0; z-index: 60;
+      background: var(--ink); color: var(--paper);
+      border-bottom: var(--border);
+    }
+    .topbar-inner {
+      max-width: 960px; margin: 0 auto; padding: 10px 20px;
+      display: flex; align-items: center; justify-content: space-between; gap: 14px;
+    }
+    .tb-left { display: flex; align-items: center; gap: 14px; min-width: 0; }
+    .tb-left a { font-family: var(--font-mono); font-size: 12px; letter-spacing: .05em; white-space: nowrap; }
+    .tb-left a:hover { color: var(--orange); }
+    .tb-brand { font-weight: 900; font-size: 12px; letter-spacing: .14em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .tb-right { display: flex; align-items: center; gap: 14px; }
+    .tb-right a, .tb-right button {
+      font-family: var(--font-mono); font-size: 11px; opacity: .8; white-space: nowrap;
+      background: none; border: 0; color: inherit; cursor: pointer; padding: 0;
+    }
+    .tb-right a:hover, .tb-right button:hover { opacity: 1; color: var(--orange); }
+
+    /* ── 主体 ── */
+    .sp-page { max-width: 960px; margin: 0 auto; padding: 30px 20px 80px; }
+    .sp-page-body {
+      background: var(--card); border: var(--border); box-shadow: 6px 6px 0 var(--ink);
+      padding: 26px 26px 22px;
+    }
+
+    @media (max-width: 640px) {
+      .sp-page { padding: 18px 14px 60px; }
+      .sp-page-body { padding: 18px 16px 16px; }
+      .tb-right { display: none; }
+    }
+
+    /* ── 打印 ── */
+    @media print {
+      html[data-theme] { --paper: #fff; --card: #fff; --ink: #000; --ink-soft: #333; --orange: #000; --blue: #000; --green: #000; }
+      body { background: #fff; color: #000; }
+      .topbar { display: none !important; }
+      .sp-page { padding: 0; max-width: none; }
+      .sp-page-body { box-shadow: none; border-color: #000; padding: 0; }
+    }
+  </style>
+</body>
+</html>
