@@ -874,7 +874,7 @@ M0–M5 已全部完成并生产切换（线上 React 版运行中，`REACT_MIGR
 | 后台只读接口 / 导出（11-27） | ✅ stats/messages/devices/config/voice/greeting/theme/gender/kb 全 200；`/api/admin/kb` `worker_ready:true`（T27 互证已闭环）；CSV 导出 `text/csv`，表头 seq…admin_note，11 条留言 |
 | 留言墙写链路（11-27 授权联调） | ✅ `POST /api/wall` 201 落库回显（id `wmwy42v07sagwj`）；随即后台 `messages/status` 置 hidden 200，公开墙已不可见，仅后台可查；为唯一写入 D1 的测试残留 |
 | 投递写链路（11-27 授权联调） | ⚠️ T34：PoW 校验通过后首发返回 CF 502 HTML（应用未走错误分类），二次被 429 限流拦下；preview 不发信分支正常。待 CF 日志定位 |
-| 核验申请写链路（11-27） | ⏳ 未提交：`/api/verify-access` 会真实发 Resend 邮件到站长 `hi@chenpeisheng.cn`，副作用需用户确认后再触发 |
+| 核验申请写链路（11-27 授权联调） | ✅ 提交 200，requestId `dbf8bd995d2e4f939dc17cb6fa8bdd3f`，D1 落 `pending` 且生成审批链接；同设备轮询 `pending`、换设备 `device_mismatch`，设备绑定守卫生效；邮件是否送达待站长查收 `hi@chenpeisheng.cn`（含垃圾箱）或 CF 日志确认——发件域 `access@chenpeisheng.cn` 未验证，可能被 Resend 拒收（同 T1 因）。该申请为 D1 测试残留，后台无列表 UI，需直接清表或点审批链接驳回 |
 | 公司 / 学校 / 案例页 | ✅ 渲染正常，控制台 0 error |
 
 ---
