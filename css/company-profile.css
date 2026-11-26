@@ -310,12 +310,40 @@ body.cp-lock { overflow: hidden; }
   .cp-exec-slide .cp-exec-photo.is-placeholder { width: 100px; height: 104px; }
 }
 
-/* 独立档案页：高管卡片紧贴卡纸右上角——去掉头部为抽屉按钮预留的 44px 与右侧外边距。
-   抽屉右上角有「全屏 / 关闭」按钮，必须保留避让留白，故只在 .cp-page-body 生效；
-   移动端轮播会换行独立成行，也不参与贴角。 */
+/* 独立档案页：档案头不参与粘性定位。
+   `.cp-head` 的 sticky 原本是为抽屉内滚动容器（.cp-panel-scroll）保留公司身份；
+   独立页里头部本身就是整页第一屏（粘住时移动端 600–730px、桌面约 390px 高），
+   会把视口下半截整块「冻结」，正文可滚动区不足一半。
+   独立页已有自己的 sticky 顶栏，头部回到普通文档流即可。 */
+.cp-page-body .cp-head { position: static; }
+/* 独立页没有抽屉右上角的关闭 / 全屏按钮，不需要预留 38–44px 避让 */
+.cp-page-body .cp-head-top { padding-right: 0; }
+
+/* 独立档案页 · 移动端：高管轮播从「竖排大卡」改为「横排紧凑卡」。
+   抽屉沿用既有竖排卡；独立页头部叠加公司名多行信息后，竖排卡会把首屏吃掉约 85%，
+   正文一个板块都进不了第一屏。横排后头部回落到约 500–570px，首屏底部即可看到 KPI 正文。
+   结构与交互（横滑 / 箭头 / 圆点）不变。 */
+@media (max-width: 680px) {
+  .cp-page-body .cp-head-exec {
+    flex: 0 0 100%; width: 100%; min-width: 0;
+    margin-top: 10px; padding: 8px 10px 7px;
+  }
+  .cp-page-body .cp-exec-viewport { margin-top: 6px; }
+  .cp-page-body .cp-exec-slide { flex-direction: row; align-items: flex-start; gap: 10px; text-align: left; }
+  .cp-page-body .cp-exec-portrait { flex: 0 0 64px; width: 64px; height: 64px; }
+  .cp-page-body .cp-exec-slide .cp-exec-photo,
+  .cp-page-body .cp-exec-slide .cp-exec-photo.is-placeholder { width: 60px; height: 60px; }
+  .cp-page-body .cp-exec-slide-body { flex: 1 1 auto; width: auto; min-width: 0; margin-top: 0; }
+  /* 竖排窄卡里「上一页 / 下一页 / 圆点」靠 space-between 分居三处；
+     横排通栏后会被拉成三段大留白，改为翻页键相邻、圆点靠右 */
+  .cp-page-body .cp-exec-ctrl { justify-content: flex-start; gap: 6px; }
+  .cp-page-body .cp-exec-dots { margin-left: auto; }
+}
+
+/* 独立档案页：桌面档高管卡片紧贴卡纸右上角——只收掉顶部内边距，
+   让卡片与标题齐平；抽屉语境保留 24px（右上角有「全屏 / 关闭」按钮）。 */
 @media (min-width: 721px) {
-  .cp-page-body .cp-head { padding-top: 12px; padding-right: 0; }
-  .cp-page-body .cp-head-top { padding-right: 0; }
+  .cp-page-body .cp-head { padding-top: 12px; }
 }
 
 /* ══ 5. 各内容区 ═════════════════════════════════════ */
