@@ -1,0 +1,803 @@
+---
+// /index.html —— 主页（React 迁移 M3 · 分片一：SSG 全板块直出）
+// 
+// 本阶段形态：内容由 data/site-data.json 构建期直出（SEO / 无 JS 首次可见），
+// 交互层（main.js 的观察器/模态框/AI 面板/留言墙）与 AI 系脚本全部零改动桥接——
+// 它们挂固定 DOM id（#aiFab/#aiPanel/#expList/…），运行时以同一快照重渲染同一
+// DOM，与 SSG 输出幂等。后续分片将逐板块收编为 React 岛并下线旧渲染层。
+// URL 契约（N3）：根路径 index.html，astro build.format 'file' 输出同名文件。
+import ThemeGuard from '../components/ThemeGuard.astro';
+import { SITE } from '../features/index/data';
+
+/* 板块可见性 & 编号（main.js syncSectionLayout 的构建期等价） */
+const d = SITE;
+const len = (x?: unknown[]) => (Array.isArray(x) ? x.length : 0);
+const RULES: Record<string, boolean> = {
+  about: true,
+  experience: len(d.experience) > 0,
+  projects: len(d.projects) > 0,
+  works: len(d.works) > 0,
+  skills: len(d.skills?.rows) > 0,
+  education: !!(d.education && d.education.main && d.education.main.school),
+  awards: len(d.awards?.certs) + len(d.awards?.list) > 0,
+  objective: len(d.objective?.cards) > 0,
+  contact: len(d.contact?.cards) > 0,
+  wall: true,
+};
+const ORDER = ['about', 'experience', 'projects', 'works', 'skills', 'education', 'awards', 'objective', 'contact', 'wall'];
+const LABELS: Record<string, string> = {
+  about: '关于我', experience: '工作经历', projects: '项目作品', works: '个人作品',
+  skills: '专业技能', education: '教育经历', awards: '获奖证书', objective: '求职意向',
+  contact: '联系方式', wall: '留言墙',
+};
+let seq = 0;
+const NOS: Record<string, string> = {};
+for (const id of ORDER) if (RULES[id] !== false) { seq++; NOS[id] = (seq < 10 ? '0' : '') + seq; }
+const secNo = (id: string) => 'SEC.' + NOS[id];
+
+const h = d.hero || {};
+const ab = d.about || {};
+const ic = h.idcard || {};
+const em = d.education?.main || {};
+const schoolUrl = em.profileId ? 'school.html?c=' + encodeURIComponent(em.profileId) : '';
+const schoolTitle = '学校档案：学校概况 / 在校经历 / 课程表 / 获奖证书 / 学历验证';
+const sk = d.skills || {};
+const aw = d.awards || {};
+const ct = d.contact || {};
+const cta = ct.cta || {};
+const nbsp = (s?: string) => (s || '').replace(/ /g, '\u00A0');
+import peopleRaw from '@data/people.json';
+const people = (peopleRaw as { people?: Array<{ name?: string; site?: string; role?: string; reason?: string; initial?: string }>; meta?: { footerCount?: number } });
+const peopleList = ((people.people) || []).filter((p) => p && p.name && p.site);
+const peopleMax = people.meta?.footerCount || 4;
+---
+
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{d.meta?.pageTitle}</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-64.png" />
+  <link rel="icon" type="image/png" sizes="512x512" href="favicon.png" />
+  <link rel="apple-touch-icon" href="favicon.png" />
+  <meta name="description" content={d.meta?.description} />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <!-- 中文用 Noto Sans SC，异步加载：境外网络被墙时不阻塞渲染，直接落到系统字体栈 -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&display=swap" media="print" onload="this.media='all'" />
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&display=swap" /></noscript>
+  <!-- 等宽英文字体本地自托管，不依赖境外 CDN -->
+  <link rel="stylesheet" href="css/fonts.css?v=20261111a" />
+  <link rel="stylesheet" href="css/style.css?v=20261125g" />
+  <link rel="stylesheet" href="css/ai-skins.css?v=20261125a" />
+  <link rel="stylesheet" href="css/ai-voice.css?v=20261118b" />
+  <!-- 面板窗口层：放大 / 还原 / 一步关闭，样式放最后以便覆盖基础面板规则 -->
+  <link rel="stylesheet" href="css/ai-panel-ux.css?v=20261118a" />
+  <!-- 角色 ↔ 面板语义联动：说话音波 / 指路小票 / 落点描边 -->
+  <link rel="stylesheet" href="css/ai-stage-link.css?v=20261121b" />
+  <!-- 公司档案（SEC.03 徽章 + 抽屉）：与 resume.html 共用，数据源 data/company-profiles.js -->
+  <link rel="stylesheet" href="css/company-profile.css?v=20261125s1" />
+  <link rel="stylesheet" href="css/secure-access.css?v=20261125s1" />
+  <meta name="theme-color" content="#F3EEE2" />
+  <link rel="canonical" href="https://chenpeisheng.cn/" />
+  <link rel="manifest" href="manifest.json" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="陈培胜 · AI Agent 工程师 · 求职作品集" />
+  <meta property="og:locale" content="zh_CN" />
+  <meta property="og:title" content="陈培胜 CHEN PEISHENG · AI Agent 工程师 · 求职作品集 2026" />
+  <meta property="og:description" content="陈培胜的个人求职作品集——AI Agent 工程师，5 年研发经验，Agent 开发 / AI 工程化 / 企业 AI 基建方向。" />
+  <meta property="og:url" content="https://chenpeisheng.cn/" />
+  <meta property="og:image" content="https://chenpeisheng.cn/images/%E9%99%88%E5%9F%B9%E8%83%9C-%E4%BD%9C%E5%93%81%E9%9B%86-%E5%88%86%E4%BA%AB%E5%8D%A1-%E6%96%B9%E5%BD%A2.png?v=20261123d" />
+  <meta property="og:image:width" content="2160" />
+  <meta property="og:image:height" content="2160" />
+  <meta property="og:image:alt" content="陈培胜 · AI Agent 工程师 · 求职作品集 2026 分享卡" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="陈培胜 CHEN PEISHENG · AI Agent 工程师 · 求职作品集 2026" />
+  <meta name="twitter:description" content="5 年 Java 后端 + 2 年 AI Agent 工程，主导 6 套系统从 0 到 1。" />
+  <meta name="twitter:image" content="https://chenpeisheng.cn/images/%E9%99%88%E5%9F%B9%E8%83%9C-%E4%BD%9C%E5%93%81%E9%9B%86-%E5%88%86%E4%BA%AB%E5%8D%A1-%E6%96%B9%E5%BD%A2.png?v=20261123d" />
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    "name": "陈培胜",
+    "alternateName": "CHEN PEISHENG",
+    "jobTitle": "AI Agent 工程师",
+    "description": "5 年 Java 后端 + 2 年 AI Agent 工程，Agent 开发与 AI 工程化方向。",
+    "url": "https://chenpeisheng.cn/",
+    "email": "mailto:hi@chenpeisheng.cn",
+    "sameAs": [
+      "https://github.com/shenge-work",
+      "https://blog.chenpeisheng.cn"
+    ],
+    "address": {
+      "@type": "PostalAddress",
+      "addressLocality": "深圳",
+      "addressRegion": "广东",
+      "addressCountry": "CN"
+    },
+    "knowsAbout": ["Agent 编排", "RAG 与评测治理", "AI 工程化", "分布式网关", "Java 后端", "Kafka / Flink / Milvus"],
+    "seeks": {
+      "@type": "Demand",
+      "name": "AI Agent 工程师"
+    }
+  }
+  </script>
+  <ThemeGuard />
+</head>
+<body>
+
+<!-- ══════════════ 顶栏 / TOP BAR ══════════════ -->
+<header class="topbar" id="topbar">
+  <div class="topbar-inner">
+    <div class="topbar-left">
+      <a class="brand" href="#hero">
+        <span class="brand-mark" id="brandMark">{d.meta?.brandMark}<span class="brand-dot">.</span></span>
+        <span class="brand-sub" id="brandSub" set:html={d.meta?.brandSub || ''} />
+      </a>
+      <span class="status-pill" id="statusPill"><i class="lamp lamp-green"></i>{d.meta?.statusPill}</span>
+    </div>
+    <nav class="nav" id="nav">
+      {ORDER.map((id) => RULES[id] !== false && (
+        <a href={`#${id}`} data-sec={id}><span class="nav-no">{NOS[id]}</span>{LABELS[id]}</a>
+      ))}
+      <a href="https://blog.chenpeisheng.cn" class="nav-blog" target="_blank" rel="noopener noreferrer" title="个人博客"><span class="nav-no">11</span>博客</a>
+    </nav>
+    <div class="topbar-right">
+      <button class="share-btn" id="shareBtn" title="分享作品集" aria-label="分享作品集" hidden>分享 ⤴</button>
+      <div class="hit-counter" id="hitCounter" role="status" aria-label="全站访问统计">
+        <div class="hit-counter-head">
+          <span class="hit-counter-dot" aria-hidden="true"></span>
+          <span>全站访问 · GLOBAL VISITS</span>
+        </div>
+        <div class="hit-counter-digits" id="hitCounterDigits" aria-hidden="true"></div>
+      </div>
+      <button class="menu-btn" id="menuBtn" aria-label="打开菜单" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<!-- ══════════════ 首屏 / HERO：档案封面 ══════════════ -->
+<section class="hero" id="hero">
+  <div class="hero-grid-bg" aria-hidden="true"></div>
+  <span class="hero-corner tl" aria-hidden="true" data-corners="0">{h.corners?.[0]}</span>
+  <span class="hero-corner tr" aria-hidden="true" data-corners="1">{h.corners?.[1]}</span>
+  <span class="hero-corner bl" aria-hidden="true" data-corners="2">{h.corners?.[2]}</span>
+  <span class="hero-corner br" aria-hidden="true" data-corners="3">{h.corners?.[3]}</span>
+
+  <div class="hero-inner">
+    <!-- 左：姓名排版 + 定位 + 简介 + 按钮 -->
+    <div class="hero-left">
+      <p class="hero-eyebrow reveal" id="heroTags">
+        {(h.tags || []).map((t) => <span class={`tag ${t.cls || 'tag-orange'}`}>{t.text}</span>)}
+      </p>
+      <h1 class="hero-name">
+        <span class="hero-name-cn reveal" id="heroNameCn">{h.nameCn}<i class="glitch-layer glitch-blue" aria-hidden="true">{h.nameCn}</i><i class="glitch-layer glitch-orange" aria-hidden="true">{h.nameCn}</i></span>
+        <span class="hero-name-en reveal" aria-hidden="true" id="heroNameEn">{h.nameEn}</span>
+      </h1>
+      <p class="hero-role reveal" id="heroRole">{h.role} <span class="role-slash">/</span> <span class="role-en" set:html={nbsp(h.roleEn)} /></p>
+      <p class="hero-bio reveal" id="heroBio">{h.bio}</p>
+      <div class="hero-cta reveal" id="heroCta">
+        <a class="btn btn-solid" href="#projects">{h.ctaProjects || '作品'} <span class="btn-arrow" aria-hidden="true">▶▶</span></a>
+        <a class="btn btn-ghost" href="jd.html">{h.ctaJd || 'JD 匹配'} <span class="btn-arrow" aria-hidden="true">▶</span></a>
+        <a class="btn btn-ghost" href={h.resumeFile || 'resume.html'}>{h.ctaResume || '简历'} <span class="btn-arrow" aria-hidden="true">▶</span></a>
+      </div>
+      <p class="hero-meta reveal">
+        <i class="lamp lamp-green"></i>
+        <span id="heroStatus">{h.statusMeta}</span>
+      </p>
+    </div>
+
+    <!-- 右：立体人才档案卡（签名元素） -->
+    <div class="hero-right reveal">
+      <div class="idcard-stack" aria-hidden="true">
+        <div class="idcard idcard-back-2"></div>
+        <div class="idcard idcard-back-1"></div>
+        <div class="idcard idcard-main">
+          <div class="idcard-head">
+            <div class="idcard-photo">
+              <img id="idcardPhoto" src={ic.photo} alt={`${h.nameCn || ''}的个人形象照`} width="480" height="480" />
+              <span class="idcard-photo-frame" aria-hidden="true"></span>
+            </div>
+            <div class="idcard-head-info">
+              <p class="idcard-title" id="idcardTitle">{ic.titleCn}<br /><span set:html={nbsp(ic.titleEn)} /></p>
+              <p class="idcard-no" id="idcardNo">{ic.no}</p>
+              <p class="idcard-status"><i class="lamp lamp-green"></i><span id="idcardStatus">{ic.status}</span></p>
+            </div>
+          </div>
+          <dl class="idcard-fields" id="idcardFields">
+            {(ic.fields || []).map((f) => (
+              <div class={`field ${f.cls || ''}`}><dt>{f.dt}</dt><dd>{f.dd}</dd></div>
+            ))}
+          </dl>
+          <div class="idcard-foot">
+            <div class="barcode" aria-hidden="true"></div>
+            <span class="idcard-foot-code" id="idcardFootCode">{ic.footCode}</span>
+          </div>
+          <span class="idcard-chip" aria-hidden="true"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <a class="hero-scroll" href="#about" aria-label="向下滚动">
+    <span class="pixel-arrow" aria-hidden="true">▼</span>
+    <span>SCROLL / 下滑查看档案</span>
+  </a>
+</section>
+
+<!-- ══════════════ 横向滚动条 / MARQUEE ══════════════ -->
+<div class="marquee" aria-hidden="true">
+  <div class="marquee-track">
+    <span id="marqueeText" set:html={`${d.marquee || ''}${d.marquee || ''}`} />
+  </div>
+</div>
+
+<!-- ══════════════ SEC.01 关于我 ══════════════ -->
+<section class="section" id="about">
+  <div class="section-head">
+    <span class="section-no">{secNo('about')}</span>
+    <h2 class="section-title">关于我 <span class="title-en">ABOUT</span></h2>
+    <span class="section-line" aria-hidden="true"></span>
+    <span class="section-coord" aria-hidden="true">ARCHIVE//BIO-GRAPHY</span>
+  </div>
+  <div class="about-grid">
+    <div class="about-photo-wrap reveal">
+      <div class="about-photo">
+        <img id="aboutPhoto" src={ab.photo} alt={ab.photoAlt} width="500" height="500" />
+      </div>
+      <div class="stamp stamp-verified" aria-hidden="true" id="aboutStamp" set:html={ab.stamp || ''}></div>
+      <span class="about-photo-no" aria-hidden="true" id="aboutPhotoNo">{ab.photoNo}</span>
+    </div>
+    <div class="about-body">
+      <p class="about-lead reveal" id="aboutLead" set:html={ab.lead || ''}></p>
+      <div id="aboutParagraphs">
+        {(ab.paragraphs || []).map((t) => <p class="reveal" set:html={t} />)}
+      </div>
+      <ul class="about-stats" id="aboutStats">
+        {(ab.stats || []).map((s) => (
+          <li class="reveal"><strong data-count={s.count} data-suffix={s.suffix}>0</strong><span>{s.label}</span></li>
+        ))}
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- 岗位匹配入口已收敛：主页仅 hero「JD 匹配」按钮 → 独立页 jd.html，无区块、无导航项 -->
+
+<!-- ══════════════ SEC.02 工作经历 ══════════════ -->
+<section class="section" id="experience" hidden={RULES.experience === false}>
+  <div class="section-head">
+    <span class="section-no">{secNo('experience')}</span>
+    <h2 class="section-title">工作经历 <span class="title-en">EXPERIENCE</span></h2>
+    <span class="section-line" aria-hidden="true"></span>
+    <span class="section-coord" aria-hidden="true">LOG//CAREER-TRACE</span>
+  </div>
+  <div class="exp-list" id="expList">
+    {(d.experience || []).map((x) => (
+      <article class="exp-card reveal" data-cp={x.profileId || undefined} title={x.profileId ? '点击查看公司档案' : undefined}>
+        {x.profileId && (
+          <span class="exp-badge" data-cp={x.profileId} role="button" tabindex="0" aria-label="查看公司档案"></span>
+        )}
+        <div class="exp-head">
+          <div>
+            <h3 class="exp-company">
+              {x.profileId ? (
+                <a class="cp-name-link" data-cp={x.profileId} href={`https://chenpeisheng.cn/company.html?c=${x.profileId}`} title="公司档案：背景 / 业务 / 融资 / 前景">{x.company}</a>
+              ) : x.company}
+            </h3>
+            {x.profileId && <p class="cp-quick" data-cp-quick={x.profileId} hidden></p>}
+            <p class="exp-role">{x.companyNote ? `${x.companyNote} · ` : ''}{x.role}</p>
+          </div>
+          <span class="exp-time">{x.time}</span>
+        </div>
+        <ul class="exp-points">
+          {(x.points || []).map((p) => <li set:html={p} />)}
+        </ul>
+        <div class="exp-tags">
+          {(x.tags || []).map((t) => <span class={`tag ${t.cls || ''}`}>{t.text}</span>)}
+        </div>
+      </article>
+    ))}
+  </div>
+</section>
+
+<!-- ══════════════ SEC.03 项目作品 ══════════════ -->
+<section class="section section-tint" id="projects" hidden={RULES.projects === false}>
+  <div class="section-head">
+    <span class="section-no">{secNo('projects')}</span>
+    <h2 class="section-title">项目作品 <span class="title-en">WORKS</span></h2>
+    <span class="section-line" aria-hidden="true"></span>
+    <span class="section-coord" aria-hidden="true">SHOWCASE//P-01→P-05</span>
+  </div>
+  <div class="proj-grid" id="projGrid">
+    {(d.projects || []).map((p, i) => (
+      <article class="proj-card reveal" data-proj={i} tabindex="0" role="button" aria-label={`查看项目 ${p.title} 的详情`}>
+        <div class="proj-media">
+          <img src={p.img} alt={p.imgAlt} width="640" height="360" />
+          <span class="proj-no" aria-hidden="true">{p.no}</span>
+          <span class="proj-hover-ui" aria-hidden="true"><span class="proj-hover-btn">查看详情 <i>▶</i></span></span>
+        </div>
+        <div class="proj-body">
+          <div class="proj-meta">
+            <span class="proj-co" hidden={!p.company}>{p.company}</span>
+            {p.url
+              ? <a class="proj-link" href={p.url} target="_blank" rel="noopener noreferrer" aria-label={`打开 ${p.title} 线上产品`}>线上产品 ↗</a>
+              : (p.note ? <span class="proj-note">{p.note}</span> : null)}
+            <span class={`tag ${p.badgeCls || 'tag-orange'}`}>{p.badge}</span>
+            <span class="proj-year">{p.year}</span>
+          </div>
+          <h3 class="proj-title">{p.title} <span class="proj-title-en">{p.titleEn}</span></h3>
+          <p class="proj-desc">{p.desc}</p>
+          <div class="proj-stack">
+            {(p.stackTags || []).map((s) => <span>{s}</span>)}
+          </div>
+        </div>
+      </article>
+    ))}
+  </div>
+  <p class="proj-hint"><span class="pixel-arrow" aria-hidden="true">▶▶</span> 点击任意卡片，调出完整项目档案</p>
+</section>
+
+<!-- ══════════════ SEC.04 个人作品 ══════════════ -->
+<section class="section" id="works" hidden={RULES.works === false}>
+  <div class="section-head">
+    <span class="section-no">{secNo('works')}</span>
+    <h2 class="section-title">个人作品 <span class="title-en">PERSONAL WORKS</span></h2>
+    <span class="section-line" aria-hidden="true"></span>
+    <span class="section-coord" aria-hidden="true">SOURCE//GITHUB-REPO</span>
+  </div>
+  <div class="works-scroller" id="worksScroller">
+    <div class="works-track" id="worksGrid">
+      <div class="works-set">
+        {(d.works || []).map((w) => (
+          <article class={`work-card${w.status === 'upcoming' ? ' work-upcoming' : ''}`}>
+            {w.status === 'upcoming' && <span class="work-badge">预告 · 规划中</span>}
+            <div class="work-head">
+              <span class="work-no" aria-hidden="true">{w.no}</span>
+              <h3 class="work-title">{w.title}<span class="work-title-en">{w.titleEn}</span></h3>
+            </div>
+            <p class="work-desc">{w.desc}</p>
+            <div class="work-tech">
+              {(w.tech || []).map((t) => <span>{t}</span>)}
+            </div>
+            <div class="work-links">
+              {w.detailId && (
+                <a class="work-link work-case" href={`work/${w.detailId}.html`} target="_blank" rel="noopener noreferrer" aria-label={`查看 ${w.title} 的项目案例`}>查看案例 →</a>
+              )}
+              {w.status === 'upcoming'
+                ? <span class="work-soon">规划中 · 敬请期待</span>
+                : (w.github || w.live
+                  ? <>
+                      {w.github && <a class="work-link work-gh" href={w.github} target="_blank" rel="noopener noreferrer" aria-label={`查看 ${w.title} 的 GitHub 源码`}>GitHub 源码 ↗</a>}
+                      {w.live && <a class="work-link" href={w.live} target="_blank" rel="noopener noreferrer" aria-label={`在线访问 ${w.title}`}>在线访问 ↗</a>}
+                    </>
+                  : <span class="work-soon">内部项目 · 未公开源码</span>)}
+            </div>
+          </article>
+        ))}
+      </div>
+      <div class="works-set" aria-hidden="true">
+        {(d.works || []).map((w) => (
+          <article class={`work-card${w.status === 'upcoming' ? ' work-upcoming' : ''}`}>
+            {w.status === 'upcoming' && <span class="work-badge">预告 · 规划中</span>}
+            <div class="work-head">
+              <span class="work-no" aria-hidden="true">{w.no}</span>
+              <h3 class="work-title">{w.title}<span class="work-title-en">{w.titleEn}</span></h3>
+            </div>
+            <p class="work-desc">{w.desc}</p>
+            <div class="work-tech">
+              {(w.tech || []).map((t) => <span>{t}</span>)}
+            </div>
+            <div class="work-links">
+              {w.detailId && (
+                <a class="work-link work-case" href={`work/${w.detailId}.html`} target="_blank" rel="noopener noreferrer" aria-label={`查看 ${w.title} 的项目案例`}>查看案例 →</a>
+              )}
+              {w.status === 'upcoming'
+                ? <span class="work-soon">规划中 · 敬请期待</span>
+                : (w.github || w.live
+                  ? <>
+                      {w.github && <a class="work-link work-gh" href={w.github} target="_blank" rel="noopener noreferrer" aria-label={`查看 ${w.title} 的 GitHub 源码`}>GitHub 源码 ↗</a>}
+                      {w.live && <a class="work-link" href={w.live} target="_blank" rel="noopener noreferrer" aria-label={`在线访问 ${w.title}`}>在线访问 ↗</a>}
+                    </>
+                  : <span class="work-soon">内部项目 · 未公开源码</span>)}
+            </div>
+          </article>
+        ))}
+      </div>
+    </div>
+  </div>
+  <p class="proj-hint"><span class="pixel-arrow" aria-hidden="true">▶▶</span> 已上线作品点击「GitHub 源码」直达仓库；带「预告」角标为规划中的项目，敬请期待</p>
+</section>
+
+<!-- ══════════════ SEC.05 专业技能 ══════════════ -->
+<section class="section section-tint" id="skills" hidden={RULES.skills === false}>
+  <div class="section-head">
+    <span class="section-no">{secNo('skills')}</span>
+    <h2 class="section-title">专业技能 <span class="title-en">SKILLS</span></h2>
+    <span class="section-line" aria-hidden="true"></span>
+    <span class="section-coord" aria-hidden="true">MATRIX//CAPABILITY-LEDGER</span>
+  </div>
+  <div class="skills-grid">
+    <div class="skills-bars reveal" id="skillBars">
+      {sk.rows && sk.rows.length ? (
+        <div class="cap-list">
+          {sk.rows.map((r) => (
+            <div class="cap" data-domain={r.domain || 'mix'}>
+              <div class="cap-left">
+                <div class="cap-head">
+                  <span class="cap-dot" aria-hidden="true"></span>
+                  <h3 class="cap-name">{r.name}</h3>
+                  {r.ref && (r.refUrl
+                    ? <a class="tag cap-ref" href={r.refUrl} target="_blank" rel="noopener noreferrer">{r.ref} ↗</a>
+                    : <span class="tag cap-ref">{r.ref}</span>)}
+                </div>
+                <span class="cap-stack">{r.stack}</span>
+              </div>
+              <div class="cap-right">
+                <p class="cap-proof">{r.proof}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        (sk.bars || []).map((b) => (
+          <div class="skill">
+            <div class="skill-head"><span>{b.label}</span><b>{b.pct}</b></div>
+            <div class="skill-bar"><i data-w={b.pct}></i></div>
+          </div>
+        ))
+      )}
+    </div>
+    <div class="skills-cloud reveal">
+      <h3 class="cloud-title" id="toolboxTitle">{sk.toolboxTitle || '工具箱 TOOLBOX'}</h3>
+      <div class="cloud-tags" id="toolboxTags">
+        {sk.toolboxGroups && sk.toolboxGroups.length ? (
+          sk.toolboxGroups.map((g) => (
+            <div class="cloud-group">
+              <div class="cloud-group-head">{g.label}</div>
+              <div class="cloud-tags">
+                {(g.tags || []).map((t) => <span class={`tag tag-lg ${t.cls || ''}`}>{t.text}</span>)}
+              </div>
+            </div>
+          ))
+        ) : (
+          (sk.toolbox || []).map((t) => <span class={`tag tag-lg ${t.cls || ''}`}>{t.text}</span>)
+        )}
+      </div>
+      <div class="skills-note">
+        <span class="side-no">NOTE</span>
+        <p id="skillsNote">{sk.note}</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ SEC.06 教育经历 ══════════════ -->
+<section class="section" id="education" hidden={RULES.education === false}>
+  <div class="section-head">
+    <span class="section-no">{secNo('education')}</span>
+    <h2 class="section-title">教育经历 <span class="title-en">EDUCATION</span></h2>
+    <span class="section-line" aria-hidden="true"></span>
+    <span class="section-coord" aria-hidden="true">RECORD//SCHOOL-FILE</span>
+  </div>
+  <div class="edu-grid" id="eduGrid">
+    <div class="edu-card reveal">
+      <div class="edu-card-head">
+        <span class="edu-years">{em.time}</span>
+        <span class={`tag ${em.tagCls || 'tag-orange'}`}>{em.tag}</span>
+      </div>
+      <div class="edu-brand">
+        {em.logo && <img class="edu-logo" src={em.logo} alt={`${em.school} 校徽`} />}
+        <div class="edu-brand-txt">
+          <h3 class="edu-school">
+            {schoolUrl
+              ? <a class="edu-school-link" href={schoolUrl} title={schoolTitle}>{em.school}<span class="edu-school-go">↗</span></a>
+              : em.school}
+          </h3>
+          {schoolUrl && <a class="edu-file-link" href={schoolUrl} title={schoolTitle}>查看学校档案 · 课程表 / 在校经历 / 获奖证书 ↗</a>}
+        </div>
+      </div>
+      <p class="edu-major">{em.major} <span class="edu-en">{em.majorEn}</span></p>
+      <div class="edu-stats">
+        {(em.stats || []).map((s) => (
+          <div class={`edu-stat ${s.cls || ''}`}><strong>{s.num}<span>{s.unit}</span></strong><em>{s.label}</em></div>
+        ))}
+      </div>
+      {(em.notes || []).map((n, i) => (
+        <p class={`edu-note${i > 0 ? ' edu-note-extra' : ''}`}>{n}</p>
+      ))}
+    </div>
+    <div class="edu-side">
+      {(d.education?.sides || []).map((s) => (
+        <div class="edu-side-card reveal">
+          <span class="side-no">{s.no}</span>
+          <h4>{s.title}</h4>
+          <p>{s.text}</p>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ SEC.07 获奖证书 ══════════════ -->
+<section class="section section-tint" id="awards" hidden={RULES.awards === false}>
+  <div class="section-head">
+    <span class="section-no">{secNo('awards')}</span>
+    <h2 class="section-title">获奖证书 <span class="title-en">AWARDS</span></h2>
+    <span class="section-line" aria-hidden="true"></span>
+    <span class="section-coord" aria-hidden="true">PROOF//HONOR-RECORD</span>
+  </div>
+  <div class="cert-grid" id="certGrid">
+    {(aw.certs || []).map((c, i) => (
+      <figure class="cert-card reveal">
+        <div class="cert-media">
+          <img src={c.img} alt={c.alt} width="620" height="446" />
+          <span class={`cert-stamp ${c.stampCls || ''}`} aria-hidden="true">{c.stamp || `CERT-0${i + 1}`}</span>
+        </div>
+        <figcaption><strong>{c.title}</strong><span>{c.sub}</span></figcaption>
+      </figure>
+    ))}
+  </div>
+  <ol class="award-list" id="awardList">
+    {(aw.list || []).map((a) => (
+      <li class="reveal">
+        <span class="award-year">{a.year}</span>
+        <span class="award-name">{a.name}<span>{a.sub}</span></span>
+      </li>
+    ))}
+  </ol>
+</section>
+
+<!-- ══════════════ SEC.08 求职意向 ══════════════ -->
+<section class="section section-tint" id="objective" hidden={RULES.objective === false}>
+  <div class="section-head">
+    <span class="section-no">{secNo('objective')}</span>
+    <h2 class="section-title">求职意向 <span class="title-en">TARGET</span></h2>
+    <span class="section-line" aria-hidden="true"></span>
+    <span class="section-coord" aria-hidden="true">LOCKED//JOB-PREFS</span>
+  </div>
+  <div class="obj-grid" id="objGrid">
+    {(d.objective?.cards || []).map((c) => (
+      <div class={`obj-card ${c.cls || ''} reveal`}>
+        <span class="obj-tag">{c.tag}</span>
+        {c.role ? (
+          <><h3 class="obj-role">{c.role}</h3><p class="obj-role-sub">{c.roleSub}</p></>
+        ) : (
+          <h3 class="obj-role-sm">{c.roleSm}</h3>
+        )}
+        <p class="obj-desc">{c.desc}</p>
+      </div>
+    ))}
+  </div>
+</section>
+
+<!-- ══════════════ SEC.09 联系方式 + 简历下载 ══════════════ -->
+<section class="section section-contact" id="contact" hidden={RULES.contact === false}>
+  <div class="section-head">
+    <span class="section-no">{secNo('contact')}</span>
+    <h2 class="section-title">联系方式 <span class="title-en">CONTACT</span></h2>
+    <span class="section-line" aria-hidden="true"></span>
+    <span class="section-coord" aria-hidden="true">SIGNAL//SEND-MESSAGE</span>
+  </div>
+  <h3 class="contact-big reveal" id="contactBig" set:html={ct.big || ''}></h3>
+  <div class="contact-grid" id="contactGrid">
+    {(ct.cards || []).map((c) => {
+      const inner = <>
+        <span class="contact-label">{c.label}</span>
+        <span class="contact-value">{c.value}</span>
+        {c.mini && <span class="contact-mini">{c.mini}</span>}
+        {!c.plain && <span class="pixel-arrow contact-arrow" aria-hidden="true">▶</span>}
+      </>;
+      const wide = c.span ? ' contact-card-wide' : '';
+      if (c.plain || !c.href) {
+        return <div class={`contact-card contact-card-plain${wide} reveal`}>{inner}</div>;
+      }
+      return (
+        <a class={`contact-card${wide} reveal`} href={c.href} target={/^https?:/.test(c.href) ? '_blank' : undefined} rel={/^https?:/.test(c.href) ? 'noopener noreferrer' : undefined}>{inner}</a>
+      );
+    })}
+  </div>
+  <!-- GitHub 贡献热力图：数据来自 data/contributions.json（Actions 每日刷新），加载失败整块隐藏 -->
+  <div class="gh-activity" id="ghActivity" hidden></div>
+  <div class="resume-cta reveal" id="resumeCta">
+    <div class="resume-cta-text"><strong>{cta.title}</strong><p>{cta.desc}</p></div>
+    <a class="btn btn-solid btn-lg" href={cta.resumeFile || 'resume.html'}>{cta.btnDownload} <span class="btn-arrow" aria-hidden="true">▶</span></a>
+    <a class="btn btn-ghost btn-lg" href={cta.resumeFile || 'resume.html'} target="_blank">{cta.btnPreview}</a>
+  </div>
+</section>
+
+<!-- ══════════════ SEC.10 留言墙 / GUEST WALL ══════════════ -->
+<section class="section section-tint" id="wall">
+  <div class="section-head">
+    <span class="section-no">{secNo('wall')}</span>
+    <h2 class="section-title">留言墙 <span class="title-en">GUEST WALL</span></h2>
+    <span class="section-line" aria-hidden="true"></span>
+    <span class="section-coord" aria-hidden="true">SIGNAL//PRIVATE-NOTE</span>
+  </div>
+  <p class="wall-lead reveal" id="wallLead" set:html={d.wall?.lead || ''}></p>
+  <div class="wall-wrap">
+    <form class="wall-form reveal" id="wallForm" novalidate>
+      <div class="wall-form-head">
+        <span class="wall-form-no">POST//NEW</span>
+        <span class="wall-form-hint">匿名可选 · 仅本设备可见 · 可继续评论</span>
+      </div>
+      <input class="wall-input" id="wallName" type="text" maxlength="16" placeholder="怎么称呼你？（可留空 = 匿名）" autocomplete="off" />
+      <textarea class="wall-input wall-textarea" id="wallText" maxlength="300" rows="4" placeholder="对我的经历或能力有想法？写在这里，只有这台设备能看到…" required></textarea>
+      <!-- 人机校验（Cloudflare Turnstile）：脚本加载失败时保持 hidden，留言照常可用 -->
+      <div class="wall-turnstile" id="wallTurnstile" hidden></div>
+      <div class="wall-form-foot">
+        <span class="wall-count" id="wallCount" aria-live="polite">0 / 300</span>
+        <button class="wall-submit" type="submit" id="wallSubmit">写进本设备留言本 ▶</button>
+      </div>
+      <p class="wall-form-tip" id="wallFormTip">⌘ / Ctrl + Enter 快速提交 · 换行会保留</p>
+    </form>
+    <div class="wall-board">
+      <div class="wall-board-head">
+        <span class="wall-board-title">NOTE//THIS-DEVICE</span>
+        <span class="wall-board-count" id="wallTotal" aria-live="polite"></span>
+        <span class="wall-board-actions">
+          <button class="wall-new" type="button" id="wallNew" hidden>有新留言 ▲</button>
+          <button class="wall-refresh" type="button" id="wallRefresh" aria-label="刷新留言" title="刷新留言">
+            <span class="wall-refresh-icon" aria-hidden="true">↻</span> 刷新
+          </button>
+        </span>
+      </div>
+      <div class="wall-list reveal" id="wallList" aria-live="polite"></div>
+      <div class="wall-board-foot">
+        <button class="wall-more" type="button" id="wallMore" hidden>加载更早的留言 ▼</button>
+        <span class="wall-board-note" id="wallNote"></span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ 页脚 / FOOTER ══════════════ -->
+<footer class="footer">
+  <!-- 推荐的人：数据源 data/people.json → data/people.js；名单为空时整节隐藏 -->
+  <section class="footer-people" id="footerPeople" hidden={peopleList.length === 0} aria-labelledby="peopleTitle">
+    <div class="fp-head">
+      <h2 class="fp-title" id="peopleTitle">推荐的人 <span class="fp-en">RECOMMENDS</span></h2>
+      <p class="fp-note">我认可其作品与判断的同行 · 不是友情链接栏</p>
+    </div>
+    <div class="fp-grid" id="peopleGrid">
+      {peopleList.slice(0, peopleMax).map((p, i) => (
+        <a class="fp-card" href={p.site} target="_blank" rel="noopener noreferrer" aria-label={`${p.name}：${p.reason || '推荐的个人站'}`}>
+          <span class={`fp-ava fp-c${i % 3}`} aria-hidden="true">{(p.initial || p.name || '').slice(0, 1).toUpperCase()}</span>
+          <span class="fp-body">
+            <span class="fp-name">{p.name}<i class="fp-arrow" aria-hidden="true">↗</i></span>
+            <span class="fp-role">{p.role}</span>
+            <span class="fp-reason" title={p.reason || ''}>{p.reason}</span>
+          </span>
+        </a>
+      ))}
+    </div>
+  </section>
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <span class="brand-mark" id="footerBrandMark">{d.meta?.brandMark}<span class="brand-dot">.</span></span>
+      <span class="footer-tagline" id="footerTagline">{d.meta?.footer?.tagline}</span>
+    </div>
+    <div class="footer-meta">
+      <span id="footerCopyright">{d.meta?.footer?.copyright}</span>
+      <span id="eofEgg" title="EOF">FILE END — EOF</span>
+      <span class="footer-coord" id="footerCoord">{d.meta?.footer?.coord}</span>
+    </div>
+    <div class="barcode barcode-sm" aria-hidden="true"></div>
+  </div>
+</footer>
+
+<!-- ══════════════ 项目详情模态框 ══════════════ -->
+<div class="modal" id="projModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle" hidden>
+  <div class="modal-backdrop" data-close></div>
+  <div class="modal-panel">
+    <button class="modal-close" data-close aria-label="关闭详情">×</button>
+    <div class="modal-media">
+      <img id="modalImg" src="" alt="" width="640" height="360" />
+      <video id="modalVideo" preload="none" playsinline controls hidden></video>
+      <button type="button" class="video-play" id="videoPlay" hidden aria-label="播放项目实战演示视频">
+        <span class="video-play-icon" aria-hidden="true"></span>
+        <span class="video-play-label">实战演示</span>
+        <span class="video-play-dur" id="videoDur" aria-hidden="true"></span>
+      </button>
+      <span class="proj-no" id="modalNo" aria-hidden="true"></span>
+    </div>
+    <div class="modal-body">
+      <div class="modal-meta">
+        <span class="tag tag-orange" id="modalBadge"></span>
+        <span class="proj-year" id="modalYear"></span>
+      </div>
+      <h3 class="modal-title" id="modalTitle"></h3>
+      <p class="modal-desc" id="modalDesc"></p>
+      <a class="modal-link" id="modalLink" target="_blank" rel="noopener noreferrer" hidden>查看线上产品 ↗</a>
+      <p class="modal-note" id="modalNote" hidden></p>
+      <div class="modal-block">
+        <h4><span class="side-no">01</span>我做了什么</h4>
+        <ul id="modalPoints"></ul>
+      </div>
+      <div class="modal-block">
+        <h4><span class="side-no">02</span>技术栈与产出</h4>
+        <p class="modal-stack" id="modalStack"></p>
+      </div>
+      <div class="modal-block">
+        <h4><span class="side-no">03</span>项目数据</h4>
+        <div class="modal-stats" id="modalStats"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 作品集分享卡预览弹窗（竖版/方形） -->
+<div class="share-overlay" id="shareOverlay" role="dialog" aria-modal="true" aria-label="作品集分享卡预览" hidden>
+  <div class="share-panel">
+    <div class="share-head">
+      <strong>作品集分享卡</strong>
+      <button class="share-close" id="shareClose" aria-label="关闭预览">×</button>
+    </div>
+    <div class="share-tabs" role="tablist">
+      <button class="share-tab on" data-i="0" role="tab" aria-selected="true">竖版<span class="share-tab-hint">朋友圈 / 小红书</span></button>
+      <button class="share-tab" data-i="1" role="tab" aria-selected="false">方形<span class="share-tab-hint">社群封面 / 名片</span></button>
+    </div>
+    <div class="share-scroll"><img id="shareImg" alt="陈培胜作品集分享卡" /></div>
+    <div class="share-actions">
+      <button class="btn btn-solid" id="shareDownload">下载分享卡 ⬇</button>
+      <button class="btn btn-ghost" id="shareCancel">取消</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast 提示 -->
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<!-- 陈培胜的数字分身：入口 + 面板（后端已接腾讯云 CloudBase 云函数，见 js/main.js 第 11 节） -->
+<button class="ai-fab" id="aiFab" aria-label="打开陈培胜的数字分身" aria-expanded="false">
+  <span class="ai-fab-mark">AI<i>.</i>ME</span>
+  <span class="ai-fab-txt">数字分身<small>DIGITAL TWIN · ONLINE</small></span>
+  <span class="ai-fab-lamp" aria-hidden="true"></span>
+</button>
+<aside class="ai-panel" id="aiPanel" role="dialog" aria-modal="false" aria-label="陈培胜的数字分身" hidden>
+  <div class="ai-head">
+    <span class="ai-head-mark">AI<i>.</i>ME</span>
+    <span class="ai-head-sub">DIGITAL TWIN // CHEN PEISHENG</span>
+    <span class="ai-head-status"><i class="ai-lamp" aria-hidden="true"></i>在线</span>
+    <button class="ai-close" id="aiClose" aria-label="关闭数字分身">×</button>
+  </div>
+  <div class="ai-modebar" id="aiModeBar" role="group" aria-label="对话模式">
+    <button class="ai-mode-btn on" type="button" data-ai-mode="qa" aria-pressed="true">问答</button>
+    <button class="ai-mode-btn" type="button" data-ai-mode="jd" aria-pressed="false">JD 匹配</button>
+    <span class="ai-mode-hint">同一个我 · 两种问法</span>
+  </div>
+  <div class="ai-body" id="aiBody" aria-live="polite"></div>
+  <div class="ai-quick" id="aiQuick"></div>
+  <div class="ai-inputrow">
+    <textarea id="aiInput" rows="1" placeholder="问我：我做过哪些 Agent 项目？" aria-label="输入你的问题"></textarea>
+    <button class="ai-send" id="aiSend" aria-label="发送问题">▶</button>
+  </div>
+  <div class="ai-foot" aria-hidden="true">CLOUDFLARE FUNCTIONS · 混合检索（BM25 + 向量 RRF）· 受约束生成 · AI 语音合成（可关闭）// 已接入</div>
+</aside>
+
+<script is:inline src="data/site-data.js?v=20261125g"></script>
+<script is:inline src="data/people.js"></script>
+<!-- 静态资源 CDN 重写：须在数据之后、main.js 之前同步执行 -->
+<script is:inline src="data/asset-map.js"></script>
+<script is:inline src="js/asset-cdn.js"></script>
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
+<script is:inline src="js/main.js?v=20261125j"></script>
+<script is:inline src="js/jd-match.js?v=20261125g"></script>
+<script is:inline src="js/ai-skins.js?v=20261125h"></script>
+<script is:inline src="js/gender-switch.js?v=20261125b"></script>
+<script is:inline src="js/ai-voice.js?v=20261125b"></script>
+<script is:inline src="js/ai-voice-cloud.js?v=20261125b"></script>
+<script is:inline src="js/ai-panel-ux.js?v=20261118a"></script>
+<script is:inline src="js/ai-stage-link.js?v=20261121b"></script>
+<script is:inline src="data/company-profiles.js?v=20261125g"></script>
+<script is:inline src="js/cp-panorama.js?v=20261125g" defer></script>
+<script is:inline src="js/company-social.js?v=20261125g" defer></script>
+<script is:inline src="js/secure-access.js?v=20261125s1" defer></script>
+<script is:inline src="js/company-profile.js?v=20261125s1" defer></script>
+<script is:inline src="js/analytics.js?v=20261119b" defer></script>
+<script is:inline src="js/visitor-count.js" defer></script>
+</body>
+</html>

@@ -630,7 +630,7 @@ admin 是本次重构**单位收益最高**的部分：原生 JS 1,033 行的多
 - **验收**：单元/组件测试 11/11；Playwright E2E **24/24**（三通道登录全流、8 tab 逐项走查、保存文案写路径、退出、768/1024 平板快照）；既有 node:test 289/289 基线不回归；内容漂移链 4 项全绿（render_resume / sync_company_profiles / render_work_details / validate_content）；build/test/lint/check 四绿。
 - **已定（2026-11-26 用户拍板，照 D6 默认建议）**：admin/login 暂不加入 `REACT_MIGRATED_PAGES`，代码进 main 但生产 /admin /login 继续走旧版，双开观察一周后再切；期间 React 版可经本地 `pnpm build` + `node scripts/dev-api-server.mjs`（:8877）联调验收。
 
-### M2 · 独立页三件套 + 404 —— 🔄 代码完成，待提交发布（2026-11-26）
+### M2 · 独立页三件套 + 404 —— ✅ 已提交推送（2026-11-26，提交 4ed8211；CI 全绿；D6 双开：未入 REACT_MIGRATED_PAGES，生产仍走旧版）
 
 - **交付**：
   - `src/pages/{jd,company,school,404}.astro` 四页壳（样式与旧版逐字平移）；`src/components/ThemeGuard.astro` 三页共用主题引导（旧内联脚本逐字收编，is:inline 防 FOUC）。
@@ -645,7 +645,30 @@ admin 是本次重构**单位收益最高**的部分：原生 JS 1,033 行的多
   - 四绿 + node:test 289/289 + 漂移链 5 项（增加 sync_school_profiles --check）全绿。
 - **迁移中发现并修复的旧实现偏差**（视觉对比逼出）：① foldBlock 的 `inner.length ≥ 1400` 字符串兜底——React 版改 mount 时实测 innerHTML 长度（useLayoutEffect 升级折叠结构，与数据自适应）；② tagList pill 的空格分隔依赖文本节点（CSS 无 gap）且 `.cp-pill:first-child` 蓝底规则禁止 wrapper——flatMap 兄弟空格方案；③ 数据可信度板块漏了 `cp-sec` 基类。
 - **工具链经验**：浏览器 canvas 对 >8kpx 高图 toDataURL 存在解码质量偏移（制造 1%+ 假差异），视觉对比判定改 Node pngjs 无损解码 + 通道 >8 灰阶的结构差口径（PIL 交叉验证一致）。
-- **未决**：M2 四页同 M1 暂不加入 `REACT_MIGRATED_PAGES`（生产继续走旧版），与 admin/login 一并待用户拍板切换节奏；切换后旧版文件由 M5 统一下线。
+- **已定（随 4ed8211 提交生效）**：M2 四页代码进 main，生产暂不切换（与 M1 一致的 D6 双开策略）；已提交推送 4ed8211，CI 全绿。
+
+### M3-A · index 主页 SSG 直出 + 旧交互脚本零改动桥接 —— 🔄 代码完成，待提交（2026-11-26，分片一 / 二分之二）
+
+> M3 是方案标注的最大单体（main.js 2,245 行 + AI 系脚本约 2,269 行）。为控风险拆分推进：**分片一（M3-A）= SSG 全板块直出 + 旧交互脚本零改动桥接**，为分片二（AI 面板 React 化）打稳定地基；分片二动工前置条件 = 本分片板块骨架稳定。
+
+- **交付**：
+  - `src/features/index/data.ts`：site-data.json zod 宽契约（passthrough，口径对齐 main.js 的 `|| ''` 容错）。
+  - `src/pages/index.astro`（801 行）：SSG 全板块直出——顶栏/导航/HERO（idcard、glitch 层）/marquee/关于我/工作经历（data-cp 整卡 + exp-badge + cp-quick）/项目作品/个人作品（双份 works-set 无缝滚动）/技能/教育（school.html 深链）/获奖/求职意向/联系 + 留言墙表单/页脚（推荐的人 from people.json，名单为空时整节隐藏）/模态框壳/分享卡壳/AI 面板壳。
+  - **桥接策略（本分片核心）**：旧交互脚本（main.js / jd-match.js / ai-skins.js / ai-voice.js / ai-voice-cloud.js / ai-panel-ux.js / ai-stage-link.js / gender-switch.js / company-profile.js / asset-cdn.js / analytics.js / visitor-count.js / data 快照等 19 处）`is:inline` 零改动保留、底载顺序与旧 index.html 完全一致；脚本挂固定 DOM id（#aiFab/#aiPanel/#aiBody/#expList/#projGrid/#modalImg…），运行时以同一 `window.SITE_DATA` 快照重渲染同一 DOM——**与 SSG 输出幂等**。
+- **验收**：
+  - 功能 E2E **26/26**（`tests/e2e/m3.e2e.mjs`，8878 旧版 / 8879 混排双服对照）：板块直出（含 JSON-LD/导航编号/公司档案徽章/教育深链）、AI 面板全流（3D 角色点击开面板/欢迎语/问答 mock/依据展开切片原文/JD 模式 + 结果卡 score 72/预填链跳 jd.html）、项目模态框 + Esc、分享卡 canvas、公司档案抽屉（data-cp 整卡）、EOF 三连击主题彩蛋、汉堡菜单、留言墙本地降级态。
+  - 视觉对比 **10/12 通过**（`tests/e2e/m3-visual.mjs`，4 主题 × 390/680/1024）：干净捕获下 archive·1024 像素级 0.002% 一致；剩余 2 个失败（archive·390/680）为捕获抖动工件 + K 线蜡烛/主题装饰等动画元素相位差，DOM 级裁定与旧版一致，非版式回归。
+  - 四绿（build 8 页 / test 11/11 / lint / check 0 错误）+ 既有 node:test 289/289 + 漂移链 9 项全绿（embed_assets / render_resume / render_work_details / validate_content / check_resume_pages / render_print_previews / sync_site_data / sync_company_profiles / sync_people）。
+- **视觉对比的确定性口径**（M3-A 固化进脚本，供含 3D/动画页复用）：
+  1. 隐藏 `#aiStage`——model-viewer 3D 动画不可 CSS 暂停，两版截取姿势天然不同，比对无意义；
+  2. 冻结 `.marquee-track` 与 `#worksGrid` 横滚动画（`animation:none; transform:none`，相位随加载时刻不同）；
+  3. Chromium 全页捕获对含 3D 页有 ~80px 高度抖动（旧页连拍两次 14692/14771 复现）→ 以 new 为基准、old 高度偏差 >4px 时重拍最多 2 轮。
+- **桥接幂等性的实测佐证**：新版 pageH 与旧版均 14691、13 个板块 top/height 逐项一致、reveal 51/51 全进、导航高亮一致；`syncSectionLayout` 运行时重排后 navNos 与旧版逐字一致（hero 亦是 `section[id]` 占 01，板块重排 02-11，博客外链保持 11——E2E 断言据此修正，直出的 01-10 会被运行时校正到旧版同一状态，恰是幂等策略在工作）。
+- **澄清（此前误判）**：aiFab 在 3D 皮肤模式下 `visibility:hidden` 是正常行为（面板唯一入口是点击 3D 角色本身），非 bug。
+- **遗留**：
+  - Astro 会把非 `is:inline` 的 `<script src>` 打成 module bundle（丢 `?v=` 版本串）→ index.astro 19 处桥接脚本全部 `is:inline`（与 M2 同款处理）。
+  - M3-A 仍**不入 `REACT_MIGRATED_PAGES` 生产**（与 M1/M2 一致等拍板）；本地混排已验证（`REACT_MIGRATED_PAGES='work/portfolio.html jd.html company.html school.html 404.html index.html'`）。
+  - 分片二（AI 面板 React 化，`features/ai/`）待用户指示动工；随后真机电池（iOS Safari + 微信内置 + Android Chrome）与 Lighthouse 对照（index 移动档 55 分 / LCP 25.3s 为优化目标）。
 
 ---
 
