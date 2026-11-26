@@ -977,6 +977,13 @@
              → 受约束提示词 → 生成（答案带 citations，可回链切片原文）
        源码：functions/api/chat.js（入口）/ kb.js（检索）/ jd.js（JD 匹配） */
     /* API 线路 API_BASES 已在 IIFE 顶层统一定义（问答 / 语音 / 留言墙共用同一份）。 */
+    /* M3-B（React 迁移分片二，2026-11-26）：index.astro 注入 window.CP_AI_REACT 后本节整体短路，
+       面板由 React 岛（src/features/ai/AiShell，client:idle）接管，jd-match.js 亦不再底载。
+       外围脚本（ai-voice-cloud 等）读的 window.CP_AI_ENDPOINT 仍在此同步设置。
+       旧版 index.html 不注入守卫，走原逻辑，行为零变化。 */
+    if (window.CP_AI_REACT) {
+      window.CP_AI_ENDPOINT = API_BASES[0] + '/api/chat';
+    } else {
     var AI_ENDPOINT = API_BASES[0] + '/api/chat';
 
     var AI_CONFIG = {
@@ -1543,6 +1550,7 @@
     });
 
     aiScheduleAuto();
+    } /* ← M3-B：window.CP_AI_REACT 守卫闭合（else 分支 = 原第 11 节） */
   }
 
   /* ── 12. 留言板（Cloudflare Pages Function /api/wall，D1 存储） ──

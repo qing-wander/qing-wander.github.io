@@ -13,13 +13,7 @@ const TH = 0.002;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const browser = await chromium.launch({ channel: 'chrome', headless: true });
 
-async function shot(ctx, base, theme, w, stable) {
-  /* Chromium 全页捕获对含 3D 舞台页面有 ~80px 高度抖动（同页连拍两次可复现）；
-     stable 模式：高度异常时重拍（最多 3 次），只接受与期望一致的那张 */
-  for (let attempt = 0; attempt < 3; attempt++) {
-    const buf = await shotOnce(ctx, base, theme, w);
-    if (!stable || !buf.jitter) return buf;
-  }
+async function shot(ctx, base, theme, w) {
   return shotOnce(ctx, base, theme, w);
 }
 
@@ -46,6 +40,10 @@ async function shotOnce(ctx, base, theme, w) {
       if (mq) { mq.style.animation = 'none'; mq.style.transform = 'none'; }
       const wt = document.getElementById('worksGrid');
       if (wt) { wt.style.animation = 'none'; wt.style.transform = 'none'; }
+      /* hero 大字的 glitch 套色错位是 3.6s steps 周期动画：animationPlayState 暂停在
+         当前帧，两版加载时序不同则暂停帧不同（M3-B 实测 0.35% 假差异）；
+         animation:none 重置到零位，两版取同一静止帧 */
+      document.querySelectorAll('.glitch-layer').forEach((el) => { el.style.animation = 'none'; });
     }).catch(() => {});
     await sleep(1400);
     const b64 = (await page.screenshot({ fullPage: true, type: 'png' })).toString('base64');

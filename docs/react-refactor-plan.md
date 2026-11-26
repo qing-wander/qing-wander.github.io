@@ -670,6 +670,27 @@ admin 是本次重构**单位收益最高**的部分：原生 JS 1,033 行的多
   - M3-A 仍**不入 `REACT_MIGRATED_PAGES` 生产**（与 M1/M2 一致等拍板）；本地混排已验证（`REACT_MIGRATED_PAGES='work/portfolio.html jd.html company.html school.html 404.html index.html'`）。
   - 分片二（AI 面板 React 化，`features/ai/`）待用户指示动工；随后真机电池（iOS Safari + 微信内置 + Android Chrome）与 Lighthouse 对照（index 移动档 55 分 / LCP 25.3s 为优化目标）。
 
+### M3-B · AI 面板 React 化 —— 🔄 代码完成，待提交（2026-11-26，分片二 / 二分之二）
+
+- **交付**：
+  - `src/features/ai/`：`chat.ts`（AI_CONFIG / askAI（AbortController 20s）/ aiRenderError 文案表 / fetchGreeting（`window.CP_GREETING_TEXT` + `cpai:greeting` 事件契约）/ `esc` 同口径转义）+ `AiShell.tsx`（单根 aside 岛：开合（hidden/aria-expanded/`ai-lock` body 锁/opening 320ms 动画/关闭回 qa）·qa 与 jd 双模式状态机·快捷 chips·输入自适应高（88 cap ref 直改）·jd 断连重试一次（900ms）·water 化问候语首开一次性渲染）+ `AiMessages.tsx`（.ai-msg[data-mode] 结构 + typing dots + 依据按钮互斥展开 `.ai-src-body`）+ `AiJdCard.tsx`（JD 结果卡：score band/stats/证据/追问/复制 MD（2s 文案复位）/打开完整对照预填链（sessionStorage cp_jd_prefill + location.href='jd.html'））。
+  - JD 请求 / 错误文案 / 示例 / Markdown 导出全部改用 M2 的 `src/lib/jd/client.ts`（`js/jd-match.js` 不再底载，window.CP_JD_UI 契约退场）；React 岛 SSR 直出与水合同源（Astro 岛根优势）。
+  - `js/main.js` 第 11 节加 `window.CP_AI_REACT` 守卫（index.astro 在 main.js 前注入 1；守卫分支保留 `window.CP_AI_ENDPOINT` 同步时序契约；旧版 index.html 不注入、走原 else 分支行为零变化）；已停用的「自动弹出 / 招呼气泡」死代码未迁移（旧版本就短路）。
+- **桥接架构（本分片核心定案）**：
+  1. **FAB 静态直出在岛外**：`#aiFab` 由 Astro 模板直出（元素身份永不重建——ai-skins.js 的 3D 舞台 `insertBefore(aiFab)` 与其持有的引用稳定）；点击经 document 级事件委托进入 React 状态机（ai-skins 的 `stage.click → aiFab.click()` 同链命中）；`aria-expanded` 由 effect 直改同步。
+  2. **面板 aside 是单根岛（client:idle）**：SSR 输出与旧版面板壳逐字一致，水合保留 DOM 元素身份 → ai-voice.js（aiBody childList MutationObserver 朗读 / aiPanel hidden 观察启停）、ai-stage-link.js（.ai-msg 联动 / lastElementChild JD 卡语义）、ai-panel-ux.js（hidden MutationObserver + 窗口层按钮）、ai-voice-cloud.js（CP_AI_ENDPOINT 运行时读取）五个外围脚本零改动协作。
+  3. **ai-head 用 dangerouslySetInnerHTML 容器**：ai-voice.js（音量开关）与 ai-panel-ux.js（aiWinSize）会在「SSR 输出后、水合前」窗口期往 head 注入节点——React 不 diff 危险容器子树，注入按钮得以存活；`#aiClose` 点击同样走 document 委托。
+- **水合陷阱的发现与修复（经验沉淀）**：
+  1. **Fragment 双根岛水合失败**：最初 AiShell 返回 `<FAB + aside>` 双根 → Astro 岛的 `<!--astro:start/end-->` 注释夹在两根之间 → React 水合 mismatch（#418）→ 整树客户端重渲 → ai-skins/ai-voice 持有的 DOM 引用孤儿化（3D 舞台插到孤儿节点、注入按钮被删）。**岛组件必须单根**（M1/M2 全部单根、M3-B 首个双根踩坑）；FAB 拆到岛外静态直出后解决。
+  2. **外围脚本「SSR 后水合前」的窗口期注入**：ai-voice 的音量按钮在水合前已插入 ai-head → React 对齐 ai-head children 时把 `ai-voice-toggle` 与 `aiClose` 视为同位元素 props 冲突（完整 diff 见 React dev 水合报告）→ mismatch 重渲删按钮。dangerouslySetInnerHTML 容器化解。
+  3. **视觉对比的 glitch 套色相位**：hero 大字 `.glitch-layer` 是 3.6s steps 周期动画，`animationPlayState:paused` 冻结在「当前帧」——两版加载时序不同则暂停帧不同（M3-B 实测 0.35% 假差异 + M3-A 时 archive·390/680 的 2 个失败同为该相位差）→ m3-visual.mjs 补 `animation:none` 重置零位后 **12/12 全绿**（M3-A 的 10/12 遗留问题一并消除）。教训：**对周期动画，「暂停」不够，要「归零」**。
+- **验收**：
+  - M3-A 全套 E2E **26/26** 原样通过（AI 面板全流在新实现上行为一致：3D 角色点击开面板/欢迎语/窗口层按钮/问答/依据展开/JD 卡 score 72/预填链跳 jd.html）。
+  - M3-B 专项 E2E **24/24**（`tests/e2e/m3b.e2e.mjs`）：守卫注入/CP_AI_ENDPOINT 契约/jd-match 未底载/FAB 岛外/面板岛内/水合未重建（aiWinSize + ai-voice-toggle 存活）/ai-voice 初始化/舞台创建/greeting 异步文案/quick chip 提交/JD 引导 quota 文案/示例填入/断连自动重试→结果卡/追问切 qa 直提/复制 MD + 文案反馈/模式联动/Esc 关面板。
+  - 视觉对比 **12/12**（glitch 冻结口径）；四绿（test 11/11 / lint / check 0 错误 / build 8 页）+ node:test **289/289** + 漂移链 9 项全绿。
+- **遗留（已知怪癖，不阻断）**：ai-voice.js 的 `inlineEl`（自动播放被浏览器拦截时的面板内 CTA）append 在 aiBody——React 下次 reconcile 消息列表时会将其移除；出现概率极低（仅自动播放被拦 + welcome pending 场景），M5 收编语音模块时一并处理。
+- **生产切换**：M3（A+B）仍不入 `REACT_MIGRATED_PAGES`（与 M1/M2 一致等拍板）；本地混排全链验证通过。
+
 ---
 
 *文档维护：本方案是活文档，随 M0–M5 推进在本文档内以「里程碑日志」形式追加实况记录；重大方向变更须更新 §9 估算并注明版本。*

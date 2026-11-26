@@ -8,6 +8,7 @@
 // URL 契约（N3）：根路径 index.html，astro build.format 'file' 输出同名文件。
 import ThemeGuard from '../components/ThemeGuard.astro';
 import { SITE } from '../features/index/data';
+import AiShell from '../features/ai/AiShell';
 
 /* 板块可见性 & 编号（main.js syncSectionLayout 的构建期等价） */
 const d = SITE;
@@ -751,32 +752,16 @@ const peopleMax = people.meta?.footerCount || 4;
 <!-- Toast 提示 -->
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-<!-- 陈培胜的数字分身：入口 + 面板（后端已接腾讯云 CloudBase 云函数，见 js/main.js 第 11 节） -->
+<!-- 陈培胜的数字分身：入口 + 面板 —— M3-B 由 React 岛接管（src/features/ai/AiShell，client:idle）
+     FAB 保持 Astro 静态直出（岛外，元素身份永不重建：3D 舞台插入点与 ai-skins 引用稳定），
+     点击经 document 事件委托进入 React 状态机；面板 aside 由岛 SSR 同构直出后水合，
+     外围脚本（ai-skins/ai-voice/…）零改动继续观察同一批 DOM id -->
 <button class="ai-fab" id="aiFab" aria-label="打开陈培胜的数字分身" aria-expanded="false">
   <span class="ai-fab-mark">AI<i>.</i>ME</span>
   <span class="ai-fab-txt">数字分身<small>DIGITAL TWIN · ONLINE</small></span>
   <span class="ai-fab-lamp" aria-hidden="true"></span>
 </button>
-<aside class="ai-panel" id="aiPanel" role="dialog" aria-modal="false" aria-label="陈培胜的数字分身" hidden>
-  <div class="ai-head">
-    <span class="ai-head-mark">AI<i>.</i>ME</span>
-    <span class="ai-head-sub">DIGITAL TWIN // CHEN PEISHENG</span>
-    <span class="ai-head-status"><i class="ai-lamp" aria-hidden="true"></i>在线</span>
-    <button class="ai-close" id="aiClose" aria-label="关闭数字分身">×</button>
-  </div>
-  <div class="ai-modebar" id="aiModeBar" role="group" aria-label="对话模式">
-    <button class="ai-mode-btn on" type="button" data-ai-mode="qa" aria-pressed="true">问答</button>
-    <button class="ai-mode-btn" type="button" data-ai-mode="jd" aria-pressed="false">JD 匹配</button>
-    <span class="ai-mode-hint">同一个我 · 两种问法</span>
-  </div>
-  <div class="ai-body" id="aiBody" aria-live="polite"></div>
-  <div class="ai-quick" id="aiQuick"></div>
-  <div class="ai-inputrow">
-    <textarea id="aiInput" rows="1" placeholder="问我：我做过哪些 Agent 项目？" aria-label="输入你的问题"></textarea>
-    <button class="ai-send" id="aiSend" aria-label="发送问题">▶</button>
-  </div>
-  <div class="ai-foot" aria-hidden="true">CLOUDFLARE FUNCTIONS · 混合检索（BM25 + 向量 RRF）· 受约束生成 · AI 语音合成（可关闭）// 已接入</div>
-</aside>
+<AiShell client:idle />
 
 <script is:inline src="data/site-data.js?v=20261125g"></script>
 <script is:inline src="data/people.js"></script>
@@ -784,8 +769,8 @@ const peopleMax = people.meta?.footerCount || 4;
 <script is:inline src="data/asset-map.js"></script>
 <script is:inline src="js/asset-cdn.js"></script>
 <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
-<script is:inline src="js/main.js?v=20261125j"></script>
-<script is:inline src="js/jd-match.js?v=20261125g"></script>
+<script is:inline>window.CP_AI_REACT = 1; /* M3-B：main.js 第 11 节短路，面板由 React 岛接管 */</script>
+<script is:inline src="js/main.js?v=20261126a"></script>
 <script is:inline src="js/ai-skins.js?v=20261125h"></script>
 <script is:inline src="js/gender-switch.js?v=20261125b"></script>
 <script is:inline src="js/ai-voice.js?v=20261125b"></script>
