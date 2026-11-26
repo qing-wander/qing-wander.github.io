@@ -98,6 +98,11 @@ Lighthouse N5 通过：index.mobile 中位数 61 ≥ 基线 55）；`REACT_MIGRA
 | T24 | RAG / 简历增强迭代池：rerank 重排、动态简历变体、跨设备查看、`resume.micro` 微调流水线 | `思考池` | 低 | AI 问答 / 简历变体 / 留言板 | [p0-single-source.md §8](p0-single-source.md) |
 | T25 | Google Fonts 本地化（自托管 / 子集化 Noto Sans SC），根治移动档 LCP ~20s | `待办` | 高（性能主优化项） | 全站移动档 LCP | 本文 §3.21 |
 | T26 | React 迁移收尾观察：真机电池、一周线上无回归观察、到期后备份线切 React + 旧文件物理删除 | `待办（观察期）` | 中 | 全站 | [react-refactor-plan.md M5](react-refactor-plan.md) |
+| T27 | 问答生成链路故障：模型服务不可用，全部降级兜底（代码侧可观测性已补，待部署后按 failReason 定位根因） | `进行中（代码已改，待部署复核）` | 高 | `/api/chat` 数字分身问答 | 本文 §3.23 / [线上站点测试报告-2026-11-26.md](线上站点测试报告-2026-11-26.md) P1-1 |
+| T28 | Turnstile 报 110200：widget 未渲染，留言墙人机校验实际未生效（CF 后台站点域名匹配） | `待办（配置侧）` | 高 | 留言墙 POST 校验 | 本文 §3.23 / 测试报告 P1-2 |
+| T29 | Cloudflare Web Analytics beacon 被 CSP 拦截，CF 这一路统计未生效（仓库代码未下发该 script-src，疑面板规则） | `待复核` | 中 | 访问统计 | 本文 §3.23 / 测试报告 P2-1 |
+| T30 | 头像 PNG 体积治理：avatar-male 疑似死资源；female 1536×1536 用于 ≤420px 展示位 | `待办（并入性能专项）` | 低 | 首屏 / 助手头像 | 测试报告 P3-2 |
+| T31 | W-01 卡片「RAG 接入中」过时文案修正（仓库源已改，待核对 D1 `site_content` 副本） | `已完成（2026-11-26），D1 副本待核对` | 低 | 首页 SEC.05 | 测试报告 P3-1 |
 
 ---
 
@@ -733,6 +738,68 @@ M0–M5 已全部完成并生产切换（线上 React 版运行中，`REACT_MIGR
 > 唯一已知怪癖（不阻塞）：ai-voice.js 的 `inlineEl`（自动播放被浏览器拦截时的面板内 CTA）
 > 会在 React 下次 reconcile 消息列表时被移除；出现概率极低，M5 收编语音模块时一并处理
 > （详见 [react-refactor-plan.md](react-refactor-plan.md) M3-B「遗留」段）。
+
+### 3.23 T27–T31 · 2026-11-26 全站线上实测发现项
+
+> 来源：2026-11-26 以访客身份逐页 / 逐接口实测 chenpeisheng.cn，完整记录与证据见
+> [线上站点测试报告-2026-11-26.md](线上站点测试报告-2026-11-26.md)。只读验证为主，写操作
+> （留言、投递、核验申请、后台）未擅自提交。
+
+**T27 · 问答生成链路故障（高，进行中）**
+
+- 现象：`POST /api/chat` 返回 200 但 `answer` 恒为兜底话术「这条我暂时答不上来（模型服务不可用）…」；
+  检索 citations 正常命中，故障只在生成环节。
+- 代码侧已改（待部署生效）：
+  - `functions/api/chat.js`：`callWorker` 区分 `no-worker / worker-http / worker-bad / empty-text`；
+    失败原因写入 `qa_logs.model`（`failed:<reason>`，表无独立 reason 列）；响应新增 `degraded` 与
+    `failReason` 字段，便于线上直接定位。
+  - `worker/kb/index.mjs` `/chat`：`env.AI.run` 包 try/catch，抛错回 502 + 错误信息；正文为空判
+    `empty-text` 失败，不再把空当成功。
+- 待办（部署后复核根因）：
+  1. push 后看线上 `/api/chat` 响应 `failReason`，或后台 qa 看板 `model` 列的 `failed:*`：
+     - `no-worker` → Pages 环境变量 `KB_WORKER_URL` / `KB_TOKEN` 缺失或被清空（对照近期邮件密钥
+       同批清空事故）；
+     - `worker-http` → Worker `resume-kb-api` 不可达 / 非 200；
+     - `worker-bad` / `empty-text` / `ai-run-failed` → Worker 内 Workers AI 模型调用失败（配额、
+       模型名、绑定）。
+  2. wrangler 登录后 `tail` Worker 日志 / 核对 `AI`、`VECTORIZE`、`DB` 绑定；Worker 需单独
+     `cd worker/kb && wrangler deploy`。
+- 验收：普通问题返回真人风格回答；`degraded` 不出现；qa_logs 正常记模型名。
+
+**T28 · Turnstile 110200，留言墙校验未生效（高，配置侧）**
+
+- 现象：控制台反复 `[Cloudflare Turnstile] Error: 110200` + postMessage origin 不匹配；`.wall-turnstile`
+  容器无 challenge iframe，widget 走 error-callback 隐藏；challenge-platform 持续 failure_retry。
+- 代码侧核对结论：sitekey `0x4AAAAAAGHnx0m992aGGpUJ`（`js/main.js`）与服务端
+  `TURNSTILE_SECRET`（`functions/api/wall.js`）配对逻辑正常；110200 是前端站点校验阶段错误，
+  根因在 Cloudflare 后台，代码改不了。
+- 待办：CF 控制台 → Turnstile → 该 sitekey，确认托管域名包含 `chenpeisheng.cn`、
+  `shenge-work.pages.dev` 及预览子域；核对 widget 类型与前端 `size:'normal'` 一致。
+- 验收：留言墙渲染出 checkbox / challenge，提交时 `cf-turnstile-response` 非空；无 110200 报错。
+
+**T29 · CF Web Analytics beacon 被 CSP 拦截（中，待复核）**
+
+- 现象：`static.cloudflareinsights.com/beacon.min.js` 被 `script-src 'self' 'unsafe-inline'` 阻止；
+  Clarity / Umami 上报 200，仅 CF 这一路未生效。
+- 排查结论：仓库公开站代码（`_middleware.js`、HTML meta）均未下发该 `script-src`，线上首页响应头
+  也只有 `frame-ancestors 'self'`；该 CSP 疑来自 Cloudflare 面板响应头规则或浏览器扩展。
+- 待办：真机无扩展环境 DevTools 核对首页响应头第二条 CSP；若在面板，`script-src` 放行
+  `https://static.cloudflareinsights.com`、`connect-src` 放行上报域名；若不打算用 CF 统计，
+  留空 `js/analytics.js` 的 `cfBeaconToken` 即可消除报错。
+
+**T30 · 头像 PNG 体积治理（低，并入性能专项）**
+
+- 现状：`images/avatar-male.png` 2.36MB、`images/avatar-female.png` 2.56MB，均 1536×1536；
+  展示位头像最大约 420px Retina 840px。`avatar-male.png` 除 manifest / asset-map 外前端零引用，
+  疑似死资源；`avatar-female.png` 被 `js/gender-switch.js` 女版头像引用。
+- 待办：先确认 male 是否后台 / 分享卡残留引用，无引用则归档移除；female 派生 840×840 WebP（或
+  优化 PNG），同步 `asset-manifest.json` / `asset-map.js` 与 COS 远端副本。并入 T25 性能专项一起做。
+
+**T31 · W-01 过时文案（已完成，D1 副本待核对）**
+
+- 仓库源 `data/site-data.json` W-01 描述已由「RAG 接入中」改为「RAG 检索增强已接入」，
+  `data/site-data.js` 快照经 `scripts/sync_site_data.py` 重建一致，漂移校验通过。
+- 待办：后台核对 D1 `site_content` 中同一条目是否为旧文案，若有副本一并更新（线上真人数据以 D1 为准）。
 
 ---
 

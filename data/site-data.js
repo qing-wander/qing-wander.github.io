@@ -565,7 +565,7 @@ window.SITE_DATA = {
       "title": "求职作品集 · 本站",
       "titleEn": "PORTFOLIO SITE",
       "detailId": "portfolio",
-      "desc": "你正在浏览的本站——档案风求职作品集：数据驱动渲染（site-data.json 单一数据源）、网页简历（彩色 / 正式黑白双模式、2 页 PDF）、分享宣传卡、数字分身问答终端（RAG 接入中）。GitHub Pages 部署。",
+      "desc": "你正在浏览的本站——档案风求职作品集：数据驱动渲染（site-data.json 单一数据源）、网页简历（彩色 / 正式黑白双模式、2 页 PDF）、分享宣传卡、数字分身问答终端（RAG 检索增强已接入）。Cloudflare Pages 部署。",
       "tech": [
         "HTML / CSS / JS",
         "GitHub Pages",
