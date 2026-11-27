@@ -404,7 +404,7 @@ npx -y @gltf-transform/cli@latest inspect FemaleRigged_think.glb
 | --- | --- | --- |
 | 空间 | 面板展开时不再淡出，缩小后贴到面板左缘（900/1200/1600 三档） | `css/ai-skins.css` §让位 |
 | 节拍 | 语音真出声时头顶换音波条（`body.cpai-speaking` 已有轻度律动，这里补可见信号） | `css/ai-stage-link.css` / `js/ai-stage-link.js` |
-| 语义 | 回答命中站内区块 → 角色头顶递「去看看」小票，点击才滚动 + 描边落点 | 同上 |
+| 语义 | 回答命中站内区块 → 角色头顶递「指路」小票，点击才滚动 + 描边落点 | 同上 |
 | 边界 | 不自动滚动、不自动开区块；移动端与 `.ai-panel.is-max` 一律不出现 | `js/ai-stage-link.js` |
 
 ### 13.2 让位几何（实测值，1440×813 视口）

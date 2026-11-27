@@ -3,7 +3,7 @@
    --------------------------------------------------------------
    目标：让右下角 3D 角色从"状态灯"变成"发言人"——
    ① 语音真的出声时，头顶换音波条（不再挂"正在算"的点）；
-   ② 回答指向站内某个区块时，角色递出一张「去看看」小票，
+   ② 回答指向站内某个区块时，角色递出一张「指路」小票，
       点击才滚动 + 描边落点，绝不自动抢滚动权。
    约束：只读 DOM、不改 js/main.js 的问答/语音/皮肤逻辑；
         面板打开时角色已由 css/ai-skins.css 缩小贴边。
@@ -73,7 +73,7 @@
   ticket.hidden = true;
   ticket.setAttribute('aria-label', '角色指路：跳到对应区块');
   ticket.innerHTML =
-    '<span class="ai-locate-k">▶ 去看看</span>' +
+    '<span class="ai-locate-k">▶ 指路</span>' +
     '<span class="ai-locate-txt"></span>' +
     '<span class="ai-locate-x" aria-hidden="true">×</span>';
   var ticketTxt = ticket.querySelector('.ai-locate-txt');
