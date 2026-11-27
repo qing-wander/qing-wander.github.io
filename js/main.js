@@ -784,180 +784,62 @@
       try { history.replaceState(null, '', location.pathname); } catch (e) {}
     });
 
-    /* ── 10. 作品集分享卡（按当前 site-data 实时绘制，竖版 / 方形） ── */
-    /* 不再依赖仓库里的静态宣传图：文案、联系方式、标签全部取自 data/site-data，
-       换人 / 改数据后分享卡自动跟着变，也不会出现“数据没有、图却还在”的假象。 */
-    var SHARE_CARDS = [];
-
-    function drawShareCard(w, h, d) {
-      var cv = document.createElement('canvas');
-      cv.width = w; cv.height = h;
-      var g = cv.getContext('2d');
-      if (!g) return null;
-      var meta = d.meta || {};
-      var hero = d.hero || {};
-      var name = String(hero.nameCn || '') || String(meta.brandMark || '');
-      if (!name) return null;
-      var role = String(hero.role || '');
-      var roleEn = String(hero.roleEn || '');
-      var tags = (hero.tags || []).map(function (t) { return String(t.text || t); }).filter(Boolean).slice(0, 3);
-      var contact = d.contact || {};
-      var tel = ''; var mail = '';
-      (contact.cards || []).forEach(function (x) {
-        var href = String(x.href || '');
-        if (!tel && href.indexOf('tel:') === 0) tel = String(x.value || href.slice(4));
-        if (!mail && href.indexOf('mailto:') === 0) mail = String(x.value || href.slice(7));
-      });
-      var url = String((d.meta && d.meta.siteUrl) || '');
-      var pad = Math.round(w * 0.075);
-
-      g.fillStyle = '#0d0d0f'; g.fillRect(0, 0, w, h);
-      g.strokeStyle = 'rgba(255,255,255,0.06)'; g.lineWidth = 1;
-      for (var x = pad; x < w; x += 90) { g.beginPath(); g.moveTo(x, 0); g.lineTo(x, h); g.stroke(); }
-      for (var y = pad; y < h; y += 90) { g.beginPath(); g.moveTo(0, y); g.lineTo(w, y); g.stroke(); }
-      g.fillStyle = '#ff5a1e'; g.fillRect(pad, pad, Math.round(w * 0.11), 10);
-
-      g.fillStyle = 'rgba(255,255,255,0.62)';
-      g.font = '600 ' + Math.round(w * 0.026) + 'px "Noto Sans SC","Microsoft YaHei",sans-serif';
-      g.fillText('PORTFOLIO · ' + new Date().getFullYear(), pad, pad + Math.round(w * 0.078));
-      g.textAlign = 'right';
-      g.fillText(String(meta.brandMark || '') + '.', w - pad, pad + Math.round(w * 0.078));
-      g.textAlign = 'left';
-
-      var nameSize = Math.round(w * (name.length > 5 ? 0.125 : 0.165));
-      g.fillStyle = '#ffffff';
-      g.font = '800 ' + nameSize + 'px "Noto Sans SC","Microsoft YaHei",sans-serif';
-      g.fillText(name, pad, Math.round(h * 0.30));
-
-      g.fillStyle = '#ff5a1e';
-      g.font = '600 ' + Math.round(w * 0.052) + 'px "Noto Sans SC","Microsoft YaHei",sans-serif';
-      g.fillText(role, pad, Math.round(h * 0.30) + Math.round(nameSize * 1.12));
-      if (roleEn) {
-        g.fillStyle = 'rgba(255,255,255,0.55)';
-        g.font = '500 ' + Math.round(w * 0.026) + 'px "JetBrains Mono","Consolas",monospace';
-        g.fillText(roleEn.toUpperCase(), pad, Math.round(h * 0.30) + Math.round(nameSize * 1.12) + Math.round(w * 0.05));
-      }
-
-      var ty = h > w
-        ? Math.round(h * 0.30) + Math.round(nameSize * 1.12) + Math.round(w * 0.125)
-        : Math.round(h * 0.50);
-      tags.forEach(function (t, i) {
-        g.font = '600 ' + Math.round(w * 0.03) + 'px "Noto Sans SC","Microsoft YaHei",sans-serif';
-        var tw = g.measureText(t).width + Math.round(w * 0.055);
-        var th = Math.round(w * 0.062);
-        var yy = ty + i * Math.round(h * 0.075) - th / 2;
-        g.fillStyle = 'rgba(255,90,30,0.14)'; g.fillRect(pad, yy, tw, th);
-        g.fillStyle = '#ff5a1e'; g.fillRect(pad, yy, 4, th);
-        g.fillStyle = '#f3f3f3';
-        g.fillText(t, pad + Math.round(w * 0.024), yy + th * 0.72);
-      });
-
-      if (h > w) {
-        var bio = String(hero.bio || '').trim();
-        if (bio) {
-          var bioSize = Math.round(w * 0.026);
-          var bioLh = Math.round(bioSize * 1.7);
-          var maxW = w - pad * 2;
-          var line = '';
-          var lines = [];
-          for (var ci = 0; ci < bio.length; ci++) {
-            var ch = bio.charAt(ci);
-            if (g.measureText(line + ch).width > maxW) {
-              lines.push(line);
-              line = ch;
-              if (lines.length === 2) break;
-            } else line += ch;
-          }
-          if (lines.length < 2 && line) lines.push(line);
-          g.fillStyle = 'rgba(255,255,255,0.60)';
-          g.font = '400 ' + bioSize + 'px "Noto Sans SC","Microsoft YaHei",sans-serif';
-          var by = Math.round(ty + Math.round(h * 0.075) * tags.length + w * 0.07);
-          lines.forEach(function (s, i) { g.fillText(s, pad, by + i * bioLh); });
-        }
-      }
-
-      var ly = Math.round(h * (h > w ? 0.80 : 0.735));
-      g.strokeStyle = 'rgba(255,255,255,0.16)';
-      g.beginPath(); g.moveTo(pad, ly); g.lineTo(w - pad, ly); g.stroke();
-      g.fillStyle = 'rgba(255,255,255,0.78)';
-      g.font = '500 ' + Math.round(w * 0.026) + 'px "Noto Sans SC","Microsoft YaHei",sans-serif';
-      var lines2 = [];
-      if (mail) lines2.push(mail);
-      if (tel) lines2.push(tel);
-      if (url) lines2.push(url);
-      lines2.forEach(function (s, i) { g.fillText(s, pad, ly + Math.round(w * 0.055) * (i + 1)); });
-      if (url) {
-        g.fillStyle = 'rgba(255,255,255,0.38)';
-        g.font = '500 ' + Math.round(w * 0.022) + 'px "Noto Sans SC","Microsoft YaHei",sans-serif';
-        g.fillText('作品集：' + url, pad, h - Math.round(pad * 0.45));
-      }
-      return cv;
-    }
-
-    function buildShareCards() {
-      var d = window.__SITE_DATA__;
-      if (!d) return;
-      SHARE_CARDS = [];
-      try {
-        [{ w: 1080, h: 1440, label: '竖版' }, { w: 1080, h: 1080, label: '方形' }].forEach(function (s) {
-          var cv = drawShareCard(s.w, s.h, d);
-          if (!cv) return;
-          SHARE_CARDS.push({
-            src: cv.toDataURL('image/png'),
-            name: String((d.hero || {}).nameCn || 'portfolio') + '-作品集分享卡-' + s.label + '.png',
-            label: s.label,
-          });
-        });
-      } catch (e) { SHARE_CARDS = []; }
-    }
-
+    /* ── 10. 作品集分享卡（内嵌 share-card.html：数据/主题/二维码实时生成） ── */
+    /* 卡片本体在独立网页 share-card.html（embed=1 隐藏其工具栏），弹窗只做壳：
+       tab 切换 → postMessage 让 iframe 换版式；下载 → postMessage 让 iframe 用 html2canvas 导出。
+       换人 / 改 data/site-data 后卡片自动跟着变，二维码指向当前访问域名，主题跟随主页。 */
     var shareBtn = $('shareBtn');
     var shareOverlay = $('shareOverlay');
-    var shareImg = $('shareImg');
+    var shareFrame = $('shareFrame');
     var shareDownload = $('shareDownload');
     var shareCur = 0;
+    var SHARE_SIZES = ['portrait', 'square'];
 
+    function shareCmd(action, extra) {
+      if (!shareFrame || !shareFrame.contentWindow) return;
+      var msg = { type: 'sharecard:cmd', action: action };
+      if (extra) for (var k in extra) msg[k] = extra[k];
+      try { shareFrame.contentWindow.postMessage(msg, location.origin); } catch (e) {}
+    }
     function setShareCard(i) {
-      if (!SHARE_CARDS.length) return;
-      shareCur = ((i % SHARE_CARDS.length) + SHARE_CARDS.length) % SHARE_CARDS.length;
-      var c = SHARE_CARDS[shareCur];
-      shareImg.onerror = null;
-      shareImg.src = c.src;
-      shareImg.alt = String(((window.__SITE_DATA__ || {}).hero || {}).nameCn || '作品集') + '分享卡（' + c.label + '）';
+      shareCur = ((i % SHARE_SIZES.length) + SHARE_SIZES.length) % SHARE_SIZES.length;
+      shareCmd('size', { size: SHARE_SIZES[shareCur] });
       document.querySelectorAll('.share-tab').forEach(function (t, idx) {
         t.classList.toggle('on', idx === shareCur);
         t.setAttribute('aria-selected', idx === shareCur ? 'true' : 'false');
       });
     }
+    // iframe 回报卡片实际高度（随版式/视口变化），同步调整预览高度
+    window.addEventListener('message', function (e) {
+      if (!shareFrame || e.origin !== location.origin || !e.data || e.data.type !== 'sharecard:height') return;
+      var h = Number(e.data.height);
+      if (h > 0 && shareFrame.style.height !== h + 'px') shareFrame.style.height = h + 'px';
+    });
 
     function closeShare() {
       shareOverlay.hidden = true;
       document.body.style.overflow = '';
-      shareImg.onerror = null;
-      shareImg.removeAttribute('src');
     }
-
     if (shareBtn) {
-      buildShareCards();
-      if (SHARE_CARDS.length) shareBtn.hidden = false;
+      shareBtn.hidden = false;
       shareBtn.addEventListener('click', function () {
-        if (!SHARE_CARDS.length) return;
-        setShareCard(0);
+        if (shareFrame && !shareFrame.src) shareFrame.src = 'share-card.html?embed=1';
+        shareCur = 0;
+        document.querySelectorAll('.share-tab').forEach(function (t, idx) {
+          t.classList.toggle('on', idx === 0);
+          t.setAttribute('aria-selected', idx === 0 ? 'true' : 'false');
+        });
         shareOverlay.hidden = false;
         document.body.style.overflow = 'hidden';
+        // iframe 首次加载完成后再发版式指令（load 事件保证内容已就绪）
+        if (shareFrame) shareFrame.addEventListener('load', function () { setShareCard(shareCur); }, { once: true });
       });
     }
     if (shareDownload) {
       shareDownload.addEventListener('click', function () {
-        var c = SHARE_CARDS[shareCur];
-        if (!c) return;
-        var a = document.createElement('a');
-        a.href = c.src;
-        a.download = c.name;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        showToast('正在下载「' + c.label + '」分享卡');
+        shareCmd('export');
+        var label = shareCur === 0 ? '竖版' : '方形';
+        showToast('正在生成「' + label + '」分享卡…');
       });
     }
     if (shareOverlay) {

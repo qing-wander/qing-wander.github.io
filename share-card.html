@@ -229,7 +229,8 @@ body {
 .card--square .c-domain { font-size:20px; padding:7px 12px; margin-top:10px; }
 .card--square .c-foot { margin-top:12px; font-size:12px; }
 
-/* 导出时对钩子：临时移除缩放与工具栏影响 */
+/* 嵌入主页弹窗模式：隐藏工具栏、压缩留白 */
+body.embed .stage-wrap { padding: 10px; }
 </style>
 </head>
 <body>
@@ -318,6 +319,17 @@ body {
   'use strict';
   var $ = function (id) { return document.getElementById(id); };
   var card = $('card'), stage = $('stage'), wrap = $('stageWrap');
+  var EMBED = /(?:\?|&)embed=1(?:&|$)/.test(location.search);
+  if (EMBED) {
+    document.body.classList.add('embed');
+    var bar = document.querySelector('.bar');
+    if (bar) bar.style.display = 'none';
+  }
+  function notifyParent(msg) {
+    if (EMBED && window.parent && window.parent !== window) {
+      try { window.parent.postMessage(msg, location.origin); } catch (e) {}
+    }
+  }
   var d = window.SITE_DATA || window.__SITE_DATA__ || {};
   var hero = d.hero || {}, meta = d.meta || {}, about = d.about || {}, contact = d.contact || {};
   var footer = meta.footer || {};
@@ -436,12 +448,16 @@ body {
     renderNums(); renderBio();
     fit();
     setTimeout(buildQR, 0);
+    notifyParent({ type: 'sharecard:ready', size: currentSize });
   }
   function fit() {
     var avail = Math.min(wrap.clientWidth - 24, 760);
+    if (EMBED && avail <= 0) avail = 520; // iframe 尚未布局时给保守值
     var scale = Math.min(1, avail / 1080);
     stage.style.transform = 'scale(' + scale + ')';
-    wrap.style.height = (card.offsetHeight * scale + 40) + 'px';
+    var h = card.offsetHeight * scale + 40;
+    wrap.style.height = h + 'px';
+    notifyParent({ type: 'sharecard:height', height: Math.ceil(h) });
   }
   document.querySelectorAll('[data-size]').forEach(function (b) {
     b.addEventListener('click', function () {
@@ -518,6 +534,21 @@ body {
   /* ── 初始化 ── */
   renderStats(); renderFocus(); renderIndex();
   applySize();
+
+  /* ── 嵌入模式：接收主页弹窗的指令 ── */
+  if (EMBED) {
+    window.addEventListener('message', function (e) {
+      if (e.origin !== location.origin || !e.data || e.data.type !== 'sharecard:cmd') return;
+      var cmd = e.data.action;
+      if (cmd === 'size' && e.data.size) {
+        var b = document.querySelector('[data-size="' + e.data.size + '"]');
+        if (b) b.click();
+      } else if (cmd === 'export') {
+        exportImage();
+        notifyParent({ type: 'sharecard:exported' });
+      }
+    });
+  }
 })();
 </script>
 </body>
