@@ -11,16 +11,16 @@
 #   ./scripts/wall-check.sh --post --admin-token=X  # 提交后用管理令牌自动删除测试留言
 #   WALL_ADMIN_TOKEN=X ./scripts/wall-check.sh --post
 #   ./scripts/wall-check.sh http://127.0.0.1:8877  # 打本地联调服务器
-#   ORIGIN=https://shenge-work.pages.dev ./scripts/wall-check.sh --post
+#   ORIGIN=https://qing-wander.pages.dev ./scripts/wall-check.sh --post
 #   DEVICE_ID=my-device-00001 ./scripts/wall-check.sh
 #
 # 退出码：全部通过 0；有失败 1；参数错误 2。
-# 说明：正式站 chenpeisheng.cn 已接入 Cloudflare Pages，API 同源；pages.dev 仍作备用线路。
+# 说明：正式站 qingfin.cn 已接入 Cloudflare Pages，API 同源；pages.dev 仍作备用线路。
 
 set -uo pipefail
 
-BASE="https://chenpeisheng.cn"
-ORIGIN="${ORIGIN:-https://chenpeisheng.cn}"
+BASE="https://qingfin.cn"
+ORIGIN="${ORIGIN:-https://qingfin.cn}"
 ADMIN_TOKEN="${WALL_ADMIN_TOKEN:-}"
 DEVICE_ID="${DEVICE_ID:-wc-selfcheck-0001}"
 OTHER_ID="${OTHER_ID:-wc-other-$(date +%s)}"
@@ -95,7 +95,7 @@ db_guide() {
         npx wrangler d1 execute portfolio-db --remote --file=db/schema.sql
       老库（2026-11-19 之前建的）还要补跑设备隔离迁移：
         npx wrangler d1 execute portfolio-db --remote --file=db/migrations/2026-11-19-wall-device-isolation.sql
-   2) Workers & Pages → 项目 shenge-work → Settings → Functions
+   2) Workers & Pages → 项目 qing-wander → Settings → Functions
       → D1 database bindings → Add binding
         Variable name  : DB              ← 必须一字不差
         D1 database    : portfolio-db
@@ -200,7 +200,7 @@ if [ "$DO_POST" = "1" ]; then
         -H "Origin: $ORIGIN" -H "X-Admin-Token: $ADMIN_TOKEN" \
         -H 'Content-Type: application/json' -d "{\"id\":\"$NEW_ID\"}")
       check W16 "测试留言已用管理令牌删除" 200 "$CODE"
-      # 旧后台接口已下线，日常管理走独立后台 shenge-work-admin.pages.dev。
+      # 旧后台接口已下线，日常管理走独立后台 qing-wander-admin.pages.dev。
       # Pages 对未匹配的 /api/* 会回退到静态首页（200 text/html），所以不能只看
       # 状态码，要看响应里还有没有设备数据。
       CODE=$(curl -sS -o "$TMP" -w '%{http_code}' -m 15 -H "X-Admin-Token: $ADMIN_TOKEN" "$BASE/api/admin/wall/devices?limit=5")

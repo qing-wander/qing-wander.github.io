@@ -13,15 +13,14 @@ import { onRequestGet as pdfGet } from '../functions/api/resume-pdf.js';
 import { onRequest as middleware } from '../functions/_middleware.js';
 
 const UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0 Safari/537.36';
-const PHONE = '+86 180 2283 4605';
+const PHONE = '+86 173 2963 5456';
 
 test('占位符四种形态都能替换成真实号码', () => {
   let html = 'TEL ' + PHONE_PLACEHOLDERS.join(' | ');
   html = injectResumePhone(html, PHONE);
   for (const ph of PHONE_PLACEHOLDERS) assert.equal(html.includes(ph), false, '残留占位符：' + ph);
-  assert.ok(html.includes('+86 180 2283 4605'));
-  assert.ok(html.includes('180 2283 4605'));
-  assert.ok(html.includes('18022834605'));
+  assert.ok(html.includes('+86 173 2963 5456'));
+  assert.ok(html.includes('17329635456'));
 });
 
 test('号码为空时原样返回，不把页面搞坏', () => {
@@ -31,7 +30,7 @@ test('号码为空时原样返回，不把页面搞坏', () => {
 
 test('从站点数据取 tel 卡片的展示号码', () => {
   const data = {
-    contact: { cards: [{ label: 'EMAIL', href: 'mailto:a@b.c', value: 'a@b.c' }, { label: 'TEL', href: 'tel:+8618022834605', value: PHONE }] },
+    contact: { cards: [{ label: 'EMAIL', href: 'mailto:a@b.c', value: 'a@b.c' }, { label: 'TEL', href: 'tel:+8617329635456', value: PHONE }] },
   };
   assert.equal(phoneFromSiteData(data), PHONE);
   assert.equal(phoneFromSiteData({}), '');
@@ -43,12 +42,12 @@ test('resumePhone 从 D1 的 site-data 里读；缺库返回空串', async () =>
       prepare: () => ({
         bind() { return this; },
         async first() {
-          return { payload: JSON.stringify({ contact: { cards: [{ href: 'tel:18022834605', value: '180 2283 4605' }] } }) };
+          return { payload: JSON.stringify({ contact: { cards: [{ href: 'tel:17329635456', value: PHONE }] } }) };
         },
       }),
     },
   };
-  assert.equal(await resumePhone(env), '180 2283 4605');
+  assert.equal(await resumePhone(env), PHONE);
   assert.equal(await resumePhone({}), '');
   assert.equal(await resumePhone({ DB: { prepare: () => ({ async first() { throw new Error('x'); } }) } }), '');
 });
@@ -59,12 +58,12 @@ test('/resume 响应前注入真号码，并标记来源与缓存', async () => 
       prepare: () => ({
         bind() { return this; },
         async first() {
-          return { payload: JSON.stringify({ contact: { cards: [{ href: 'tel:+8618022834605', value: PHONE }] } }) };
+          return { payload: JSON.stringify({ contact: { cards: [{ href: 'tel:+8617329635456', value: PHONE }] } }) };
         },
       }),
     },
   };
-  const req = new Request('https://chenpeisheng.cn/resume', { headers: { 'User-Agent': UA } });
+  const req = new Request('https://qing-wander.github.io/resume', { headers: { 'User-Agent': UA } });
   const res = await middleware({
     request: req,
     env,
@@ -74,7 +73,7 @@ test('/resume 响应前注入真号码，并标记来源与缓存', async () => 
   assert.equal(res.status, 200);
   assert.equal(res.headers.get('X-Content-Source'), 'cloud');
   assert.equal(html.includes('138 0000 0000'), false);
-  assert.ok(html.includes('180 2283 4605'));
+  assert.ok(html.includes('173 2963 5456'));
 });
 
 test('/api/resume-pdf：KV 有真 PDF 就用它，没有回落到静态副本', async () => {
@@ -95,8 +94,13 @@ test('/api/resume-pdf：KV 有真 PDF 就用它，没有回落到静态副本', 
   } finally { globalThis.fetch = orig; }
 });
 
-test('仓库里的 resume.html 确实只剩占位符（防回归）', () => {
+test('仓库里的 resume.html 只出现本站联系号码，不带上游作者号码', () => {
   const html = readFileSync(new URL('../resume.html', import.meta.url), 'utf8');
-  assert.ok(html.includes('138 0000 0000'), '占位符不在了：脱敏脚本或模板变了');
-  assert.equal(/\+?8618022834605|18022834605/.test(html), false, '仓库里出现了真实手机号');
+  /* 本站（李清）采用实名公开联系方式：允许真实号码或脱敏占位符，
+     但绝不能把上游作者的号码随模板带进来。 */
+  assert.ok(
+    /173\s?2963\s?5456|138\s0000\s0000/.test(html),
+    '简历页缺少联系号码（真实号或占位符都算）',
+  );
+  assert.equal(/\+?8617329635456|17329635456/.test(html), false, '仓库里出现了上游作者手机号');
 });

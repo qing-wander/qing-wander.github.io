@@ -157,7 +157,7 @@ test('OPTIONS 返回预检头', async () => {
   assert.match(res.headers.get('Access-Control-Allow-Headers'), /X-Device-Id/);
 });
 
-test('成功申请：邮件发往 hi@chenpeisheng.cn，含身份 / 时间 / 设备 / UA / IP 哈希', async (t) => {
+test('成功申请：邮件发往 hi@qingfin.cn，含身份 / 时间 / 设备 / UA / IP 哈希', async (t) => {
   const calls = mockResend(t);
   const res = await post(BASE_BODY, { 'X-Device-Id': 'test-device-0001' });
   assert.equal(res.status, 200);
@@ -166,7 +166,7 @@ test('成功申请：邮件发往 hi@chenpeisheng.cn，含身份 / 时间 / 设�
   assert.equal(calls[0].url, 'https://api.resend.com/emails');
 
   const mail = JSON.parse(calls[0].init.body);
-  assert.deepEqual(mail.to, ['hi@chenpeisheng.cn']);
+  assert.deepEqual(mail.to, ['hi@qingfin.cn']);
   assert.equal(mail.reply_to, 'hr@example.com');
   const all = mail.subject + '\n' + mail.text + '\n' + mail.html;
   for (const needle of [

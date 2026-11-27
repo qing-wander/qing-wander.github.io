@@ -20,7 +20,7 @@ const SITE_FILE = resolve(ROOT, 'data/site-data.json');
 const DETAILS_FILE = resolve(ROOT, 'data/work-details.json');
 const TEMPLATE_FILE = resolve(ROOT, 'templates/work-detail.template.html');
 const OUT_DIR = resolve(ROOT, 'work');
-const SITE_ORIGIN = 'https://chenpeisheng.cn';
+const SITE_ORIGIN = 'https://qingfin.cn';
 
 const BANNER = [
   '<!-- 由 scripts/render_work_details.mjs 生成，请勿手改 -->',
@@ -251,7 +251,7 @@ function jsonld(w, site, canonical) {
     operatingSystem: 'Web',
     url: canonical,
     description: (w.seo || {}).description || '',
-    author: { '@type': 'Person', name: '陈培胜' },
+    author: { '@type': 'Person', name: '李清' },
     inLanguage: 'zh-CN',
   };
   /* SEO 描述里若出现 </script> 会截断内联 JSON-LD，统一转义尖括号 */

@@ -3,9 +3,10 @@
     {
       "allowed": {
         "origins": [
-          "https://chenpeisheng.cn",
-          "https://www.chenpeisheng.cn",
-          "https://shenge-work.pages.dev",
+          "https://qingfin.cn",
+          "https://qing-wander.github.io",
+          "https://www.qing-wander.github.io",
+          "https://qing-wander.pages.dev",
           "http://localhost:8080",
           "http://localhost:8000"
         ],

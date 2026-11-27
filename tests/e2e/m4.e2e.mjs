@@ -54,7 +54,7 @@ try {
     status: 200, contentType: 'application/json',
     body: JSON.stringify({
       ok: true, html: '<p>邮件正文预览 E2E</p>', to: ['hr@company.com'],
-      subject: '陈培胜 · 简历', attachments: ['chen-peisheng-resume-2026.pdf'],
+      subject: '李清 · 简历', attachments: ['chen-peisheng-resume-2026.pdf'],
       replyTo: 'you@company.com',
     }),
   }));

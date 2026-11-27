@@ -13,7 +13,7 @@ import { onRequestGet as qrGet } from '../functions/api/admin/auth/mini/qr.js';
 import { onRequestPost as confirmPost } from '../functions/api/admin/auth/mini/confirm.js';
 import { onRequestGet as pollGet } from '../functions/api/admin/auth/mini/poll.js';
 
-const ORIGIN = 'https://chenpeisheng.cn';
+const ORIGIN = 'https://qingfin.cn';
 
 function fakeKv() {
   const map = new Map();

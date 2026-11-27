@@ -26,7 +26,7 @@ import { mkdirSync, writeFileSync, statSync, existsSync, readdirSync } from 'nod
 import { createHash } from 'node:crypto';
 import { chromium, devices } from 'playwright';
 
-const BASE = process.env.BASE || 'https://shenge-work.pages.dev';
+const BASE = process.env.BASE || 'https://qing-wander.pages.dev';
 const SHOT_DIR = 'tests/e2e/baseline/screenshots';
 const FRESH = !!process.env.FRESH;
 const THEMES = ['archive', 'blueprint', 'newsprint', 'noir'];

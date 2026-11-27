@@ -9,14 +9,14 @@
  *   且以「逐字一致页」（resume）的波动作为该环境的噪声带参照。
  *
  * 运行：node tests/e2e/perf-post.mjs
- *   BASE=https://chenpeisheng.cn（默认；也可指向 pages.dev）
+ *   BASE=https://qingfin.cn（默认；也可指向 pages.dev）
  */
 import { mkdirSync, writeFileSync, readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import * as chromeLauncher from 'chrome-launcher';
 import lighthouse from 'lighthouse';
 
-const BASE = process.env.BASE || 'https://chenpeisheng.cn';
+const BASE = process.env.BASE || 'https://qingfin.cn';
 const OUT_DIR = 'tests/e2e/baseline/lighthouse-post-react';
 const BASELINE_SUMMARY = 'tests/e2e/baseline/lighthouse/summary.json';
 const PAGES = [

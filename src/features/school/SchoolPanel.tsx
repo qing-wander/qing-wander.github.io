@@ -353,7 +353,7 @@ function AccessModal({
               <textarea name="reason" rows={5} maxLength={600} placeholder="请具体说明为什么要查看学历验证码…"></textarea>
               <small className="sp-field-guide">
                 <b>填写引导：</b>① 你是谁、代表哪家公司；② 为什么必须核验学历；③ 信息只用于什么场景、不会外传。<br />
-                <b>示例：</b>我是某某科技 HR BP 张三，正在推进陈培胜后端工程师岗位的录用流程，需要核验学信网学历信息以完成入职背调；该信息仅用于本次招聘评估，不会外传。
+                <b>示例：</b>我是某某科技 HR BP 张三，正在推进李清后端工程师岗位的录用流程，需要核验学信网学历信息以完成入职背调；该信息仅用于本次招聘评估，不会外传。
               </small>
             </label>
             <label className="sp-check">

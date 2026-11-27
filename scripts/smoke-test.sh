@@ -12,7 +12,7 @@
 set -uo pipefail
 
 ENDPOINT="${ENDPOINT:-https://resume-ai-d9g7zghnxda2ee2cb-1307508155.ap-shanghai.app.tcloudbase.com/chat}"
-ORIGIN="${ORIGIN:-https://chenpeisheng.cn}"
+ORIGIN="${ORIGIN:-https://qingfin.cn}"
 BAD_ORIGIN="${BAD_ORIGIN:-https://evil.example.com}"
 WITH_MODEL=0
 WITH_RATE=0

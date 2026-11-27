@@ -7,7 +7,7 @@
  * 汇总分数写入 summary.json —— 后续 M1-M5 每阶段与本基线对比（N5 不变量）。
  *
  * 运行：pnpm e2e:perf-baseline
- *   BASE=https://shenge-work.pages.dev node tests/e2e/perf-baseline.mjs
+ *   BASE=https://qing-wander.pages.dev node tests/e2e/perf-baseline.mjs
  * ⚠ M0 基线抓的是【旧版站】；React 版验收时用同一脚本重抓对照。
  */
 import { mkdirSync, writeFileSync } from 'node:fs';
@@ -15,7 +15,7 @@ import { createHash } from 'node:crypto';
 import * as chromeLauncher from 'chrome-launcher';
 import lighthouse from 'lighthouse';
 
-const BASE = process.env.BASE || 'https://shenge-work.pages.dev';
+const BASE = process.env.BASE || 'https://qing-wander.pages.dev';
 const OUT_DIR = 'tests/e2e/baseline/lighthouse';
 const PAGES = [
   { name: 'index', url: `${BASE}/` },

@@ -25,7 +25,7 @@ try {
   await page.waitForTimeout(3000);
 
   /* ① 板块 SSG 直出 */
-  check('title 直出', (await page.title()).includes('陈培胜'));
+  check('title 直出', (await page.title()).includes('李清'));
   const st = await page.evaluate(() => ({
     exp: document.querySelectorAll('.exp-card').length,
     proj: document.querySelectorAll('.proj-card').length,

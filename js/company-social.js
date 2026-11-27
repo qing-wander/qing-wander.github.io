@@ -16,8 +16,8 @@
   var API_BASES = (function () {
     var host = location.hostname || '';
     if (/^(localhost|127\.0\.0\.1|0\.0\.0\.0|\[::1\])$/.test(host)) return [''];
-    if (/\.github\.io$/i.test(host)) return ['https://shenge-work.pages.dev'];
-    return ['', 'https://shenge-work.pages.dev'];
+    if (/\.github\.io$/i.test(host)) return ['https://qing-wander.pages.dev'];
+    return ['', 'https://qing-wander.pages.dev'];
   })();
 
   /* 与留言墙共用同一设备 ID：清缓存 / 换浏览器算新设备 */

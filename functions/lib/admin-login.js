@@ -12,8 +12,8 @@
 
 const enc = new TextEncoder();
 const RESEND_URL = 'https://api.resend.com/emails';
-const DEFAULT_FROM = '作品集后台 <code@chenpeisheng.cn>';
-const DEFAULT_ADMIN_EMAIL = 'hi@chenpeisheng.cn';
+const DEFAULT_FROM = '作品集后台 <code@qingfin.cn>';
+const DEFAULT_ADMIN_EMAIL = 'hi@qingfin.cn';
 
 /* ── 基础工具 ─────────────────────────────────────────────────── */
 
@@ -108,7 +108,7 @@ function codeMailHtml(code, email) {
       <p style="margin:0 0 4px;font-size:12px;line-height:1.7;color:#4A423A">不是你操作的？忽略这封邮件即可，后台不会因此解锁。</p>
     </td></tr>
     <tr><td style="padding:18px 24px 24px;border-top:1px solid #D8CFBF">
-      <p style="margin:0;font-size:11px;line-height:1.7;color:#7A7168">chenpeisheng.cn · 后台登录通知，请勿转发</p>
+      <p style="margin:0;font-size:11px;line-height:1.7;color:#7A7168">qingfin.cn · 后台登录通知，请勿转发</p>
     </td></tr>
   </table>
 </body></html>`;

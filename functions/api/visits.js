@@ -6,7 +6,7 @@
    为什么放在 Pages 而不是独立 Worker：
      · 独立 Worker 只能挂在 *.workers.dev 域（境内被墙实测超时）或自有域名
        （站长因支付问题暂未购买域名），两条路都走不通；
-     · Pages 项目本身的 shenge-work.pages.dev 是既有可用链路，函数与站点同域，
+     · Pages 项目本身的 qing-wander.pages.dev 是既有可用链路，函数与站点同域，
        顺带省掉一层跨域往返；github.io 主站调用时按白名单放行 CORS。
 
    接口：
@@ -34,9 +34,9 @@ const VISITOR_TTL_MS = 180 * 24 * 60 * 60 * 1000; // 180 天不活跃即清掉
 const IP_WINDOW_MS = 60 * 60 * 1000;              // 每 IP 限流窗口 1 小时
 const IP_LIMIT = 60;                             // 每 IP 每小时最多 60 次计数写入
 const DEFAULT_ORIGINS = [
-  'https://chenpeisheng.cn',
-  'https://shenge-work.pages.dev',
-  '*.shenge-work.pages.dev',
+  'https://qingfin.cn',
+  'https://qing-wander.pages.dev',
+  '*.qing-wander.pages.dev',
   'http://localhost:8000',
   'http://127.0.0.1:8000',
   'http://localhost:8080',

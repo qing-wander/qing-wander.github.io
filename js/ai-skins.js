@@ -592,7 +592,7 @@
     host.innerHTML = SVG_MASCOT;
     var img = document.createElement('img');
     img.className = 'sk-gen-img';
-    img.alt = '陈培胜的数字分身形象';
+    img.alt = '李清的数字分身形象';
     img.src = BASE + 'generated.png';
     img.onload = function () { host.innerHTML = ''; host.appendChild(img); };
     var t = null;
@@ -668,7 +668,7 @@
   stage.id = 'aiStage';
   stage.setAttribute('role', 'button');
   stage.setAttribute('tabindex', '0');
-  stage.setAttribute('aria-label', '陈培胜的数字分身，点击开始对话');
+  stage.setAttribute('aria-label', '李清的数字分身，点击开始对话');
   stage.innerHTML =
     '<div class="ai-stage-actor" id="aiActor"></div>' +
     '<div class="ai-stage-ground" aria-hidden="true"></div>' +

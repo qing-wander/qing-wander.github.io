@@ -87,10 +87,10 @@ test('重建：切片数与向量数一致，先算完再写库', async () => {
   const env = envOf();
   const r = await rebuildKb(env);
   assert.equal(r.ok, true, r.message);
-  assert.equal(r.count, 42);
-  assert.equal(r.vectors, 42);
-  assert.equal(env.AI.calls.length, 2, '42 片应分两批嵌入（每批 40）');
-  assert.equal(env.VECTORIZE.upserts.length, 42);
+  assert.equal(r.count, 36);
+  assert.equal(r.vectors, 36);
+  assert.equal(env.AI.calls.length, 1, '36 片一批嵌入（每批上限 40）');
+  assert.equal(env.VECTORIZE.upserts.length, 36);
   assert.ok(env.VECTORIZE.upserts.every((v) => /^kb-[0-9a-f]{8}:/.test(v.id)));
   assert.ok(r.kb_version.startsWith('kb-'));
 
@@ -167,7 +167,7 @@ test('Worker 路由：/rebuild 需要令牌，/health 公开', async () => {
     method: 'POST', headers: { 'X-KB-Token': 'secret-token' }, body: '{}',
   }), env);
   assert.equal(ok.status, 200);
-  assert.equal((await ok.json()).count, 42);
+  assert.equal((await ok.json()).count, 36);
 });
 
 test('kbStatus：能识别知识库是否落后于站点数据', async () => {

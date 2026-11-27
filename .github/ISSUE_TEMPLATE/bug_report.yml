@@ -7,13 +7,13 @@ body:
     attributes:
       value: |
         感谢反馈。请先确认：
-        - 安全漏洞**不要**在这里报告，请按 [SECURITY.md](https://github.com/shenge-work/shenge-work.github.io/blob/main/SECURITY.md) 私信；
+        - 安全漏洞**不要**在这里报告，请按 [SECURITY.md](https://github.com/qing-wander/qing-wander.github.io/blob/main/SECURITY.md) 私信；
         - 提交前请勿粘贴真实手机号、验证码、API Key 或他人留言内容。
   - type: input
     id: url
     attributes:
       label: 出问题的页面 / 接口
-      placeholder: https://chenpeisheng.cn/resume.html 或 GET /api/wall
+      placeholder: https://qingfin.cn/resume.html 或 GET /api/wall
     validations:
       required: true
   - type: textarea

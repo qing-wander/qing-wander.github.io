@@ -3,7 +3,7 @@
    确认结果不在这里展示细节——网页端轮询才会拿到 openid 或登录态，
    这样 openid 不会留在手机截图里。 */
 
-var API = 'https://chenpeisheng.cn/api/admin/auth/mini/confirm';
+var API = 'https://qingfin.cn/api/admin/auth/mini/confirm';
 
 Page({
   data: {

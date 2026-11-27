@@ -9,17 +9,11 @@
       "site": "https://example.com",
       "initial": "L",
       "reason": "一起做过 Agent 落地，他对提示词工程的拆解很值得看",
-      "tags": ["Agent", "RAG"]
+      "tags": [
+        "Agent",
+        "RAG"
+      ]
     }
   },
-  "people": [
-    {
-      "name": "杨胜",
-      "role": "AI 应用架构师 · 开源 CCode 作者",
-      "site": "https://resume.nodetime.top",
-      "initial": "Y",
-      "reason": "日均 20 亿 Token 的五层可观测与评测体系，少见地把 Agent 成本与 Trace 拆到了工程颗粒度",
-      "tags": ["Agent 可观测", "AI 编程工具"]
-    }
-  ]
+  "people": []
 }

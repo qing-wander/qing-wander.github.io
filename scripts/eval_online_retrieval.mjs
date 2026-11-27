@@ -11,7 +11,7 @@
 
    用法：
      node scripts/eval_online_retrieval.mjs
-     node scripts/eval_online_retrieval.mjs --base https://shenge-work.pages.dev
+     node scripts/eval_online_retrieval.mjs --base https://qing-wander.pages.dev
    ────────────────────────────────────────────────────────────────────── */
 import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
@@ -21,7 +21,7 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const GOLDEN = JSON.parse(readFileSync(resolve(ROOT, 'tests/golden-queries.json'), 'utf8'));
 const BASE = (process.argv.includes('--base')
   ? process.argv[process.argv.indexOf('--base') + 1]
-  : 'https://shenge-work.pages.dev').replace(/\/$/, '');
+  : 'https://qing-wander.pages.dev').replace(/\/$/, '');
 
 async function ask(q, rerank, top = 3) {
   const url = `${BASE}/api/kb?q=${encodeURIComponent(q)}&top=${top}&rerank=${rerank ? 1 : 0}`;

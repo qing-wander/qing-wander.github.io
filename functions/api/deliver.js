@@ -2,14 +2,14 @@
    简历自动投递 API · Cloudflare Pages Function（路由 /api/deliver）
    ──────────────────────────────────────────────────────────────────────
    用途：resume.html「自动投递」——浏览简历的人（HR / 面试官 / 猎头 / 朋友）
-   填表单，把「陈培胜的简历」发到指定邮箱：正文含动态称呼、简历提炼、可选 JD、
+   填表单，把「李清的简历」发到指定邮箱：正文含动态称呼、简历提炼、可选 JD、
    在线简历入口，附件含 PDF 简历 + 可选证书（文件缺失则标注待补充）。
 
    ⚠️ 方向：收件人 = 访客填写的邮箱，不是站长邮箱。
    站长只可选收一份 BCC 备案（DELIVER_BCC），默认不发。
 
    为什么不墙：发信调用发生在 Cloudflare 节点（Pages Functions 运行时），
-   访问 api.resend.com 无网络障碍；国内访客只访问 shenge-work.pages.dev。
+   访问 api.resend.com 无网络障碍；国内访客只访问 qing-wander.pages.dev。
    Resend API Key 只放 Cloudflare 环境变量（RESEND_API_KEY），永不进前端。
 
    接口：
@@ -32,9 +32,9 @@
 
    环境变量（Cloudflare Pages → Settings → Variables）：
      RESEND_API_KEY   必填，未配置返回 503（前端自动走 mailto 兜底）
-     DELIVER_FROM     可选，简历投递专用发件身份（默认 jobs@chenpeisheng.cn）
+     DELIVER_FROM     可选，简历投递专用发件身份（默认 jobs@qingfin.cn）
      RESEND_FROM      可选，仅作兼容兜底，勿再填 hi@ 本人邮箱
-     DELIVER_BCC      可选，站长收一份备案（如 hi@chenpeisheng.cn），留空则不发
+     DELIVER_BCC      可选，站长收一份备案（如 hi@qingfin.cn），留空则不发
      ALLOWED_ORIGINS  可选，逗号分隔（默认 github.io / pages.dev / localhost）
 
    绑定：SITE_KV（与留言墙共用；未绑定时跳过限额，不阻塞发信）
@@ -64,7 +64,7 @@ import {
 export { allowedOrigins, corsHeaders, isAllowedOrigin, json };
 
 const RESEND_URL = 'https://api.resend.com/emails';
-const DEFAULT_FROM = '陈培胜 · 简历投递 <jobs@chenpeisheng.cn>';
+const DEFAULT_FROM = '李清 · 简历投递 <jobs@qingfin.cn>';
 
 const MAX_NAME = 24;
 const MAX_NOTE = 500;

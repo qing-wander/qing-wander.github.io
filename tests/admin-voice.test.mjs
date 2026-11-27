@@ -15,7 +15,7 @@ import { onRequestGet as voiceGet, onRequestOptions as voiceOptions } from '../f
 import { onRequestGet as adminVoiceGet, onRequestPost as adminVoicePost } from '../functions/api/admin/voice.js';
 import { onRequestPost as previewPost } from '../functions/api/admin/voice/preview.js';
 
-const ORIGIN = 'https://chenpeisheng.cn';
+const ORIGIN = 'https://qingfin.cn';
 const SCHEMA = readFileSync(new URL('../db/schema.sql', import.meta.url), 'utf8');
 const SECRET = 'test-admin-session-secret';
 

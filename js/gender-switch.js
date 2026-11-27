@@ -12,7 +12,7 @@
   var MAP = {
     male: {
       img: 'images/portrait.jpg',
-      alt: '陈培胜——橙色连帽卫衣与黑框眼镜的半身插画肖像',
+      alt: '李清——橙色连帽卫衣与黑框眼镜的半身插画肖像',
       no: 'PHOTO NO.001',
       skin: 'self3d',
       voice: 101013,          // 兜底：D1 没配或离线预览时用
@@ -78,8 +78,8 @@
   function cloudBases() {
     var host = location.hostname || '';
     if (/^(localhost|127\.0\.0\.1|0\.0\.0\.0|\[::1\])$/.test(host)) return [''];
-    if (/\.github\.io$/i.test(host)) return ['https://shenge-work.pages.dev'];
-    return ['', 'https://shenge-work.pages.dev'];
+    if (/\.github\.io$/i.test(host)) return ['https://qing-wander.pages.dev'];
+    return ['', 'https://qing-wander.pages.dev'];
   }
 
   function loadCloud() {

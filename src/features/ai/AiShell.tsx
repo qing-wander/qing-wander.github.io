@@ -27,7 +27,7 @@ type PanelItem = AiMsgItem | { id: number; jdCard: { data: JdMatchData; elapsed:
    注入按钮得以保留（旧版无水合的等效行为）；#aiClose 点击由 document 委托接管。 */
 const HEAD_HTML =
   '<span class="ai-head-mark">AI<i>.</i>ME</span>' +
-  '<span class="ai-head-sub">DIGITAL TWIN // CHEN PEISHENG</span>' +
+  '<span class="ai-head-sub">DIGITAL TWIN // LI QING</span>' +
   '<span class="ai-head-status"><i class="ai-lamp" aria-hidden="true"></i>在线</span>' +
   '<button class="ai-close" id="aiClose" aria-label="关闭数字分身">×</button>';
 
@@ -282,7 +282,7 @@ export default function AiShell() {
 
   return (
     <aside className={'ai-panel' + (mode === 'jd' ? ' ai-mode-jd' : '') + (opening ? ' opening' : '')}
-      id="aiPanel" role="dialog" aria-modal="false" aria-label="陈培胜的数字分身" hidden={!open} ref={panelRef}>
+      id="aiPanel" role="dialog" aria-modal="false" aria-label="李清的数字分身" hidden={!open} ref={panelRef}>
         <div className="ai-head" dangerouslySetInnerHTML={{ __html: HEAD_HTML }} />
         <div className="ai-modebar" id="aiModeBar" role="group" aria-label="对话模式">
           <button className={'ai-mode-btn' + (mode === 'qa' ? ' on' : '')} type="button" data-ai-mode="qa"

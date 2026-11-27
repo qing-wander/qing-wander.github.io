@@ -13,7 +13,7 @@
    （去掉 EXIF，减小体积）→ 算 sha256 → 写二进制 + 元数据到存储。
 
    KV：键 secure-asset:<id>（二进制）、secure-asset-meta:<id>（JSON）。
-   COS：对象放 shenge-work/private/ 下，单对象 ACL=private（桶是 public-read，
+   COS：对象放 qing-wander/private/ 下，单对象 ACL=private（桶是 public-read，
         必须显式私有），元数据 backend=cos；服务端用 COS_* 密钥签名私有读。
 
    环境变量：
@@ -116,7 +116,7 @@ async function putCos(cfg, key, file) {
   });
   const bucket = process.env.COS_BUCKET || '7265-resume-ai-d9g7zghnxda2ee2cb-1307508155';
   const region = process.env.COS_REGION || 'ap-shanghai';
-  const prefix = process.env.COS_PRIVATE_PREFIX || 'shenge-work/private/';
+  const prefix = process.env.COS_PRIVATE_PREFIX || 'qing-wander/private/';
   const objectKey = prefix + key;
   await new Promise((res, rej) => {
     client.putObject({

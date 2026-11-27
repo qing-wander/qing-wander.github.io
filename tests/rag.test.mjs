@@ -14,7 +14,7 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 /* 知识库产物不入库：测试前从 data/site-data.json 现算到临时目录。 */
 const KB_DIR = mkdtempSync(join(tmpdir(), 'cpai-kb-test-'));
 process.env.KB_OUT_DIR = KB_DIR;
-const built = spawnSync('python3', ['scripts/build_kb.py'], {
+const built = spawnSync('python', ['scripts/build_kb.py'], {
   cwd: ROOT, env: process.env, encoding: 'utf8',
 });
 if (built.status !== 0) throw new Error('测试知识库生成失败：' + (built.stderr || built.stdout));
@@ -47,7 +47,7 @@ test('splitRequirements：超长 JD 截断到 14 条', () => {
 });
 
 test('retrieve：依据里不允许出现 0 分块', () => {
-  for (const q of ['Agent 架构经验', '他做过哪些项目', 'Kafka Flink 实时链路', '技术栈是什么']) {
+  for (const q of ['费用报销审核经验', '她做过哪些项目', '金蝶系统运维', '技能有哪些']) {
     const r = _internal.retrieve(q);
     for (const h of r.hits) {
       assert.ok(h.score > 0, `"${q}" 召回出了 0 分块 ${h.id}`);
@@ -57,8 +57,8 @@ test('retrieve：依据里不允许出现 0 分块', () => {
 
 test('retrieve：相关问题的 top1 落在预期档案段', () => {
   const cases = [
-    ['Agent 架构经验', ['skills-01', 'me-01', 'me-02', 'proj-p02-01']],
-    ['他在进门财经做了什么', ['proj-p01-01', 'proj-p01-02', 'proj-p01-03', 'exp-01-01']],
+    ['费用报销审核经验', ['skills-01', 'me-01', 'exp-02-01', 'proj-p01-01']],
+    ['她在南方电网做了什么', ['exp-02-01', 'proj-p01-01', 'proj-p01-02', 'skills-01']],
   ];
   for (const [q, allowed] of cases) {
     const r = _internal.retrieve(q);
@@ -69,7 +69,7 @@ test('retrieve：相关问题的 top1 落在预期档案段', () => {
 });
 
 test('retrieve：档案里没有的信息应落空，交给 NO_MATCH', () => {
-  for (const q of ['你多大了', '今天早上吃什么', '北京到上海多远', '他的星座是什么']) {
+  for (const q of ['你多大了', '今天早上吃什么', '你会做饭吗', '她的星座是什么']) {
     const r = _internal.retrieve(q);
     assert.equal(r.hits.length, 0, `"${q}" 不该召回出 ${r.hits.map((h) => h.id).join(',')}`);
   }
@@ -82,11 +82,11 @@ test('retrieve：relaxed 模式给 JD 单条需求留出召回空间', () => {
 });
 
 test('retrieve：词面缺口靠章节意图兜住（教育 / 联系方式）', () => {
-  const edu = _internal.retrieve('他的教育背景');
+  const edu = _internal.retrieve('她的教育背景');
   assert.ok(edu.hits.length > 0, '「教育背景」不该召回为空');
   assert.ok(edu.hits.some((h) => h.id.startsWith('edu-')), '应命中教育段');
 
-  const contact = _internal.retrieve('怎么联系他');
+  const contact = _internal.retrieve('怎么联系她');
   assert.ok(contact.hits.some((h) => h.id === 'contact-01'), '应命中联系方式段');
 });
 

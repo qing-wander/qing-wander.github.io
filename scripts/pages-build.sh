@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Cloudflare Pages 构建产物 dist/ —— 自动构建与手动部署共用的唯一入口
 #
-# 控制台配置（Pages 项目 shenge-work → Settings → Builds & deployments）：
+# 控制台配置（Pages 项目 qing-wander → Settings → Builds & deployments）：
 #   Build command    : bash scripts/pages-build.sh
 #   Build output dir : dist
 #   Root directory   :（留空）

@@ -11,7 +11,7 @@ import { signSession, COOKIE, TTL } from '../functions/lib/admin-auth.js';
 import { onRequestGet as publicGet } from '../functions/api/gender.js';
 import { onRequestGet as adminGet, onRequestPost as adminPost } from '../functions/api/admin/gender.js';
 
-const ORIGIN = 'https://chenpeisheng.cn';
+const ORIGIN = 'https://qingfin.cn';
 const SCHEMA = readFileSync(new URL('../db/schema.sql', import.meta.url), 'utf8');
 const SECRET = 'test-admin-session-secret';
 

@@ -10,7 +10,7 @@
 
    用法：
      node scripts/mail-e2e-test.mjs --to you@example.com
-     node scripts/mail-e2e-test.mjs --to you@example.com --base https://shenge-work.pages.dev
+     node scripts/mail-e2e-test.mjs --to you@example.com --base https://qing-wander.pages.dev
      node scripts/mail-e2e-test.mjs --to a@x.com --dry-run     # 只取证 + 求解，不投递
 
    注意：
@@ -21,7 +21,7 @@
 
 import { createHash } from 'node:crypto';
 
-const DEFAULT_BASE = 'https://chenpeisheng.cn';
+const DEFAULT_BASE = 'https://qingfin.cn';
 const UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 ' +
   '(KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36';
 
@@ -106,8 +106,8 @@ async function main() {
 
   const out = await deliver(args.base, {
     to: args.to,
-    name: '陈培胜',
-    email: 'hi@chenpeisheng.cn',
+    name: '李清',
+    email: 'hi@qingfin.cn',
     note: '这是一封自动投递链路的验收测试邮件，用于核对发件身份与认证结果，请忽略。',
     verify: { token: ch.token, nonce: solved.nonce },
   });
@@ -117,9 +117,9 @@ async function main() {
     console.log('  id: ' + (out.body.id || '(未返回)'));
     console.log('  to: ' + (out.body.to || args.to));
     console.log('  下一步：到收件箱点「显示原始邮件」，确认');
-    console.log('    From: 陈培胜 · 简历投递 <jobs@chenpeisheng.cn>');
-    console.log('    dkim=pass header.d=chenpeisheng.cn');
-    console.log('    spf=pass smtp.mailfrom=rsend.chenpeisheng.cn');
+    console.log('    From: 李清 · 简历投递 <jobs@qingfin.cn>');
+    console.log('    dkim=pass header.d=qingfin.cn');
+    console.log('    spf=pass smtp.mailfrom=rsend.qingfin.cn');
     return;
   }
 

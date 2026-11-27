@@ -141,7 +141,7 @@
     var c = (err && err.code) || '';
     if (c === 'timeout') return '这次等太久了，模型可能正忙，稍后再点一次。';
     if (c === 'network') return '网络或通道异常，检查网络后重试；也可以直接邮件联系。';
-    if (c === 'jd_quota') return 'JD 匹配' + CFG.quota + '，歇一会儿再来；急的话直接邮件：hi@chenpeisheng.cn';
+    if (c === 'jd_quota') return 'JD 匹配' + CFG.quota + '，歇一会儿再来；急的话直接邮件：hi@qingfin.cn';
     if (c === 'rate_limited') return '请求有点急，等十几秒再试。';
     if (c === 'parse_failed') return '模型这次没按结构输出，再点一次通常就好。';
     if (c === 'no_match') return '档案里没有和这份 JD 相关的资料，换个岗位试试。';
@@ -154,7 +154,7 @@
     if (c === 'origin_denied') return '当前域名不在白名单里，本地预览请用 127.0.0.1:8000。';
     if (c === 'server_misconfig') return '后端的模型 Key 还没配置好，暂时无法匹配。';
     if (c === 'bad_json') return '通道返回了无法解析的内容，稍后再试。';
-    return (err && err.serverMessage) || '匹配失败，稍后再试，或邮件联系：hi@chenpeisheng.cn';
+    return (err && err.serverMessage) || '匹配失败，稍后再试，或邮件联系：hi@qingfin.cn';
   }
 
   /* ── 请求：POST { mode:'jd', jd } ── */
@@ -337,8 +337,8 @@
           '<button class="jd-act jd-act-ghost" type="button" id="jdAgain">换一份 JD ↺</button>' +
           '<span class="jd-foot-note">证据均取自本页档案切片 · 缺口照实列出，不做粉饰 · 点证据来源可展开原文核对</span>' +
         '</div>' +
-        '<p class="jd-print-meta" hidden>来源：陈培胜求职作品集 · 岗位匹配（RAG 检索 + 约束生成）· 生成于 ' +
-          new Date().toLocaleString('zh-CN', { hour12: false }) + ' · chenpeisheng.cn/jd.html</p>' +
+        '<p class="jd-print-meta" hidden>来源：李清求职作品集 · 岗位匹配（RAG 检索 + 约束生成）· 生成于 ' +
+          new Date().toLocaleString('zh-CN', { hour12: false }) + ' · qingfin.cn/jd.html</p>' +
       '</div>';
 
     var copyBtn = document.getElementById('jdCopy');
@@ -392,7 +392,7 @@
       out.push('| ' + (i + 1) + ' | ' + mdCell(r.req) + ' | ' + (STATUS_CN[r.status] || '部分') + ' | ' +
         mdCell(ev || '—') + ' | ' + mdCell(r.gap || '—') + ' | ' + mdCell(r.probe || '—') + ' |');
     });
-    out.push('', '---', '来源：陈培胜求职作品集 · 岗位匹配（RAG 检索 + 约束生成）https://chenpeisheng.cn/jd.html');
+    out.push('', '---', '来源：李清求职作品集 · 岗位匹配（RAG 检索 + 约束生成）https://qingfin.cn/jd.html');
     return out.join('\n');
   }
 

@@ -3,5 +3,5 @@
   <view class="title">{{title}}</view>
   <view class="desc">{{desc}}</view>
   <button wx:if="{{failed}}" class="btn" bindtap="retry">重试</button>
-  <view class="foot">chenpeisheng.cn · 后台登录</view>
+  <view class="foot">qingfin.cn · 后台登录</view>
 </view>

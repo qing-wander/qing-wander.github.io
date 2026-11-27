@@ -80,8 +80,8 @@
       try {
         var abs = new URL(u, location.href);
         if (abs.origin === location.origin) return u;
-        var i = abs.pathname.indexOf('/shenge-work/');
-        if (i >= 0) return abs.pathname.slice(i + '/shenge-work/'.length);
+        var i = abs.pathname.indexOf('/qing-wander/');
+        if (i >= 0) return abs.pathname.slice(i + '/qing-wander/'.length);
       } catch (e) {}
     }
     return /^(https?:)?\/\//i.test(u) ? p : u;

@@ -414,8 +414,8 @@
     var host = location.hostname || '';
     /* github.io 是纯静态托管，没有 Functions：直接打 Cloudflare Pages */
     if (/^(localhost|127\.0\.0\.1|0\.0\.0\.0|\[::1\])$/.test(host)) return [''];
-    if (/\.github\.io$/i.test(host)) return ['https://shenge-work.pages.dev'];
-    return ['', 'https://shenge-work.pages.dev'];
+    if (/\.github\.io$/i.test(host)) return ['https://qing-wander.pages.dev'];
+    return ['', 'https://qing-wander.pages.dev'];
   })();
 
   /* ── 审批结果轮询：申请成功后本人点邮件链接批准，页面无需刷新即解锁 ── */
@@ -641,7 +641,7 @@
           '<label class="sp-field"><span class="sp-field-label">查看理由 <em>必填 · 至少 15 字</em></span>' +
             '<textarea name="reason" rows="5" maxlength="600" placeholder="请具体说明为什么要查看学历验证码…"></textarea>' +
             '<small class="sp-field-guide"><b>填写引导：</b>① 你是谁、代表哪家公司；② 为什么必须核验学历；③ 信息只用于什么场景、不会外传。<br>' +
-            '<b>示例：</b>我是某某科技 HR BP 张三，正在推进陈培胜后端工程师岗位的录用流程，需要核验学信网学历信息以完成入职背调；该信息仅用于本次招聘评估，不会外传。</small></label>' +
+            '<b>示例：</b>我是某某科技 HR BP 张三，正在推进李清后端工程师岗位的录用流程，需要核验学信网学历信息以完成入职背调；该信息仅用于本次招聘评估，不会外传。</small></label>' +
           '<label class="sp-check"><input type="checkbox" name="consent" value="1">' +
             '<span>我确认以上信息真实，且仅用于所填用途，不会转交第三方。</span></label>' +
           '<div class="sp-honeypot" aria-hidden="true"><label>网站地址<input type="text" name="website" tabindex="-1" autocomplete="off"></label></div>' +

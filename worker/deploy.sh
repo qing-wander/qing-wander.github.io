@@ -86,7 +86,7 @@ if [ -z "$URL" ]; then
 fi
 
 say "⑤ 验证接口（只读公开 / 写入仅白名单）"
-ALLOWED=$(curl -s -o /dev/null -w '%{http_code}' -H "Origin: https://chenpeisheng.cn" "$URL/stats" || echo "000")
+ALLOWED=$(curl -s -o /dev/null -w '%{http_code}' -H "Origin: https://qingfin.cn" "$URL/stats" || echo "000")
 PUBLIC=$(curl -s -o /dev/null -w '%{http_code}' "$URL/stats" || echo "000")
 BLOCKED=$(curl -s -o /dev/null -w '%{http_code}' -X POST -H "Origin: https://evil.example.com" -H "Content-Type: application/json" -d '{"id":"deploy-probe"}' "$URL/hit" || echo "000")
 echo "白名单 GET /stats   → ${ALLOWED}（应为 200）"

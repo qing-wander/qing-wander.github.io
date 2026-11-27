@@ -4,14 +4,14 @@
    此 JS 快照作为数据源，保证双击打开也能展示最新数据。 */
 window.SITE_DATA = {
   "meta": {
-    "pageTitle": "陈培胜 CHEN PEISHENG · AI Agent 工程师 · 求职作品集 2026",
-    "description": "陈培胜的个人求职作品集——AI Agent 工程师，5 年研发经验，Agent 开发 / AI 工程化 / 企业 AI 基建方向。",
-    "brandMark": "PS",
-    "brandSub": "CHEN PEISHENG —<br>5年 Agent 工程师档案",
+    "pageTitle": "李清 LI QING · 财务会计 · 求职作品集 2026",
+    "description": "李清的个人求职作品集——财务会计，5 年财务核算经验，费用管控 / 往来对账 / 金蝶系统运维方向。",
+    "brandMark": "LQ",
+    "brandSub": "LI QING —<br>5年财务会计档案",
     "statusPill": "开放新机会",
     "footer": {
-      "tagline": "一份来自 5 年 Agent 工程师的求职档案 · 感谢翻阅到底",
-      "copyright": "© 2026 CHEN PEISHENG",
+      "tagline": "一份来自 5 年财务会计的求职档案 · 感谢翻阅到底",
+      "copyright": "© 2026 LI QING",
       "coord": "N22.54° / E114.06°"
     }
   },
@@ -19,41 +19,41 @@ window.SITE_DATA = {
     "corners": [
       "PORTFOLIO — VOL.2026",
       "N22.54° / E114.06°",
-      "FILE NO. CPS-2021-0919",
+      "FILE NO. LQ-2021-0621",
       "● REC"
     ],
     "tags": [
       {
-        "text": "5 年 Agent 工程师",
+        "text": "5 年财务核算",
         "cls": "tag-orange"
       },
       {
-        "text": "AGENT × AGENTIC",
+        "text": "FINANCE × COMPLIANCE",
         "cls": "tag-blue"
       }
     ],
-    "nameCn": "陈培胜",
-    "nameEn": "CHEN PEISHENG",
-    "gender": "male",
-    "role": "AI Agent 工程师",
-    "roleEn": "AI AGENT ENGINEER",
-    "bio": "5 年 Java 后端 + 2 年 AI Agent 工程，主导 6 套系统从 0 到 1：潜客 CRM、品牌官网、AI 搜索引擎、海外营销平台与投研工作台。技术决策风格三原则：不停机、可回滚、最小改动。",
+    "nameCn": "李清",
+    "nameEn": "LI QING",
+    "gender": "female",
+    "role": "财务会计",
+    "roleEn": "FINANCE ACCOUNTANT",
+    "bio": "5 年财务核算经验，独立审核 15 个部门月度报销单据，单据合规率 93%；做过费用审核、往来对账、月结清理与金蝶系统运维，也推动过 3 项财务制度优化。做事只有一条标准：账要算到分毫可查。",
     "ctaProjects": "作品",
     "ctaResume": "简历",
     "resumeFile": "resume.html",
-    "resumeDownloadName": "陈培胜-AIAgent工程师-简历.html",
-    "statusMeta": "OPEN TO WORK · 随时到岗 · 深圳 / 广州 / 远程",
+    "resumeDownloadName": "李清-财务会计-简历.html",
+    "statusMeta": "OPEN TO WORK · 随时到岗 · 深圳 / 广州",
     "idcard": {
       "photo": "images/portrait.jpg",
       "titleCn": "人才档案终端",
       "titleEn": "TALENT ARCHIVE",
-      "no": "NO. CPS-2021-0919",
+      "no": "NO. LQ-2021-0621",
       "status": "ACTIVE · 已激活",
       "footCode": "HR-ARCHIVE·v2.6·ALL SYSTEMS OK",
       "fields": [
         {
           "dt": "姓名 NAME",
-          "dd": "陈培胜 / CHEN PEISHENG"
+          "dd": "李清 / LI QING"
         },
         {
           "dt": "经验 EXP",
@@ -69,16 +69,16 @@ window.SITE_DATA = {
         },
         {
           "dt": "专业 MAJOR",
-          "dd": "软件工程 · 2021 届"
+          "dd": "会计学 · 2021 届"
         },
         {
-          "dt": "奖学金 AWARDS",
-          "dd": "国家励志 · 校级",
+          "dt": "证书 CERT",
+          "dd": "会计初级 · CET-4",
           "cls": "field-orange"
         },
         {
           "dt": "方向 ROLE",
-          "dd": "Agent 开发 / AI 工程化",
+          "dd": "费用管控 / 财务核算",
           "cls": "field-blue"
         },
         {
@@ -88,37 +88,37 @@ window.SITE_DATA = {
       ]
     }
   },
-  "marquee": "OPEN TO WORK ✦ AI Agent 工程师 ✦ MULTI-AGENT ✦ RAG 检索增强 ✦ MCP / SKILL 生态 ✦ JAVA → PYTHON / TS ✦ 企业 AI 基建 ✦ 评测体系 ✦ ",
+  "marquee": "OPEN TO WORK ✦ 财务会计 ✦ 费用管控 ✦ 业财对账 ✦ EXCEL / POWER QUERY ✦ 金蝶系统 ✦ 跨部门协同 ✦ 5 年经验",
   "about": {
     "photo": "images/portrait.jpg",
-    "photoAlt": "陈培胜——橙色连帽卫衣与黑框眼镜的半身插画肖像",
+    "photoAlt": "李清——职业形象照",
     "photoNo": "PHOTO NO.001",
     "stamp": "已审核<br>VERIFIED",
-    "lead": "你好，我是<strong>陈培胜</strong>。一个把「从 0 到 1，再做到 N」当正事来办的 AI Agent 工程师。",
+    "lead": "你好，我是<strong>李清</strong>。一个把「每一笔账」都当认真事来办的财务人。",
     "paragraphs": [
-      "工程路从港企周生生起步：近两年 Java 后端深耕，独立负责多渠道潜客 CRM 与香港帝舵官网核心模块；后来到红杉投资的 AI 创业公司担任创始团队研发，主导 lessie.cn 人脉搜索引擎与 hicreator.ai 营销平台从零跑通到商业闭环。",
-      "现在专注 AI 工程化：垂直领域 Agent 编排、二开通用 Agent 基座（QwenPaw / OpenCode）、Tool / MCP / Skill 统一扩展体系、多租户云沙箱，再用 Flink 搭起 AI 网关实时计费链路。写代码之外也立规矩：不停机、可回滚、最小改动。"
+      "财务路从广东国地规划起步：两年管理会计，做费用报销审核、往来核对、合同评审与资金申请；同时担任金蝶系统管理员——账号开通与注销、角色权限申请审批、会计科目与客户/项目档案维护、操作答疑与故障排查，都由我兜底。",
+      "后来到南方电网数字平台驻场近三年：独立审核 15 个部门月度报销单据，把合规率做到 93%、部门报销办理效率提升至 95%；按月编制费用台账，分析明细与异常，跟进付款审批到支付全流程；既做供应商往来核对与月结清理，也统筹合同、付款凭证、报销单据与发票，建立标准化归档体系。作为财务系统与业务端之间的那座桥，我把零散反馈整理成需求、跟进工单到功能上线并验证效果，推动 3 项制度优化落地。2026 年在科锐国际做薪资验收，继续把数据校验与问题闭环做细。"
     ],
     "stats": [
       {
         "count": 5,
         "suffix": "",
-        "label": "年工程经验"
+        "label": "年财务经验"
       },
       {
-        "count": 5,
+        "count": 3,
         "suffix": "",
         "label": "段企业经历"
       },
       {
-        "count": 6,
+        "count": 15,
         "suffix": "",
-        "label": "套 0→1 系统"
+        "label": "个部门单据审核"
       },
       {
-        "count": 50,
-        "suffix": "+",
-        "label": "万级月均邮件触达"
+        "count": 93,
+        "suffix": "%",
+        "label": "单据合规率"
       }
     ]
   },
@@ -126,20 +126,20 @@ window.SITE_DATA = {
     "cards": [
       {
         "tag": "意向岗位 POSITION",
-        "role": "AI Agent 工程师",
-        "roleSub": "AI AGENT ENGINEER · 企业 AI 基建方向",
-        "desc": "Agent 开发与 AI 工程化：企业 AI 基建、Harness 架构、评测体系，也写前后端与数据链路，让模型真正跑进业务。",
+        "role": "财务会计",
+        "roleSub": "FINANCE ACCOUNTANT · 费用管控 / 核算方向",
+        "desc": "费用审核与合规管控、往来对账、账务核算与月结，也做财务系统运维与跨部门协同。",
         "cls": "obj-main"
       },
       {
         "tag": "备选方向 ALT",
-        "roleSm": "AI 应用开发工程师",
-        "desc": "Multi-Agent 编排、RAG 检索增强、LLM 评测平台与 Tool 生态建设。"
+        "roleSm": "管理会计 / 财务 BP",
+        "desc": "预算与费用分析、经营数据支持、业财流程优化。"
       },
       {
         "tag": "期望城市 CITY",
-        "roleSm": "深圳 · 广州 · 远程",
-        "desc": "坐标深圳，接受远程 / 混合办公，跨城面试随时安排。"
+        "roleSm": "深圳 · 广州",
+        "desc": "现居深圳，可接受广深两地机会，跨城面试随时安排。"
       },
       {
         "tag": "到岗时间 START",
@@ -149,8 +149,8 @@ window.SITE_DATA = {
       },
       {
         "tag": "其他 OTHER",
-        "roleSm": "不停机 · 可回滚 · 最小改动",
-        "desc": "我的技术决策三原则，也是我对团队交付质量的承诺。",
+        "roleSm": "凭证齐全 · 账实相符 · 差异可解释",
+        "desc": "我的做事三原则，也是我对每一份单据的承诺。",
         "cls": "obj-orange-card"
       }
     ]
@@ -163,8 +163,8 @@ window.SITE_DATA = {
       "school": "中山大学新华学院",
       "profileId": "xinhua",
       "logo": "images/edu-xinhua.png",
-      "major": "软件工程",
-      "majorEn": "SOFTWARE ENGINEERING",
+      "major": "会计学",
+      "majorEn": "ACCOUNTING",
       "stats": [
         {
           "num": "2021",
@@ -175,163 +175,129 @@ window.SITE_DATA = {
         {
           "num": "2",
           "unit": "项",
-          "label": "奖学金（含国家级）",
+          "label": "专业证书",
           "cls": ""
         },
         {
-          "num": "4",
+          "num": "5",
           "unit": "年",
-          "label": "全日制统招",
+          "label": "财务实务",
           "cls": "edu-stat-blue"
         }
       ],
       "notes": [
-        "主修：软件工程核心课程体系——数据结构 · 数据库原理 · 计算机网络 · 软件工程 · 操作系统",
-        "在校获国家励志奖学金（国家级）与校级奖学金；毕业后从 Java 后端起步，一路跨栈至 AI Agent 工程。"
+        "主修：会计学核心课程体系——基础会计 · 财务会计 · 成本会计 · 管理会计 · 审计学 · 税法",
+        "在校通过 CET-4，毕业前后考取会计初级职称（助理会计师）；从核算岗一路做到费用管控与系统运维。"
       ]
     },
     "sides": [
       {
         "no": "NOTE-A",
-        "title": "奖学金",
-        "text": "国家励志奖学金（国家级）+ 校级奖学金——本科期间的两次「外部认证」。"
+        "title": "专业职称",
+        "text": "会计初级职称（助理会计师）——毕业前后拿下的第一张专业凭证。"
       },
       {
         "no": "NOTE-B",
-        "title": "跨栈路径",
-        "text": "从 Java 微服务到 Python / TypeScript：语言只是工具，工程方法论可以平移。"
+        "title": "系统侧能力",
+        "text": "金蝶系统管理员：账号权限、科目与客商档案、故障排查，系统侧的活儿我也接。"
       },
       {
         "no": "NOTE-C",
-        "title": "学习方式",
-        "text": "习惯「读源码 + 二开轮子」：二开 QwenPaw / OpenCode Agent 基座，日常 Vibe Coding（Claude Code / Codex / Cursor）。"
+        "title": "做事方式",
+        "text": "习惯先对齐规则再动手：票据合规、费用标准、审批流程，三样先弄清楚再审核。"
       }
     ]
   },
   "experience": [
     {
-      "profileId": "comein",
-      "company": "进门财经 · 深圳进门财经科技股份有限公司",
-      "companyNote": "金融投研 SaaS",
-      "role": "Agent 工程师（AI 进宝）",
-      "time": "2026.01 — 2026.07（组织架构调整）",
+      "profileId": "",
+      "company": "北京科锐国际人力资源股份有限公司深圳分公司",
+      "companyNote": "人力资源服务 · 薪资验收",
+      "role": "综合财务（薪资验收方向）",
+      "time": "2026.05 — 2026.07",
       "points": [
-        "研发 AI 金融投研工作台核心基建：Agent 基座与多租户云沙箱、MCP / Skill 扩展、AI 资源计费、五端 IM 网关，<strong>支撑 Agent 从接入到计费全链路落地</strong>"
+        "负责外包员工薪资验收核对：逐项比对考勤、工时与结算数据，<strong>识别异常并定位差异来源，推动问题闭环</strong>",
+        "按交付节点完成批次验收与数据校验，保证薪资数据按时、准确交付"
       ],
       "tags": [
         {
-          "text": "Python"
+          "text": "薪资验收"
         },
         {
-          "text": "AgentScope"
+          "text": "数据校验"
         },
         {
-          "text": "QwenPaw / OpenCode"
+          "text": "异常识别"
         },
         {
-          "text": "Flink"
+          "text": "差异定位"
         },
         {
-          "text": "MCP / Skill"
-        },
-        {
-          "text": "云沙箱",
+          "text": "Excel",
           "cls": "tag-blue"
         }
       ]
     },
     {
-      "profileId": "zhishu",
-      "company": "Lessie · 深圳指数引力科技有限公司",
-      "companyNote": "网红营销 SaaS",
-      "role": "Agent 工程师 · 创始团队成员（红杉投资 AI 初创）",
-      "time": "2024.03 — 2025.11",
+      "profileId": "",
+      "company": "南方电网数字平台科技（广东）有限公司",
+      "companyNote": "能源数字化 · 驻场财务支撑",
+      "role": "综合会计",
+      "time": "2023.06 — 2026.04",
       "points": [
-        "<strong>研发 AI 人脉搜索引擎</strong>：Supervisor / Search / Review 多层级 ReAct Multi-Agent 架构，搜索精准度提升 <strong>30%</strong>、找人成本降低 <strong>80%</strong>、定位耗时缩短 <strong>60%</strong>。",
-        "研发红人营销 SaaS：<strong>FDE</strong> 式定制业务流程，Grok LLM + Agent 工作流串联「客户→合同→付款→结算」，实现客户到结算的全流程自动化闭环。",
-        "0→1 搭建海外触达体系：邮件群发系统（AWS / SendGrid / 自建 SMTP 统一驱动）+ 群控 RPA 自动注册 / 养号 / 私信群发，月均 <strong>50 万+</strong> 有效触达、替代人工规模化运营。",
-        "搭建达人数据库飞轮体系：dataworks 数仓同步第三方平台达人画像与粉丝数据，合作过程人工标注 + 自动化沉淀优质达人，自动淘汰留存高质量达人，沉淀 <strong>300+ 万</strong>网红画像与视频数据日更、以高质量达人库提升合作效率。"
+        "独立审核 15 个部门月度报销单据，核对票据合规、费用标准与审批流程，<strong>单据合规率 93%、部门报销办理效率提升至 95%</strong>",
+        "负责供应商往来核对与应付账款梳理，月结前完成挂账清理与差异调整，<strong>保证账实相符</strong>",
+        "作为财务系统与业务端的桥梁：收集使用问题、跟进工单、推动功能迭代上线",
+        "一对一反馈退回单据、讲解发票规范，推动 3 项制度优化并组织财务培训，<strong>降低单据退回率</strong>"
       ],
       "tags": [
         {
-          "text": "LangChain"
+          "text": "费用审核"
         },
         {
-          "text": "LangGraph"
+          "text": "合规校验"
         },
         {
-          "text": "Multi-Agent"
+          "text": "往来对账"
         },
         {
-          "text": "RAG"
+          "text": "应付账款"
         },
         {
-          "text": "Milvus"
+          "text": "金蝶"
         },
         {
-          "text": "Spring Boot",
+          "text": "跨部门协同",
           "cls": "tag-blue"
         }
       ]
     },
     {
-      "profileId": "fanggeek",
-      "company": "房极客 · 深圳市房极客网络科技有限公司",
-      "companyNote": "房地产 SaaS",
-      "role": "Java 开发工程师",
-      "time": "2023.08 — 2024.01",
+      "profileId": "",
+      "company": "广东国地规划科技股份有限公司",
+      "companyNote": "规划设计 · 财务核算",
+      "role": "管理会计",
+      "time": "2021.06 — 2023.05",
       "points": [
-        "参与小鹿选房 C 端、看房日记 B 端、经纪人 ERP 中台研发，负责新房报备 / 上下架 / 房源跟进 / 权限控制 / 余额划转等模块，<strong>打通新房业务线上流转</strong>。"
+        "负责费用报销审核、往来核对、资金申请资料整理，参与合同评审与财务条款梳理",
+        "担任金蝶财务系统管理员：账号权限配置、会计科目与客户供应商档案维护、系统故障排查",
+        "协助增值税与附加税申报准备（进项勾选认证、发票核对）、企业所得税汇算清缴资料收集，配合税务稽查与外部审计"
       ],
       "tags": [
         {
-          "text": "Java"
+          "text": "费用报销"
         },
         {
-          "text": "Spring Cloud / Boot"
+          "text": "合同评审"
         },
         {
-          "text": "MySQL"
+          "text": "金蝶运维"
         },
         {
-          "text": "RocketMQ"
+          "text": "税务申报"
         },
         {
-          "text": "MongoDB"
-        }
-      ]
-    },
-    {
-      "profileId": "chowsang",
-      "company": "周生生（中国）商业有限公司",
-      "companyNote": "珠宝品牌自营数字化",
-      "role": "Java 开发工程师 · 获评「高级程序员」职称",
-      "time": "2021.09 — 2023.06",
-      "points": [
-        "研发多渠道潜客 <strong>CRM 平台</strong>：整合大陆、港澳台线上线下销售线索，日活 <strong>10W+</strong>，销售转化率提升 <strong>70%</strong>。",
-        "搭建门店预约体验流程与预约限额体系，设计分地区业务分层与跨境敏感数据过滤 / 定期清除机制，预约到店率提升 <strong>40%</strong>。",
-        "基于 <strong>JBPM</strong> 编排财务差异审批流程，任务自动分配并处理超时 / 驳回异常，保障财务审批全流程闭环、替代人工流转。",
-        "搭建供应商 <strong>API 网关</strong>（鉴权 / 额度 / 监控）与 <strong>Redash BI</strong> 多维看板，支撑供应商管理与经营可视化。",
-        "参与香港帝舵官网研发，负责会员体系、订单支付与对账、库存同步模块，打通品牌官网会员、交易、库存一体的线上销售链路。"
-      ],
-      "tags": [
-        {
-          "text": "Java"
-        },
-        {
-          "text": "Spring Cloud / Boot"
-        },
-        {
-          "text": "Oracle"
-        },
-        {
-          "text": "ShardingSphere"
-        },
-        {
-          "text": "JBPM"
-        },
-        {
-          "text": "Redis",
+          "text": "汇算清缴",
           "cls": "tag-blue"
         }
       ]
@@ -341,222 +307,174 @@ window.SITE_DATA = {
     {
       "no": "P-01",
       "img": "images/project-1.jpg",
-      "imgAlt": "AI 金融投研工作台项目封面——机器人与K线图盾牌插画",
-      "badge": "企业 AI 基建 · 金融投研",
+      "imgAlt": "费控中枢项目封面——费用审核与合规校验插画",
+      "badge": "费用管控 · 合规审核",
       "badgeCls": "tag-orange",
-      "company": "进门财经",
-      "year": "2026.01 — 2026.07",
-      "yearDetail": "2026.01 — 2026.07 · 进门财经 · Agent 工程师",
-      "title": "comein.cn",
-      "titleEn": "AI 金融投研工作台",
-      "modalTitle": "comein.cn — AI 金融投研工作台（Agent 基座 · 云沙箱）",
-      "desc": "合规 Agent 投研闭环平台：Agent 基座、多租户云沙箱、工具生态、模型计费与 Skill 治理。",
-      "modalDesc": "面向券商研究所、上市公司及机构投资者等多类投研主体，构建合规、安全、可扩展的智能投研信息闭环。项目以 QwenPaw / OpenClaw 为通用 Agent 场景基座，整合多渠道消息接入、外部工具调用、模型服务、云电脑沙箱及计费体系，为专业投资者提供信息整合、研究协同、机会洞察与智能决策支持。",
+      "company": "南方电网数字平台",
+      "year": "2023.06 — 2026.04",
+      "yearDetail": "2023.06 — 2026.04 · 南方电网数字平台 · 综合会计",
+      "title": "EXPENSE HUB",
+      "titleEn": "费控中枢",
+      "modalTitle": "EXPENSE HUB — 费控中枢（费用审核 · 合规校验 · 异常分析）",
+      "desc": "15 个部门月度报销的合规闸门：票据、标准、流程三道校验，异常单据当日退回。",
+      "modalDesc": "驻场南方电网数字平台期间独立承担的报销审核体系：以票据合规、费用标准、审批流程三条线交叉校验，把 15 个部门的月度单据收进同一套规则与台账里；退回单据逐条说明原因并跟踪整改，让合规要求真正落到业务端。",
       "points": [
-        "搭建 QwenPaw / OpenCode 集成与通用 Agent 基座，实现多租户云沙箱隔离环境，完成发布依赖管理、日志上报、数据预处理与 Agent / Skill 全生命周期管控；",
-        "设计 MCP / Skill 统一能力扩展体系，标准化能力注册、发现、调用、权限与版本流程，兼容 MCP 协议与外部 API，支持多模态能力接入，降低工具接入成本；",
-        "设计多租户 AI 资源精细化计费：费率转换、实时预扣、离线扣费、账单校准与补偿机制，实现模型调用成本实时计量、链路追溯；",
-        "自研分布式 IM 网关：统一承接飞书 / 企微 / 钉钉 / 微信 / QQ 五端消息，支撑多副本扩缩容与滚动发布不丢消息。"
+        "票据合规校验：发票真伪与要素完整性、抬头税号、开票内容与事由一致性逐项核对；",
+        "费用标准比对：差旅、招待、办公等科目对照制度额度与审批权限，超标准单据当日退回；",
+        "审批流程核查：前置审批、验收人、附件齐全性一并检查，避免流程倒挂与事后补单；",
+        "费用台账与异常分析：按月沉淀部门维度数据，定位高频退回原因并输出改进建议。"
       ],
       "stackTags": [
-        "Python",
-        "AgentScope",
-        "QwenPaw / OpenCode",
-        "Flink"
+        "Excel",
+        "金蝶",
+        "费用审核",
+        "内控流程"
       ],
-      "stack": "Python · AgentScope · QwenPaw / OpenCode · SandBox · OAuth2 · Flink · MCP · Skill · Tool Calling",
+      "stack": "Excel · VLOOKUP / 透视表 · 金蝶 · 费用审核 · 合规校验 · 台账分析",
       "stats": [
         {
-          "v": "多租户",
-          "s": "云沙箱隔离执行"
+          "v": "15 个",
+          "s": "部门月度审核"
         },
         {
-          "v": "5+ IM",
-          "s": "投研结果实时触达"
+          "v": "93%",
+          "s": "单据合规率"
         },
         {
-          "v": "全链路",
-          "s": "成本计量与追溯"
+          "v": "95%",
+          "s": "报销办理效率"
         }
       ],
-      "url": "https://comein.cn"
+      "url": ""
     },
     {
       "no": "P-02",
       "img": "images/project-2.jpg",
-      "imgAlt": "AI 人脉搜索引擎项目封面——地球仪与放大镜节点连线插画",
-      "badge": "Multi-Agent · Agentic RAG",
+      "imgAlt": "对账闭环项目封面——往来核对与账实相符插画",
+      "badge": "往来对账 · 账实相符",
       "badgeCls": "tag-blue",
-      "company": "指数引力",
-      "year": "2024.03 — 2025.11",
-      "yearDetail": "2024.03 — 2025.11 · Lessie · 创始团队核心研发",
-      "title": "lessie.cn",
-      "titleEn": "AI 人脉搜索引擎",
-      "modalTitle": "lessie.cn — AI 人脉搜索引擎",
-      "desc": "企业级人才搜索平台：Supervisor / Search / Review 多层级 ReAct Multi-Agent 架构，将传统「找人」流程标准化、自动化。",
-      "modalDesc": "一款定位为「找人」场景的多 Agent 协作架构企业级人才搜索平台。旨在把传统依赖人脉、手动检索的「找人」流程标准化、自动化，帮助用户在全球范围快速精准定位目标人物，并完成初步联络，大幅降低搜索与沟通的时间成本。",
+      "company": "南方电网数字平台",
+      "year": "2023.06 — 2026.04",
+      "yearDetail": "2023.06 — 2026.04 · 南方电网数字平台 · 综合会计",
+      "title": "RECON LOOP",
+      "titleEn": "对账闭环",
+      "modalTitle": "RECON LOOP — 对账闭环（往来核对 · 应付梳理 · 月结清理）",
+      "desc": "供应商往来逐户核对，月结前把挂账与差异清干净，账实相符再关账。",
+      "modalDesc": "把应付账款从「余额对不对」推进到「每一笔都能解释」：逐户核对供应商往来发生额与余额，梳理账龄与长期挂账，月结前完成差异调整与清理，形成可复核的对账底稿。",
       "points": [
-        "开发 Search Agent：调研 Apollo / LinkedIn / Upfluence / Modash 等 10+ 数据源 API，抽象统一搜索接口，实现多平台调用封装、搜索参数生成与工具智能路由；通过 Standardizer 将各源异构字段收敛为统一人物 Schema，支撑多源结果融合与排序；",
-        "构建 Review Agent 质量评审系统：基于 ReAct 架构从内容相关性、数据指标匹配度、Web Search 事实校验等维度对候选人评分排序；以 analyzer / result_manager 分层基类 + 策略模式落地，多轮 Prompt Engineering 校准评分口径，支撑 B2B 与 KOL 两套垂类评审逻辑快速扩展；",
-        "搭建 RAG 增强的 Few-Shot 学习系统：多类型样本自动化录入（含从 LangSmith 回流历史成功案例），LlamaIndex 完成文档切片与索引构建、Milvus 承接向量化存储与相似性召回，将历史最优搜索策略动态注入当前 Agent 决策，实现高质量搜索策略的知识固化；",
-        "攻克多 Agent 协作与上下文瓶颈：在 Supervisor / Search / Review 多层级 ReAct 架构中以状态机与共享上下文约定消除任务重复与决策冲突，通过上下文压缩、分层缓存与增量更新等 Context Engineering 手段平衡信息完整性与响应稳定性；",
-        "工程化落地：LLM / 工具 / 业务三级埋点经 Kafka 落数仓，按模型维度统计评审通过率与任务耗时，支撑模型选型与参数调优；解耦 SSE 流式推送实现「逐字输出」，基于图状态持久化与 interrupt / resume 机制实现人机中断应答与长任务恢复；任务按订阅套餐优先级分级抢占，配合全局与用户级双层并发控制。"
+        "供应商往来逐户核对：合同、发票、付款、余额四向比对，差异定位到单据；",
+        "应付账款账龄梳理：按账龄与业务状态分类，识别长期挂账与重复挂账；",
+        "月结前挂账清理：联动业务端补齐验收与发票，减少跨期挂账；",
+        "差异调整与底稿留存：调整有依据、可追溯，支撑月结与审计复核。"
       ],
       "stackTags": [
-        "LangChain · LangGraph",
-        "ReAct",
-        "LlamaIndex",
-        "Milvus"
+        "应付账款",
+        "往来对账",
+        "月结",
+        "金蝶"
       ],
-      "stack": "LangChain · LangGraph · ReAct · Multi-Agent · Apollo · LinkedIn API · Upfluence / Modash · Prompt / Context Engineering · LangSmith · LlamaIndex · Milvus · Kafka · SSE",
+      "stack": "Excel · 金蝶 · 应付账款 · 账龄分析 · 月结清理 · 对账底稿",
       "stats": [
         {
-          "v": "+30%",
-          "s": "搜索精准度"
+          "v": "账实相符",
+          "s": "月结前完成校验"
         },
         {
-          "v": "-80%",
-          "s": "单次找人成本"
+          "v": "逐户",
+          "s": "供应商往来核对"
         },
         {
-          "v": "-60%",
-          "s": "目标定位耗时"
+          "v": "可追溯",
+          "s": "差异调整留痕"
         }
       ],
-      "video": {
-        "src": "videos/lessie-demo.mp4",
-        "duration": "56s"
-      },
-      "url": "https://lessie.cn"
+      "url": ""
     },
     {
       "no": "P-03",
       "img": "images/project-3.jpg",
-      "imgAlt": "海外红人营销一体化 SaaS 平台项目封面——摄像机爱心与火箭插画",
-      "badge": "FDE 式业务落地",
-      "badgeCls": "tag-orange",
-      "company": "指数引力",
-      "year": "2024.03 — 2025.11",
-      "yearDetail": "2024.03 — 2025.11 · Lessie · 端到端交付",
-      "title": "hicreator.ai",
-      "titleEn": "海外红人营销一体化 SaaS 平台",
-      "modalTitle": "hicreator.ai — 海外红人营销一体化 SaaS 平台",
-      "desc": "一站式 AI 网红营销自动化系统：大模型与多模态数据实现品牌与创作者全链路闭环。",
-      "modalDesc": "基于人工智能技术研发的一站式网红营销自动化系统，专注于解决品牌与全球内容创作者（KOL/KOC）高效匹配、协作及管理的核心痛点。通过整合多模态数据分析与自动化流程，实现从创作者筛选、智能谈判、合同执行到关系维护的全链路闭环管理。",
+      "imgAlt": "系统桥梁项目封面——金蝶系统与业财协同插画",
+      "badge": "财务系统 · 业财协同",
+      "badgeCls": "",
+      "company": "广东国地规划",
+      "year": "2021.06 — 2023.05",
+      "yearDetail": "2021.06 — 2023.05 · 广东国地规划 · 管理会计",
+      "title": "SYS BRIDGE",
+      "titleEn": "系统桥梁",
+      "modalTitle": "SYS BRIDGE — 系统桥梁（金蝶运维 · 权限配置 · 迭代推动）",
+      "desc": "既是金蝶系统管理员，也是财务与业务之间的翻译：问题收上来，功能推上去。",
+      "modalDesc": "在国地规划担任管理会计兼金蝶系统管理员：负责账号权限、会计科目与客商档案的日常维护和故障排查，同时把业务端的使用问题收拢成需求、跟进工单、推动功能迭代上线，并组织财务培训让规则真正被执行。",
       "points": [
-        "FDE 式端到端落地：深入红人营销业务，把模糊诉求拆解为可执行流程，用 Grok LLM + Agent 工作流将「客户→项目→合同→审批→付款→结算」串联成自动化闭环；",
-        "搭建 IM 通信平台，打通 TikTok（RPA 机器人）、WhatsApp 及邮件发信渠道与风险检测评估，支撑达人筛选、批量邀约、合同管理、样品履约自动化；",
-        "自建 KOL 达人数据库 + SEO 引流标准化 Toolkit：构建达人画像、商品类目、市场规则、合规话术等垂直领域知识库；",
-        "开发浏览器插件，在 YouTube / IG / TikTok / X / FB 达人主页浮窗展示入库、拉黑、粉丝与项目信息。"
+        "金蝶系统运维：账号权限配置、会计科目与客户供应商档案维护、日常故障排查；",
+        "业务问题收集与工单跟进：把零散反馈整理成可执行需求，跟踪到上线；",
+        "制度与流程优化：推动 3 项财务制度优化，配套培训与操作指引；",
+        "合同评审与财务条款梳理：资金申请资料整理，前置控制财务风险。"
       ],
       "stackTags": [
-        "Spring Boot / Cloud",
-        "LLM",
-        "MCP",
-        "WebDriver"
+        "金蝶",
+        "权限配置",
+        "需求管理",
+        "财务培训"
       ],
-      "stack": "Spring Boot / Cloud · MyBatis · MySQL · Redis · RocketMQ · LLM · MCP · Skill · WebDriver",
+      "stack": "金蝶 · 账号权限 · 会计科目 · 客商档案 · 工单跟进 · 制度优化",
       "stats": [
         {
-          "v": "+40%",
-          "s": "运营效率提升"
+          "v": "金蝶",
+          "s": "系统管理员"
         },
         {
-          "v": "80%",
-          "s": "履约率"
+          "v": "3 项",
+          "s": "制度优化落地"
         },
         {
-          "v": "<10%",
-          "s": "失联率"
+          "v": "多部门",
+          "s": "系统与培训支撑"
         }
       ],
-      "url": "https://hicreator.ai"
+      "url": ""
     },
     {
       "no": "P-04",
       "img": "images/project-4.jpg",
-      "imgAlt": "海外邮件群发系统项目封面——信封纸飞机与队列插画",
-      "badge": "0→1 自建触达基建",
+      "imgAlt": "数据验收项目封面——薪资数据比对与异常定位插画",
+      "badge": "薪资验收 · 数据质量",
       "badgeCls": "tag-blue",
-      "company": "指数引力",
-      "year": "2024 — 2025",
-      "yearDetail": "2024 — 2025 · Lessie · 独立负责",
-      "title": "邮件营销群发系统",
-      "titleEn": "MAIL ENGINE",
-      "modalTitle": "海外邮件营销群发系统 — MAIL ENGINE",
-      "desc": "替代第三方 SaaS 的自建邮件触达平台：海量群发、多渠道投递、域名信誉全链路自持。",
-      "modalDesc": "0→1 搭建面向海外用户的自建邮件营销触达平台，替代第三方 SaaS 服务：海量邮件群发、多渠道投递，打开率 45% 以上、送达率 95% 以上、垃圾箱率低于 5%。",
+      "company": "科锐国际",
+      "year": "2026.05 — 2026.07",
+      "yearDetail": "2026.05 — 2026.07 · 科锐国际 · 综合财务",
+      "title": "PAYCHECK",
+      "titleEn": "数据验收",
+      "modalTitle": "PAYCHECK — 数据验收（考勤比对 · 异常定位 · 问题闭环）",
+      "desc": "考勤、工时、结算三源比对，异常逐笔定位到人，交付节点不拖延。",
+      "modalDesc": "外包员工薪资验收岗位上的核心工作：以考勤、工时与结算三套数据交叉比对，逐笔识别异常并定位差异来源（漏记、重复、标准错配），推动业务端修正后闭环，按批次节点完成验收交付。",
       "points": [
-        "依赖倒置双端架构：一套账号串联生产 / 测试环境并强隔离数据，解决跨境网络及环境差异问题；封装多发送渠道统一驱动层（Resend / AWS SES / SendGrid），渠道动态分配、队列分片限流；",
-        "分布式定时批处理 + DelayQueue + 子任务切片落表，实现群发任务断点续发与失败重试；对接 Webhook 事件幂等消费，Kafka 上报全量邮件事件并搭建 BI 统计看板；",
-        "基于 LLM 推理与上下文记忆实现多业务场景邮件模板智能匹配与营销内容智能生成；构建发送链路自动化告警风控体系，AI 分析 BadCase 自动调优发送策略；",
-        "独立发送 IP 与域名资源隔离、域名校验与发送控频，搭建域名自动化养号链路缩短预热周期；落地黑名单过滤、发件人轮换、内容检测与敏感字段拦截。"
+        "三源数据比对：考勤记录、工时填报与结算明细逐笔核对；",
+        "异常识别与差异定位：漏记、重复计算、单价错配分类归因；",
+        "问题闭环：反馈至业务端修正并复核，形成异常台账；",
+        "批次交付把控：按节点完成验收，保证数据按时准确。"
       ],
       "stackTags": [
-        "Kafka",
-        "Docker / K8s",
-        "SMTP / IMAP",
-        "AWS SES"
+        "Excel",
+        "数据校验",
+        "对账",
+        "异常分析"
       ],
-      "stack": "Spring Boot / Cloud · MyBatis · MySQL · Redis · Kafka · Docker / K8s · SMTP / IMAP · AWS · SendGrid · Resend",
+      "stack": "Excel · VLOOKUP / XLOOKUP · 数据校验 · 差异分析 · 异常台账",
       "stats": [
         {
-          "v": "95%+",
-          "s": "送达率"
+          "v": "逐笔",
+          "s": "三源数据比对"
         },
         {
-          "v": "50万+",
-          "s": "月均有效触达"
+          "v": "闭环",
+          "s": "异常跟踪修正"
         },
         {
-          "v": "45%+",
-          "s": "邮件打开率"
+          "v": "按时",
+          "s": "批次验收交付"
         }
       ],
-      "note": "内部系统 · 不可公开"
-    },
-    {
-      "no": "P-05",
-      "img": "images/project-5.jpg",
-      "imgAlt": "多渠道潜客 CRM 项目封面——商店门面与转化漏斗插画",
-      "badge": "日活 10W+ · 企业级 CRM",
-      "badgeCls": "tag-blue",
-      "company": "周生生",
-      "year": "2021.09 — 2023.06",
-      "yearDetail": "2021.09 — 2023.06 · 周生生（中国）商业 · Java 开发工程师",
-      "title": "多渠道潜客 CRM",
-      "titleEn": "OMNI-CRM",
-      "modalTitle": "多渠道潜客 CRM — 周生生全渠道线索跟踪平台",
-      "desc": "整合线上线下渠道销售线索，覆盖大陆与港澳台，支撑潜客分配、跟进与转化全链路漏斗分析。",
-      "modalDesc": "整合线上线下渠道的销售线索系统，覆盖大陆、港澳台地区，日活用户 10W+：打通潜客从分配、跟进到转化的全链路漏斗分析，销售转化率提升 70%、预约到店率提升 40%。",
-      "points": [
-        "搭建各地区门店预约体验流程与预约限额体系，优化预约链路节点；设计分地区业务逻辑分层方案与跨境敏感数据过滤、定期清除机制，确保多地区用户数据传输合规；",
-        "基于 ShardingSphere 实施分库分表分布式数据治理，突破单库单表性能瓶颈；采用 MQ 与适配器模式搭建离线下载任务中心，EasyExcel 高性能批处理与内存阈值控制，解决 300W+ 级大数据导入导出与 JVM OOM 难题；",
-        "搭建供应商平台 API 的网关鉴权与额度消费机制供合作方调用，设置 API 监控看板实时监测接口调用状态，全链路异常及时感知；",
-        "搭建 Redash BI 平台，数据埋点与 SQL 统计各项业务指标，输出多维度数据看板辅助业务决策；基于 JBPM 编排财务差异审批流程，任务自动分配并同步处理审批超时、驳回异常，保障流程闭环。"
-      ],
-      "stackTags": [
-        "Spring Cloud",
-        "Oracle",
-        "ShardingSphere",
-        "JBPM"
-      ],
-      "stack": "Spring Cloud · Spring Boot · Oracle · TK-Mybatis · Redis · JasperReport · JBPM · ShardingSphere · EasyExcel · Redash",
-      "stats": [
-        {
-          "v": "10W+",
-          "s": "日活用户"
-        },
-        {
-          "v": "+70%",
-          "s": "销售转化率提升"
-        },
-        {
-          "v": "300W+",
-          "s": "用户数据管理"
-        }
-      ],
-      "note": "内部系统 · 不可公开"
+      "url": ""
     }
   ],
   "works": [
@@ -565,280 +483,225 @@ window.SITE_DATA = {
       "title": "求职作品集 · 本站",
       "titleEn": "PORTFOLIO SITE",
       "detailId": "portfolio",
-      "desc": "你正在浏览的本站——档案风求职作品集：数据驱动渲染（site-data.json 单一数据源）、网页简历（彩色 / 正式黑白双模式、2 页 PDF）、分享宣传卡、数字分身问答终端（RAG 检索增强已接入）。Cloudflare Pages 部署。",
+      "desc": "你正在浏览的本站——档案风求职作品集：数据驱动渲染（site-data.json 单一数据源）、网页简历（可直接打印为 PDF）、分享宣传卡、数字分身问答终端（RAG 检索增强已接入）。Cloudflare Pages 部署。",
       "tech": [
         "HTML / CSS / JS",
         "GitHub Pages",
-        "无框架纯静态"
+        "Cloudflare Pages"
       ],
-      "github": "https://github.com/shenge-work/shenge-work.github.io",
-      "live": "https://chenpeisheng.cn"
+      "github": "https://github.com/qing-wander/qing-wander.github.io",
+      "live": "https://qingfin.cn"
     },
     {
       "no": "W-02",
-      "title": "CareerAgent · 求职工作台",
-      "titleEn": "CAREER-AGENT",
-      "desc": "本地优先的 AI 求职 Agent 桌面应用（Windows / macOS 装好即用）：投递追踪、公司调研、简历改写这些杂活交给 AI——按 JD 自动改写简历并导出 PDF、六维公司调研与面试简报、聊天记录归档去重、内推跟进自动提醒；数据存本地 PGlite，只留在本机，换设备走端到端加密同步。",
+      "title": "网页版简历",
+      "titleEn": "WEB RESUME",
+      "desc": "与首页同一份数据生成的网页简历：彩色 / 正式双模式，可直接打印为两页 PDF，投递时随邮件附上即可。",
       "tech": [
-        "TypeScript",
-        "Node.js",
-        "Electron 桌面端",
-        "PGlite / PostgreSQL"
+        "数据驱动生成",
+        "打印排版",
+        "PDF 导出"
       ],
-      "github": "https://github.com/shenge-work/career-agent",
-      "live": "https://career-agent-3gi.pages.dev/"
-    },
-    {
-      "no": "W-03",
-      "title": "IM Gateway · 分布式 IM 网关",
-      "titleEn": "IM-GATEWAY",
-      "desc": "把飞书 / 钉钉 / 企微 / 微信 / QQ 统一收口的 Go 网关：平台差异封在适配器、分布式正确性封在协调层，多实例扩缩容与滚动发布不丢消息，分布式租约 + 消费侧去重保证幂等，单一二进制零运行时依赖。",
-      "tech": [
-        "Go",
-        "分布式",
-        "Apache-2.0"
-      ],
-      "github": "https://github.com/shenge-work/im-gateway"
-    },
-    {
-      "no": "W-04",
-      "title": "Personal Agent · 贾维斯",
-      "titleEn": "PERSONAL AGENT",
-      "desc": "个人 AI 智能体（预告）：面向日常任务的个人智能助理，未来着手开发，覆盖任务与社交场景。",
-      "tech": [
-        "AI Agent",
-        "规划中"
-      ],
-      "status": "upcoming"
-    },
-    {
-      "no": "W-05",
-      "title": "AI Reply · 社交自动回复",
-      "titleEn": "AI-REPLY",
-      "desc": "AI 社交回复助手（预告）：自动回复社交 / 产品消息，缓解社恐与线上社交困难；可获取聊天记录、分析对方性格特点与需求，辅助更自然的互动。项目名待定。",
-      "tech": [
-        "AI",
-        "性格分析",
-        "规划中"
-      ],
-      "status": "upcoming"
-    },
-    {
-      "no": "W-06",
-      "title": "Skill Hub · 技能中枢",
-      "titleEn": "SKILL HUB",
-      "desc": "AI 技能中枢（预告）：聚合、规划与按需调用个人 AI 技能包，支持技能检索、索引与持续更新。",
-      "tech": [
-        "Skills 生态",
-        "索引",
-        "规划中"
-      ],
-      "status": "upcoming"
+      "live": "resume.html"
     }
   ],
   "skills": {
     "rows": [
       {
-        "name": "Agent 编排与基座",
-        "domain": "ai",
-        "ref": "投研工作台",
-        "stack": "LangGraph · LangChain · LlamaIndex",
-        "proof": "3 套 Agent 系统 0→1，MCP · A2A 协议",
-        "refUrl": "https://comein.cn"
-      },
-      {
-        "name": "RAG 与评测治理",
-        "domain": "ai",
-        "ref": "人脉搜索",
-        "stack": "Agentic RAG · Few-Shot · Langfuse",
-        "proof": "评测集作上线闸门，链路可追溯",
-        "refUrl": "https://lessie.cn"
-      },
-      {
-        "name": "AI 驱动编程",
-        "domain": "ai",
-        "ref": "本站",
-        "stack": "Claude Code · Codex · Cursor",
-        "proof": "需求到部署交由 Coding Agent 驱动",
-        "refUrl": "https://chenpeisheng.cn"
-      },
-      {
-        "name": "后端与网关",
-        "domain": "eng",
-        "ref": "CHANMESH",
-        "stack": "Java / Spring 5 年 · Python · Go",
-        "proof": "Java 5 年撑 SaaS；自建 IM 网关",
-        "refUrl": "https://github.com/shenge-work/im-gateway"
-      },
-      {
-        "name": "数据与中间件",
-        "domain": "eng",
-        "ref": "KOL 中台",
-        "stack": "Milvus · Kafka · Flink · Redis",
-        "proof": "300+ 万达人画像日更，检索链路贯通",
-        "refUrl": "https://hicreator.ai"
-      },
-      {
-        "name": "前端与交付",
+        "name": "费用管控与合规审核",
         "domain": "mix",
-        "ref": "营销 SaaS",
-        "stack": "Vue · UniApp · Electron · K8s",
-        "proof": "多端上线；CI/CD 与 Nexus 私服自建",
-        "refUrl": "https://hicreator.ai"
+        "ref": "费控中枢",
+        "stack": "票据合规 · 费用标准 · 审批流程",
+        "proof": "15 个部门月度审核，合规率 93%",
+        "refUrl": ""
+      },
+      {
+        "name": "账务核算与往来对账",
+        "domain": "mix",
+        "ref": "对账闭环",
+        "stack": "应付账款 · 账龄梳理 · 月结清理",
+        "proof": "月结前完成校验，账实相符",
+        "refUrl": ""
+      },
+      {
+        "name": "Excel 数据处理",
+        "domain": "eng",
+        "ref": "数据验收",
+        "stack": "VLOOKUP / XLOOKUP · 透视表 · Power Query",
+        "proof": "三源数据逐笔比对，异常可定位",
+        "refUrl": ""
+      },
+      {
+        "name": "金蝶系统运维",
+        "domain": "eng",
+        "ref": "系统桥梁",
+        "stack": "账号权限 · 会计科目 · 客商档案",
+        "proof": "系统管理员出身，故障排查与需求推动",
+        "refUrl": ""
+      },
+      {
+        "name": "税务申报协助",
+        "domain": "mix",
+        "ref": "国地规划",
+        "stack": "增值税 · 附加税 · 汇算清缴",
+        "proof": "进项勾选认证、资料收集，配合稽查审计",
+        "refUrl": ""
+      },
+      {
+        "name": "跨部门协同与培训",
+        "domain": "mix",
+        "ref": "制度优化",
+        "stack": "制度宣讲 · 单据反馈 · 操作指引",
+        "proof": "推动 3 项制度优化，降低退回率",
+        "refUrl": ""
       }
     ],
     "toolboxTitle": "工具箱 TOOLBOX",
     "toolboxGroups": [
       {
-        "label": "LLM 编排与 Agent",
+        "label": "办公与数据",
         "tags": [
           {
-            "text": "Dify"
+            "text": "Excel"
           },
           {
-            "text": "Coze"
-          },
-          {
-            "text": "n8n"
-          },
-          {
-            "text": "MCP / Skill 生态",
+            "text": "VLOOKUP / XLOOKUP",
             "cls": "tag-orange"
           },
           {
-            "text": "LangSmith / Langfuse"
+            "text": "数据透视表"
           },
           {
-            "text": "AgentScope"
+            "text": "Power Query"
           },
           {
-            "text": "QwenPaw / OpenCode",
+            "text": "数据校验"
+          }
+        ]
+      },
+      {
+        "label": "核算与合规",
+        "tags": [
+          {
+            "text": "费用审核"
+          },
+          {
+            "text": "发票合规"
+          },
+          {
+            "text": "内控流程"
+          },
+          {
+            "text": "凭证管理"
+          },
+          {
+            "text": "月度结账"
+          },
+          {
+            "text": "应付账款",
             "cls": "tag-orange"
           }
         ]
       },
       {
-        "label": "检索与存储",
+        "label": "系统与税务",
         "tags": [
           {
-            "text": "Milvus"
+            "text": "金蝶"
           },
           {
-            "text": "Elasticsearch"
+            "text": "账号权限配置"
           },
           {
-            "text": "Redis"
+            "text": "会计科目维护"
           },
           {
-            "text": "MySQL / PostgreSQL"
+            "text": "增值税申报"
+          },
+          {
+            "text": "汇算清缴",
+            "cls": "tag-orange"
           }
         ]
       },
       {
-        "label": "消息与流",
+        "label": "协作与输出",
         "tags": [
           {
-            "text": "Kafka"
+            "text": "跨部门沟通"
           },
           {
-            "text": "RocketMQ"
+            "text": "财务培训"
           },
           {
-            "text": "Flink",
-            "cls": "tag-blue"
-          }
-        ]
-      },
-      {
-        "label": "运行与交付",
-        "tags": [
-          {
-            "text": "Docker / K8s"
+            "text": "制度优化"
           },
           {
-            "text": "Jenkins"
+            "text": "审计配合"
           },
           {
-            "text": "Nexus"
+            "text": "工单跟进"
           },
           {
-            "text": "Git"
-          },
-          {
-            "text": "Claude Code / Cursor",
-            "cls": "tag-blue"
-          },
-          {
-            "text": "Stripe / PayPal"
+            "text": "快速上手新系统",
+            "cls": "tag-orange"
           }
         ]
       }
     ],
-    "note": "不设自评分 —— 分数无法被验证，落点可以。持续探索：A2A 协议、Coding Agent 底层架构。"
+    "note": "不设自评分 —— 分数无法被验证，落点可以。持续补课：财务 BP 业务分析、Power BI、预算编制。"
   },
   "awards": {
     "certs": [
       {
         "img": "images/cert-1.jpg",
-        "alt": "国家励志奖学金奖章插画",
+        "alt": "会计初级职称证书插画",
         "stamp": "CERT-01",
         "stampCls": "",
-        "title": "国家励志奖学金",
-        "sub": "国家级 · 本科期间"
+        "title": "会计初级职称",
+        "sub": "助理会计师 · 全国会计专业技术资格考试"
       },
       {
         "img": "images/cert-2.jpg",
-        "alt": "校级奖学金奖章插画",
+        "alt": "大学英语四级成绩证明插画",
         "stamp": "CERT-02",
         "stampCls": "cert-stamp-blue",
-        "title": "校级奖学金",
-        "sub": "中山大学新华学院 · 本科期间"
-      },
-      {
-        "img": "images/cert-3.jpg",
-        "alt": "高级程序员职称徽章插画",
-        "stamp": "CERT-03",
-        "stampCls": "cert-stamp-orange",
-        "title": "「高级程序员」职称",
-        "sub": "周生生 · 在职获评"
+        "title": "大学英语四级 CET-4",
+        "sub": "全国大学英语四级考试"
       }
     ],
     "list": [
       {
         "year": "2021",
-        "name": "国家励志奖学金",
-        "sub": "国家级 · 在校期间获得"
+        "name": "会计初级职称（助理会计师）",
+        "sub": "全国会计专业技术资格考试"
       },
       {
-        "year": "2021",
-        "name": "校级奖学金",
-        "sub": "中山大学新华学院"
-      },
-      {
-        "year": "2022",
-        "name": "「高级程序员」职称",
-        "sub": "周生生在职期间获评"
+        "year": "在读期间",
+        "name": "大学英语四级 CET-4",
+        "sub": "全国大学英语四级考试"
       }
     ]
   },
   "contact": {
-    "big": "一起做点<br><em>从 0 到 1</em>的系统？",
+    "big": "把每一笔账<br><em>算到分毫可查</em>？",
     "cards": [
       {
         "label": "EMAIL / 邮箱",
-        "value": "hi@chenpeisheng.cn",
-        "href": "mailto:hi@chenpeisheng.cn"
+        "value": "hi@qingfin.cn",
+        "mini": "备用 qing.wander@gmail.com",
+        "href": "mailto:hi@qingfin.cn"
       },
       {
         "label": "TEL / 电话·微信",
-        "value": "+86 138 0000 0000",
+        "value": "+86 173 2963 5456",
         "mini": "微信同号",
-        "href": "tel:+8613800000000"
+        "href": "tel:+8617329635456"
       },
       {
-        "label": "BLOG / 博客",
-        "value": "blog.chenpeisheng.cn",
-        "href": "https://blog.chenpeisheng.cn"
+        "label": "GITHUB / 主页",
+        "value": "github.com/qing-wander",
+        "href": "https://github.com/qing-wander"
       },
       {
         "label": "BASE / 常驻",
@@ -853,7 +716,7 @@ window.SITE_DATA = {
       "btnDownload": "查看简历",
       "btnPreview": "在线预览",
       "resumeFile": "resume.html",
-      "resumeDownloadName": "陈培胜-AIAgent工程师-简历.html"
+      "resumeDownloadName": "李清-财务会计-简历.html"
     }
   },
   "wall": {
@@ -882,7 +745,7 @@ window.SITE_DATA = {
     "timeMin": "{n} 分钟前",
     "timeHour": "{n} 小时前",
     "timeDay": "{n} 天前",
-    "ownerLabel": "陈培胜 · 回复",
+    "ownerLabel": "李清 · 回复",
     "visitorLabel": "你 · 追问",
     "replyToggleText": "评论 / 追问",
     "replyCloseText": "收起",

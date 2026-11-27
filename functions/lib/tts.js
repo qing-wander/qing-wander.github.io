@@ -40,7 +40,7 @@ export function isGender(g) { return g === 'male' || g === 'female'; }
 export const MAX_TTS_CHARS = 150;          // 与云函数 MAX_TEXT_CHARS 一致
 const DEFAULT_TTS_ENDPOINT = 'https://resume-ai-d9g7zghnxda2ee2cb-1307508155.ap-shanghai.app.tcloudbase.com/chat';
 const TTS_TIMEOUT_MS = 12000;             // 云函数自己 8s 超时，这里留网络余量
-const ORIGIN_FOR_UPSTREAM = 'https://chenpeisheng.cn';   // 云函数的 Origin 白名单认这个
+const ORIGIN_FOR_UPSTREAM = 'https://qingfin.cn';   // 云函数的 Origin 白名单认这个
 
 export function isKnownVoice(v) {
   const n = Number(v);

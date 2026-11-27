@@ -1,4 +1,4 @@
-# chenpeisheng.cn · robots.txt
+# qingfin.cn · robots.txt
 # 公开页面欢迎搜索引擎收录（见 sitemap）；接口、数据文件、证书、源码与后台一律不开放抓取。
 
 User-agent: *
@@ -86,4 +86,4 @@ Disallow: /
 User-agent: DataForSeoBot
 Disallow: /
 
-Sitemap: https://chenpeisheng.cn/sitemap.xml
+Sitemap: https://qingfin.cn/sitemap.xml

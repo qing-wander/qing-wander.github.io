@@ -19,7 +19,7 @@ export const AI = {
   /** 与后端 MAX_QUESTION_CHARS 对齐 */
   maxChars: 200,
   /** 欢迎语先放默认值；后台在 /admin「AI 语音」改的招呼文案异步覆盖下来 */
-  welcome: '你好，我是陈培胜的数字分身。<br>你可以把我当成「在线的他」：关于他的项目、技术栈和工作经历，都能直接问我。我会依据他的真实简历资料作答，并标注出处。<br>想了解什么，尽管开口。',
+  welcome: '你好，我是李清的数字分身。<br>你可以把我当成「在线的他」：关于他的项目、技术栈和工作经历，都能直接问我。我会依据他的真实简历资料作答，并标注出处。<br>想了解什么，尽管开口。',
   quickQuestions: ['你主导过哪些 0→1 系统？', '你的 Agent 架构经验？', '技术栈与方向？', '怎么联系你？'],
   jd: {
     minChars: 30,
@@ -120,9 +120,9 @@ export function aiRenderError(err: { message?: string } | null | undefined): str
   if (code === 'rate_limited') return '▍问得有点急，隔一分钟再问我吧。';
   if (code === 'AbortError') return '▍响应超时了，稍等再试一次。';
   if (code === 'origin_denied' || code === 'bad_request') {
-    return '▍通道拒绝了这次请求。可以直接邮件联系：hi@chenpeisheng.cn';
+    return '▍通道拒绝了这次请求。可以直接邮件联系：hi@qingfin.cn';
   }
-  return '▍通道暂时不可用，请稍后再试，或邮件联系：hi@chenpeisheng.cn';
+  return '▍通道暂时不可用，请稍后再试，或邮件联系：hi@qingfin.cn';
 }
 
 /* ── window 契约（岛水合后设置；main.js 守卫分支已兜底同步时序） ── */

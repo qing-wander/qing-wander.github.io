@@ -13,7 +13,7 @@
 同时由新原图重生 1080px 预览（webp + png），供主页弹窗使用。
 
 用法：
-  python3 scripts/regen_share_cards.py                         # 默认 https://chenpeisheng.cn / chenpeisheng.cn
+  python3 scripts/regen_share_cards.py                         # 默认 https://qingfin.cn / qingfin.cn
   python3 scripts/regen_share_cards.py --url https://x.cn --label x.cn
   python3 scripts/regen_share_cards.py --verify                # 额外用 OpenCV 回读二维码
 
@@ -29,7 +29,7 @@ from PIL import Image, ImageDraw, ImageFont
 
 ROOT = Path(__file__).resolve().parent.parent
 IMG_DIR = ROOT / "images"
-BASE = "陈培胜-作品集-分享卡"
+BASE = "李清-作品集-分享卡"
 
 # 由 OpenCV QRCodeDetector 在 2160px 原图上实测得到，勿凭目测改。
 CARDS = [
@@ -43,7 +43,7 @@ FONT_CANDIDATES = [
     "/usr/share/fonts/truetype/dejavu/DejaVuSansMono-Bold.ttf",
 ]
 
-OLD_LABEL = "shenge-work.github.io"  # 仅用于反推原字号，保证新文字视觉大小一致
+OLD_LABEL = "qing-wander.github.io"  # 仅用于反推原字号，保证新文字视觉大小一致
 BAR_PADDING = 24
 
 
@@ -135,8 +135,8 @@ def verify(url):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--url", default="https://chenpeisheng.cn", help="二维码目标 URL")
-    ap.add_argument("--label", default="chenpeisheng.cn", help="卡面黑底条上显示的域名")
+    ap.add_argument("--url", default="https://qingfin.cn", help="二维码目标 URL")
+    ap.add_argument("--label", default="qingfin.cn", help="卡面黑底条上显示的域名")
     ap.add_argument("--verify", action="store_true", help="用 OpenCV 回读二维码")
     a = ap.parse_args()
 

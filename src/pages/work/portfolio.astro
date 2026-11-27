@@ -16,10 +16,10 @@ const meta = (siteData.works as Array<{ title: string; titleEn: string; no: stri
   .find((w) => w.detailId === 'portfolio');
 if (!meta) throw new Error('site-data.json works 数组缺少 detailId=portfolio 条目');
 
-const canonical = Astro.site ? new URL('work/portfolio.html', Astro.site).href : 'https://chenpeisheng.cn/work/portfolio.html';
+const canonical = Astro.site ? new URL('work/portfolio.html', Astro.site).href : 'https://qingfin.cn/work/portfolio.html';
 ---
 <SiteShell
-  title={`${meta.title} · 作品案例 | 陈培胜`}
+  title={`${meta.title} · 作品案例 | 李清`}
   description={detail.tagline}
   canonical={canonical}
 >

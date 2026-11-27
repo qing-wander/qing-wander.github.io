@@ -1,7 +1,7 @@
 /* GET /api/auth/callback —— GitHub 授权回调
    ──────────────────────────────────────────────────────────────
    code → access_token → /user → 校验登录名在放行名单 → 发会话 cookie → 回首页。
-   放行名单：ADMIN_GITHUB_USERS（逗号分隔，默认 shenge-work）。
+   放行名单：ADMIN_GITHUB_USERS（逗号分隔，默认 qing-wander）。
    state 校验：签名 + 10 分钟有效期，防 CSRF 与重放。
    ────────────────────────────────────────────────────────────── */
 import { json, sessionCookie, signSession, TTL } from '../../../lib/admin.js';
@@ -56,11 +56,11 @@ export async function onRequestGet({ request, env }) {
     if (!token) return back('/?login=token_failed');
 
     const ur = await fetch('https://api.github.com/user', {
-      headers: { Authorization: `Bearer ${token}`, 'User-Agent': 'shenge-work-admin' },
+      headers: { Authorization: `Bearer ${token}`, 'User-Agent': 'qing-wander-admin' },
     });
     const user = await ur.json().catch(() => ({}));
     const login = String(user.login || '');
-    const allow = String(env.ADMIN_GITHUB_USERS || 'shenge-work')
+    const allow = String(env.ADMIN_GITHUB_USERS || 'qing-wander')
       .split(',').map((s) => s.trim()).filter(Boolean);
     if (!allow.includes(login)) return back('/?login=not_allowed');
 

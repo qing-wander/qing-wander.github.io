@@ -40,8 +40,8 @@ const { } = Astro.props;
       var bases = (function () {
         var host = location.hostname || '';
         if (/^(localhost|127\.0\.0\.1|0\.0\.0\.0|\[::1\])$/.test(host)) return [''];
-        if (/\.github\.io$/i.test(host)) return ['https://shenge-work.pages.dev'];
-        return ['', 'https://shenge-work.pages.dev'];
+        if (/\.github\.io$/i.test(host)) return ['https://qing-wander.pages.dev'];
+        return ['', 'https://qing-wander.pages.dev'];
       })();
       (function next(i) {
         if (i >= bases.length) return;

@@ -47,7 +47,7 @@ jobs:
       - name: 生成真蛇动效 SVG
         uses: Platane/snk@v3
         with:
-          github_user_name: shenge-work
+          github_user_name: qing-wander
           github_token: ${{ secrets.GITHUB_TOKEN }}
           outputs: |
             data/snake.svg?palette=github&color_snake=%23FF5A1E

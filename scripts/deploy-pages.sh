@@ -2,14 +2,14 @@
 # 作品集静态站 —— Cloudflare Pages 部署脚本（GitHub Pages 之外的备用托管）
 #
 # 用法：
-#   ./scripts/deploy-pages.sh              # 直接上传当前静态文件到 shenge-work 项目
+#   ./scripts/deploy-pages.sh              # 直接上传当前静态文件到 qing-wander 项目
 #   ./scripts/deploy-pages.sh --dry-run    # 只打印会传哪些文件，不真的部署
 #   WRANGLER_BIN=/path/to/wrangler.js ./scripts/deploy-pages.sh
 #                                         # npx 缓存损坏时直接指定已下载的 wrangler 入口
 #
 # 线上地址：
-#   生产环境  https://shenge-work.pages.dev
-#   预览环境  https://<commit>.shenge-work.pages.dev
+#   生产环境  https://qing-wander.pages.dev
+#   预览环境  https://<commit>.qing-wander.pages.dev
 #
 # 说明：
 #   · 上传静态资源（根目录全部 .html / CSS / JS / data / images / videos /
@@ -33,7 +33,7 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 ROOT="$(pwd)"
-PROJECT="shenge-work"
+PROJECT="qing-wander"
 BRANCH="main"
 STAGE="$(mktemp -d "${TMPDIR:-/tmp}/portfolio-pages.XXXXXX")"
 

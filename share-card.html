@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>作品集分享卡 · 陈培胜</title>
+<title>作品集分享卡 · 李清</title>
 <meta name="robots" content="noindex,nofollow" />
 <link rel="stylesheet" href="/css/fonts.css" />
 <script>
@@ -264,7 +264,7 @@ body.embed .stage-wrap { padding: 10px; }
         <div class="c-id">
           <div class="c-logo" id="cLogo">CP<i>.</i></div>
           <div>
-            <div class="c-idname" id="cIdName">CHEN PEISHENG</div>
+            <div class="c-idname" id="cIdName">LI QING</div>
             <div class="c-idsub" id="cIdSub">5 年 Agent 工程师 · 个人档案</div>
           </div>
         </div>
@@ -275,8 +275,8 @@ body.embed .stage-wrap { padding: 10px; }
 
       <div class="c-title">
         <div class="c-sec" id="cSec">SEC.00 <b>//</b> CANDIDATE DOSSIER <em>· 求职作品集 2026</em></div>
-        <div class="c-name" id="cName">陈培胜</div>
-        <div class="c-name-en" id="cNameEn">CHEN PEISHENG</div>
+        <div class="c-name" id="cName">李清</div>
+        <div class="c-name-en" id="cNameEn">LI QING</div>
         <div class="c-role">
           <div class="zh" id="cRole">AI Agent 工程师</div>
           <div class="en" id="cRoleEn">AI AGENT<br>ENGINEER</div>
@@ -296,7 +296,7 @@ body.embed .stage-wrap { padding: 10px; }
           <div class="c-signal">SIGNAL // SCAN TO OPEN</div>
           <div class="c-cta">扫码查看<br>完整作品集</div>
           <div class="c-cta-en">OPEN THE FULL DOSSIER</div>
-          <div class="c-domain" id="cDomain">chenpeisheng.cn</div>
+          <div class="c-domain" id="cDomain">qingfin.cn</div>
           <div class="c-scan">微信 / 相机扫一扫，或长按识别二维码</div>
           <div class="meta-line" id="cQrMeta"></div>
         </div>
@@ -305,7 +305,7 @@ body.embed .stage-wrap { padding: 10px; }
       <div class="c-foot">
         <span>FILE END — EOF</span>
         <span id="cFootMid">OPEN TO WORK · 深圳 / 广州 / 远程</span>
-        <span id="cCopy">© 2026 CHEN PEISHENG</span>
+        <span id="cCopy">© 2026 LI QING</span>
         <b id="cMark">CP.</b>
       </div>
     </div>
@@ -338,15 +338,15 @@ body.embed .stage-wrap { padding: 10px; }
   var target;
   try {
     if (/^https?:$/.test(location.protocol)) target = location.origin + location.pathname.replace(/share-card\.html$/, '');
-    else target = 'https://chenpeisheng.cn/';
-  } catch (e) { target = 'https://chenpeisheng.cn/'; }
-  var host = (function () { try { return new URL(target).host.replace(/^www\./, ''); } catch (e) { return 'chenpeisheng.cn'; } })();
+    else target = 'https://qingfin.cn/';
+  } catch (e) { target = 'https://qingfin.cn/'; }
+  var host = (function () { try { return new URL(target).host.replace(/^www\./, ''); } catch (e) { return 'qingfin.cn'; } })();
   $('cDomain').textContent = host;
   $('urlHint').textContent = '二维码 → ' + host;
 
   /* ── 文本填充（全部来自 site-data）── */
   var nameCn = String(hero.nameCn || '');
-  var nameEn = String(hero.nameEn || 'CHEN PEISHENG');
+  var nameEn = String(hero.nameEn || 'LI QING');
   $('cName').textContent = nameCn;
   $('cNameEn').textContent = nameEn;
   $('cRole').textContent = String(hero.role || '');

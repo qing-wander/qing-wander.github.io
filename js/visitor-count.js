@@ -52,7 +52,7 @@
   function pagesEndpoint() {
     if (CONFIG.pagesApi) return CONFIG.pagesApi;
     if (host.slice(-9) === '.pages.dev') return '/api/visits';
-    return 'https://shenge-work.pages.dev/api/visits';
+    return 'https://qing-wander.pages.dev/api/visits';
   }
 
   function alreadyCounted() {

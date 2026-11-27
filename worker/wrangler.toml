@@ -17,4 +17,4 @@ id = "78ccba103c8a444eb1b60e8fb8938e8f"
 
 [vars]
 # 允许调用计数接口的来源，逗号分隔；线上只留你的正式域名
-ALLOWED_ORIGINS = "https://chenpeisheng.cn,https://www.chenpeisheng.cn,http://localhost:8080,http://127.0.0.1:8080"
+ALLOWED_ORIGINS = "https://qingfin.cn,https://qing-wander.github.io,https://www.qing-wander.github.io,http://localhost:8080,http://127.0.0.1:8080"

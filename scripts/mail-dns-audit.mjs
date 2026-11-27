@@ -2,7 +2,7 @@
 /**
  * 域名邮件配置体检 / 迁移验收
  *
- *   node scripts/mail-dns-audit.mjs                 # 体检默认域名 chenpeisheng.cn
+ *   node scripts/mail-dns-audit.mjs                 # 体检默认域名 qingfin.cn
  *   node scripts/mail-dns-audit.mjs example.com     # 体检指定域名
  *   node scripts/mail-dns-audit.mjs --expect feishu # 按目标态验收（feishu|tencent|google）
  *
@@ -21,7 +21,7 @@ import { Resolver } from 'node:dns/promises';
 const resolver = new Resolver({ timeout: 4000, tries: 2 });
 resolver.setServers(['1.1.1.1', '8.8.8.8']);
 
-const DEFAULT_DOMAIN = 'chenpeisheng.cn';
+const DEFAULT_DOMAIN = 'qingfin.cn';
 
 // DKIM selector 探测表：不同服务商用的 selector 不一样，逐个查一遍看哪个存在。
 // ⚠️ 飞书用的是「feishu + 启用时间戳」这种动态 selector（例如 feishu2611261416），
@@ -140,7 +140,7 @@ async function main() {
 
 示例：
   node scripts/mail-dns-audit.mjs
-  node scripts/mail-dns-audit.mjs chenpeisheng.cn --expect feishu
+  node scripts/mail-dns-audit.mjs qingfin.cn --expect feishu
 `);
     return 0;
   }

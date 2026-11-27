@@ -9,7 +9,7 @@
  *      → pypdf 拆页 + sips/pdftoppm 栅格化 → 彩色 PNG + 像素灰度 PNG
  *      → assets/print-preview/manifest.json（记录 resume.html 的 sha256）
  *
- * 生成的 PDF 同时覆盖 .temp/陈培胜-简历-2026.pdf，保证用户手里的文件和预览同源。
+ * 生成的 PDF 同时覆盖 .temp/李清-简历-2026.pdf，保证用户手里的文件和预览同源。
  * 以后 resume.html 或打印样式有改动，必须重跑本脚本并一并提交 assets/print-preview/。
  */
 import { spawnSync } from 'node:child_process';
@@ -22,7 +22,7 @@ const ROOT = resolve(import.meta.dirname, '..');
 const HTML = join(ROOT, 'resume.html');
 const OUT = join(ROOT, 'assets', 'print-preview');
 const MANIFEST = join(OUT, 'manifest.json');
-const DELIVERED_PDF = join(ROOT, '.temp', '陈培胜-简历-2026.pdf');
+const DELIVERED_PDF = join(ROOT, '.temp', '李清-简历-2026.pdf');
 const ATTACH_PDF = join(ROOT, 'assets', 'resume', 'chen-peisheng-resume-2026.pdf');
 const CHECK_ONLY = process.argv.includes('--check');
 

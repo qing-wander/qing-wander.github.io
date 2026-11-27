@@ -67,7 +67,7 @@ function Dash() {
           </div>
         </div>
         <div className="head-actions">
-          <a className="btn btn-ghost" href="https://chenpeisheng.cn" target="_blank" rel="noopener">公开站 ↗</a>
+          <a className="btn btn-ghost" href="https://qingfin.cn" target="_blank" rel="noopener">公开站 ↗</a>
           <button className="btn btn-ghost" type="button" onClick={refreshAll}>刷新</button>
           <button className="btn btn-ghost" type="button" onClick={logout}>退出</button>
         </div>

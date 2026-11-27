@@ -25,7 +25,7 @@ const env = {
 };
 
 function req(jd) {
-  return new Request('https://shenge-work.pages.dev/api/variant', {
+  return new Request('https://qing-wander.pages.dev/api/variant', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ jd }),
@@ -51,7 +51,7 @@ test('正常 JD 出变体，且只删不改', async () => {
   assert.equal(d.ok, true);
 
   /* 同一模板骨架：打印按钮 / 简历页脚 / 主题变量都在 */
-  assert.match(d.html, /AUTO-GENERATED/);
+  assert.match(d.html, /李清 · 财务会计 · 求职简历/); // 本地模板无 AUTO-GENERATED 标记
   assert.match(d.html, /<html/);
   assert.ok(d.html.length > 30000, 'HTML 体量异常，可能模板没注入');
 

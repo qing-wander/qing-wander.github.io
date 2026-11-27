@@ -344,7 +344,7 @@ function Result({
         <span className="jd-foot-note">证据均取自本页档案切片 · 缺口照实列出，不做粉饰 · 点证据来源可展开原文核对</span>
       </div>
       <p className="jd-print-meta" hidden>
-        来源：陈培胜求职作品集 · 岗位匹配（RAG 检索 + 约束生成）· 生成于 {stamp} · chenpeisheng.cn/jd.html
+        来源：李清求职作品集 · 岗位匹配（RAG 检索 + 约束生成）· 生成于 {stamp} · qingfin.cn/jd.html
       </p>
     </div>
   );

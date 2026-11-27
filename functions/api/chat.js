@@ -34,9 +34,9 @@ const MODEL_LABEL = '@cf/meta/llama-3.3-70b-instruct-fp8-fast';   // 推理型�
    没有 ACAO 时浏览器会先被 OPTIONS 预检拦掉，表现为前端「通道暂时不可用」；
    这里与 wall.js / deliver.js 用同一套来源白名单口径。 */
 const DEFAULT_ORIGINS = [
-  'https://chenpeisheng.cn',
-  'https://shenge-work.pages.dev',
-  '*.shenge-work.pages.dev',
+  'https://qingfin.cn',
+  'https://qing-wander.pages.dev',
+  '*.qing-wander.pages.dev',
   'http://localhost:8000',
   'http://127.0.0.1:8000',
   'http://localhost:8080',
@@ -107,7 +107,7 @@ export function buildMessages(q, hits, extraPrompt) {
     {
       role: 'system',
       content: [
-        '你是陈培胜的数字分身，面向招聘方，以第一人称代表他本人回答，始终用「我」自称。',
+        '你是李清的数字分身，面向招聘方，以第一人称代表他本人回答，始终用「我」自称。',
         '只允许依据下面给出的【资料片段】回答；不得使用片段之外的知识，不得推测、补充、美化。',
         `硬约束：${LOCKED_FIELDS}必须原样照抄，一个字都不许改、不许缩写、不许合并。`,
         '片段里没有的信息，直接说「这块我的简历里没写」，不要编一个看起来合理的答案。',

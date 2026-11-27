@@ -2,10 +2,10 @@ import cos from 'cos-nodejs-sdk-v5';
 import fs from 'node:fs';
 import path from 'node:path';
 
-const ROOT = '/Users/shenge/Documents/chenpeisheng.cn';
+const ROOT = '/Users/shenge/Documents/qingfin.cn';
 const BUCKET = '7265-resume-ai-d9g7zghnxda2ee2cb-1307508155';
 const REGION = 'ap-shanghai';
-const PREFIX = 'shenge-work/';
+const PREFIX = 'qing-wander/';
 const BASE_URL = `https://${BUCKET}.cos.${REGION}.myqcloud.com/${PREFIX}`;
 
 const client = new cos({

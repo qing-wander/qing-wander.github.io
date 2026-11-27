@@ -1,7 +1,7 @@
 {
   "description": "个人主体小程序扫码登录跳板：扫码后 wx.login 回传 code 给后台",
   "appid": "wx3a03f69382d6bc49",
-  "projectname": "chenpeisheng-admin-login",
+  "projectname": "qingfin-admin-login",
   "miniprogramRoot": "./",
   "compileType": "miniprogram",
   "setting": {

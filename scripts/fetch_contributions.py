@@ -60,7 +60,7 @@ def gql(token: str, variables: dict) -> dict:
             "Authorization": "Bearer " + token,
             "Accept": "application/vnd.github+json",
             "Content-Type": "application/json",
-            "User-Agent": "shenge-work.github.io-contributions",
+            "User-Agent": "qing-wander.github.io-contributions",
         },
         method="POST",
     )
@@ -107,7 +107,7 @@ def main() -> int:
     now = datetime.now(timezone.utc)
     to = now.replace(hour=0, minute=0, second=0, microsecond=0)
     fr = to - timedelta(days=365)
-    login = os.environ.get("GH_LOGIN", "shenge-work")
+    login = os.environ.get("GH_LOGIN", "qing-wander")
 
     data = gql(token, {"login": login, "from": fr.isoformat(), "to": to.isoformat()})
     user = data["user"]

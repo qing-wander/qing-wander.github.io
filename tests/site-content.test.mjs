@@ -52,7 +52,7 @@ async function adminEnv(env) {
 }
 
 function req(url, opts = {}) {
-  return new Request('https://chenpeisheng.cn' + url, {
+  return new Request('https://qingfin.cn' + url, {
     method: opts.method || 'GET',
     headers: Object.assign({}, opts.headers || {}),
     body: opts.body,

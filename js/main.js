@@ -40,8 +40,8 @@
   var API_BASES = (function () {
     var host = location.hostname || '';
     if (/^(localhost|127\.0\.0\.1|0\.0\.0\.0|\[::1\])$/.test(host)) return [''];
-    if (/\.github\.io$/i.test(host)) return ['https://shenge-work.pages.dev'];
-    return ['', 'https://shenge-work.pages.dev'];
+    if (/\.github\.io$/i.test(host)) return ['https://qing-wander.pages.dev'];
+    return ['', 'https://qing-wander.pages.dev'];
   })();
 
   /* ── Toast（分享卡、留言墙等场景共用的轻提示） ──
@@ -220,7 +220,7 @@
       var quick = '';
       if (x.profileId) {
         name = '<a class="cp-name-link" data-cp="' + esc(x.profileId) +
-          '" href="https://chenpeisheng.cn/company.html?c=' + esc(x.profileId) +
+          '" href="https://qingfin.cn/company.html?c=' + esc(x.profileId) +
           '" title="公司档案：背景 / 业务 / 融资 / 前景">' + name + '</a>';
         quick = '<p class="cp-quick" data-cp-quick="' + esc(x.profileId) + '" hidden></p>';
       }
@@ -390,7 +390,7 @@
      统计行另取 data/contributions.json（Actions 每日用 GraphQL 拉取，前端
      不碰 token）；拿不到就只隐藏统计，不影响图。 */
   function renderGhSkeleton(box, username) {
-    var user = String(username || 'shenge-work');
+    var user = String(username || 'qing-wander');
     box.innerHTML =
       '<div class="gh-head">' +
         '<span class="gh-label">GITHUB ACTIVITY · 近一年提交</span>' +
@@ -873,7 +873,7 @@
       });
     }
 
-    /* ── 11. 陈培胜的数字分身（后端：Cloudflare Pages Function /api/chat） ──
+    /* ── 11. 李清的数字分身（后端：Cloudflare Pages Function /api/chat） ──
        链路：静态页 → POST /api/chat → D1 FTS5 BM25 + Vectorize 向量（RRF 融合）
              → 受约束提示词 → 生成（答案带 citations，可回链切片原文）
        源码：functions/api/chat.js（入口）/ kb.js（检索）/ jd.js（JD 匹配） */
@@ -893,14 +893,14 @@
       maxChars: 200,        // 与后端 MAX_QUESTION_CHARS 对齐
       /* 欢迎语先放默认值；后台在 /admin「AI 语音」改的招呼文案异步覆盖下来，
          面板打开时若已取到就用新版，取不到（网络抖动 / 未部署函数）回退默认。 */
-      welcome: '你好，我是陈培胜的数字分身。<br>你可以把我当成「在线的他」：关于他的项目、技术栈和工作经历，都能直接问我。我会依据他的真实简历资料作答，并标注出处。<br>想了解什么，尽管开口。',
+      welcome: '你好，我是李清的数字分身。<br>你可以把我当成「在线的他」：关于他的项目、技术栈和工作经历，都能直接问我。我会依据他的真实简历资料作答，并标注出处。<br>想了解什么，尽管开口。',
       quickQuestions: ['你主导过哪些 0→1 系统？', '你的 Agent 架构经验？', '技术栈与方向？', '怎么联系你？'],
       /* ── 主动性：为兼容保留配置，但面板不再自动弹出（仅点击 3D 角色打开） ── */
       autoDelay: 10000,             // 保留字段（自动弹出已停用）
       autoTipAhead: 8500,           // 保留字段（自动弹出已停用）
       autoCooldown: 30 * 60 * 1000, // 保留字段（自动弹出已停用）
-      autoTip: '👋 我是陈培胜的数字分身，点我聊聊～',
-      autoLead: '你好，我是陈培胜的数字分身。<br>这页有 5 个企业项目、6 个个人作品和几十条技术细节，翻起来慢——<b>直接问我更快</b>，回答都带原文出处。<br>不想打字就先点一个：',
+      autoTip: '👋 我是李清的数字分身，点我聊聊～',
+      autoLead: '你好，我是李清的数字分身。<br>这页有 5 个企业项目、6 个个人作品和几十条技术细节，翻起来慢——<b>直接问我更快</b>，回答都带原文出处。<br>不想打字就先点一个：',
       autoPrompts: [
         { q: '你主导过哪些 0→1 的系统？', label: '0→1 系统' },
         { q: 'Agent 架构这块你做到什么程度？', label: 'Agent 深度' },
@@ -968,7 +968,7 @@
       wrap.className = 'ai-msg ai-msg-' + who;
       /* 消息归属哪个模式：问答历史与 JD 结果分栏，切换时互不干扰 */
       wrap.setAttribute('data-mode', mode || aiMode || 'qa');
-      wrap.innerHTML = '<span class="ai-msg-name">' + (who === 'bot' ? '陈培胜 · AI数字分身' : 'YOU') + '</span>' +
+      wrap.innerHTML = '<span class="ai-msg-name">' + (who === 'bot' ? '李清 · AI数字分身' : 'YOU') + '</span>' +
         '<div class="ai-bubble">' + html + '</div>';
       aiBody.appendChild(wrap);
       aiScroll();
@@ -1297,9 +1297,9 @@
       if (code === 'rate_limited') return '▍问得有点急，隔一分钟再问我吧。';
       if (code === 'AbortError') return '▍响应超时了，稍等再试一次。';
       if (code === 'origin_denied' || code === 'bad_request') {
-        return '▍通道拒绝了这次请求。可以直接邮件联系：hi@chenpeisheng.cn';
+        return '▍通道拒绝了这次请求。可以直接邮件联系：hi@qingfin.cn';
       }
-      return '▍通道暂时不可用，请稍后再试，或邮件联系：hi@chenpeisheng.cn';
+      return '▍通道暂时不可用，请稍后再试，或邮件联系：hi@qingfin.cn';
     }
     /* ── 主动性：已停用自动弹出 ──
        面板不再自动弹出 / 自动冒招呼气泡：唯一入口是用户点击 3D 角色（见 js/ai-skins.js
@@ -1648,7 +1648,7 @@
           try { iso = new Date(r.ts).toISOString(); } catch (e) {}
           return '<div class="wall-reply' + (owner ? ' is-owner' : '') + '">' +
             '<div class="wall-reply-head"><span class="wall-reply-author">' +
-            escT(owner ? (T.ownerLabel || '陈培胜 · 回复') : (T.visitorLabel || '你 · 追问')) + '</span>' +
+            escT(owner ? (T.ownerLabel || '李清 · 回复') : (T.visitorLabel || '你 · 追问')) + '</span>' +
             '<time class="wall-reply-time" datetime="' + escT(iso) + '" title="' + escT(fmtTime(r.ts)) + '">' +
             escT(relTime(r.ts)) + '</time></div>' +
             '<p class="wall-reply-text">' + escT(r.text) + '</p>' +

@@ -17,7 +17,7 @@ set -euo pipefail
 cd "$(dirname "$0")/.." || exit 1
 
 DB="${1:-portfolio-db}"
-OUT_DIR="${D1_BACKUP_DIR:-$HOME/.local/share/shenge-work/d1-backups}"
+OUT_DIR="${D1_BACKUP_DIR:-$HOME/.local/share/qing-wander/d1-backups}"
 KEEP="${KEEP:-10}"
 STAMP="$(date +%Y%m%d-%H%M%S)"
 OUT="$OUT_DIR/${DB}-${STAMP}.sql"

@@ -25,7 +25,7 @@ function envOf(extra = {}) {
 }
 
 /* 捕获 Resend 请求；站点静态资源按路径返回假 PDF / 404 */
-function mockNet(availablePaths = ['/assets/resume/chen-peisheng-resume-2026.pdf']) {
+function mockNet(availablePaths = ['/assets/resume/li-qing-resume-2026.pdf']) {
   const calls = { resend: null };
   const orig = globalThis.fetch;
   globalThis.fetch = async (url, opts) => {
@@ -84,15 +84,15 @@ test('称呼：填写则「某某，您好」，留空则泛化「您好」', ()
 });
 
 test('主题写法与真人投递一致，不带「自动」痕迹', () => {
-  assert.equal(buildSubject({ recipient: '' }), '应聘 AI Agent 工程师 · 陈培胜');
+  assert.equal(buildSubject({ recipient: '' }), '应聘 财务会计 · 李清');
   assert.match(buildSubject({ recipient: '李 HR' }), /致 李 HR/);
   assert.ok(!buildSubject({ recipient: '李 HR' }).includes('自动'));
 });
 
 test('简历提炼信息来自数据源，含姓名/能力/项目', () => {
   const d = resumeDigest();
-  assert.equal(d.name, '陈培胜');
-  assert.ok(d.role.includes('AI Agent'));
+  assert.equal(d.name, '李清');
+  assert.ok(d.role.includes('财务'));
   assert.ok(d.skills.length >= 3);
   assert.ok(d.projects.length >= 1);
 });
@@ -188,7 +188,7 @@ test('成功发送：正文含动态称呼、PDF 附件、JD、在线简历入�
 
 test('勾选多个证书：有的附上、缺的标注；未勾选不渲染', async () => {
   const dipPath = CERT_SLOTS.diploma.path;
-  const net = mockNet(['/assets/resume/chen-peisheng-resume-2026.pdf', dipPath]);
+  const net = mockNet(['/assets/resume/li-qing-resume-2026.pdf', dipPath]);
   try {
     const res = await post({ ...BASE, attachments: ['diploma', 'degree', 'other'] });
     assert.equal(res.status, 201);
@@ -321,9 +321,9 @@ test('预览接口：未配置 Resend 仍可预览；来源白名单与 OPTIONS'
 /* ── 附件重命名 / 排序 / ZIP 打包 ──────────────────────────────── */
 
 test('压缩包默认命名：有岗位带岗位段，无 JD 则省略；岗位名从 JD 提取', () => {
-  const withRole = defaultZipName('岗位名称：AI Agent 工程师\n岗位职责：开发', '陈培胜');
-  assert.match(withRole, /^\d{4}_AI Agent 工程师_应聘材料_陈培胜\.zip$/);
-  assert.match(defaultZipName('', '陈培胜'), /^\d{4}_应聘材料_陈培胜\.zip$/);
+  const withRole = defaultZipName('岗位名称：AI Agent 工程师\n岗位职责：开发', '李清');
+  assert.match(withRole, /^\d{4}_AI Agent 工程师_应聘材料_李清\.zip$/);
+  assert.match(defaultZipName('', '李清'), /^\d{4}_应聘材料_李清\.zip$/);
   assert.equal(roleFromJd('岗位职责：写代码'), '');
   assert.equal(roleFromJd('岗位：后端工程师'), '后端工程师');
 });
@@ -331,14 +331,14 @@ test('压缩包默认命名：有岗位带岗位段，无 JD 则省略；岗位�
 test('自定义文件名 + fileOrder 决定实发附件的名字与顺序', async () => {
   const dip = CERT_SLOTS.diploma.path;
   const deg = CERT_SLOTS.degree.path;
-  const net = mockNet(['/assets/resume/chen-peisheng-resume-2026.pdf', dip, deg]);
+  const net = mockNet(['/assets/resume/li-qing-resume-2026.pdf', dip, deg]);
   try {
     const res = await post({
       ...BASE,
       attachments: ['degree', 'diploma'],
       fileOrder: ['diploma', 'degree'],
       fileNames: {
-        diploma: '学历证书_陈培胜.pdf',
+        diploma: '学历证书_李清.pdf',
         degree: '学位证件\\说明:2026.pdf', // 特殊字符会被清洗成下划线
       },
     });
@@ -346,10 +346,10 @@ test('自定义文件名 + fileOrder 决定实发附件的名字与顺序', asyn
     const sent = net.calls.resend.body;
     assert.deepEqual(sent.attachments.map((a) => a.filename), [
       RESUME_PDF_NAME,
-      '学历证书_陈培胜.pdf',
+      '学历证书_李清.pdf',
       '学位证件_说明_2026.pdf',
     ]);
-    assert.match(sent.html, /学历证书_陈培胜\.pdf/);
+    assert.match(sent.html, /学历证书_李清\.pdf/);
     assert.match(sent.html, /学位证件_说明_2026\.pdf/);
   } finally {
     net.restore();
@@ -359,14 +359,14 @@ test('自定义文件名 + fileOrder 决定实发附件的名字与顺序', asyn
 test('打包开启：只附一个 ZIP，内含按序文件，正文列出内含清单', async () => {
   const id = CERT_SLOTS.idCard.path;
   const dip = CERT_SLOTS.diploma.path;
-  const net = mockNet(['/assets/resume/chen-peisheng-resume-2026.pdf', id, dip]);
-  const zipName = '2026_AI Agent工程师_应聘材料_陈培胜.zip';
+  const net = mockNet(['/assets/resume/li-qing-resume-2026.pdf', id, dip]);
+  const zipName = '2026_AI Agent工程师_应聘材料_李清.zip';
   try {
     const res = await post({
       ...BASE,
       attachments: ['idCard', 'diploma'],
       fileOrder: ['diploma', 'idCard'],
-      fileNames: { diploma: '学历证书_陈培胜.pdf' },
+      fileNames: { diploma: '学历证书_李清.pdf' },
       zip: { enabled: true, name: zipName },
     });
     assert.equal(res.status, 201);
@@ -379,11 +379,11 @@ test('打包开启：只附一个 ZIP，内含按序文件，正文列出内含�
     /* 用系统 zipfile 独立验证二进制：名字、顺序、内容都能被标准工具读出 */
     const r = spawnSync('python3', ['-c',
       'import sys,zipfile,io;z=zipfile.ZipFile(io.BytesIO(sys.stdin.buffer.read()));' +
-      'print("|".join(z.namelist()));print(z.read("学历证书_陈培胜.pdf").decode())',
+      'print("|".join(z.namelist()));print(z.read("学历证书_李清.pdf").decode())',
     ], { input: Buffer.from(sent.attachments[0].content, 'base64'), encoding: 'utf8' });
     if (r.status === 0) {
-      const lines = r.stdout.trim().split('\n');
-      assert.equal(lines[0], [RESUME_PDF_NAME, '学历证书_陈培胜.pdf', CERT_SLOTS.idCard.filename].join('|'));
+      const lines = r.stdout.replace(/\r/g, '').trim().split('\n');
+      assert.equal(lines[0], [RESUME_PDF_NAME, '学历证书_李清.pdf', CERT_SLOTS.idCard.filename].join('|'));
       assert.equal(lines[1], '%PDF-1.7');
     }
   } finally {
@@ -392,12 +392,12 @@ test('打包开启：只附一个 ZIP，内含按序文件，正文列出内含�
 });
 
 test('ZIP 场景：预览与实发的主题/正文/附件名逐字一致', async () => {
-  const net = mockNet(['/assets/resume/chen-peisheng-resume-2026.pdf', CERT_SLOTS.idCard.path]);
+  const net = mockNet(['/assets/resume/li-qing-resume-2026.pdf', CERT_SLOTS.idCard.path]);
   try {
     const payload = {
       ...BASE, recipient: '王经理',
       attachments: ['idCard'],
-      fileNames: { idCard: '身份证复印件_陈培胜.pdf' },
+      fileNames: { idCard: '身份证复印件_李清.pdf' },
       zip: { enabled: true, name: '测试包.zip' },
     };
     const pv = await (await preview(payload)).json();
@@ -408,7 +408,7 @@ test('ZIP 场景：预览与实发的主题/正文/附件名逐字一致', async
     assert.equal(pv.text, sent.text);
     assert.deepEqual(pv.attachments, sent.attachments.map((a) => a.filename));
     assert.deepEqual(pv.attachments, ['测试包.zip']);
-    assert.deepEqual(pv.zipEntries, [RESUME_PDF_NAME, '身份证复印件_陈培胜.pdf']);
+    assert.deepEqual(pv.zipEntries, [RESUME_PDF_NAME, '身份证复印件_李清.pdf']);
   } finally {
     net.restore();
   }
@@ -428,7 +428,7 @@ test('打包但取不到任何文件时，不虚报 ZIP 附件', async () => {
 });
 
 test('fileNames 里的未勾选项不会被误附上', async () => {
-  const net = mockNet(['/assets/resume/chen-peisheng-resume-2026.pdf', CERT_SLOTS.idCard.path]);
+  const net = mockNet(['/assets/resume/li-qing-resume-2026.pdf', CERT_SLOTS.idCard.path]);
   try {
     const res = await post({ ...BASE, attachments: [], fileNames: { idCard: '不要附上.pdf' } });
     assert.equal(res.status, 201);

@@ -12,9 +12,9 @@
 
 import SITE_DATA from './site-data.js';
 
-export const RESUME_PRIMARY = 'https://chenpeisheng.cn/resume.html';
-export const RESUME_BACKUP = 'https://shenge-work.pages.dev/resume.html';
-export const HOMEPAGE = 'https://chenpeisheng.cn';
+export const RESUME_PRIMARY = 'https://qingfin.cn/resume.html';
+export const RESUME_BACKUP = 'https://qing-wander.pages.dev/resume.html';
+export const HOMEPAGE = 'https://qingfin.cn';
 
 /* 勾选框 → 附件元信息。文件未提供时 fetch 会 404，后端跳过并在正文标注「待补充」。 */
 export const CERT_SLOTS = {
@@ -23,8 +23,8 @@ export const CERT_SLOTS = {
   degree: { label: '学位证书', filename: '学位证书.pdf', path: '/assets/resume/certificates/degree.pdf' },
   other: { label: '其他相关资质证书', filename: '其他相关资质证书.pdf', path: '/assets/resume/certificates/other-qualifications.pdf' },
 };
-export const RESUME_PDF_PATH = '/assets/resume/chen-peisheng-resume-2026.pdf';
-export const RESUME_PDF_NAME = '陈培胜-简历-2026.pdf';
+export const RESUME_PDF_PATH = '/assets/resume/li-qing-resume-2026.pdf';
+export const RESUME_PDF_NAME = '李清-简历-2026.pdf';
 
 export function esc(s) {
   return String(s == null ? '' : s)
@@ -70,7 +70,7 @@ export function resumeDigest() {
     subtitle: plain(p.subtitle || p.lead || '').slice(0, 70),
   })).filter((p) => p.name).slice(0, 2);
   return {
-    name: plain(basics.name) || '陈培胜',
+    name: plain(basics.name) || '李清',
     role: plain(basics.role) || 'AI Agent 工程师',
     summary,
     skills,
@@ -222,11 +222,11 @@ jdBlock + noteBlock +
 attachmentLine +
 
 '<tr><td style="border:4px solid #141311;border-top:none;background:#FFFCF4;padding:12px 22px;">' +
-'<span style="font:bold 12px/1.6 \'PingFang SC\',\'Microsoft YaHei\',sans-serif;color:#141311;">简历作者邮箱：hi@chenpeisheng.cn' + (plain(d.email) ? ' · 回复本邮件可直接联系投递人' : '') + '</span>' +
+'<span style="font:bold 12px/1.6 \'PingFang SC\',\'Microsoft YaHei\',sans-serif;color:#141311;">简历作者邮箱：hi@qingfin.cn' + (plain(d.email) ? ' · 回复本邮件可直接联系投递人' : '') + '</span>' +
 '</td></tr>' +
 
 '<tr><td style="padding:16px 4px 0;text-align:center;">' +
-'<span style="font:11px/1.6 \'Courier New\',monospace;color:#4A463F;">' + esc(digest.name) + ' · chenpeisheng.cn · ' + time + '</span>' +
+'<span style="font:11px/1.6 \'Courier New\',monospace;color:#4A463F;">' + esc(digest.name) + ' · qingfin.cn · ' + time + '</span>' +
 '</td></tr>' +
 
 '</table></td></tr></table></body></html>';
@@ -249,7 +249,7 @@ attachmentLine +
     textLines.push('附件：' + attachmentText, '');
     if (pending.length) textLines.push('另申请：' + pending.join('、') + '（文件待补充，本次未附上）', '');
   }
-  textLines.push('简历作者邮箱：hi@chenpeisheng.cn');
+  textLines.push('简历作者邮箱：hi@qingfin.cn');
 
   return { html, text: textLines.join('\n') };
 }

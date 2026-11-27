@@ -1,9 +1,9 @@
-# 【已并入主站】后台现在跑在主站 chenpeisheng.cn：
+# 【已并入主站】后台现在跑在主站 qingfin.cn：
 #   控制台 /admin、登录 /login、接口 /api/admin/**，守卫在 functions/_middleware.js。
 #   本目录 public/ 仍是后台前端的唯一源码（构建脚本会复制到 dist/admin、dist/login），
 #   functions/ 与 lib/ 则为历史备份，线上已由仓库根的 functions/ 接管。
 #
-# 后台项目配置（shenge-work-admin.pages.dev，历史独立部署，保留作回滚）
+# 后台项目配置（qing-wander-admin.pages.dev，历史独立部署，保留作回滚）
 #
 # 独立 Pages 项目：静态页面在 public/，Functions 在 functions/，
 # 跟公开站共用同一个 D1（portfolio-db），不新建库。
@@ -18,7 +18,7 @@
 #   ADMIN_SESSION_SECRET  会话签名盐（32 字节以上；不配会退回用 ADMIN_PASSWORD 当盐）
 #   WALL_ADMIN_TOKEN      可选，应急令牌直连
 
-name = "shenge-work-admin"
+name = "qing-wander-admin"
 compatibility_date = "2025-01-01"
 pages_build_output_dir = "public"
 

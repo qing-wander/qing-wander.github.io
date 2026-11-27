@@ -270,7 +270,7 @@ export function LoginApp() {
         </form>
 
         <p className="foot">
-          <a href="https://chenpeisheng.cn">← 返回公开站</a>
+          <a href="https://qingfin.cn">← 返回公开站</a>
           <span id="footNote">{methods?.emailEnabled && methods.emailHint ? '白名单 ' + methods.emailCount + ' 个 · ' + methods.emailHint : ''}</span>
         </p>
       </main>

@@ -115,7 +115,7 @@ function profileBits(e) {
   if (!e.profileId) return { name: '', quick: '' };
   const id = esc(e.profileId);
   return {
-    name: `<a class="cp-name-link" data-cp="${id}" href="https://chenpeisheng.cn/company.html?c=${e.profileId}" title="公司档案：背景 / 业务 / 融资 / 前景">${esc(e.company)}</a>`,
+    name: `<a class="cp-name-link" data-cp="${id}" href="https://qingfin.cn/company.html?c=${e.profileId}" title="公司档案：背景 / 业务 / 融资 / 前景">${esc(e.company)}</a>`,
     quickLine: '        <p class="cp-quick" data-cp-quick="' + id + '"></p>',
   };
 }
@@ -181,7 +181,7 @@ function skillsSection(r) {
 function schoolNameLink(e) {
   if (!e.profileId) return esc(e.school);
   const id = esc(e.profileId);
-  return `<a class="sp-name-link" data-sp="${id}" href="https://chenpeisheng.cn/school.html?c=${id}" title="学校档案：学校概况 / 在校经历 / 课程表 / 获奖证书 / 学历验证">${esc(e.school)}</a>`;
+  return `<a class="sp-name-link" data-sp="${id}" href="https://qingfin.cn/school.html?c=${id}" title="学校档案：学校概况 / 在校经历 / 课程表 / 获奖证书 / 学历验证">${esc(e.school)}</a>`;
 }
 
 function educationSection(r) {

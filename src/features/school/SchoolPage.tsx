@@ -16,7 +16,7 @@ export default function SchoolPage() {
     const id = !q && all.length === 1 ? all[0]!.id : q;
     const s = id ? getSchool(id) : null;
     setVisit({ id, s });
-    if (s) document.title = (s.name || '学校档案') + ' · 学校档案 | 陈培胜';
+    if (s) document.title = (s.name || '学校档案') + ' · 学校档案 | 李清';
     if (typeof window !== 'undefined' && window.AssetURL) {
       /* 资产重写：SchoolPanel 首渲染后补一次（图片走 CDN） */
       window.AssetURL.rewriteDOM(document.getElementById('spPageBody') ?? undefined);

@@ -37,9 +37,9 @@
 const JSON_HEADERS = { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' };
 
 const DEFAULT_ORIGINS = [
-  'https://chenpeisheng.cn',
-  'https://shenge-work.pages.dev',
-  '*.shenge-work.pages.dev',
+  'https://qingfin.cn',
+  'https://qing-wander.pages.dev',
+  '*.qing-wander.pages.dev',
   'http://localhost:8000',
   'http://127.0.0.1:8000',
   'http://localhost:8080',

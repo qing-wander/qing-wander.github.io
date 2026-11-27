@@ -94,11 +94,11 @@ test('notifyWallMessage：按默认收件人发信并携带邮件正文', async 
   const m = mockFetch(() => okResponse('em_123'));
   try {
     const res = await notifyWallMessage(envOf(fakeDb()), { id: 'w1', name: '小李', text: '你好，留言测试', created_at: Date.now() }, { origin: ORIGIN });
-    assert.deepEqual(res, { ok: true, id: 'em_123', to: 'hi@chenpeisheng.cn' });
+    assert.deepEqual(res, { ok: true, id: 'em_123', to: 'hi@qingfin.cn' });
     assert.equal(m.calls.length, 1);
     assert.equal(m.calls[0].url, 'https://api.resend.com/emails');
     const payload = JSON.parse(m.calls[0].init.body);
-    assert.deepEqual(payload.to, ['hi@chenpeisheng.cn']);
+    assert.deepEqual(payload.to, ['hi@qingfin.cn']);
     assert.match(payload.from, /onboarding@resend\.dev/);
     assert.match(payload.subject, /小李/);
     assert.ok(payload.html.includes('你好，留言测试'));
@@ -142,7 +142,7 @@ test('wall.js：留言写入成功后发一封，重复提交不再发', async (
     assert.equal((await first.json()).messages[0].text, '第一次留言内容');
     assert.equal(m.calls.length, 1);
     const payload = JSON.parse(m.calls[0].init.body);
-    assert.deepEqual(payload.to, ['hi@chenpeisheng.cn']);
+    assert.deepEqual(payload.to, ['hi@qingfin.cn']);
     assert.ok(payload.text.includes('第一次留言内容'));
 
     const again = await onRequestPost({ request: post('张三', '第一次留言内容'), env });

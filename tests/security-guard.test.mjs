@@ -9,7 +9,7 @@ import {
   hourKey, minuteKey, dayKey, tooLarge, certToken, isAllowedOrigin, allowedOrigins,
 } from '../functions/lib/guard.js';
 
-const ORIGIN = 'https://chenpeisheng.cn';
+const ORIGIN = 'https://qingfin.cn';
 const ENV = { DELIVER_CHALLENGE_SECRET: 'test-secret-do-not-use' };
 
 function req(headers = {}, url = ORIGIN + '/api/deliver') {
@@ -176,8 +176,8 @@ test('证书签名头与路径强绑定', async () => {
 
 test('来源白名单支持通配子域，且拒绝外站', () => {
   const allow = allowedOrigins({});
-  assert.equal(isAllowedOrigin('https://chenpeisheng.cn', allow), true);
-  assert.equal(isAllowedOrigin('https://abc.shenge-work.pages.dev', allow), true);
+  assert.equal(isAllowedOrigin('https://qingfin.cn', allow), true);
+  assert.equal(isAllowedOrigin('https://abc.qing-wander.pages.dev', allow), true);
   assert.equal(isAllowedOrigin('https://evil.example', allow), false);
   assert.equal(isAllowedOrigin('', allow), false);
 });

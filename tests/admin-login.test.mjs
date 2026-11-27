@@ -12,7 +12,7 @@ import { onRequestGet as wechatCallback } from '../functions/api/admin/auth/wech
 import { signState, codeHash, wechatAllowed, isAllowedEmail } from '../functions/lib/admin-login.js';
 import { verifySession, COOKIE } from '../functions/lib/admin-auth.js';
 
-const ORIGIN = 'https://chenpeisheng.cn';
+const ORIGIN = 'https://qingfin.cn';
 const SCHEMA = readFileSync(new URL('../db/schema.sql', import.meta.url), 'utf8');
 const SECRET = 'test-session-secret';
 const EMAILS = 'me@gmail.com,me@qq.com';
@@ -47,7 +47,7 @@ function envOf(db, extra = {}) {
     ADMIN_SESSION_SECRET: SECRET,
     ADMIN_EMAILS: EMAILS,
     RESEND_API_KEY: 'test-resend',
-    ADMIN_EMAIL_FROM: 'chenpeisheng <hi@chenpeisheng.cn>',
+    ADMIN_EMAIL_FROM: 'qingfin <hi@qingfin.cn>',
   }, extra);
 }
 
@@ -94,7 +94,7 @@ function codeFromCalls() {
 /* ── 白名单 ─────────────────────────────────────────────────────── */
 
 test('邮箱白名单：默认只认站长邮箱，配了多个都能用', () => {
-  assert.equal(isAllowedEmail({}, 'hi@chenpeisheng.cn'), true);
+  assert.equal(isAllowedEmail({}, 'hi@qingfin.cn'), true);
   assert.equal(isAllowedEmail({}, 'someone@gmail.com'), false);
   assert.equal(isAllowedEmail({ ADMIN_EMAILS: EMAILS }, 'ME@GMAIL.COM'), true);
   assert.equal(isAllowedEmail({ ADMIN_EMAILS: EMAILS }, 'me@qq.com'), true);
@@ -124,7 +124,7 @@ test('发验证码：落库只存哈希，邮件里是 6 位码', async () => {
 
   const { code, to, from } = codeFromCalls();
   assert.equal(to[0], 'me@gmail.com');
-  assert.match(from, /hi@chenpeisheng\.cn/);
+  assert.match(from, /hi@qingfin\.cn/);
   assert.match(code, /^\d{6}$/);
 
   const row = db.raw.prepare('SELECT * FROM admin_email_codes WHERE email = ?').get('me@gmail.com');

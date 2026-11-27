@@ -51,14 +51,14 @@ test('crc32 标准向量 123456789', () => {
 
 test('ZIP 解析：中文文件名、内容与顺序都正确', () => {
   const z = createZip([
-    { name: '陈培胜-简历-2026.pdf', bytes: enc.encode('RESUME') },
-    { name: '身份证复印件_陈培胜.pdf', bytes: enc.encode('ID') },
-    { name: '学历证书_陈培胜.pdf', bytes: enc.encode('DIPLOMA') },
+    { name: '李清-简历-2026.pdf', bytes: enc.encode('RESUME') },
+    { name: '身份证复印件_李清.pdf', bytes: enc.encode('ID') },
+    { name: '学历证书_李清.pdf', bytes: enc.encode('DIPLOMA') },
   ]);
   assert.deepEqual(readZip(z), [
-    { name: '陈培胜-简历-2026.pdf', text: 'RESUME' },
-    { name: '身份证复印件_陈培胜.pdf', text: 'ID' },
-    { name: '学历证书_陈培胜.pdf', text: 'DIPLOMA' },
+    { name: '李清-简历-2026.pdf', text: 'RESUME' },
+    { name: '身份证复印件_李清.pdf', text: 'ID' },
+    { name: '学历证书_李清.pdf', text: 'DIPLOMA' },
   ]);
 });
 
@@ -68,15 +68,15 @@ test('空文件列表也生成合法空 ZIP', () => {
 
 test('系统 zipfile 能识别生成的包（格式兼容性）', () => {
   const z = createZip([
-    { name: '陈培胜-简历-2026.pdf', bytes: enc.encode('%PDF-1.7') },
-    { name: '学位证书_陈培胜.pdf', bytes: enc.encode('%PDF-1.7') },
+    { name: '李清-简历-2026.pdf', bytes: enc.encode('%PDF-1.7') },
+    { name: '学位证书_李清.pdf', bytes: enc.encode('%PDF-1.7') },
   ]);
   const r = spawnSync('python3', ['-c',
     'import sys,zipfile,io;z=zipfile.ZipFile(io.BytesIO(sys.stdin.buffer.read()));' +
     'print("|".join(z.namelist()));print(z.testzip())',
   ], { input: Buffer.from(z), encoding: 'utf8' });
   if (r.status !== 0) return; // 环境没 python3 就跳过，前面的独立解析已覆盖
-  const lines = r.stdout.trim().split('\n');
-  assert.equal(lines[0], '陈培胜-简历-2026.pdf|学位证书_陈培胜.pdf');
+  const lines = r.stdout.replace(/\r/g, '').trim().split('\n');
+  assert.equal(lines[0], '李清-简历-2026.pdf|学位证书_李清.pdf');
   assert.equal(lines[1], 'None');
 });

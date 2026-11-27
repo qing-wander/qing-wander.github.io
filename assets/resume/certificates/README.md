@@ -22,4 +22,4 @@
 - 单附件上限 12MB（代码常量 `MAX_ATTACH_BYTES`），Resend 全封上限 40MB；
 - 建议证书里敏感信息自行打码，勾选即代表投递人同意随信发送。
 
-PDF 简历附件（`assets/resume/chen-peisheng-resume-2026.pdf`）由 `node scripts/render_print_previews.mjs` 自动生成，勿手改。
+PDF 简历附件（`assets/resume/li-qing-resume-2026.pdf`）由 `node scripts/render_print_previews.mjs` 自动生成，勿手改。

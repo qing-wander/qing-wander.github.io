@@ -7,7 +7,7 @@ import {
 } from '../functions/_middleware.js';
 import { certToken } from '../functions/lib/guard.js';
 
-const ORIGIN = 'https://chenpeisheng.cn';
+const ORIGIN = 'https://qingfin.cn';
 const ENV = { DELIVER_CHALLENGE_SECRET: 'test-secret-do-not-use', ALLOWED_ORIGINS: ORIGIN };
 
 function ctx(path, headers = {}, env = ENV) {

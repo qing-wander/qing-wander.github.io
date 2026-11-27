@@ -2,42 +2,33 @@
 #  Cloudflare Pages 项目配置（仅用于本地 wrangler 命令与 D1 管理）
 # ──────────────────────────────────────────────────────────────────────
 #  说明：
-#   · 线上 Pages 项目 shenge-work 的绑定（KV / D1 / 环境变量）以控制台为准，
+#   · 线上 Pages 项目 qing-wander 的绑定（KV / D1 / 环境变量）以控制台为准，
 #     本文件仅供 `wrangler d1 execute`、`wrangler pages dev` 等本地命令
 #     找到同名资源；GitHub 集成的自动构建不读本文件。
 #   · 正式部署仍走 `git push`（自动构建）或 ./scripts/deploy-pages.sh（兜底）。
 #   · functions/api/visits.js、wall.js 都通过 env.DB 访问 D1（表见 db/schema.sql）。
 # ──────────────────────────────────────────────────────────────────────
 
-name = "shenge-work"
+name = "qing-wander"
 compatibility_date = "2025-01-01"
 pages_build_output_dir = "dist"
 
 [[d1_databases]]
 binding = "DB"
 database_name = "portfolio-db"
-database_id = "022be169-a84e-4791-b2f2-ee4f9c4f17c8"
+database_id = "5e4457c3-d3a7-4ee3-881a-28f5bc3875c1"
 
 # deliver.js 仍用 KV 做发信限额（写量可控：日上限 30 封 ≈ 90 写/天）
 [[kv_namespaces]]
 binding = "SITE_KV"
-id = "f5253a16b4d84a20a32c0cd497b1f269"
+id = "297f5f1612e3486ca06f4ff8284a8327"
 
 # ──────────────────────────────────────────────────────────────────────
 #  预览环境（非 main 分支 / 本地直接上传）—— 独立沙箱
 # ──────────────────────────────────────────────────────────────────────
-#  没有这一段时，预览部署会退回到顶层的生产绑定，等于让预览站
-#  直接读写线上数据（实测过：预览页注入了真实手机号）。
-#
-#  这里指向另建的 D1 与 KV，数据由
-#    D1_DB_NAME=portfolio-db-preview bash scripts/db-init.sh remote
-#  灌入仓库里的脱敏副本，所以预览永远碰不到生产数据。
-#
-#  预览刻意不配这些密钥：RESEND_API_KEY / TURNSTILE_SECRET / 微信相关 /
-#  KB_WORKER_URL —— 预览不需要真发信、真发码、真写向量库，缺了代码会降级，
-#  也避免误操作打到生产（例如在预览里点“重建知识库”）。
-#  只保留：ADMIN_EMAILS（明文）、ADMIN_SESSION_SECRET / DEVICE_HASH_PEPPER /
-#  VERIFY_ACCESS_SECRET（预览专用随机值，由控制台或 API 配）。
+#  没有这一段时，预览部署会退回顶层的生产绑定，等于让预览站直接读写
+#  线上数据。这里指向另建的 D1 与 KV，预览永远碰不到生产数据。
+#  预览刻意不配发信 / 微信 / 向量库等密钥，缺了代码会降级。
 # ──────────────────────────────────────────────────────────────────────
 [env.preview]
 compatibility_date = "2025-01-01"
@@ -45,11 +36,11 @@ compatibility_date = "2025-01-01"
 [[env.preview.d1_databases]]
 binding = "DB"
 database_name = "portfolio-db-preview"
-database_id = "853951d9-3d14-404b-b8ac-e51fba8673ff"
+database_id = "9f473ad3-194b-4363-8a3b-d696803644b7"
 
 [[env.preview.kv_namespaces]]
 binding = "SITE_KV"
-id = "f10c006844234aa7ae963020fff2e1c2"
+id = "739affaabe60404a8a08240713e0eb29"
 
 # ──────────────────────────────────────────────────────────────────────
 #  管理后台已经并入本站：/admin 控制台 + /login 登录页（免密登录）
@@ -68,8 +59,8 @@ id = "f10c006844234aa7ae963020fff2e1c2"
 #    ADMIN_SESSION_SECRET   会话签名盐，32 字节以上（必填，缺了谁都进不去）
 #
 #    ── 邮箱登录 ──
-#    ADMIN_EMAILS           允许登录的邮箱，逗号分隔，默认 hi@chenpeisheng.cn
-#                           例：hi@chenpeisheng.cn,you@gmail.com,you@qq.com
+#    ADMIN_EMAILS           允许登录的邮箱，逗号分隔，默认 qing.wander@gmail.com
+#                           例：qing.wander@gmail.com,you@gmail.com,you@qq.com
 #    RESEND_API_KEY         发验证码用的 Resend Key（与自动投递共用）
 #    RESEND_FROM            可选，发件人；建议用已验证域名，否则易进垃圾箱
 #    ADMIN_EMAIL_FROM       可选，优先于 RESEND_FROM
@@ -82,17 +73,8 @@ id = "f10c006844234aa7ae963020fff2e1c2"
 #    WECHAT_ALLOW_OPENIDS   允许登录的 openid，逗号分隔（白名单为空 = 微信登录不可用）
 #    WECHAT_ALLOW_UNIONIDS  可选，unionid 名单（跨应用唯一，更稳）
 #
-#    ── 小程序扫码登录（个人主体唯一可用的微信登录）──
-#    WECHAT_MINI_APP_ID     小程序 AppID（个人实名注册即可，无需认证）
-#    WECHAT_MINI_APP_SECRET 小程序 AppSecret（开发管理 → 开发设置 → 生成）
-#    WECHAT_MINI_LOGIN_ENABLED  显式开关，默认关闭；设为 1/true/on/yes 才露出扫码入口。
-#                          即使上面两个密钥已配，小程序未备案/未发布时也不该显示按钮。
-#    注意：小程序 openid 与公众号/开放平台的 openid 不同，扫码者的 openid
-#          要单独加进 WECHAT_ALLOW_OPENIDS；首次未放行时登录页会显示它。
-#    小程序端源码在 miniprogram/，需上传发布；request 合法域名填 chenpeisheng.cn。
-#
-#  公众号授权回调地址（在微信后台配置，仅认证服务号可用）：
-#    https://chenpeisheng.cn/api/admin/auth/wechat/callback
+#  授权回调地址（在微信后台配置）：
+#    https://qingfin.cn/api/admin/auth/wechat/callback
 #  首次扫码若提示「未放行」，登录页会直接显示你的 openid，复制进白名单即可。
 #
 #  可选 / 应急：

@@ -24,7 +24,7 @@ export default function CompanyProfilePanel({ c }: { c: Company }) {
   /* 挂载后：资产 CDN 统一重写（与旧版 DOMContentLoaded → applyDOM 同时序）+ 标题 */
   useEffect(() => {
     try { window.AssetURL?.rewriteDOM(rootRef.current ?? undefined); } catch { /* 静默降级 */ }
-    document.title = (c.name || '公司档案') + ' · 公司档案 | 陈培胜';
+    document.title = (c.name || '公司档案') + ' · 公司档案 | 李清';
   }, [c.id, c.name]);
 
   /* Esc 链（与旧版全局 keydown 一致）：全景 → 灯箱 */

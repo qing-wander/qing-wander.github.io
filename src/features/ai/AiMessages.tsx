@@ -43,7 +43,7 @@ export function AiMsg({ item }: Props) {
 
   return (
     <div className={`ai-msg ai-msg-${item.who}${item.typing ? ' ai-typing' : ''}`} data-mode={item.mode}>
-      <span className="ai-msg-name">{item.who === 'bot' ? '陈培胜 · AI数字分身' : 'YOU'}</span>
+      <span className="ai-msg-name">{item.who === 'bot' ? '李清 · AI数字分身' : 'YOU'}</span>
       <div className="ai-bubble">
         {item.typing ? (
           <><span className="ai-dot" /><span className="ai-dot" /><span className="ai-dot" /></>

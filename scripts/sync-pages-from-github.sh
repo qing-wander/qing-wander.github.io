@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# 把 GitHub 上 main 的最新提交同步部署到 Cloudflare Pages（shenge-work 项目）
+# 把 GitHub 上 main 的最新提交同步部署到 Cloudflare Pages（qing-wander 项目）
 #
 # 背景：Cloudflare 的 GitHub App 未授予本仓库访问权，push 不会触发 Pages 自动构建，
 #      所以用本机 wrangler 凭据做「拉最新 + 直传」的兜底同步，可交给定时任务反复跑。
@@ -17,8 +17,8 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 ROOT="$(pwd)"
-REPO="shenge-work/shenge-work.github.io"
-PROJECT="shenge-work"
+REPO="qing-wander/qing-wander.github.io"
+PROJECT="qing-wander"
 STATE_DIR="${HOME}/.local/state/pages-sync"
 STATE_FILE="${STATE_DIR}/${PROJECT}.last-commit"
 UA="Mozilla/5.0"

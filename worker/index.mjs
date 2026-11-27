@@ -40,7 +40,7 @@ function json(body, cors, status) {
 }
 
 function allowedOrigins(env) {
-  return (env.ALLOWED_ORIGINS || 'https://chenpeisheng.cn')
+  return (env.ALLOWED_ORIGINS || 'https://qingfin.cn')
     .split(',')
     .map(function (s) { return s.trim(); })
     .filter(Boolean);

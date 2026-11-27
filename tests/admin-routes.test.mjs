@@ -15,7 +15,7 @@ import { onRequestGet as meGet } from '../functions/api/admin/auth/me.js';
 import { onRequestGet as statsGet } from '../functions/api/admin/stats.js';
 import { onRequestPost as logoutPost } from '../functions/api/admin/auth/logout.js';
 
-const ORIGIN = 'https://chenpeisheng.cn';
+const ORIGIN = 'https://qingfin.cn';
 const SCHEMA = readFileSync(new URL('../db/schema.sql', import.meta.url), 'utf8');
 const SECRET = 'test-admin-session-secret';
 const PASSWORD = 'correct-horse-battery';

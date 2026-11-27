@@ -15,7 +15,7 @@ import { onRequestGet as adminGreetingGet, onRequestPost as adminGreetingPost } 
 import { onRequestGet as publicGreetingGet, onRequestOptions as publicGreetingOpt } from '../functions/api/greeting.js';
 import { onRequestPost as previewPost } from '../functions/api/admin/voice/preview.js';
 
-const ORIGIN = 'https://chenpeisheng.cn';
+const ORIGIN = 'https://qingfin.cn';
 const SCHEMA = readFileSync(new URL('../db/schema.sql', import.meta.url), 'utf8');
 const SECRET = 'test-greeting-session-secret';
 
@@ -83,7 +83,7 @@ function stubFetch(handler) {
 /* ── 共享默认值与校验 ───────────────────────────────────────── */
 
 test('招呼文案默认值：与试听原默认一致，且长度在 TTS 上限内', () => {
-  assert.equal(DEFAULT_GREETING, '你好，我是陈培胜的数字分身。他的项目经历、技术栈和协作方式，都可以直接问我。');
+  assert.equal(DEFAULT_GREETING, '你好，我是李清的数字分身。他的项目经历、技术栈和协作方式，都可以直接问我。');
   assert.ok(Array.from(DEFAULT_GREETING).length <= MAX_GREETING_CHARS);
   assert.equal(normalizeGreeting(DEFAULT_GREETING).text, DEFAULT_GREETING);
 });

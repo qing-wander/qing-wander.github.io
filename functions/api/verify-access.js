@@ -23,7 +23,7 @@
    环境变量：
      RESEND_API_KEY      必填（与简历转发 / 留言墙共用），未配置则跳过发信
      RESEND_FROM         可选，默认 onboarding@resend.dev（未验证域名时只能发注册邮箱）
-     VERIFY_ACCESS_TO    收件人，默认 hi@chenpeisheng.cn
+     VERIFY_ACCESS_TO    收件人，默认 hi@qingfin.cn
      VERIFY_ACCESS_FROM  可选，单独指定本接口的发件人
      DEVICE_HASH_PEPPER  可选，IP 哈希盐；与留言墙共用
      VERIFY_ACCESS_SECRET 可选，审批链接 HMAC 密钥（强烈建议单独配置）
@@ -54,9 +54,9 @@ const DAY_LIMIT = 30;
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 const DEFAULT_ORIGINS = [
-  'https://chenpeisheng.cn',
-  'https://shenge-work.pages.dev',
-  '*.shenge-work.pages.dev',
+  'https://qingfin.cn',
+  'https://qing-wander.pages.dev',
+  '*.qing-wander.pages.dev',
   'http://localhost:8000',
   'http://127.0.0.1:8000',
   'http://localhost:8080',

@@ -12,7 +12,7 @@
    ────────────────────────────────────────────────────────────── */
 
 export const GREETING_KEY = 'ai_greeting';
-export const DEFAULT_GREETING = '你好，我是陈培胜的数字分身。他的项目经历、技术栈和协作方式，都可以直接问我。';
+export const DEFAULT_GREETING = '你好，我是李清的数字分身。他的项目经历、技术栈和协作方式，都可以直接问我。';
 /* 与 TTS 的 MAX_TTS_CHARS 对齐：文案要能被云端一口气播完，别到前端才截断 */
 export const MAX_GREETING_CHARS = 150;
 

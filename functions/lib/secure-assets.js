@@ -61,7 +61,7 @@ export function cosConfig(env) {
   const key = String((env && env.COS_SECRET_KEY) || '').trim();
   const bucket = String((env && env.COS_BUCKET) || '').trim();
   const region = String((env && env.COS_REGION) || 'ap-shanghai').trim();
-  const prefix = String((env && env.COS_PRIVATE_PREFIX) || 'shenge-work/private/').trim();
+  const prefix = String((env && env.COS_PRIVATE_PREFIX) || 'qing-wander/private/').trim();
   if (!id || !key || !bucket) return null;
   return { id, key, bucket, region, prefix, token: String((env && env.COS_SESSION_TOKEN) || '').trim() };
 }
