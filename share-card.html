@@ -451,13 +451,19 @@ body.embed .stage-wrap { padding: 10px; }
     notifyParent({ type: 'sharecard:ready', size: currentSize });
   }
   function fit() {
-    var avail = Math.min(wrap.clientWidth - 24, 760);
-    if (EMBED && avail <= 0) avail = 520; // iframe 尚未布局时给保守值
+    /* 嵌入弹窗时卡片宽度固定 520（再受 iframe 可用宽度约束），
+       父页面据此把弹窗收窄到贴合卡片，避免右侧大片空白；
+       独立网页版仍按容器自适应，上限 760。 */
+    var avail = EMBED
+      ? Math.min(520, wrap.clientWidth - 24)
+      : Math.min(wrap.clientWidth - 24, 760);
+    if (avail <= 0) avail = 520; // iframe 尚未布局时给保守值
     var scale = Math.min(1, avail / 1080);
     stage.style.transform = 'scale(' + scale + ')';
     var h = card.offsetHeight * scale + 40;
     wrap.style.height = h + 'px';
     notifyParent({ type: 'sharecard:height', height: Math.ceil(h) });
+    notifyParent({ type: 'sharecard:width', width: Math.round(1080 * scale) });
   }
   document.querySelectorAll('[data-size]').forEach(function (b) {
     b.addEventListener('click', function () {

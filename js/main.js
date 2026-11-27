@@ -809,11 +809,22 @@
         t.setAttribute('aria-selected', idx === shareCur ? 'true' : 'false');
       });
     }
-    // iframe 回报卡片实际高度（随版式/视口变化），同步调整预览高度
+    // iframe 回报卡片实际尺寸：高度同步预览，宽度把弹窗收窄到贴合卡片（不受 CSS 缓存影响）
     window.addEventListener('message', function (e) {
-      if (!shareFrame || e.origin !== location.origin || !e.data || e.data.type !== 'sharecard:height') return;
-      var h = Number(e.data.height);
-      if (h > 0 && shareFrame.style.height !== h + 'px') shareFrame.style.height = h + 'px';
+      if (!shareFrame || e.origin !== location.origin || !e.data) return;
+      if (e.data.type === 'sharecard:height') {
+        var h = Number(e.data.height);
+        if (h > 0 && shareFrame.style.height !== h + 'px') shareFrame.style.height = h + 'px';
+      } else if (e.data.type === 'sharecard:width') {
+        var w = Number(e.data.width);
+        if (w > 0) {
+          var panel = shareOverlay && shareOverlay.querySelector('.share-panel');
+          var panelW = Math.min(w + 52, window.innerWidth - 32);
+          if (panel) panel.style.width = panelW + 'px';
+          var frameW = Math.min(w + 24, panelW - 28);
+          if (shareFrame.style.width !== frameW + 'px') shareFrame.style.width = frameW + 'px';
+        }
+      }
     });
 
     function closeShare() {
@@ -823,7 +834,11 @@
     if (shareBtn) {
       shareBtn.hidden = false;
       shareBtn.addEventListener('click', function () {
-        if (shareFrame && !shareFrame.src) shareFrame.src = 'share-card.html?embed=1';
+        if (shareFrame && !shareFrame.src) {
+          // 先给足够宽度让卡片渲染到目标 520px，随后由 width 消息把弹窗收窄贴合
+          shareFrame.style.width = Math.min(560, window.innerWidth - 60) + 'px';
+          shareFrame.src = 'share-card.html?embed=1&v=20261127c';
+        }
         shareCur = 0;
         document.querySelectorAll('.share-tab').forEach(function (t, idx) {
           t.classList.toggle('on', idx === 0);
